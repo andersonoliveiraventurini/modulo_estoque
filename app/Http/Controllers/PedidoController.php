@@ -13,7 +13,8 @@ class PedidoController extends Controller
      */
     public function index()
     {
-        //
+        $pedidos = Pedido::paginate();
+        return view('paginas.pedidos.index', compact('pedidos'));
     }
 
     /**

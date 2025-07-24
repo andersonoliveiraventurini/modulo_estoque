@@ -13,7 +13,8 @@ class FornecedorController extends Controller
      */
     public function index()
     {
-        //
+        $fornecedores = Fornecedor::paginate();
+        return view('paginas.fornecedores.index', compact('fornecedores'));
     }
 
     /**

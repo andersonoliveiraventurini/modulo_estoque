@@ -13,7 +13,8 @@ class EnderecoController extends Controller
      */
     public function index()
     {
-        //
+        $enderecos = Endereco::paginate();
+        return view('paginas.enderecos.index', compact('enderecos'));
     }
 
     /**

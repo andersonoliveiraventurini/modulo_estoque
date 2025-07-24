@@ -13,7 +13,8 @@ class DescontoController extends Controller
      */
     public function index()
     {
-        //
+        $descontos = Desconto::paginate();
+        return view('paginas.descontos.index', compact('descontos'));
     }
 
     /**

@@ -13,7 +13,8 @@ class VendaController extends Controller
      */
     public function index()
     {
-        //
+        $vendas = Venda::paginate();
+        return view('paginas.vendas.index', compact('vendas'));
     }
 
     /**

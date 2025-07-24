@@ -13,7 +13,8 @@ class ProdutoController extends Controller
      */
     public function index()
     {
-        //
+        $produtos = Produto::paginate();
+        return view('paginas.produtos.index', compact('produtos'));
     }
 
     /**

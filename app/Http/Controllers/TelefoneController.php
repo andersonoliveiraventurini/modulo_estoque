@@ -13,7 +13,8 @@ class TelefoneController extends Controller
      */
     public function index()
     {
-        //
+        $telefones = Telefone::paginate();
+        return view('paginas.telefones.index', compact('telefones'));
     }
 
     /**
