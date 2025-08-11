@@ -14,14 +14,20 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     npm \
     nodejs \
+    tzdata \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo pdo_mysql mbstring zip exif pcntl gd \
+    && docker-php-ext-install sockets pdo pdo_mysql mbstring zip exif pcntl bcmath gd \
+    && docker-php-ext-enable sockets bcmath zip \
+    && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
+
+# Ajusta o fuso horário para o Brasil
+RUN ln -snf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime && echo "America/Sao_Paulo" > /etc/timezone
 
 # Copia o Composer da imagem oficial
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
-# Ativa mod_rewrite do Apache
+# Ativa o mod_rewrite do Apache
 RUN a2enmod rewrite
 
 # Define o ServerName para evitar erro AH00558
@@ -33,17 +39,20 @@ RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|' /et
 # Define o diretório de trabalho
 WORKDIR /var/www/html
 
-# Copia todos os arquivos do projeto
+# Copia os arquivos do projeto
 COPY . .
 
-# Instala dependências do Laravel
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader || cat /var/www/html/storage/logs/laravel.log || true
+# Instala dependências PHP do Laravel
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader || true
 
 # Instala dependências JS e compila os assets
 RUN npm install && npm run build
 
 # Ajusta permissões
-RUN chown -R www-data:www-data /var/www/html && chmod -R 755 /var/www/html
+RUN chown -R www-data:www-data /var/www/html && chmod -R 775 storage bootstrap/cache
 
+# Expõe a porta padrão do Apache
 EXPOSE 80
+
+# Comando padrão do container
 CMD ["apache2-foreground"]
