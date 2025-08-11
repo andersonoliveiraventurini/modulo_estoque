@@ -15,7 +15,8 @@
         "laravel/nightwatch": "^1.11",
         "laravel/tinker": "^2.10.1",
         "livewire/flux": "^2.1.1",
-        "livewire/volt": "^1.7.0"
+        "livewire/volt": "^1.7.0",
+        "vladimir-yuldashev/laravel-queue-rabbitmq": "^14.2"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.15",
