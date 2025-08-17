@@ -11,23 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('bloco_k_items', function (Blueprint $table) {
+        Schema::create('blocok_insumos', function (Blueprint $table) {
             $table->id();
-            // produto que será produzido
+            // produto que será usado como insumo
             $table->unsignedBigInteger('produto_id')->nullable()
                   ->comment('Referência ao produto relacionado a este item do Bloco K.');
             $table->foreign('produto_id')->references('id')->on('produtos')->onDelete('cascade');
-
-            // quantidade do produto
+            // quantidade do insumo
             $table->decimal('quantidade', 15, 2)->nullable()
-                    ->comment('Quantidade do produto produzido.');
-            // unidade de medida do produto
+                    ->comment('Quantidade do insumo utilizado na produção.');
+            // unidade de medida do insumo
             $table->string('unidade_medida', 10)->nullable()
-                    ->comment('Unidade de medida do produto produzido, como kg, g, L, etc.');
-
-           
-
-
+                    ->comment('Unidade de medida do insumo utilizado, como kg, g, L, etc.');
             $table->timestamps();
             $table->softDeletes();
         });
@@ -38,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('bloco_k_items');
+        Schema::dropIfExists('blocok_insumos');
     }
 };
