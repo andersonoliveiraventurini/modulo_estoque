@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('blocok_insumos', function (Blueprint $table) {
+        Schema::create('bloco_k_insumos', function (Blueprint $table) {
             $table->id();
             // produto que será usado como insumo
             $table->unsignedBigInteger('produto_id')->nullable()

@@ -14,8 +14,14 @@ return new class extends Migration
         Schema::create('emails', function (Blueprint $table) {
             $table->id();
             $table->string('email')->unique();
-            $table->foreignId('fornecedor_id')->constrained('fornecedores')->onDelete('cascade');
-            $table->foreignId('cliente_id')->constrained('clientes')->onDelete('cascade');
+           
+            $table->unsignedBigInteger('fornecedor_id')->nullable()
+                  ->comment('Referência ao fornecedor associado a este e-mail.');
+            $table->foreign('fornecedor_id')->references('id')->on('fornecedores')->onDelete('cascade');
+           
+            $table->unsignedBigInteger('cliente_id')->nullable()
+                  ->comment('Referência ao cliente associado a este e-mail.');
+            $table->foreign('cliente_id')->references('id')->on('clientes')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
         });

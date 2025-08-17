@@ -10,5 +10,7 @@ class BlocokInsumos extends Model
 {
     /** @use HasFactory<\Database\Factories\BlocokInsumosFactory> */
     use HasFactory, SoftDeletes;
+
+    protected $table = 'bloco_k_insumos';
     
 }

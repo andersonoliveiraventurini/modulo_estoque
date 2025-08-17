@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('blocok_descartes', function (Blueprint $table) {
+        Schema::create('bloco_k_descartes', function (Blueprint $table) {
             $table->id();
 
             // produto que será criado 
