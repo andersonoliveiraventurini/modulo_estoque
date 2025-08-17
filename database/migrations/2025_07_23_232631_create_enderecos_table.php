@@ -20,8 +20,12 @@ return new class extends Migration
             $table->string('cidade');
             $table->string('estado');
             $table->string('cep');
-            $table->foreignId('cliente_id')->nullable()->constrained('clientes')->nullOnDelete();
-            $table->foreignId('fornecedor_id')->nullable()->constrained('fornecedores')->nullOnDelete();
+            $table->unsignedBigInteger('cliente_id')->nullable()
+                  ->comment('Referência ao cliente associado a este endereço.');
+            $table->foreign('cliente_id')->references('id')->on('clientes')->onDelete('cascade');
+            $table->unsignedBigInteger('fornecedor_id')->nullable()
+                  ->comment('Referência ao fornecedor associado a este endereço.');
+            $table->foreign('fornecedor_id')->references('id')->on('fornecedores')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
         });
