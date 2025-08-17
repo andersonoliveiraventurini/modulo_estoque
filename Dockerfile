@@ -12,12 +12,13 @@ RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libonig-dev \
     libxml2-dev \
+    libicu-dev \
     npm \
     nodejs \
     tzdata \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install sockets pdo pdo_mysql mbstring zip exif pcntl bcmath gd \
-    && docker-php-ext-enable sockets bcmath zip \
+    && docker-php-ext-enable sockets bcmath zip intl \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
