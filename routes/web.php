@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\BlocokController;
+use App\Http\Controllers\BlocokDescartesController;
+use App\Http\Controllers\BlocokInsumosController;
+use App\Http\Controllers\BlocokItemController;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use App\Http\Controllers\ClienteController;
@@ -26,6 +30,13 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('settings/password', 'settings.password')->name('settings.password');
     Volt::route('settings/appearance', 'settings.appearance')->name('settings.appearance');
 
+    // Resource routes for various controllers
+    Route::resource('blocok/descartes', BlocokDescartesController::class)->names('blocok.descartes');
+    Route::resource('blocok/insumos', BlocokInsumosController::class)->names('blocok.insumos');
+    Route::resource('blocok/items', BlocokItemController::class)->names('blocok.items');
+    Route::resource('blocok', BlocokController::class)->names('blocok');
+
+
     Route::resource('clientes', ClienteController::class)->names('clientes');
     Route::resource('fornecedores', FornecedorController::class)->names('fornecedores');
     Route::resource('produtos', ProdutoController::class)->names('produtos');
@@ -34,6 +45,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('vendas', VendaController::class)->names('vendas');
     Route::resource('pedidos', PedidoController::class)->names('pedidos');
     Route::resource('descontos', DescontoController::class)->names('descontos');
+    Route::resource('emails', \App\Http\Controllers\EmailController::class)->names('emails');
+    Route::resource('armazens', \App\Http\Controllers\ArmazemController::class)->names('armazens');
+
 });
 
 require __DIR__.'/auth.php';
