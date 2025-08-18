@@ -12,20 +12,55 @@
             </a>
 
             <flux:navlist variant="outline">
-                <flux:navlist.group :heading="__('Platform')" class="grid">
-                    <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
+                <flux:navlist.group :heading="__('Financeiro')" class="grid">
+                    <flux:navlist.item icon="home" :href="route('pedidos.index')" :current="request()->routeIs('pedidos.index')" wire:navigate>{{ __('Listar pedidos') }}</flux:navlist.item>
+                    <flux:navlist.item icon="home" :href="route('orcamentos.index')" :current="request()->routeIs('orcamentos.index')" wire:navigate>{{ __('Listar orçamentos') }}</flux:navlist.item>
+                    <flux:navlist.item icon="home" :href="route('orcamentos.create')" :current="request()->routeIs('orcamentos.create')" wire:navigate>{{ __('Gerar orçamento') }}</flux:navlist.item>
+                    <flux:navlist.item icon="home" :href="route('vendas.index')" :current="request()->routeIs('vendas.index')" wire:navigate>{{ __('Listar vendas') }}</flux:navlist.item>
+
+                    <flux:navlist.item icon="home" :href="route('descontos.index')" :current="request()->routeIs('descontos.index')" wire:navigate>{{ __('Descontos') }}</flux:navlist.item>
+                 <flux:navlist.item icon="home" :href="route('notas.index')" :current="request()->routeIs('notas.index')" wire:navigate>{{ __('Listar notas') }}</flux:navlist.item>
+              <flux:navlist.item icon="home" :href="route('notas.create')" :current="request()->routeIs('notas.create')" wire:navigate>{{ __('Gerar nota') }}</flux:navlist.item>
+       </flux:navlist.group>
+            </flux:navlist>
+            <flux:navlist variant="outline">
+                <flux:navlist.group :heading="__('Clientes')" class="grid">
+                    <flux:navlist.item icon="home" :href="route('clientes.index')" :current="request()->routeIs('clientes.index')" wire:navigate>{{ __('Listar clientes') }}</flux:navlist.item>
+                    <flux:navlist.item icon="home" :href="route('clientes.create')" :current="request()->routeIs('clientes.create')" wire:navigate>{{ __('Cadastrar cliente') }}</flux:navlist.item>
                 </flux:navlist.group>
             </flux:navlist>
+            <flux:navlist variant="outline">
+                <flux:navlist.group :heading="__('Produtos')" class="grid">
+                    <flux:navlist.item icon="home" :href="route('produtos.index')" :current="request()->routeIs('produtos.index')" wire:navigate>{{ __('Listar produtos') }}</flux:navlist.item>
+               
+                    <flux:navlist.item icon="home" :href="route('produtos.create')" :current="request()->routeIs('produtos.create')" wire:navigate>{{ __('Criar produto') }}</flux:navlist.item>
+                </flux:navlist.group>
+            </flux:navlist>
+
+            <flux:navlist variant="outline">
+                <flux:navlist.group :heading="__('RD Station')" class="grid">
+                    <flux:navlist.item icon="home" :href="route('rdstation.checar-token')"
+                        :current="request()->routeIs('rdstation.checar-token')" wire:navigate>{{ __('Checar token') }}
+                    </flux:navlist.item>
+                <flux:navlist.item icon="banknotes" :href="route('rdstation.listar-empresas')"
+                    :current="request()->routeIs('rdstation.listar-empresas')" wire:navigate>{{ __('Empresas') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="shopping-cart" :href="route('rdstation.listar-negociacoes')"
+                    :current="request()->routeIs('rdstation.listar-negociacoes')" wire:navigate>{{ __('Negociações') }}
+                </flux:navlist.item>
+            </flux:navlist.group>
+
+        </flux:navlist>
 
             <flux:spacer />
 
             <flux:navlist variant="outline">
-                <flux:navlist.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                {{ __('Repository') }}
+                <flux:navlist.item icon="folder-git-2" href="#" target="_blank">
+                {{ __('Acav') }}
                 </flux:navlist.item>
 
-                <flux:navlist.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                {{ __('Documentation') }}
+                <flux:navlist.item icon="book-open-text" href="#" target="_blank">
+                {{ __('Processos') }}
                 </flux:navlist.item>
             </flux:navlist>
 
