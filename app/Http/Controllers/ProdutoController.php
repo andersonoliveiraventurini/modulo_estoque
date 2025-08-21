@@ -22,7 +22,7 @@ class ProdutoController extends Controller
      */
     public function create()
     {
-        //
+        return view('paginas.produtos.create');
     }
 
     /**
@@ -30,7 +30,29 @@ class ProdutoController extends Controller
      */
     public function store(StoreProdutoRequest $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'price' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'weight' => 'nullable|numeric|min:0',
+            'description' => 'nullable|string',
+            'active' => 'boolean',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        $product = Produto::create($validated);
+
+        // Processar imagens
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('products', 'public');
+                $product->images()->create(['path' => $path]);
+            }
+        }
+
+        return redirect()->route('products.index')
+            ->with('success', 'Produto cadastrado com sucesso!');
     }
 
     /**

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('nome');
             $table->string('tipo_produto_sped')->nullable()->comment('Tipo do produto conforme a classificação do SPED - Indica a categoria do produto segundo as normas do Sistema Público de Escrituração Digital (SPED).');
             $table->string('ncm')->nullable()->comment('Nomenclatura Comum do Mercosul - Código utilizado para identificar a natureza de um produto no comércio internacional.');
+            $table->string('codigo_barras')->nullable()->comment('Código de barras - Código utilizado para identificar o produto de forma única.');
             $table->unsignedBigInteger('fornecedor_id')->nullable()
                   ->comment('Referência ao fornecedor deste produto.');
             $table->foreign('fornecedor_id')->references('id')->on('fornecedores')->onDelete('cascade');
