@@ -51,7 +51,7 @@ new #[Layout('components.layouts.auth')] class extends Component {
         </flux:button>
 
         <flux:link class="text-sm cursor-pointer" wire:click="logout">
-            {{ __('Log out') }}
+            {{ __('Sair') }}
         </flux:link>
     </div>
 </div>

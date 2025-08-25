@@ -8,8 +8,9 @@ Route::middleware('guest')->group(function () {
     Volt::route('login', 'auth.login')
         ->name('login');
 
-    Volt::route('register', 'auth.register')
-        ->name('register');
+    Route::any('register', function () {
+    abort(404, 'Página não encontrada.');
+})->name('register')->middleware('guest');
 
     Volt::route('forgot-password', 'auth.forgot-password')
         ->name('password.request');
