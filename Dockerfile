@@ -43,6 +43,10 @@ WORKDIR /var/www/html
 # Copia os arquivos do projeto
 COPY . .
 
+# Ajusta propietario e permissões antes da instalação para evitar problemas
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
 # Instala dependências PHP do Laravel
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader || true
 

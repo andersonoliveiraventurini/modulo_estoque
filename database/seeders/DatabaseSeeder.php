@@ -23,5 +23,8 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('12345'),
             'email_verified_at' => Carbon::now()
         ]);
+
+        $this->call(NcmSeeder::class);
+        $this->call(FornecedorSeeder::class);
     }
 }
