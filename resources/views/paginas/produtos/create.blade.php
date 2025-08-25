@@ -1,4 +1,4 @@
-<x-layouts.app :title="__('Dashboard')">
+<x-layouts.app :title="__('Criar item')">
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
             <form action="{{ route('produtos.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">

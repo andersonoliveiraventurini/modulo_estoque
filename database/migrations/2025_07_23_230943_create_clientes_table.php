@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('cpf')->nullable();
             $table->string('cnpj')->nullable();
-
+            $table->integer('status')->default(1); // 1 - Ativo, 0 - Inativo
             $table->timestamps();
             $table->softDeletes();
         });
