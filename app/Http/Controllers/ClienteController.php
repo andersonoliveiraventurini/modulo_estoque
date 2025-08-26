@@ -22,7 +22,8 @@ class ClienteController extends Controller
      */
     public function create()
     {
-        return view('paginas.clientes.create');
+        $vendedores = \App\Models\Vendedor::all();
+        return view('paginas.clientes.create', compact('vendedores'));
     }
 
     /**
