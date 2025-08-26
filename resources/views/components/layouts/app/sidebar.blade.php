@@ -27,6 +27,7 @@
                 <flux:navlist.group :heading="__('Clientes')" class="grid">
                     <flux:navlist.item icon="home" :href="route('clientes.index')" :current="request()->routeIs('clientes.index')" wire:navigate>{{ __('Listar clientes') }}</flux:navlist.item>
                     <flux:navlist.item icon="home" :href="route('clientes.create')" :current="request()->routeIs('clientes.create')" wire:navigate>{{ __('Cadastrar cliente') }}</flux:navlist.item>
+                    <flux:navlist.item icon="home" :href="route('clientes.create_completo')" :current="request()->routeIs('clientes.create-completo')" wire:navigate>{{ __('Cadastrar cliente - completo') }}</flux:navlist.item>
                 </flux:navlist.group>
             </flux:navlist>
             <flux:navlist variant="outline">

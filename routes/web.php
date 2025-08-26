@@ -53,6 +53,7 @@ Route::middleware(['auth'])->group(function () {
 
 
     Route::resource('clientes', ClienteController::class)->names('clientes');
+    Route::get('cliente/create_completo', [ClienteController::class, 'create_completo'])->name('clientes.create_completo');
     Route::resource('fornecedores', FornecedorController::class)->names('fornecedores');
     Route::resource('telefones', TelefoneController::class)->names('telefones');
     Route::resource('enderecos', EnderecoController::class)->names('enderecos');

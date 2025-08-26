@@ -26,6 +26,14 @@ class ClienteController extends Controller
     }
 
     /**
+     * Show the form for creating a new resource.
+     */
+    public function create_completo()
+    {
+        return view('paginas.clientes.create_completo');
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(StoreClienteRequest $request)
