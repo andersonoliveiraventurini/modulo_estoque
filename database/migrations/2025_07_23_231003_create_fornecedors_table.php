@@ -14,10 +14,11 @@ return new class extends Migration
         Schema::create('fornecedores', function (Blueprint $table) {
             $table->id();
             $table->integer('linha_brcom')->nullable();
-            $table->string('nome');
+            $table->string('nome_fantasia');
             $table->text('descricao')->nullable();
             $table->text('observacao')->nullable();
-            $table->string('email')->nullable();            $table->string('telefone')->nullable();
+            $table->string('email')->nullable();           
+            $table->string('telefone')->nullable();
             $table->string('CNPJ')->unique()->nullable();
             $table->timestamps();
             $table->softDeletes();

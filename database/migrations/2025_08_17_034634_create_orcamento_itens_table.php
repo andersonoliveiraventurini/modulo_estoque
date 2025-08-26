@@ -32,9 +32,9 @@ return new class extends Migration
                     ->comment('Valor do produto orçado com desconto aplicado, se houver.');
 
             // quem deu o desconto
-            $table->unsignedBigInteger('usuario_id')->nullable()
+            $table->unsignedBigInteger('user_id')->nullable()
                     ->comment('Referência ao usuário que aplicou o desconto, se houver.');
-            $table->foreign('usuario_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
 
             // unidade de medida do produto
             $table->timestamps();

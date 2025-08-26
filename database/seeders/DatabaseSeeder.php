@@ -26,5 +26,6 @@ class DatabaseSeeder extends Seeder
 
         $this->call(NcmSeeder::class);
         $this->call(FornecedorSeeder::class);
+        $this->call(VendedorSeeder::class);
     }
 }

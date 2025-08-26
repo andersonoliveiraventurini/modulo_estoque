@@ -37,7 +37,7 @@ class FornecedorSeeder extends Seeder
 
                     $data[] = [
                         'linha_brcom' => $linha,
-                        'nome' => $descricao,
+                        'nome_fantasia' => $descricao,
                         'descricao' => $desc,
                         'observacao' => $obs,
                         'created_at' => now(),
