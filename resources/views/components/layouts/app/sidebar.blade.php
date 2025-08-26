@@ -26,14 +26,14 @@
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('Clientes')" class="grid">
                     <flux:navlist.item icon="home" :href="route('clientes.index')" :current="request()->routeIs('clientes.index')" wire:navigate>{{ __('Listar clientes') }}</flux:navlist.item>
-                    <flux:navlist.item icon="home" :href="route('clientes.create')" :current="request()->routeIs('clientes.create')" wire:navigate>{{ __('Cadastrar cliente') }}</flux:navlist.item>
-                    <flux:navlist.item icon="home" :href="route('clientes.create_completo')" :current="request()->routeIs('clientes.create-completo')" wire:navigate>{{ __('Cadastrar cliente - completo') }}</flux:navlist.item>
+                    <flux:navlist.item icon="home" :href="route('clientes.create')" :current="request()->routeIs('clientes.create')" wire:navigate>{{ __('Pré-cadastro cliente') }}</flux:navlist.item>
+                    <flux:navlist.item icon="home" :href="route('clientes.create_completo')" :current="request()->routeIs('clientes.create-completo')" wire:navigate>{{ __('Cadastrar cliente') }}</flux:navlist.item>
                 </flux:navlist.group>
             </flux:navlist>
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('Produtos')" class="grid">
                     <flux:navlist.item icon="home" :href="route('produtos.index')" :current="request()->routeIs('produtos.index')" wire:navigate>{{ __('Listar produtos') }}</flux:navlist.item>
-               
+
                     <flux:navlist.item icon="home" :href="route('produtos.create')" :current="request()->routeIs('produtos.create')" wire:navigate>{{ __('Criar produto') }}</flux:navlist.item>
                 </flux:navlist.group>
             </flux:navlist>
