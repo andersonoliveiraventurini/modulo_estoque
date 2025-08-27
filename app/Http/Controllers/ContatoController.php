@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreEmailRequest;
-use App\Http\Requests\UpdateEmailRequest;
-use App\Models\Email;
+use App\Http\Requests\StoreContatoRequest;
+use App\Http\Requests\UpdateContatoRequest;
+use App\Models\Contato;
 
-class EmailController extends Controller
+class ContatoController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -27,7 +27,7 @@ class EmailController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreEmailRequest $request)
+    public function store(StoreContatoRequest $request)
     {
         //
     }
@@ -35,7 +35,7 @@ class EmailController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Email $email)
+    public function show(Contato $contato)
     {
         //
     }
@@ -43,7 +43,7 @@ class EmailController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Email $email)
+    public function edit(Contato $contato)
     {
         //
     }
@@ -51,7 +51,7 @@ class EmailController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateEmailRequest $request, Email $email)
+    public function update(UpdateContatoRequest $request, Contato $contato)
     {
         //
     }
@@ -59,7 +59,7 @@ class EmailController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Email $email)
+    public function destroy(Contato $contato)
     {
         //
     }
