@@ -20,7 +20,10 @@
                     <!-- Informações Pessoais -->
                     <div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                            <x-input name="nome" label="Nome/Nome Fantasia" placeholder="Digite o nome completo" required />
+                            <x-input name="nome" label="Nome" placeholder="Digite o nome completo" required />
+                            <x-input name="razao_social" label="Razão social" placeholder="Digite a razão social" required />
+                            <x-input name="nome_fantasia" label="Nome Fantasia" placeholder="Digite o nome fantasia" required />
+                            <x-input type="tratamento" name="tratamento" label="Tratamento *" placeholder="Apelido" required />
                             <x-input type="email" name="email" label="E-mail *" placeholder="cliente@email.com" required />
                             <x-input type="text" name="cnpj" label="CNPJ (opcional)" placeholder="00.000.000/0000-00" />
                         </div>
@@ -32,6 +35,12 @@
                             <x-input type="text" name="cpf" label="CPF (opcional)" placeholder="000.000.000-00"  />
                             <x-select name="vendedor_id" label="Vendedor Responsável" >
                                 <option value="">Selecione um vendedor</option>
+                                @foreach($vendedores as $v)
+                                    <option value="{{ $v->id }}">{{ $v->id }}</option>
+                                @endforeach
+                            </x-select>
+                            <x-select name="vendedor_id" label="Vendedor Externo" >
+                                <option value="">Selecione um vendedor externo</option>
                                 @foreach($vendedores as $v)
                                     <option value="{{ $v->id }}">{{ $v->id }}</option>
                                 @endforeach
@@ -76,6 +85,25 @@
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                             <x-input name="endereco" label="Endereço Completo" placeholder="Rua, número, complemento" />
+                        </div>
+                    </div>
+                    <br/>
+                    <!-- Endereço -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium flex items-center gap-2">
+                            <x-icon name="users" class="w-5 h-5 text-primary-600" />
+                            Endereço de entrega
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                            <x-input name="cep_entrega" label="CEP" placeholder="00000-000" />
+                            <x-input name="cidade_entrega" label="Cidade" placeholder="São Paulo" />
+                            <x-input name="estado_entrega" label="Estado" placeholder="SP" />
+                            <x-input name="bairro_entrega" label="Bairro" placeholder="Bairro" />
+                            <x-input name="numero_entrega" label="Número" placeholder="123" />
+                            <x-input name="complemento_entrega" label="Complemento" placeholder="Apto, Bloco, etc." />
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                            <x-input name="endereco_entrega" label="Endereço Completo" placeholder="Rua, número, complemento" />
                         </div>
                     </div>
                     <br/>
