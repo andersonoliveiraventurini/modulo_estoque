@@ -23,6 +23,12 @@
               <flux:navlist.item icon="home" :href="route('notas.create')" :current="request()->routeIs('notas.create')" wire:navigate>{{ __('Gerar nota') }}</flux:navlist.item>
        </flux:navlist.group>
             </flux:navlist>
+             <flux:navlist variant="outline">
+                <flux:navlist.group :heading="__('Fornecedores')" class="grid">
+                    <flux:navlist.item icon="home" :href="route('fornecedores.index')" :current="request()->routeIs('fornecedores.index')" wire:navigate>{{ __('Listar fornecedores') }}</flux:navlist.item>
+                    <flux:navlist.item icon="home" :href="route('fornecedores.create')" :current="request()->routeIs('fornecedores.create')" wire:navigate>{{ __('Cadastrar fornecedor') }}</flux:navlist.item>
+                 </flux:navlist.group>
+            </flux:navlist>
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('Clientes')" class="grid">
                     <flux:navlist.item icon="home" :href="route('clientes.index')" :current="request()->routeIs('clientes.index')" wire:navigate>{{ __('Listar clientes') }}</flux:navlist.item>
