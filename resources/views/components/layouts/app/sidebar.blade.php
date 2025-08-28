@@ -13,32 +13,7 @@
             <x-app-logo />
         </a>
 
-        <flux:navlist variant="outline">
-            <flux:navlist.group :heading="__('Financeiro')" class="grid">
-                <flux:navlist.item icon="home" :href="route('pedidos.index')"
-                    :current="request()->routeIs('pedidos.index')" wire:navigate>{{ __('Listar pedidos') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('orcamentos.index')"
-                    :current="request()->routeIs('orcamentos.index')" wire:navigate>{{ __('Listar orçamentos') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('orcamentos.create')"
-                    :current="request()->routeIs('orcamentos.create')" wire:navigate>{{ __('Gerar orçamento') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('vendas.index')"
-                    :current="request()->routeIs('vendas.index')" wire:navigate>{{ __('Listar vendas') }}
-                </flux:navlist.item>
 
-                <flux:navlist.item icon="home" :href="route('descontos.index')"
-                    :current="request()->routeIs('descontos.index')" wire:navigate>{{ __('Descontos') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('notas.index')"
-                    :current="request()->routeIs('notas.index')" wire:navigate>{{ __('Listar notas') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('notas.create')"
-                    :current="request()->routeIs('notas.create')" wire:navigate>{{ __('Gerar nota') }}
-                </flux:navlist.item>
-            </flux:navlist.group>
-        </flux:navlist>
         <flux:navlist variant="outline">
             <flux:navlist.group :heading="__('Fornecedores')" class="grid">
                 <flux:navlist.item icon="home" :href="route('fornecedores.index')"
@@ -88,6 +63,32 @@
                 </flux:navlist.item>
             </flux:navlist.group>
 
+        </flux:navlist>
+        <flux:navlist variant="outline">
+            <flux:navlist.group :heading="__('Financeiro')" class="grid">
+                <flux:navlist.item icon="home" :href="route('pedidos.index')"
+                                   :current="request()->routeIs('pedidos.index')" wire:navigate>{{ __('Listar pedidos') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="home" :href="route('orcamentos.index')"
+                                   :current="request()->routeIs('orcamentos.index')" wire:navigate>{{ __('Listar orçamentos') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="home" :href="route('orcamentos.create')"
+                                   :current="request()->routeIs('orcamentos.create')" wire:navigate>{{ __('Gerar orçamento') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="home" :href="route('vendas.index')"
+                                   :current="request()->routeIs('vendas.index')" wire:navigate>{{ __('Listar vendas') }}
+                </flux:navlist.item>
+
+                <flux:navlist.item icon="home" :href="route('descontos.index')"
+                                   :current="request()->routeIs('descontos.index')" wire:navigate>{{ __('Descontos') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="home" :href="route('notas.index')"
+                                   :current="request()->routeIs('notas.index')" wire:navigate>{{ __('Listar notas') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="home" :href="route('notas.create')"
+                                   :current="request()->routeIs('notas.create')" wire:navigate>{{ __('Gerar nota') }}
+                </flux:navlist.item>
+            </flux:navlist.group>
         </flux:navlist>
 
         <flux:spacer />

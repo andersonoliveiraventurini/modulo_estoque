@@ -18,6 +18,10 @@ async function buscarCNPJ() {
         document.querySelector('[name="nome_fantasia"]').value = data.nome_fantasia || "";
         document.querySelector('[name="email"]').value = data.email || "";
 
+        // campos especificios completo
+        document.querySelector('[name="data_abertura"]').value = data.data_inicio_atividade || "";
+        document.querySelector('[name="cnae"]').value = data.cnae_fiscal_descricao || "";
+
         // endereço
         document.getElementById("endereco_logradouro").value = data.logradouro || "";
         document.getElementById("endereco_bairro").value = data.bairro || "";

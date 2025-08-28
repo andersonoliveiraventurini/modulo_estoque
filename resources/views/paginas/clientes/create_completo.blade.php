@@ -54,17 +54,20 @@
                         <h3 class="text-lg font-medium">Classificação</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <x-select name="classificacao" label="Classificação">
+                                <option value="">Selecione</option>
                                 <option>Distribuidor</option>
                                 <option>Revenda</option>
                                 <option>Construtora</option>
                                 <option>Consumidor Final</option>
                             </x-select>
                             <x-select name="canal_origem" label="Canal de Origem">
+                                <option value="">Selecione</option>
                                 <option>Indicação</option>
                                 <option>Marketing</option>
                                 <option>Visita</option>
                             </x-select>
                             <x-select name="status" label="Status">
+                                <option value="">Selecione</option>
                                 <option value="ativo">Ativo</option>
                                 <option value="inativo">Inativo</option>
                                 <option value="bloqueado">Bloqueado</option>
@@ -97,7 +100,6 @@
                         </div>
                         <br />
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-checkbox name="credito_a_vista" label="À Vista" />
                             <x-input type="number" step="0.01" name="limite_boleto" label="Limite Boleto (R$)" />
                             <x-input type="number" step="0.01" name="limite_carteira"
                                 label="Limite Carteira (R$)" />
@@ -108,9 +110,17 @@
                                 label="Data Vencimento da Análise" />
                         </div>
                         <x-textarea name="historico_credito" label="Histórico de Análise de Crédito" />
-                        <x-checkbox name="nao_negociar_titulos" label="Não aceitar negociar títulos" />
+                        <x-select name="negociar_titulos" label="Aceitar negociar títulos">
+                            <option value="">Selecione</option>
+                            <option value="0">Não</option>
+                            <option value="1">Sim</option>
+                        </x-select>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-checkbox name="bloqueio" label="Bloqueado" />
+                            <x-select name="bloqueado" label="Bloqueado">
+                                <option value="">Selecione</option>
+                                <option value="0">Não</option>
+                                <option value="1">Sim</option>
+                            </x-select>
                             <x-input name="motivo_bloqueio" label="Motivo do Bloqueio" />
                             <x-input type="date" name="data_bloqueio" label="Data Bloqueio" />
                         </div>
