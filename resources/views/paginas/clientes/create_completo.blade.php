@@ -1,9 +1,9 @@
-<x-layouts.app :title="__('Cadastrar cliente - completo')">
+<x-layouts.app :title="__('Cadastrar cliente')">
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-
-            <div class="bg-white p-6 shadow rounded-2xl border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-                  
+            <!-- Informações Básicas -->
+            <div
+                class="bg-white p-6  shadow rounded-2xl border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
                 <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
                     <x-icon name="user" class="w-5 h-5 text-primary-600" />
                     Cadastro de Cliente
@@ -12,30 +12,25 @@
                     Preencha as informações do cliente para realizar o cadastro.
                 </p>
 
-                <form action="{{ route('clientes.store') }}" method="POST" enctype="multipart/form-data" class="space-y-10">
+                <form action="{{ route('clientes.store') }}" method="POST" class="space-y-8">
                     @csrf
 
-                    <!-- ==========================
-                         DADOS DO CLIENTE (PJ)
-                    =========================== -->
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-medium">Dados do Cliente (Pessoa Jurídica)</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-input name="razao_social" label="Razão Social *" />
-                            <x-input name="nome_fantasia" label="Nome Fantasia" />
-                            <x-input name="tratamento" label="Tratamento" />
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-input name="desconto" label="Desconto (%)" type="number" step="0.01"/>
-                            <x-input name="cnpj" label="CNPJ *" placeholder="00.000.000/0000-00"/>
-                            <x-input name="inscricao_estadual" label="Inscrição Estadual"/>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-input name="inscricao_municipal" label="Inscrição Municipal"/>
-                            <x-input type="date" name="data_abertura" label="Data de Abertura"/>
-                            <x-input name="cnae" label="CNAE Principal"/>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Informações Pessoais -->
+                    <div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                            <x-input id="cnpj" type="text" name="cnpj" label="CNPJ (opcional)"
+                                placeholder="00.000.000/0000-00" />
+                            <x-input name="nome" label="Nome" placeholder="Digite o nome completo" required />
+                            <x-input id="razao_social" name="razao_social" label="Razão social"
+                                placeholder="Digite a razão social" required />
+                            <x-input id="nome_fantasia" name="nome_fantasia" label="Nome Fantasia"
+                                placeholder="Digite o nome fantasia" required />
+                            <x-input type="text" name="tratamento" label="Tratamento *" placeholder="Apelido"
+                                required />
+                            <x-input name="inscricao_estadual" label="Inscrição Estadual" /> <x-input
+                                name="inscricao_municipal" label="Inscrição Municipal" />
+                            <x-input type="date" name="data_abertura" label="Data de Abertura" />
+                            <x-input name="cnae" label="CNAE Principal" />
                             <x-select name="regime_tributario" label="Regime Tributário">
                                 <option value="simples">Simples Nacional</option>
                                 <option value="lucro_presumido">Lucro Presumido</option>
@@ -44,46 +39,13 @@
                         </div>
                     </div>
 
-                    <!-- Endereço -->
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-medium">Endereço</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-input name="cep" label="CEP"/>
-                            <x-input name="cidade" label="Cidade"/>
-                            <x-input name="estado" label="Estado"/>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <x-input name="endereco" label="Endereço Completo"/>
-                            <x-input name="endereco_entrega" label="Endereço de Entrega"/>
-                        </div>
-                    </div>
-
-                    <!-- Contatos -->
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-medium">Contatos</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-input name="contato" label="Contato"/>
-                            <x-input name="funcao_contato" label="Função do Contato"/>
-                            <x-input name="contato_financeiro" label="Contato Financeiro"/>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-input name="telefone_empresa" label="Telefone Empresa"/>
-                            <x-input name="telefone_contato" label="Telefone Contato"/>
-                            <x-input name="telefone_financeiro" label="Telefone Financeiro"/>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <x-input type="email" name="email_xml" label="E-mail XML"/>
-                            <x-input type="email" name="email_cobranca" label="E-mail Cobrança"/>
-                        </div>
-                    </div>
-
                     <!-- Responsável e Documentos -->
                     <div class="space-y-4">
                         <h3 class="text-lg font-medium">Responsável Legal</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-input name="cpf_responsavel" label="CPF do Responsável"/>
-                            <x-input type="file" name="certidoes_negativas" label="Certidões Negativas"/>
-                            <x-input name="suframa" label="Inscrição SUFRAMA (se aplicável)"/>
+                            <x-input name="cpf_responsavel" label="CPF do Responsável" />
+                            <x-input type="file" name="certidoes_negativas" label="Certidões Negativas" />
+                            <x-input name="suframa" label="Inscrição SUFRAMA (se aplicável)" />
                         </div>
                     </div>
 
@@ -108,111 +70,168 @@
                                 <option value="bloqueado">Bloqueado</option>
                             </x-select>
                         </div>
-                        <x-input type="number" name="inativar_apos" label="Inativar automaticamente após (meses sem comprar)"/>
+                        <x-input type="number" name="inativar_apos"
+                            label="Inativar automaticamente após (meses sem comprar)" />
                     </div>
 
                     <!-- Informações de Crédito -->
                     <div class="space-y-4">
                         <h3 class="text-lg font-medium">Informações de Crédito</h3>
+                        <!-- Documentação -->
+                        <div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                                <x-select name="vendedor_id" label="Vendedor Responsável">
+                                    <option value="">Selecione um vendedor</option>
+                                    @foreach ($vendedores as $v)
+                                        <option value="{{ $v->id }}">{{ $v->id }}</option>
+                                    @endforeach
+                                </x-select>
+                                <x-select name="vendedor_externo_id" label="Vendedor Externo">
+                                    <option value="">Selecione um vendedor externo</option>
+                                    @foreach ($vendedores as $v)
+                                        <option value="{{ $v->id }}">{{ $v->id }}</option>
+                                    @endforeach
+                                </x-select>
+                                <x-input name="desconto" label="Desconto (%)" type="number" step="0.01" />
+                            </div>
+                        </div>
+                        <br />
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-checkbox name="credito_a_vista" label="À Vista"/>
-                            <x-input type="number" step="0.01" name="limite_boleto" label="Limite Boleto (R$)"/>
-                            <x-input type="number" step="0.01" name="limite_carteira" label="Limite Carteira (R$)"/>
+                            <x-checkbox name="credito_a_vista" label="À Vista" />
+                            <x-input type="number" step="0.01" name="limite_boleto" label="Limite Boleto (R$)" />
+                            <x-input type="number" step="0.01" name="limite_carteira"
+                                label="Limite Carteira (R$)" />
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <x-input type="date" name="data_ultima_analise" label="Data da Última Análise"/>
-                            <x-input type="date" name="data_vencimento_analise" label="Data Vencimento da Análise"/>
+                            <x-input type="date" name="data_ultima_analise" label="Data da Última Análise" />
+                            <x-input type="date" name="data_vencimento_analise"
+                                label="Data Vencimento da Análise" />
                         </div>
-                        <x-textarea name="historico_credito" label="Histórico de Análise de Crédito"/>
-                        <x-checkbox name="nao_negociar_titulos" label="Não aceitar negociar títulos"/>
+                        <x-textarea name="historico_credito" label="Histórico de Análise de Crédito" />
+                        <x-checkbox name="nao_negociar_titulos" label="Não aceitar negociar títulos" />
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-checkbox name="bloqueio" label="Bloqueado"/>
-                            <x-input name="motivo_bloqueio" label="Motivo do Bloqueio"/>
-                            <x-input type="date" name="data_bloqueio" label="Data Bloqueio"/>
+                            <x-checkbox name="bloqueio" label="Bloqueado" />
+                            <x-input name="motivo_bloqueio" label="Motivo do Bloqueio" />
+                            <x-input type="date" name="data_bloqueio" label="Data Bloqueio" />
                         </div>
                     </div>
 
                     <!-- Observações -->
                     <div>
-                        <x-textarea name="observacoes" label="Observações" placeholder="Informações adicionais..."/>
+                        <x-textarea name="observacoes" label="Observações" placeholder="Informações adicionais..." />
                     </div>
+                    <!-- Contatos da Empresa -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium flex items-center gap-2">
+                            <x-icon name="users" class="w-5 h-5 text-primary-600" />
+                            Contatos
+                        </h3>
 
+                        <div id="contatos-wrapper" class="space-y-4">
+                            <div
+                                class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-xl dark:border-neutral-700 relative">
+                                <x-input name="contatos[0][nome]" label="Nome" placeholder="Nome da pessoa" />
+                                <x-input name="contatos[0][telefone]" label="Telefone"
+                                    placeholder="(11) 99999-9999" />
+                                <x-input name="contatos[0][email]" label="E-mail"
+                                    placeholder="contato@empresa.com" />
+                            </div>
+                        </div>
+
+                        <x-button type="button" onclick="addContato()">
+                            + Adicionar Contato
+                        </x-button>
+                    </div>
+                    <br />
+                    <!-- Endereço -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium flex items-center gap-2">
+                            <x-icon name="users" class="w-5 h-5 text-primary-600" />
+                            Endereço do cliente
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                            <x-input id="endereco_cep" name="endereco_cep" label="CEP" placeholder="00000-000"
+                                onblur="pesquisacep(this.value);" onkeypress="mascara(this, '#####-###')"
+                                size="10" maxlength="9" value="{{ old('endereco_cep') }}" />
+                            <x-input id="endereco_cidade" name="endereco_cidade" label="Cidade" readonly="readonly"
+                                placeholder="Cidade" value="{{ old('endereco_cidade') }}" />
+                            <x-input id="endereco_estado" name="endereco_estado" label="Estado" placeholder="Estado"
+                                readonly="readonly" value="{{ old('endereco_estado') }}" />
+                            <x-input id="endereco_bairro" name="endereco_bairro" label="Bairro" placeholder="Bairro"
+                                readonly="readonly" value="{{ old('endereco_bairro') }}" />
+                            <x-input id="endereco_numero" name="endereco_numero" label="Número" placeholder="N°"
+                                value="{{ old('endereco_numero') }}" />
+                            <x-input id="endereco_compl" name="endereco_compl" label="Complemento"
+                                placeholder="Complemento - Apto, Bloco, etc." value="{{ old('endereco_compl') }}" />
+                        </div>
+                        <x-input id="endereco_logradouro" name="endereco_logradouro" label="Logradouro"
+                            placeholder="Rua, número, complemento" readonly="readonly"
+                            value="{{ old('endereco_logradouro') }}" />
+                    </div>
+                    <br />
+
+                    <!-- Endereço de entrega -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium flex items-center gap-2">
+                            <x-icon name="users" class="w-5 h-5 text-primary-600" />
+                            Endereço de entrega
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                            <x-input id="entrega_cep" name="entrega_cep" label="CEP" placeholder="00000-000"
+                                onblur="pesquisacepentrega(this.value);" onkeypress="mascara(this, '#####-###')"
+                                size="10" maxlength="9" value="{{ old('entrega_cep') }}" />
+                            <x-input id="entrega_cidade" name="entrega_cidade" label="Cidade" readonly="readonly"
+                                placeholder="Cidade" value="{{ old('entrega_cidade') }}" />
+                            <x-input id="entrega_estado" name="entrega_estado" label="Estado" placeholder="Estado"
+                                readonly="readonly" value="{{ old('entrega_estado') }}" />
+                            <x-input id="entrega_bairro" name="entrega_bairro" label="Bairro" placeholder="Bairro"
+                                readonly="readonly" value="{{ old('entrega_bairro') }}" />
+                            <x-input id="entrega_numero" name="entrega_numero" label="Número" placeholder="N°"
+                                value="{{ old('entrega_numero') }}" />
+                            <x-input id="entrega_compl" name="entrega_compl" label="Complemento"
+                                placeholder="Complemento - Apto, Bloco, etc." value="{{ old('entrega_compl') }}" />
+                        </div>
+                        <x-input id="entrega_logradouro" name="entrega_logradouro" label="Logradouro"
+                            placeholder="Rua, número, complemento" readonly="readonly"
+                            value="{{ old('entrega_logradouro') }}" />
+                    </div>
+                    <br />
                     <!-- Ações -->
                     <div class="flex gap-4">
                         <x-button type="submit" class="bg-primary-600 text-white">Cadastrar Cliente</x-button>
-                        <x-button type="reset">Limpar</x-button>
+                        <x-button type="reset">Limpar Formulário</x-button>
                     </div>
+                    <!-- Botões -->
                 </form>
             </div>
         </div>
     </div>
 
+    <script src="{{ asset('js/valida.js') }}"></script>
+
     <script>
-        async function buscarCNPJ() {
-    const cnpj = document.querySelector('[name="cnpj"]').value.replace(/\D/g, ""); // remove caracteres não numéricos
+        let contatoIndex = 1;
 
-    if (!cnpj) {
-        alert("Digite um CNPJ válido");
-        return;
-    }
+        function addContato() {
+            const wrapper = document.getElementById('contatos-wrapper');
+            const div = document.createElement('div');
+            div.classList = "grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-xl dark:border-neutral-700 relative";
+            div.innerHTML = `
+            <x-input name="contatos[\${contatoIndex}][nome]" label="Nome" placeholder="Nome da pessoa" />
+            <x-input name="contatos[\${contatoIndex}][telefone]" label="Telefone" placeholder="(11) 99999-9999" />
+            <x-input name="contatos[\${contatoIndex}][email]" label="E-mail" placeholder="contato@empresa.com" />
 
-    try {
-        const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
-        if (!response.ok) throw new Error("Erro ao consultar CNPJ");
-
-        const data = await response.json();
-
-        // Dados principais
-        document.querySelector('[name="razao_social"]').value = data.razao_social || "";
-        document.querySelector('[name="nome_fantasia"]').value = data.nome_fantasia || "";
-        document.querySelector('[name="cnae"]').value = data.cnae_fiscal_descricao || "";
-        document.querySelector('[name="data_abertura"]').value = data.data_inicio_atividade || "";
-
-        // Endereço
-        document.querySelector('[name="cep"]').value = data.cep || "";
-        document.querySelector('[name="cidade"]').value = data.municipio || "";
-        document.querySelector('[name="estado"]').value = data.uf || "";
-        document.querySelector('[name="endereco"]').value = 
-            `${data.descricao_tipo_de_logradouro || ""} ${data.logradouro || ""}, ${data.numero || ""} ${data.complemento || ""}`.trim();
-
-        // Telefones (a API retorna até dois)
-        document.querySelector('[name="telefone_empresa"]').value = data.ddd_telefone_1 || "";
-        document.querySelector('[name="telefone_contato"]').value = data.ddd_telefone_2 || "";
-
-        // Emails
-        document.querySelector('[name="email_xml"]').value = data.email || "";
-
-        // Regime tributário (simplificado: escolhe o primeiro válido)
-        if (data.regime_tributario && data.regime_tributario.length > 0) {
-            const regime = data.regime_tributario[0].forma_de_tributacao?.toLowerCase();
-            const select = document.querySelector('[name="regime_tributario"]');
-            if (select) {
-                if (regime.includes("simples")) {
-                    select.value = "simples";
-                } else if (regime.includes("presumido")) {
-                    select.value = "lucro_presumido";
-                } else if (regime.includes("real")) {
-                    select.value = "lucro_real";
-                }
-            }
+            <!-- Botão de excluir -->
+            <button type="button" onclick="removeContato(this)"
+                class="absolute top-2 right-2 text-red-600 hover:text-red-800">
+                <x-icon name="trash" class="w-5 h-5" />
+            </button>`;
+            wrapper.appendChild(div);
+            contatoIndex++;
         }
 
-        // Responsável legal (primeiro da lista QSA)
-        if (data.qsa && data.qsa.length > 0) {
-            document.querySelector('[name="cpf_responsavel"]').value = data.qsa[0].cnpj_cpf_do_socio || "";
+        function removeContato(button) {
+            button.closest('div').remove();
         }
-
-    } catch (err) {
-        alert("Erro: " + err.message);
-    }
-}
-
-// opcional: chama a função quando sair do campo CNPJ
-document.addEventListener("DOMContentLoaded", () => {
-    const cnpjInput = document.querySelector('[name="cnpj"]');
-    if (cnpjInput) {
-        cnpjInput.addEventListener("blur", buscarCNPJ);
-    }
-});
-</script>
+    </script>
 </x-layouts.app>
