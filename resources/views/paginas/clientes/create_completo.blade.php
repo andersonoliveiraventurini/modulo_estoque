@@ -18,7 +18,7 @@
                     <!-- Informações Pessoais -->
                     <div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                            <x-input id="cnpj" type="text" name="cnpj" label="CNPJ (opcional)"
+                            <x-input id="cnpj" type="text" name="cnpj" label="CNPJ"
                                 placeholder="00.000.000/0000-00" />
                             <x-input name="nome" label="Nome" placeholder="Digite o nome completo" required />
                             <x-input id="razao_social" name="razao_social" label="Razão social"

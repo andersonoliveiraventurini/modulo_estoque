@@ -2,10 +2,8 @@
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
             <!-- Informações Básicas -->
-
             <div
                 class="bg-white p-6  shadow rounded-2xl border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-
                 <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
                     <x-icon name="user" class="w-5 h-5 text-primary-600" />
                     Cadastro de Cliente
@@ -16,13 +14,12 @@
 
                 <form action="{{ route('clientes.store') }}" method="POST" class="space-y-8">
                     @csrf
-
                     <!-- Informações Pessoais -->
                     <div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                            <x-input id="cnpj" type="text" name="cnpj" label="CNPJ (opcional)"
+                            <x-input id="cnpj" type="text" name="cnpj" label="CNPJ"
                                 placeholder="00.000.000/0000-00" />
-                            <x-input type="text" name="cpf" label="CPF (opcional)"
+                            <x-input type="text" name="cpf" label="CPF"
                                 placeholder="000.000.000-00" />
                             <x-input name="nome" label="Nome" placeholder="Digite o nome completo" required />
                             <x-input id="razao_social" name="razao_social" label="Razão social"
@@ -33,7 +30,6 @@
                                 required />
                         </div>
                     </div>
-
                     <!-- Documentação -->
                     <div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
@@ -58,7 +54,6 @@
                             <x-icon name="users" class="w-5 h-5 text-primary-600" />
                             Contatos
                         </h3>
-
                         <div id="contatos-wrapper" class="space-y-4">
                             <div
                                 class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-xl dark:border-neutral-700 relative">
