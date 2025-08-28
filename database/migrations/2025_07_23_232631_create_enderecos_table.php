@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::create('enderecos', function (Blueprint $table) {
             $table->id();
-            $table->string('logradouro');
-            $table->string('numero');
+            $table->string('logradouro')->nullable();
+            $table->string('numero')->nullable();
             $table->string('complemento')->nullable();
-            $table->string('bairro');
-            $table->string('cidade');
-            $table->string('estado');
-            $table->string('cep');
+            $table->string('bairro')->nullable();
+            $table->string('cidade')->nullable();
+            $table->string('estado')->nullable();
+            $table->string('cep')->nullable();
             $table->unsignedBigInteger('cliente_id')->nullable()
                   ->comment('Referência ao cliente associado a este endereço.');
             $table->foreign('cliente_id')->references('id')->on('clientes')->onDelete('cascade');

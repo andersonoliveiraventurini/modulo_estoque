@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('fornecedores', function (Blueprint $table) {
             $table->id();
             $table->integer('linha_brcom')->nullable();
-            $table->string('nome_fantasia');
+            $table->string('nome_fantasia')->nullable();
             $table->text('descricao')->nullable();
             $table->text('observacao')->nullable();
             $table->string('email')->nullable();           
