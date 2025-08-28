@@ -9,18 +9,16 @@ use Livewire\Volt\Volt;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\FornecedorController;
 use App\Http\Controllers\ProdutoController;
-use App\Http\Controllers\TelefoneController;
 use App\Http\Controllers\EnderecoController;
 use App\Http\Controllers\VendaController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\DescontoController;
 use App\Http\Controllers\RdstationController;
 use App\Http\Controllers\OrcamentoController;
-use App\Http\Controllers\EmailController;
 use App\Http\Controllers\ArmazemController;
 use App\Http\Controllers\NcmController;
 use App\Http\Controllers\NotaFiscalController;
-use App\Models\NotaFiscal;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -45,24 +43,17 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('blocok/items', BlocokItemController::class)->names('blocok.items');
     Route::resource('blocok', BlocokController::class)->names('blocok');
 
-
     Route::resource('vendas', VendaController::class)->names('vendas');
     Route::resource('pedidos', PedidoController::class)->names('pedidos');
     Route::resource('orcamentos', OrcamentoController::class)->names('orcamentos');
     Route::resource('notas', NotaFiscalController::class)->names('notas');
 
-
     Route::resource('clientes', ClienteController::class)->names('clientes');
     Route::get('cliente/create_completo', [ClienteController::class, 'create_completo'])->name('clientes.create_completo');
     Route::resource('fornecedores', FornecedorController::class)->names('fornecedores');
-    Route::resource('telefones', TelefoneController::class)->names('telefones');
     Route::resource('enderecos', EnderecoController::class)->names('enderecos');
     Route::resource('descontos', DescontoController::class)->names('descontos');
-    Route::resource('emails', EmailController::class)->names('emails');
     Route::resource('armazens', ArmazemController::class)->names('armazens');
-
-
-
 
     Route::get('rdstation/checar-token', [RdstationController::class, 'checarToken'])->name('rdstation.checar-token');
     Route::get('rdstation/listar-empresas', [RdstationController::class, 'listarEmpresas'])->name('rdstation.listar-empresas');

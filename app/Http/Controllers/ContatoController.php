@@ -2,19 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreTelefoneRequest;
-use App\Http\Requests\UpdateTelefoneRequest;
-use App\Models\Telefone;
+use App\Http\Requests\StoreContatoRequest;
+use App\Http\Requests\UpdateContatoRequest;
+use App\Models\Contato;
 
-class TelefoneController extends Controller
+class ContatoController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $telefones = Telefone::paginate();
-        return view('paginas.telefones.index', compact('telefones'));
+        //
     }
 
     /**
@@ -28,7 +27,7 @@ class TelefoneController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreTelefoneRequest $request)
+    public function store(StoreContatoRequest $request)
     {
         //
     }
@@ -36,7 +35,7 @@ class TelefoneController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Telefone $telefone)
+    public function show(Contato $contato)
     {
         //
     }
@@ -44,7 +43,7 @@ class TelefoneController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Telefone $telefone)
+    public function edit(Contato $contato)
     {
         //
     }
@@ -52,7 +51,7 @@ class TelefoneController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateTelefoneRequest $request, Telefone $telefone)
+    public function update(UpdateContatoRequest $request, Contato $contato)
     {
         //
     }
@@ -60,7 +59,7 @@ class TelefoneController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Telefone $telefone)
+    public function destroy(Contato $contato)
     {
         //
     }

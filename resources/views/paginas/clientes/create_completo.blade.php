@@ -146,4 +146,73 @@
             </div>
         </div>
     </div>
+
+    <script>
+        async function buscarCNPJ() {
+    const cnpj = document.querySelector('[name="cnpj"]').value.replace(/\D/g, ""); // remove caracteres não numéricos
+
+    if (!cnpj) {
+        alert("Digite um CNPJ válido");
+        return;
+    }
+
+    try {
+        const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
+        if (!response.ok) throw new Error("Erro ao consultar CNPJ");
+
+        const data = await response.json();
+
+        // Dados principais
+        document.querySelector('[name="razao_social"]').value = data.razao_social || "";
+        document.querySelector('[name="nome_fantasia"]').value = data.nome_fantasia || "";
+        document.querySelector('[name="cnae"]').value = data.cnae_fiscal_descricao || "";
+        document.querySelector('[name="data_abertura"]').value = data.data_inicio_atividade || "";
+
+        // Endereço
+        document.querySelector('[name="cep"]').value = data.cep || "";
+        document.querySelector('[name="cidade"]').value = data.municipio || "";
+        document.querySelector('[name="estado"]').value = data.uf || "";
+        document.querySelector('[name="endereco"]').value = 
+            `${data.descricao_tipo_de_logradouro || ""} ${data.logradouro || ""}, ${data.numero || ""} ${data.complemento || ""}`.trim();
+
+        // Telefones (a API retorna até dois)
+        document.querySelector('[name="telefone_empresa"]').value = data.ddd_telefone_1 || "";
+        document.querySelector('[name="telefone_contato"]').value = data.ddd_telefone_2 || "";
+
+        // Emails
+        document.querySelector('[name="email_xml"]').value = data.email || "";
+
+        // Regime tributário (simplificado: escolhe o primeiro válido)
+        if (data.regime_tributario && data.regime_tributario.length > 0) {
+            const regime = data.regime_tributario[0].forma_de_tributacao?.toLowerCase();
+            const select = document.querySelector('[name="regime_tributario"]');
+            if (select) {
+                if (regime.includes("simples")) {
+                    select.value = "simples";
+                } else if (regime.includes("presumido")) {
+                    select.value = "lucro_presumido";
+                } else if (regime.includes("real")) {
+                    select.value = "lucro_real";
+                }
+            }
+        }
+
+        // Responsável legal (primeiro da lista QSA)
+        if (data.qsa && data.qsa.length > 0) {
+            document.querySelector('[name="cpf_responsavel"]').value = data.qsa[0].cnpj_cpf_do_socio || "";
+        }
+
+    } catch (err) {
+        alert("Erro: " + err.message);
+    }
+}
+
+// opcional: chama a função quando sair do campo CNPJ
+document.addEventListener("DOMContentLoaded", () => {
+    const cnpjInput = document.querySelector('[name="cnpj"]');
+    if (cnpjInput) {
+        cnpjInput.addEventListener("blur", buscarCNPJ);
+    }
+});
+</script>
 </x-layouts.app>
