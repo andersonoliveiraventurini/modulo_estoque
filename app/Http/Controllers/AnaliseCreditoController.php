@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreAnaliseCreditoRequest;
 use App\Http\Requests\UpdateAnaliseCreditoRequest;
 use App\Models\AnaliseCredito;
+use App\Models\Cliente;
 
 class AnaliseCreditoController extends Controller
 {
@@ -13,15 +14,17 @@ class AnaliseCreditoController extends Controller
      */
     public function index()
     {
-        //
+        $analises = AnaliseCredito::all();
+        return view('paginas.analise_credito.index', compact('analises'));
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create($cliente_id)
     {
-        //
+        $cliente = Cliente::find($cliente_id);
+        return view('paginas.analise_credito.create', compact('cliente'));
     }
 
     /**

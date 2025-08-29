@@ -33,9 +33,6 @@
                 <flux:navlist.item icon="home" :href="route('clientes.index')"
                     :current="request()->routeIs('clientes.index')" wire:navigate>{{ __('Listar clientes') }}
                 </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('bloqueios.create')"
-                    :current="request()->routeIs('bloqueios.create')" wire:navigate>{{ __('Bloquear cliente') }}
-                </flux:navlist.item>
                 <flux:navlist.item icon="home" :href="route('bloqueios.index')"
                     :current="request()->routeIs('bloqueios.index')" wire:navigate>{{ __('Clientes bloqueados') }}
                 </flux:navlist.item>
@@ -84,10 +81,6 @@
         </flux:navlist>
         <flux:navlist variant="outline">
             <flux:navlist.group :heading="__('Financeiro')" class="grid">
-                <flux:navlist.item icon="home" :href="route('analise_creditos.create')"
-                    :current="request()->routeIs('analise_creditos.create')" wire:navigate>
-                    {{ __('Analisar crédito') }}
-                </flux:navlist.item>
                 <flux:navlist.item icon="home" :href="route('analise_creditos.index')"
                     :current="request()->routeIs('analise_creditos.index')" wire:navigate>
                     {{ __('Análises de crédito') }}

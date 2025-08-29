@@ -11,9 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('vendedors', function (Blueprint $table) {
+        Schema::create('vendedores', function (Blueprint $table) {
             $table->id();
+            // quem deu o desconto
+            $table->unsignedBigInteger('user_id')->nullable()
+                    ->comment('Referência ao usuário que aplicou o desconto, se houver.');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->string('desconto')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -22,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('vendedors');
+        Schema::dropIfExists('vendedores');
     }
 };
