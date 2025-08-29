@@ -19,7 +19,7 @@
                     <div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                             <x-input id="cnpj" type="text" name="cnpj" label="CNPJ"
-                                placeholder="00.000.000/0000-00" />
+                                placeholder="00.000.000/0000-00" onblur="buscarCNPJ(this.value);" />
                             <x-input name="nome" label="Nome" placeholder="Digite o nome completo" required />
                             <x-input id="razao_social" name="razao_social" label="Razão social"
                                 placeholder="Digite a razão social" required />
@@ -32,6 +32,7 @@
                             <x-input type="date" name="data_abertura" label="Data de Abertura" />
                             <x-input name="cnae" label="CNAE Principal" />
                             <x-select name="regime_tributario" label="Regime Tributário">
+                                <option value="">Selecione</option>
                                 <option value="simples">Simples Nacional</option>
                                 <option value="lucro_presumido">Lucro Presumido</option>
                                 <option value="lucro_real">Lucro Real</option>

@@ -11,14 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('documentos', function (Blueprint $table) {
+        Schema::create('analise_creditos', function (Blueprint $table) {
             $table->id();
-            // quem criou
-            $table->unsignedBigInteger('user_id')->nullable()
-                    ->comment('Referência ao usuário que aplicou o desconto, se houver.');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
@@ -27,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('documentos');
+        Schema::dropIfExists('analise_creditos');
     }
 };

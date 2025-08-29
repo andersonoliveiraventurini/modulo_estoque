@@ -1,5 +1,3 @@
-
-
 async function buscarCNPJ() {
     const cnpj = document.getElementById("cnpj").value.replace(/\D/g, "");
     if (cnpj.length !== 14) {
@@ -16,8 +14,7 @@ async function buscarCNPJ() {
         // dados principais
         document.querySelector('[name="razao_social"]').value = data.razao_social || "";
         document.querySelector('[name="nome_fantasia"]').value = data.nome_fantasia || "";
-        document.querySelector('[name="email"]').value = data.email || "";
-
+        
         // campos especificios completo
         document.querySelector('[name="data_abertura"]').value = data.data_inicio_atividade || "";
         document.querySelector('[name="cnae"]').value = data.cnae_fiscal_descricao || "";
@@ -29,7 +26,54 @@ async function buscarCNPJ() {
         document.getElementById("endereco_estado").value = data.uf || "";
         document.getElementById("endereco_cep").value = data.cep || "";
       
+        // Contato
+        if (data.ddd_telefone_1) {
+            const telefone = `(${data.ddd_telefone_1.substring(0, 2)}) ${data.ddd_telefone_1.substring(2)}`;
+            document.querySelector("[name='contatos[0][telefone]']").value = telefone;
+        }
+        if (data.email) {
+            document.querySelector("[name='contatos[0][email]']").value = data.email;
+        }
 
+        // Opcional: sócios (primeiro da lista)
+        if (data.qsa && data.qsa.length > 0) {
+            document.querySelector("[name='contatos[0][nome]']").value = data.qsa[0].nome_socio || "";
+        }
+
+    } catch (err) {
+        alert("Erro: " + err.message);
+    }
+}
+
+async function buscarCNPJ_precadastro() {
+    const cnpj = document.getElementById("cnpj").value.replace(/\D/g, "");
+    if (cnpj.length !== 14) {
+        alert("CNPJ inválido!");
+        return;
+    }
+
+    try {
+        const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
+        if (!response.ok) throw new Error("Erro ao consultar CNPJ");
+
+        const data = await response.json();
+
+        // dados principais
+        document.querySelector('[name="razao_social"]').value = data.razao_social || "";
+        document.querySelector('[name="nome_fantasia"]').value = data.nome_fantasia || "";
+        //document.querySelector('[name="email"]').value = data.email || "";
+
+        // campos especificios completo
+        //document.querySelector('[name="data_abertura"]').value = data.data_inicio_atividade || "";
+        //document.querySelector('[name="cnae"]').value = data.cnae_fiscal_descricao || "";
+
+        // endereço
+        document.getElementById("endereco_logradouro").value = data.logradouro || "";
+        document.getElementById("endereco_bairro").value = data.bairro || "";
+        document.getElementById("endereco_cidade").value = data.municipio || "";
+        document.getElementById("endereco_estado").value = data.uf || "";
+        document.getElementById("endereco_cep").value = data.cep || "";
+      
         // Contato
         if (data.ddd_telefone_1) {
             const telefone = `(${data.ddd_telefone_1.substring(0, 2)}) ${data.ddd_telefone_1.substring(2)}`;
