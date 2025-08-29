@@ -43,13 +43,11 @@
                 <flux:navlist.item icon="home" :href="route('produtos.index')"
                     :current="request()->routeIs('produtos.index')" wire:navigate>{{ __('Listar produtos') }}
                 </flux:navlist.item>
-
                 <flux:navlist.item icon="home" :href="route('produtos.create')"
                     :current="request()->routeIs('produtos.create')" wire:navigate>{{ __('Criar produto') }}
                 </flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist>
-
         <flux:navlist variant="outline">
             <flux:navlist.group :heading="__('RD Station')" class="grid">
                 <flux:navlist.item icon="home" :href="route('rdstation.checar-token')"
@@ -63,7 +61,6 @@
                     {{ __('Negociações') }}
                 </flux:navlist.item>
             </flux:navlist.group>
-
         </flux:navlist>
 
         <flux:navlist variant="outline">
