@@ -1,4 +1,4 @@
-<x-layouts.app :title="__('Cadastrar cliente')">
+<x-layouts.app :title="__('Análise cliente')">
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
             <!-- Informações Básicas -->
@@ -6,52 +6,39 @@
                 class="bg-white p-6  shadow rounded-2xl border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
                 <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
                     <x-icon name="user" class="w-5 h-5 text-primary-600" />
-                    Cadastro de Cliente
+                    Análise de Cliente
                 </h2>
                 <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
-                    Preencha as informações do cliente para realizar o cadastro.
+                    Preencha as informações do cliente para realizar a análise.
                 </p>
 
-                <form action="{{ route('clientes.store') }}" method="POST" class="space-y-8">
+                <form action="{{ route('analise_credito.store') }}" method="POST" class="space-y-8">
                     @csrf
 
                     <!-- Informações Pessoais -->
                     <div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                            <x-input id="cnpj" type="text" name="cnpj" label="CNPJ"
-                                placeholder="00.000.000/0000-00" onblur="buscarCNPJ(this.value);" />
-                            <x-input id="razao_social" name="razao_social" label="Razão social"
-                                placeholder="Digite a razão social" required />
-                            <x-input id="nome_fantasia" name="nome_fantasia" label="Nome Fantasia"
-                                placeholder="Digite o nome fantasia" required />
-                            <x-input type="text" name="tratamento" label="Tratamento *" placeholder="Apelido"
-                                required />
-                            <x-input name="inscricao_estadual" label="Inscrição Estadual" /> <x-input
-                                name="inscricao_municipal" label="Inscrição Municipal" />
-                            <x-input type="date" name="data_abertura" label="Data de Abertura" />
-                            <x-input name="cnae" label="CNAE Principal" />
-                            <x-select name="regime_tributario" label="Regime Tributário">
+                            <x-select name="cliente_id" label="Cliente">
                                 <option value="">Selecione</option>
-                                <option value="simples">Simples Nacional</option>
-                                <option value="lucro_presumido">Lucro Presumido</option>
-                                <option value="lucro_real">Lucro Real</option>
+                                @foreach ($clientes as $cliente)
+                                    <option value="{{ $cliente->id }}">{{ $cliente->nome }}</option>
+                                @endforeach
                             </x-select>
                         </div>
                     </div>
 
                     <!-- Responsável e Documentos -->
-                    <div class="space-y-4"><br/><hr/>
+                    <div class="space-y-4">
                         <h3 class="text-lg font-medium">Responsável Legal</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <x-input name="cpf_responsavel" label="CPF do Responsável" />
-                            <x-input name="nome" label="Nome" placeholder="Digite o nome completo" required />
                             <x-input type="file" name="certidoes_negativas" label="Certidões Negativas" />
                             <x-input name="suframa" label="Inscrição SUFRAMA (se aplicável)" />
                         </div>
                     </div>
 
                     <!-- Classificação -->
-                    <div class="space-y-4"><br/><hr/>
+                    <div class="space-y-4">
                         <h3 class="text-lg font-medium">Classificação</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <x-select name="classificacao" label="Classificação">
@@ -67,12 +54,19 @@
                                 <option>Marketing</option>
                                 <option>Visita</option>
                             </x-select>
+                            <x-select name="status" label="Status">
+                                <option value="">Selecione</option>
+                                <option value="ativo">Ativo</option>
+                                <option value="inativo">Inativo</option>
+                                <option value="bloqueado">Bloqueado</option>
+                            </x-select>
                         </div>
-
+                        <x-input type="number" name="inativar_apos"
+                            label="Inativar automaticamente após (meses sem comprar)" />
                     </div>
 
                     <!-- Informações de Crédito -->
-                    <div class="space-y-4"><br/><hr/>
+                    <div class="space-y-4">
                         <h3 class="text-lg font-medium">Informações de Crédito</h3>
                         <!-- Documentação -->
                         <div>
@@ -90,26 +84,41 @@
                                     @endforeach
                                 </x-select>
                                 <x-input name="desconto" label="Desconto (%)" type="number" step="0.01" />
-                                <x-select name="bloqueado" label="Bloqueado">
-                                    <option value="">Selecione</option>
-                                    <option value="0">Não</option>
-                                    <option value="1">Sim</option>
-                                </x-select>
-                                <x-select name="negociar_titulos" label="Aceitar negociar títulos">
-                                    <option value="">Selecione</option>
-                                    <option value="0">Não</option>
-                                    <option value="1">Sim</option>
-                                </x-select> <x-input type="number" step="0.01" name="limite_boleto"
-                                    label="Limite Boleto (R$)" />
-                                <x-input type="number" step="0.01" name="limite_carteira"
-                                    label="Limite Carteira (R$)" />
-                                <x-input type="number" name="inativar_apos"
-                                    label="Inativar após (meses sem comprar)" />
                             </div>
                         </div>
+                        <br />
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <x-input type="number" step="0.01" name="limite_boleto" label="Limite Boleto (R$)" />
+                            <x-input type="number" step="0.01" name="limite_carteira"
+                                label="Limite Carteira (R$)" />
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <x-input type="date" name="data_ultima_analise" label="Data da Última Análise" />
+                            <x-input type="date" name="data_vencimento_analise" label="Data Vencimento da Análise" />
+                        </div>
+                        <x-textarea name="historico_credito" label="Histórico de Análise de Crédito" />
+                        <x-select name="negociar_titulos" label="Aceitar negociar títulos">
+                            <option value="">Selecione</option>
+                            <option value="0">Não</option>
+                            <option value="1">Sim</option>
+                        </x-select>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <x-select name="bloqueado" label="Bloqueado">
+                                <option value="">Selecione</option>
+                                <option value="0">Não</option>
+                                <option value="1">Sim</option>
+                            </x-select>
+                            <x-input name="motivo_bloqueio" label="Motivo do Bloqueio" />
+                            <x-input type="date" name="data_bloqueio" label="Data Bloqueio" />
+                        </div>
+                    </div>
+
+                    <!-- Observações -->
+                    <div>
+                        <x-textarea name="observacoes" label="Observações" placeholder="Informações adicionais..." />
                     </div>
                     <!-- Contatos da Empresa -->
-                    <div class="space-y-4"><br/><hr/>
+                    <div class="space-y-4">
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <x-icon name="users" class="w-5 h-5 text-primary-600" />
                             Contatos
@@ -130,8 +139,9 @@
                             + Adicionar Contato
                         </x-button>
                     </div>
+                    <br />
                     <!-- Endereço -->
-                    <div class="space-y-4"><br/><hr/>
+                    <div class="space-y-4">
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <x-icon name="users" class="w-5 h-5 text-primary-600" />
                             Endereço do cliente
@@ -155,9 +165,10 @@
                             placeholder="Rua, número, complemento" readonly="readonly"
                             value="{{ old('endereco_logradouro') }}" />
                     </div>
+                    <br />
 
                     <!-- Endereço de entrega -->
-                    <div class="space-y-4"><br/><hr/>
+                    <div class="space-y-4">
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <x-icon name="users" class="w-5 h-5 text-primary-600" />
                             Endereço de entrega

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AnaliseCreditoController;
 use App\Http\Controllers\BlocokController;
 use App\Http\Controllers\BlocokDescartesController;
 use App\Http\Controllers\BlocokInsumosController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\DescontoController;
 use App\Http\Controllers\RdstationController;
 use App\Http\Controllers\OrcamentoController;
 use App\Http\Controllers\ArmazemController;
+use App\Http\Controllers\BloqueioController;
 use App\Http\Controllers\NcmController;
 use App\Http\Controllers\NotaFiscalController;
 
@@ -50,6 +52,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('clientes', ClienteController::class)->names('clientes');
     Route::get('cliente/create_completo', [ClienteController::class, 'create_completo'])->name('clientes.create_completo');
+    Route::resource('bloqueios', BloqueioController::class)->names('bloqueios');
+    Route::resource('analise_creditos', AnaliseCreditoController::class)->names('analise_creditos');
+
+
     Route::resource('fornecedores', FornecedorController::class)->names('fornecedores');
     Route::resource('enderecos', EnderecoController::class)->names('enderecos');
     Route::resource('descontos', DescontoController::class)->names('descontos');

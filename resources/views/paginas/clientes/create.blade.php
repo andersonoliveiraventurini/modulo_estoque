@@ -20,7 +20,7 @@
                             <x-input id="nome_fantasia" name="nome_fantasia" label="Nome Fantasia"
                                 placeholder="Digite o nome fantasia" />
                             <x-input type="text" name="tratamento" label="Tratamento *" placeholder="Apelido" />
-                        </div>
+                        </div><br/><hr/>
                         <br />
                         <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
                             <x-icon name="user" class="w-5 h-5 text-primary-600" />
@@ -50,9 +50,8 @@
                             </x-select>
                         </div>
                     </div>
-                    <br />
                     <!-- Contatos da Empresa -->
-                    <div class="space-y-4">
+                    <div class="space-y-4"><br/><hr/>
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <x-icon name="users" class="w-5 h-5 text-primary-600" />
                             Contatos
@@ -69,9 +68,8 @@
                             + Adicionar Contato
                         </x-button>
                     </div>
-                    <br />
                     <!-- Endereço -->
-                    <div class="space-y-4">
+                    <div class="space-y-4"><br/><hr/>
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <x-icon name="users" class="w-5 h-5 text-primary-600" />
                             Endereço do cliente
@@ -95,9 +93,8 @@
                             placeholder="Rua, número, complemento" readonly="readonly"
                             value="{{ old('endereco_logradouro') }}" />
                     </div>
-                    <br />
                     <!-- Endereço de entrega -->
-                    <div class="space-y-4">
+                    <div class="space-y-4"><br/><hr/>
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <x-icon name="users" class="w-5 h-5 text-primary-600" />
                             Endereço de entrega
