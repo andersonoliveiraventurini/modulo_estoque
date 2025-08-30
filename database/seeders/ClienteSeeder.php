@@ -14,52 +14,28 @@ class ClienteSeeder extends Seeder
     {
         // carga de clientes inicial
         /**
-    numero,
+    SELECT numero,
     referencias,
     cpf,
     rg,
     cnpj,
     usuario,
-    cliente,
-    fornecedor,
-    nascimento,
     contato,
-    vencimento,
-    valor,
-    carta,
-    seproc,
-    idcarta,
-    enviado,
-    bloqueio,
-    ref_cial,
-    emi_rg,
     filiação,
-    funcionario,
-    empresa,
     fantasia,
     codmun,
-    casa,
-    UF,
-    avisar,
-    complemento,
-    limite,
     vendedor,
-    compl,
+    externo,
     momento,
     referencias2,
     ultima,
     referencias3,
     entrega,
-    arquivo,
-    externo,
-    carteira,
-    cheque,
-    boleto,
-    cadastro,
+    limite,
     venc_limite,
     desconto,
-    cf,
-    tratamento,
+    bloqueio,
+    tratamento FROM clientes c
      */
 
 
@@ -96,5 +72,32 @@ class ClienteSeeder extends Seeder
         telefone,
         cliente_id
      */
+
+        /** campos descartados
+         * 
+         * relaciona a tabela de clientes 2 - campos cliente     empresa,
+
+valores nulos, 1 ou 0 :
+valor,
+    funcionario,
+
+    ref_cial,
+    emi_rg,
+    carta,
+    seproc,
+    idcarta,
+cliente,
+    complemento,
+    fornecedor,
+    compl,
+    arquivo,
+    vencimento,
+    enviado,
+    nascimento, carteira,
+    cheque,
+    boleto,
+    cadastro,avisar,
+    cf,
+         */
     }
 }
