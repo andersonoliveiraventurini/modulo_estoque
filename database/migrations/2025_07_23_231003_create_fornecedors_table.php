@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->integer('linha_brcom')->nullable();
             $table->string('nome_fantasia')->nullable();
+            $table->string('razao_social')->nullable();
+            $table->string('tratamento')->nullable();
             $table->text('descricao')->nullable();
             $table->text('observacao')->nullable();
             $table->string('email')->nullable();           
