@@ -13,7 +13,24 @@ return new class extends Migration
     {
         Schema::create('analise_creditos', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('cliente_id')->nullable()
+                    ->comment('Referência ao cliente associado a este orçamento.');
+            $table->foreign('cliente_id')->references('id')->on('clientes')->onDelete('cascade');
+
+            $table->double('limite_boleto')->nullable()
+                    ->comment('Limite de crédito para boleto aprovado para o cliente.');
+            $table->double('limite_credito')->nullable()
+                    ->comment('Limite de crédito aprovado para o cliente.');
+            $table->date('validade')->nullable()
+                    ->comment('Data de validade do limite de crédito.');
+            $table->text('observacoes')->nullable()
+                    ->comment('Observações adicionais sobre a análise de crédito.');
+
+            $table->unsignedBigInteger('user_id')->nullable()
+                    ->comment('Referência ao usuário que aplicou o desconto, se houver.');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
