@@ -11,5 +11,5 @@ class Vendedor extends Model
     /** @use HasFactory<\Database\Factories\VendedorFactory> */
     use HasFactory, SoftDeletes;
 
-    protected $table = 'venderores';
+    protected $table = 'vendedores';
 }
