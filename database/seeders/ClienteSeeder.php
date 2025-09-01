@@ -14,28 +14,31 @@ class ClienteSeeder extends Seeder
     {
         // carga de clientes inicial
         /**
-    SELECT numero,
-    referencias,
-    cpf,
-    rg,
-    cnpj,
-    usuario,
-    contato,
-    filiação,
-    fantasia,
-    codmun,
-    vendedor,
-    externo,
-    momento,
-    referencias2,
-    ultima,
-    referencias3,
-    entrega,
-    limite,
-    venc_limite,
-    desconto,
-    bloqueio,
-    tratamento FROM clientes c
+    numero
+
+referencias
+
+rg
+
+usuario
+
+contato
+
+filiação
+
+codmun
+
+momento
+
+referencias2
+
+ultima
+
+referencias3
+
+entrega
+
+externo
      */
 
 
