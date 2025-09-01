@@ -13,37 +13,26 @@ class ClienteSeeder extends Seeder
     public function run(): void
     {
         // carga de clientes inicial
-        /**
-    numero
+        /*
+        numero -> idbrcom
 
-referencias
-
-rg
-
-usuario
-
-contato
-
-filiação
-
-codmun
-
-momento
-
-referencias2
-
-ultima
-
-referencias3
-
-entrega
-
-externo
      */
 
+        /*valor para analise de limite de credito 
+        
+       tabela brcom - 
+        referencias,
+        filiação,
+        referencias2,
+        ultima,
+        referencias3,
 
-    /** Após dar a carga do cliente, rodar o comando abaixo para ajustar os campos de endereço
-     * 
+        */
+
+
+
+    /* Após dar a carga do cliente, rodar o comando abaixo para ajustar os campos de endereço
+     tabela brcom* 
     nome,
     endereço,
     bairro,
@@ -61,9 +50,9 @@ externo
             cliente_id
      */
 
-    /** Após dar a carga do cliente, rodar o comando abaixo para ajustar os campos de telefone
+    /* Após dar a carga do cliente, rodar o comando abaixo para ajustar os campos de telefone
      * 
-     * 
+     *tabela brcom*  
     telefone_res,
     telefone_cial,
     celular,
@@ -76,7 +65,9 @@ externo
         cliente_id
      */
 
-        /** campos descartados
+
+
+        /* campos descartados
          * 
          * relaciona a tabela de clientes 2 - campos cliente     empresa,
 
@@ -99,7 +90,8 @@ cliente,
     nascimento, carteira,
     cheque,
     boleto,
-    cadastro,avisar,
+    cadastro,
+avisar,
     cf,
          */
     }
