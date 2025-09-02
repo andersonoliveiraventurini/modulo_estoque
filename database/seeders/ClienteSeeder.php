@@ -14,7 +14,7 @@ class ClienteSeeder extends Seeder
     /**
      * Run the database seeds.
      */
-    
+
     protected $csvPath = 'database/seeders/_carga_inicial/clientes.csv';
 
     public function run(): void
@@ -44,7 +44,7 @@ class ClienteSeeder extends Seeder
         }
         // Remove possível BOM e normaliza
         $header[0] = preg_replace('/^\xEF\xBB\xBF/', '', $header[0] ?? '');
-        $header = array_map(fn ($h) => mb_strtolower(trim($h)), $header);
+        $header = array_map(fn($h) => mb_strtolower(trim($h)), $header);
 
         $line = 1;          // linha do cabeçalho
         $ok   = 0;
@@ -73,8 +73,8 @@ class ClienteSeeder extends Seeder
                 }
 
                 // Helpers de limpeza
-                $digits = fn ($v) => $v !== null && $v !== '' ? preg_replace('/\D+/', '', (string) $v) : null;
-                $trimOrNull = fn ($v) => ($v !== null && trim((string) $v) !== '') ? trim((string) $v) : null;
+                $digits = fn($v) => $v !== null && $v !== '' ? preg_replace('/\D+/', '', (string) $v) : null;
+                $trimOrNull = fn($v) => ($v !== null && trim((string) $v) !== '') ? trim((string) $v) : null;
 
                 // Monta dados do cliente (mapeamento conforme solicitado)
                 $clienteData = [
@@ -96,13 +96,13 @@ class ClienteSeeder extends Seeder
                 // (telefone_res está disponível mas não foi solicitado para inserir)
 
                 try {
-                    DB::transaction(function () use ($clienteData, $email, $telComercial, $telCelular) {
-                        // Insere cliente e captura o ID com segurança
+                    DB::transaction(function () use ($clienteData, $email, $telComercial, $telCelular, $data, $trimOrNull) {
+                        // Insere cliente
                         $clienteId = DB::table('clientes')->insertGetId($clienteData);
 
+                        // ---- Contatos ----
                         $contatos = [];
 
-                        // Contato 1: email + telefone_cial (quando houver)
                         if ($email !== null || $telComercial !== null) {
                             $contatos[] = [
                                 'nome'       => $clienteData['nome'] ?? ($clienteData['razao_social'] ?? 'Contato'),
@@ -114,9 +114,7 @@ class ClienteSeeder extends Seeder
                             ];
                         }
 
-                        // Contato 2: celular (quando houver)
                         if ($telCelular !== null) {
-                            // evita duplicar se for igual ao comercial
                             if ($telComercial === null || $telCelular !== $telComercial) {
                                 $contatos[] = [
                                     'nome'       => $clienteData['nome'] ?? ($clienteData['razao_social'] ?? 'Contato'),
@@ -132,7 +130,46 @@ class ClienteSeeder extends Seeder
                         if (!empty($contatos)) {
                             DB::table('contatos')->insert($contatos);
                         }
+
+                        // ---- Endereço ----
+                        $endereco = [
+                            'logradouro'  => $trimOrNull($data['endereço'] ?? null),
+                            'numero'      => null,
+                            'complemento' => null,
+                            'bairro'      => $trimOrNull($data['bairro'] ?? null),
+                            'cidade'      => $trimOrNull($data['codmun'] ?? ($data['cidade'] ?? null)),
+                            'estado'      => null,
+                            'cep'         => $trimOrNull($data['cep'] ?? null),
+                            'cliente_id'  => $clienteId,
+                            'created_at'  => now(),
+                            'updated_at'  => now(),
+                        ];
+
+                        DB::table('enderecos')->insert($endereco);
+
+                        // analise de crédito
+                        /*
+                        DB::table('analise_creditos')->insert([
+                            'cliente_id' => $clienteId,
+                            'limite_boleto' => null,
+                            'limite_credito' => null,
+                            'validade' => null,
+                            'observacoes' => null,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);*/
+
+                        // bloqueio de crédito
+                        /*
+                        DB::table('bloqueio_creditos')->insert([
+                            'cliente_id' => $clienteId,
+                            'motivo' => null,
+                            'data_bloqueio' => null,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);*/
                     });
+
 
                     $ok++;
                     // Feedback pontual para lotes grandes (opcional)
@@ -144,7 +181,6 @@ class ClienteSeeder extends Seeder
                     Log::error("Linha {$line}: falha ao inserir cliente/contatos. Erro: {$e->getMessage()}");
                 }
             }
-
         } finally {
             fclose($handle);
         }
@@ -156,13 +192,13 @@ class ClienteSeeder extends Seeder
             $this->command->warn("Houveram {$fail} falhas. Consulte storage/logs/laravel.log para detalhes.");
         }
     }
-        // carga de clientes inicial
-        /*
+    // carga de clientes inicial
+    /*
         numero -> idbrcom
 
      */
 
-        /*valor para analise de limite de credito 
+    /*valor para analise de limite de credito 
         
        tabela brcom - 
         referencias,
@@ -226,7 +262,7 @@ $table->unsignedBigInteger('cliente_id')->nullable()
 
 
 
-        /* campos descartados
+    /* campos descartados
          * 
          * relaciona a tabela de clientes 2 - campos cliente     empresa,
 
@@ -253,5 +289,4 @@ cliente,
 avisar,
     cf,
          */
-    
 }
