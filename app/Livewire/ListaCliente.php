@@ -75,10 +75,10 @@ class ListaCliente extends Component
             ->when($this->search, function ($query) {
                 $query->where(function ($query) {
                     $query->where('nome_fantasia', 'like', '%' . $this->search . '%')
+                        ->orWhere('nome', 'like', '%' . $this->search . '%') // nome no brcom
                         ->orWhere('razao_social', 'like', '%' . $this->search . '%')
                         ->orWhere('tratamento', 'like', '%' . $this->search . '%')
                         ->orWhere('cnpj', 'like', '%' . $this->search . '%')
-                        ->orWhere('limite', 'like', '%' . $this->search . '%')
                         ->orWhere('desconto', 'like', '%' . $this->search . '%');
                 });
             })

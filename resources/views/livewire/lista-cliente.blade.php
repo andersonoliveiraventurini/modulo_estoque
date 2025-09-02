@@ -39,6 +39,11 @@
                 <tr>
                     <th class="px-6 py-3 text-left">
                         <button wire:click="sortBy('nome_fantasia')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Nome Brcom
+                        </button>
+                    </th>
+                    <th class="px-6 py-3 text-left">
+                        <button wire:click="sortBy('nome_fantasia')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Nome Fantasia
                         </button>
                     </th>
@@ -72,6 +77,7 @@
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse($clientes as $c)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->nome }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->nome_fantasia }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->razao_social }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->tratamento ?? '-' }}</td>
