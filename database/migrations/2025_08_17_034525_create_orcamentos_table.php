@@ -26,8 +26,6 @@ return new class extends Migration
                   $table->foreign('endereco_id')->references('id')->on('enderecos')->onDelete('cascade');
                   $table->string('obra')->nullable()
                         ->comment('Número único do orçamento para identificação.');
-                  $table->date('data')->nullable()
-                        ->comment('Data do orçamento.');
                   $table->decimal('valor_total', 15, 2)->nullable()
                         ->comment('Valor total do orçamento.');
                   $table->string('status', 20)->default('pendente')
