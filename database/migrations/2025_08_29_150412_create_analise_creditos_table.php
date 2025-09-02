@@ -17,8 +17,6 @@ return new class extends Migration
                     ->comment('Referência ao cliente associado a este orçamento.');
             $table->foreign('cliente_id')->references('id')->on('clientes')->onDelete('cascade');
 
-            $table->double('limite_boleto')->nullable()
-                    ->comment('Limite de crédito para boleto aprovado para o cliente.');
             $table->double('limite_credito')->nullable()
                     ->comment('Limite de crédito aprovado para o cliente.');
             $table->date('validade')->nullable()

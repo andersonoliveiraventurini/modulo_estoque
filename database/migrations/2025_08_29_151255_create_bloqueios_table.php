@@ -13,7 +13,19 @@ return new class extends Migration
     {
         Schema::create('bloqueios', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('cliente_id')->nullable()
+                    ->comment('Referência ao cliente associado a este orçamento.');
+            $table->foreign('cliente_id')->references('id')->on('clientes')->onDelete('cascade');
+
+            $table->text('motivo')->nullable()
+                    ->comment('Motivo do bloqueio.');
+
+            $table->unsignedBigInteger('user_id')->nullable()
+                    ->comment('Referência ao usuário que aplicou o desconto, se houver.');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

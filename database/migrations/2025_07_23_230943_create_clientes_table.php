@@ -44,8 +44,6 @@ return new class extends Migration
             $table->boolean('bloqueado')->default(false);
             
             $table->boolean('negociar_titulos')->default(false);
-            $table->decimal('limite_boleto', 15, 2)->nullable();
-            $table->decimal('limite_carteira', 15, 2)->nullable();
             $table->integer('inativar_apos')->nullable();
 
             $table->timestamps();

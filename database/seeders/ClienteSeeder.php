@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Cliente;
 use App\Models\Contato;
+use GuzzleHttp\Client;
 
 class ClienteSeeder extends Seeder
 {
@@ -148,26 +149,28 @@ class ClienteSeeder extends Seeder
                         DB::table('enderecos')->insert($endereco);
 
                         // analise de crédito
-                        /*
                         DB::table('analise_creditos')->insert([
                             'cliente_id' => $clienteId,
-                            'limite_boleto' => null,
-                            'limite_credito' => null,
-                            'validade' => null,
-                            'observacoes' => null,
+                            'limite_credito' => $trimOrNull($data['limite'] ?? null),
+                            'validade' => $trimOrNull($data['venc_limite'] ?? null),
+                            'observacoes' => $trimOrNull($data['bloqueio'] ?? null),
                             'created_at' => now(),
                             'updated_at' => now(),
-                        ]);*/
+                        ]);
 
                         // bloqueio de crédito
-                        /*
-                        DB::table('bloqueio_creditos')->insert([
-                            'cliente_id' => $clienteId,
-                            'motivo' => null,
-                            'data_bloqueio' => null,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);*/
+                        if (($trimOrNull($data['bloqueio'] ?? null) != null) && $trimOrNull($data['bloqueio'] ?? null) != '*') {
+                            DB::table('bloqueios')->insert([
+                                'cliente_id' => $clienteId,
+                                'motivo' => $trimOrNull($data['bloqueio'] ?? null),
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+
+                            $cliente = Cliente::find($clienteId);
+                            $cliente->bloqueado = true;
+                            $cliente->save();
+                        }
                     });
 
 
