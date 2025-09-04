@@ -4,6 +4,14 @@
             <!-- Informações Básicas -->
             <div
                 class="bg-white p-6  shadow rounded-2xl border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+                <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
+                    <x-icon name="user" class="w-5 h-5 text-primary-600" />
+                    Pré-cadastro de cliente
+                </h2>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
+                    Preencha o CNPJ primeiro e aguarde os dados serem preenchidos automaticamente. Se for pessoa física,
+                    preencha o CPF.
+                </p>
                 <form action="{{ route('clientes.store') }}" method="POST" class="space-y-8">
                     @csrf
                     <!-- Informações Pessoais -->
@@ -14,13 +22,14 @@
                     <div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                             <x-input id="cnpj" type="text" name="cnpj" label="CNPJ"
-                                placeholder="00.000.000/0000-00" onblur="buscarCNPJ_precadastro(this.value);"  />
+                                placeholder="00.000.000/0000-00" onblur="buscarCNPJ_precadastro(this.value);" />
                             <x-input id="razao_social" name="razao_social" label="Razão social"
                                 placeholder="Digite a razão social" />
                             <x-input id="nome_fantasia" name="nome_fantasia" label="Nome Fantasia"
                                 placeholder="Digite o nome fantasia" />
                             <x-input type="text" name="tratamento" label="Tratamento *" placeholder="Apelido" />
-                        </div><br/><hr/>
+                        </div><br />
+                        <hr />
                         <br />
                         <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
                             <x-icon name="user" class="w-5 h-5 text-primary-600" />
@@ -33,7 +42,12 @@
                         </div>
                     </div>
                     <br />
-                    <!-- Documentação -->
+                    <hr />
+                    <br />
+                    <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
+                        <x-icon name="user" class="w-5 h-5 text-primary-600" />
+                        Vendedor
+                    </h2>
                     <div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                             <x-select name="vendedor_id" label="Vendedor Responsável">
@@ -51,7 +65,8 @@
                         </div>
                     </div>
                     <!-- Contatos da Empresa -->
-                    <div class="space-y-4"><br/><hr/>
+                    <div class="space-y-4"><br />
+                        <hr />
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <x-icon name="users" class="w-5 h-5 text-primary-600" />
                             Contatos
@@ -69,11 +84,15 @@
                         </x-button>
                     </div>
                     <!-- Endereço -->
-                    <div class="space-y-4"><br/><hr/>
+                    <div class="space-y-4"><br />
+                        <hr />
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <x-icon name="users" class="w-5 h-5 text-primary-600" />
                             Endereço do cliente
                         </h3>
+                        <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
+                            Preencha o CEP primeiro e aguarde os dados serem preenchidos automaticamente.
+                        </p>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                             <x-input id="endereco_cep" name="endereco_cep" label="CEP" placeholder="00000-000"
                                 onblur="pesquisacep(this.value);" onkeypress="mascara(this, '#####-###')" size="10"
@@ -94,11 +113,15 @@
                             value="{{ old('endereco_logradouro') }}" />
                     </div>
                     <!-- Endereço de entrega -->
-                    <div class="space-y-4"><br/><hr/>
+                    <div class="space-y-4"><br />
+                        <hr />
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <x-icon name="users" class="w-5 h-5 text-primary-600" />
                             Endereço de entrega
                         </h3>
+                        <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
+                            Preencha o CEP primeiro e aguarde os dados serem preenchidos automaticamente.
+                        </p>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                             <x-input id="entrega_cep" name="entrega_cep" label="CEP" placeholder="00000-000"
                                 onblur="pesquisacepentrega(this.value);" onkeypress="mascara(this, '#####-###')"

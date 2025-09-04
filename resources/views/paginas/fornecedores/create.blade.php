@@ -11,7 +11,7 @@
                     Cadastro de Fornecedor
                 </h2>
                 <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
-                    Preencha as informações para cadastrar um novo fornecedor.
+                    Preencha o CNPJ e aguarde as informações serem preenchidas automaticamente.
                 </p>
 
                 <form action="{{ route('fornecedores.store') }}" method="POST" enctype="multipart/form-data"
@@ -81,6 +81,9 @@
                             <x-icon name="users" class="w-5 h-5 text-primary-600" />
                             Endereço do cliente
                         </h3>
+                        <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
+                            Preencha o CEP primeiro e aguarde os dados serem preenchidos automaticamente.
+                        </p>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                             <x-input id="endereco_cep" name="endereco_cep" label="CEP" placeholder="00000-000"
                                 onblur="pesquisacep(this.value);" onkeypress="mascara(this, '#####-###')" size="10"

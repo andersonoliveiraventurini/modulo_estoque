@@ -136,6 +136,9 @@
                             <x-icon name="users" class="w-5 h-5 text-primary-600" />
                             Endereço do cliente
                         </h3>
+                        <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
+                            Preencha o CEP primeiro e aguarde os dados serem preenchidos automaticamente.
+                        </p>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                             <x-input id="endereco_cep" name="endereco_cep" label="CEP" placeholder="00000-000"
                                 onblur="pesquisacep(this.value);" onkeypress="mascara(this, '#####-###')"
@@ -162,6 +165,9 @@
                             <x-icon name="users" class="w-5 h-5 text-primary-600" />
                             Endereço de entrega
                         </h3>
+                        <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
+                            Preencha o CEP primeiro e aguarde os dados serem preenchidos automaticamente.
+                        </p>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                             <x-input id="entrega_cep" name="entrega_cep" label="CEP" placeholder="00000-000"
                                 onblur="pesquisacepentrega(this.value);" onkeypress="mascara(this, '#####-###')"
