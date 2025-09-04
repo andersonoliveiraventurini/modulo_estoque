@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProdutoRequest;
 use App\Http\Requests\UpdateProdutoRequest;
+use App\Models\Fornecedor;
 use App\Models\Produto;
 
 class ProdutoController extends Controller
@@ -22,7 +23,8 @@ class ProdutoController extends Controller
      */
     public function create()
     {
-        return view('paginas.produtos.create');
+        $fornecedores = Fornecedor::all();
+        return view('paginas.produtos.create', compact('fornecedores'));
     }
 
     /**
