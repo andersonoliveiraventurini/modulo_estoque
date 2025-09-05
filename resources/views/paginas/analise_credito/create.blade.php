@@ -15,8 +15,6 @@
                 <form action="{{ route('analise_creditos.store') }}" method="POST" class="space-y-8">
                     @csrf
 
-                    
-
                     <!-- Informações de Crédito -->
                     <div class="space-y-4">
                         <!-- Documentação -->
