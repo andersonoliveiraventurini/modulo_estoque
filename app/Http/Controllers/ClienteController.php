@@ -6,6 +6,7 @@ use App\Http\Requests\StoreClienteRequest;
 use App\Http\Requests\UpdateClienteRequest;
 use App\Models\Cliente;
 use App\Models\Contato;
+use App\Models\Vendedor;
 
 class ClienteController extends Controller
 {
@@ -23,7 +24,7 @@ class ClienteController extends Controller
      */
     public function create()
     {
-        $vendedores = \App\Models\Vendedor::all();
+        $vendedores = Vendedor::all();
         return view('paginas.clientes.create', compact('vendedores'));
     }
 
@@ -32,7 +33,7 @@ class ClienteController extends Controller
      */
     public function create_completo()
     {
-        $vendedores = \App\Models\Vendedor::all();
+        $vendedores = Vendedor::all();
         return view('paginas.clientes.create_completo', compact('vendedores'));
     }
 
@@ -58,7 +59,9 @@ class ClienteController extends Controller
      */
     public function edit(Cliente $cliente)
     {
-        //
+        $contatos = Contato::where('cliente_id', $cliente->id)->get();
+        $vendedores = Vendedor::all();
+        return view('paginas.clientes.edit', compact('cliente', 'contatos', 'vendedores'));
     }
 
     /**
