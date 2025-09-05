@@ -1,19 +1,15 @@
 <x-layouts.app :title="__('Criar item')">
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-
             <!-- Card Principal -->
             <div
                 class="bg-white p-6 shadow rounded-2xl border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-
                 <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
                     <x-icon name="building-office-2" class="w-5 h-5 text-primary-600" />
                     Cadastro de produto
                 </h2>
-
                 <form action="{{ route('produtos.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
                     @csrf
-
                     <!-- Dados Básicos -->
                     <div class="space-y-4">
                         <h3 class="text-lg font-medium flex items-center gap-2">
@@ -27,6 +23,9 @@
                             <x-input name="sku" label="SKU/Código" placeholder="PRD123456" />
                             <x-select name="fornecedor_id" label="Fornecedor">
                                 <option value="">Selecione...</option>
+                                @foreach ($fornecedores as $fornecedor)
+                                    <option value="{{ $fornecedor->id }}">{{ $fornecedor->nome_fantasia }}</option>
+                                @endforeach
                             </x-select>
                             <x-input name="marca" label="Marca" placeholder="Digite a marca" />
                             <x-input name="modelo" label="Modelo" placeholder="Digite o modelo" />
@@ -155,7 +154,11 @@
                                                 Produto</x-button>
                                             <x-button type="reset">Limpar Formulário</x-button>
                                         </div>
-
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>

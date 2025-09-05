@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreClienteRequest;
 use App\Http\Requests\UpdateClienteRequest;
 use App\Models\Cliente;
+use App\Models\Contato;
 
 class ClienteController extends Controller
 {
@@ -48,7 +49,8 @@ class ClienteController extends Controller
      */
     public function show(Cliente $cliente)
     {
-        //
+        $contatos = Contato::where('cliente_id', $cliente->id)->get();
+        return view('paginas.clientes.show', compact('cliente', 'contatos'));
     }
 
     /**
