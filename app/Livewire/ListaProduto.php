@@ -49,6 +49,8 @@ class ListaProduto extends Component
                         ->orWhere('codigo_barras', 'like', '%' . $this->search . '%')
                         ->orWhere('marca', 'like', '%' . $this->search . '%')
                         ->orWhere('modelo', 'like', '%' . $this->search . '%')
+                        ->orWhere('estoque_minimo', 'like', '%' . $this->search . '%')
+                        ->orWhere('estoque_atual', 'like', '%' . $this->search . '%')
                         ->orWhere('ncm', 'like', '%' . $this->search . '%');
                 });
             })
