@@ -18,6 +18,7 @@ use App\Http\Controllers\RdstationController;
 use App\Http\Controllers\OrcamentoController;
 use App\Http\Controllers\ArmazemController;
 use App\Http\Controllers\BloqueioController;
+use App\Http\Controllers\MovimentacaoController;
 use App\Http\Controllers\NcmController;
 use App\Http\Controllers\NotaFiscalController;
 
@@ -38,6 +39,7 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('settings/appearance', 'settings.appearance')->name('settings.appearance');
 
     Route::resource('produtos', ProdutoController::class)->names('produtos');
+    Route::resource('movimentacao', MovimentacaoController::class)->names('movimentacao');
     Route::resource('ncm', NcmController::class)->names('ncm');
     
     Route::resource('blocok/descartes', BlocokDescartesController::class)->names('blocok.descartes');

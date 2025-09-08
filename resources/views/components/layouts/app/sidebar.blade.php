@@ -35,6 +35,14 @@
                 :current="request()->routeIs('fornecedores.create')" wire:navigate>
                 {{ __('Cadastrar fornecedor') }}</flux:navlist.item>
         </flux:navlist.group>
+        <flux:navlist.group heading="Estoque" expandable :expanded="false">
+            <flux:navlist.item icon="home" :href="route('movimentacao.index')"
+                :current="request()->routeIs('movimentacao.index')" wire:navigate>{{ __('Movimentações') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="truck" :href="route('movimentacao.create')"
+                :current="request()->routeIs('movimentacao.create')" wire:navigate>
+                {{ __('Receber produto') }}</flux:navlist.item>
+        </flux:navlist.group>
 
 
         <flux:navlist.group heading="Produtos" expandable :expanded="false">
@@ -74,7 +82,7 @@
                 </flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist>
-        
+
         <flux:navlist variant="outline">
             <flux:navlist.group :heading="__('Financeiro')" class="grid">
                 <flux:navlist.item icon="home" :href="route('analise_creditos.index')"

@@ -16,7 +16,6 @@
                 <x-input id="search" wire:model.live.debounce.300ms="search"
                     placeholder="Buscar por nome, quantidade ..." />
             </div>
-
             <!-- Itens por página (largura fixa) -->
             <div class="flex flex-col w-28">
                 <label for="perPage" class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">

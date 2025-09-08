@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('armazens', function (Blueprint $table) {
             $table->id();
+            $table->string('nome')->comment('Nome do armazém');
+            $table->string('localizacao')->comment('Localização do armazém');
             $table->timestamps();
             $table->softDeletes();
         });
