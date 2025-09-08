@@ -65,11 +65,10 @@
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse($fornecedores as $f)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $f->nome_fantasia }}</td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $f->razao_social }}</td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $f->tratamento ?? '-' }}</td>
-                        <td class="px-6 py-4 font-mono text-zinc-800 dark:text-zinc-200">{{ $f->cnpj }}
-                        </td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/fornecedores/{{ $f->id }}">{{ $f->nome_fantasia }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/fornecedores/{{ $f->id }}">{{ $f->razao_social }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/fornecedores/{{ $f->id }}">{{ $f->tratamento ?? '-' }}</a></td>
+                        <td class="px-6 py-4 font-mono text-zinc-800 dark:text-zinc-200"><a href="/fornecedores/{{ $f->id }}">{{ $f->cnpj }}</a></td>
                     </tr>
                 @empty
                     <tr>

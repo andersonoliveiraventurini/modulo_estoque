@@ -80,10 +80,10 @@
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             <a href="/clientes/{{ $c->id }}">{{ $c->nome }}</a>
                         </td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->nome_fantasia }}</td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->razao_social }}</td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->tratamento ?? '-' }}</td>
-                        <td class="px-6 py-4 font-mono text-zinc-800 dark:text-zinc-200">{{ $c->cnpj }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/clientes/{{ $c->id }}">{{ $c->nome_fantasia }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/clientes/{{ $c->id }}">{{ $c->razao_social }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/clientes/{{ $c->id }}">{{ $c->tratamento ?? '-' }}</a></td>
+                        <td class="px-6 py-4 font-mono text-zinc-800 dark:text-zinc-200"><a href="/clientes/{{ $c->id }}">{{ $c->cnpj }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->limite ?? '-' }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->desconto ?? '-' }}</td>
                     </tr>

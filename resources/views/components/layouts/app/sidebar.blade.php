@@ -12,42 +12,40 @@
         <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
             <x-app-logo />
         </a>
-        <flux:navlist variant="outline">
-            <flux:navlist.group :heading="__('Fornecedores')" class="grid">
-                <flux:navlist.item icon="home" :href="route('fornecedores.index')"
-                    :current="request()->routeIs('fornecedores.index')" wire:navigate>{{ __('Listar fornecedores') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('fornecedores.create')"
-                    :current="request()->routeIs('fornecedores.create')" wire:navigate>
-                    {{ __('Cadastrar fornecedor') }}</flux:navlist.item>
-            </flux:navlist.group>
-        </flux:navlist>
-        <flux:navlist variant="outline">
-            <flux:navlist.group :heading="__('Clientes')" class="grid">
-                <flux:navlist.item icon="home" :href="route('clientes.create')"
-                    :current="request()->routeIs('clientes.create')" wire:navigate>{{ __('Pré-cadastro cliente') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('clientes.create_completo')"
-                    :current="request()->routeIs('clientes.create-completo')" wire:navigate>
-                    {{ __('Cadastrar cliente') }}</flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('clientes.index')"
-                    :current="request()->routeIs('clientes.index')" wire:navigate>{{ __('Listar clientes') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('bloqueios.index')"
-                    :current="request()->routeIs('bloqueios.index')" wire:navigate>{{ __('Clientes bloqueados') }}
-                </flux:navlist.item>
-            </flux:navlist.group>
-        </flux:navlist>
-        <flux:navlist variant="outline">
-            <flux:navlist.group :heading="__('Produtos')" class="grid">
-                <flux:navlist.item icon="home" :href="route('produtos.index')"
-                    :current="request()->routeIs('produtos.index')" wire:navigate>{{ __('Listar produtos') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('produtos.create')"
-                    :current="request()->routeIs('produtos.create')" wire:navigate>{{ __('Criar produto') }}
-                </flux:navlist.item>
-            </flux:navlist.group>
-        </flux:navlist>
+
+        <flux:navlist.group heading="Clientes" expandable :expanded="false">
+            <flux:navlist.item icon="home" :href="route('clientes.create')"
+                :current="request()->routeIs('clientes.create')" wire:navigate>{{ __('Pré-cadastro cliente') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="home" :href="route('clientes.create_completo')"
+                :current="request()->routeIs('clientes.create-completo')" wire:navigate>
+                {{ __('Cadastrar cliente') }}</flux:navlist.item>
+            <flux:navlist.item icon="home" :href="route('clientes.index')"
+                :current="request()->routeIs('clientes.index')" wire:navigate>{{ __('Listar clientes') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="home" :href="route('bloqueios.index')"
+                :current="request()->routeIs('bloqueios.index')" wire:navigate>{{ __('Clientes bloqueados') }}
+            </flux:navlist.item>
+        </flux:navlist.group>
+        <flux:navlist.group heading="Fornecedores" expandable :expanded="false">
+            <flux:navlist.item icon="home" :href="route('fornecedores.index')"
+                :current="request()->routeIs('fornecedores.index')" wire:navigate>{{ __('Listar fornecedores') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="truck" :href="route('fornecedores.create')"
+                :current="request()->routeIs('fornecedores.create')" wire:navigate>
+                {{ __('Cadastrar fornecedor') }}</flux:navlist.item>
+        </flux:navlist.group>
+
+
+        <flux:navlist.group heading="Produtos" expandable :expanded="false">
+            <flux:navlist.item icon="home" :href="route('produtos.index')"
+                :current="request()->routeIs('produtos.index')" wire:navigate>{{ __('Listar produtos') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="home" :href="route('produtos.create')"
+                :current="request()->routeIs('produtos.create')" wire:navigate>{{ __('Criar produto') }}
+            </flux:navlist.item>
+        </flux:navlist.group>
+
         <flux:navlist variant="outline">
             <flux:navlist.group :heading="__('RD Station')" class="grid">
                 <flux:navlist.item icon="home" :href="route('rdstation.checar-token')"
@@ -76,6 +74,7 @@
                 </flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist>
+        
         <flux:navlist variant="outline">
             <flux:navlist.group :heading="__('Financeiro')" class="grid">
                 <flux:navlist.item icon="home" :href="route('analise_creditos.index')"

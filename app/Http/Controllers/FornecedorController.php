@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreFornecedorRequest;
 use App\Http\Requests\UpdateFornecedorRequest;
+use App\Models\Contato;
 use App\Models\Fornecedor;
 
 class FornecedorController extends Controller
@@ -36,11 +37,12 @@ class FornecedorController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Fornecedor $fornecedor)
+    public function show($fornecedor_id)
     {
-        //
+        $fornecedor = Fornecedor::findOrFail($fornecedor_id);
+        $contatos = Contato::where('fornecedor_id', $fornecedor->id)->get();
+        return view('paginas.fornecedores.show', compact('fornecedor', 'contatos'));
     }
-
     /**
      * Show the form for editing the specified resource.
      */
