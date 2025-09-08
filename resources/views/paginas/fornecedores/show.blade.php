@@ -17,7 +17,7 @@
                     <!-- Dados Básicos -->
                     <x-tab name="basico" label="Básico">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-show-field label="CNPJ" :value="$fornecedor->cnpj" />
+                            <x-show-field label="CNPJ" :value="$fornecedor->cnpj_formatado" />
                             <x-show-field label="Razão Social" :value="$fornecedor->razao_social" />
                             <x-show-field label="Nome Fantasia" :value="$fornecedor->nome_fantasia" />
                             <x-show-field label="Tratamento" :value="$fornecedor->tratamento" />

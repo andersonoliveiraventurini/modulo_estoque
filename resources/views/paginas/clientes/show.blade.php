@@ -16,7 +16,7 @@
                 <x-tabs default="basico">
                     <x-tab name="basico" label="Básico">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-show-field label="CNPJ" :value="$cliente->cnpj" />
+                            <x-show-field label="CNPJ" :value="$cliente->cnpj_formatado" />
                             <x-show-field label="Razão Social" :value="$cliente->razao_social" />
                             <x-show-field label="Nome Fantasia" :value="$cliente->nome_fantasia" />
                             <x-show-field label="Tratamento" :value="$cliente->tratamento" />
@@ -62,7 +62,7 @@
                                 <div class="p-4 border rounded-xl dark:border-neutral-700">
                                     <p><strong>Nome:</strong> {{ $contato->nome }}</p>
                                     <p><strong>Telefone:</strong> {{ $contato->telefone }}</p>
-                                    <p><strong>Email:</strong> {{ $contato->email }}</p>
+                                    <p><strong>E-mail:</strong> {{ $contato->email }}</p>
                                 </div>
                             @empty
                                 <p class="text-sm text-neutral-500">Nenhum contato informado.</p>
@@ -82,7 +82,7 @@
                         </div>
                     </x-tab>
 
-                    <x-tab name="entrega" label="Endereço de Entrega">
+                    <x-tab name="entrega" label="Endereço de entrega">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <x-show-field label="CEP" :value="$cliente->entrega_cep" />
                             <x-show-field label="Cidade" :value="$cliente->entrega_cidade" />

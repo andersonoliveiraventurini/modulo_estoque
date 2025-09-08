@@ -22,7 +22,7 @@ class Cliente extends Model
         'email',
         'telefone' // novos campos
     ];
-    
+
     protected $casts = [
         'data_abertura' => 'date',
         // outros campos date se houver
@@ -32,5 +32,19 @@ class Cliente extends Model
     public function getDataAberturaFormatadaAttribute()
     {
         return $this->data_abertura?->format('d/m/Y');
+    }
+
+    public function getCnpjFormatadoAttribute()
+    {
+        $cnpj = preg_replace('/\D/', '', $this->cnpj); // remove tudo que não é número
+        if (strlen($cnpj) !== 14) {
+            return $this->cnpj; // retorna cru se não for válido
+        }
+
+        return substr($cnpj, 0, 2) . '.' .
+            substr($cnpj, 2, 3) . '.' .
+            substr($cnpj, 5, 3) . '/' .
+            substr($cnpj, 8, 4) . '-' .
+            substr($cnpj, 12, 2);
     }
 }

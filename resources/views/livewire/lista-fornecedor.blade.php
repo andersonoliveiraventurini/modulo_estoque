@@ -68,7 +68,7 @@
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/fornecedores/{{ $f->id }}">{{ $f->nome_fantasia }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/fornecedores/{{ $f->id }}">{{ $f->razao_social }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/fornecedores/{{ $f->id }}">{{ $f->tratamento ?? '-' }}</a></td>
-                        <td class="px-6 py-4 font-mono text-zinc-800 dark:text-zinc-200"><a href="/fornecedores/{{ $f->id }}">{{ $f->cnpj }}</a></td>
+                        <td class="px-6 py-4 font-mono text-zinc-800 dark:text-zinc-200"><a href="/fornecedores/{{ $f->id }}">{{ $f->cnpj_formatado }}</a></td>
                     </tr>
                 @empty
                     <tr>
