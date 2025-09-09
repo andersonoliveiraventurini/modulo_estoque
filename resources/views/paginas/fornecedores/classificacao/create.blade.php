@@ -23,11 +23,15 @@
                     <div class="col-span-12 md:col-span-4 flex justify-end gap-6">
                         <a href="{{ route('fornecedores.edit', $fornecedor->id ?? null) }}"
                             class="text-primary-600 hover:underline text-sm font-medium">
-                            Editar
+                            Editar Fornecedor
+                        </a>
+                        <a href="{{ route('fornecedores.precos', $fornecedor->id ?? null) }}"
+                            class="text-secondary-600 hover:underline text-sm font-medium">
+                            Tabela de preços do fornecedor
                         </a>
                         <a href="{{ route('fornecedores.show', $fornecedor->id ?? null) }}"
                             class="text-secondary-600 hover:underline text-sm font-medium">
-                            Mostrar detalhes
+                            Mostrar detalhes do fornecedor
                         </a>
                     </div>
                 </div>

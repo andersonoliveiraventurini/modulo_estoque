@@ -19,9 +19,9 @@
 
                     <!-- 40% (direita com links) -->
                     <div class="col-span-12 md:col-span-4 flex justify-end gap-6">
-                        <a href="{{ route('fornecedores.edit', $fornecedor->id ?? null) }}"
+                        <a href="{{ route('fornecedores.precos', $fornecedor->id ?? null) }}"
                             class="text-primary-600 hover:underline text-sm font-medium">
-                            Editar
+                            Tabela de preços
                         </a>
                         <a href="{{ route('fornecedores.classificar', $fornecedor->id ?? null) }}"
                             class="text-secondary-600 hover:underline text-sm font-medium">

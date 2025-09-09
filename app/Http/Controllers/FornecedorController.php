@@ -34,6 +34,12 @@ class FornecedorController extends Controller
         //
     }
 
+    public function tabelaPrecos($fornecedor_id)
+    {
+        $fornecedor = Fornecedor::findOrFail($fornecedor_id);
+        return view('paginas.fornecedores.tabela_preco.mostrar', compact('fornecedor'));
+    }
+
     /**
      * Display the specified resource.
      */

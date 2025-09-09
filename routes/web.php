@@ -66,6 +66,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('fornecedores', FornecedorController::class)->names('fornecedores');
     Route::resource('fornecedores.classificacao', ClassificarFornecedorController::class)->names('fornecedores.classificacao');
     Route::get('fornecedor/{fornecedor_id}/classificar', [ClassificarFornecedorController::class, 'create'])->name('fornecedores.classificar');
+    Route::get('fornecedor/{fornecedor_id}/precos', [FornecedorController::class, 'tabelaPrecos'])->name('fornecedores.precos');
     Route::resource('enderecos', EnderecoController::class)->names('enderecos');
     Route::resource('descontos', DescontoController::class)->names('descontos');
     Route::resource('armazens', ArmazemController::class)->names('armazens');
