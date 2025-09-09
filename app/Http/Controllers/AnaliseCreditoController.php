@@ -15,7 +15,7 @@ class AnaliseCreditoController extends Controller
     public function index()
     {
         $analises = AnaliseCredito::all();
-        return view('paginas.analise_credito.index', compact('analises'));
+        return view('paginas.clientes.analise_credito.index', compact('analises'));
     }
 
     /**
@@ -24,7 +24,7 @@ class AnaliseCreditoController extends Controller
     public function create($cliente_id)
     {
         $cliente = Cliente::find($cliente_id);
-        return view('paginas.analise_credito.create', compact('cliente'));
+        return view('paginas.clientes.analise_credito.create', compact('cliente'));
     }
 
     /**
@@ -41,6 +41,19 @@ class AnaliseCreditoController extends Controller
     public function show(AnaliseCredito $analiseCredito)
     {
         //
+    }
+
+    public function analisar($cliente_id)
+    {
+        $cliente = Cliente::find($cliente_id);
+        return view('paginas.clientes.analise_credito.create', compact('cliente'));
+    }
+
+    public function mostrar($cliente_id)
+    {
+        $cliente = Cliente::find($cliente_id);
+        $analises = AnaliseCredito::where('cliente_id', $cliente_id)->get();
+        return view('paginas.clientes.analise_credito.mostrar', compact('cliente', 'analises'));
     }
 
     /**

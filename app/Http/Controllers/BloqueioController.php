@@ -15,7 +15,7 @@ class BloqueioController extends Controller
     public function index()
     {
         $bloqueios = Bloqueio::all();
-        return view('paginas.bloqueios.index', compact('bloqueios'));
+        return view('paginas.clientes.bloqueios.index', compact('bloqueios'));
     }
 
     /**
@@ -24,7 +24,7 @@ class BloqueioController extends Controller
     public function create($cliente_id)
     {
         $cliente = Cliente::find($cliente_id);
-        return view('paginas.bloqueios.create', compact('cliente'));
+        return view('paginas.clientes.bloqueios.create', compact('cliente'));
     }
 
     /**
@@ -41,6 +41,18 @@ class BloqueioController extends Controller
     public function show(Bloqueio $bloqueio)
     {
         //
+    }
+
+    public function bloquear($cliente_id)
+    {
+        $cliente = Cliente::find($cliente_id);
+        return view('paginas.clientes.bloqueios.create', compact('cliente'));
+    }
+
+    public function bloqueios($cliente_id)
+    {
+        $cliente = Cliente::find($cliente_id);
+        return view('paginas.clientes.bloqueios.mostrar', compact('cliente'));
     }
 
     /**

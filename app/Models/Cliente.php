@@ -47,4 +47,9 @@ class Cliente extends Model
             substr($cnpj, 8, 4) . '-' .
             substr($cnpj, 12, 2);
     }
+
+    public function bloqueios()
+{
+    return $this->hasMany(Bloqueio::class);
+}
 }

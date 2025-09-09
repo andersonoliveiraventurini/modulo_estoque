@@ -18,6 +18,7 @@ use App\Http\Controllers\RdstationController;
 use App\Http\Controllers\OrcamentoController;
 use App\Http\Controllers\ArmazemController;
 use App\Http\Controllers\BloqueioController;
+use App\Http\Controllers\ClassificarFornecedorController;
 use App\Http\Controllers\MovimentacaoController;
 use App\Http\Controllers\NcmController;
 use App\Http\Controllers\NotaFiscalController;
@@ -55,10 +56,16 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('clientes', ClienteController::class)->names('clientes');
     Route::get('cliente/create_completo', [ClienteController::class, 'create_completo'])->name('clientes.create_completo');
     Route::resource('bloqueios', BloqueioController::class)->names('bloqueios');
+    Route::get('bloquear/{cliente_id}/cliente', [BloqueioController::class, 'bloquear'])->name('bloquear.cliente');
+    Route::get('bloqueios/{cliente_id}/mostrar', [BloqueioController::class, 'bloqueios'])->name('bloqueios.mostrar');
     Route::resource('analise_creditos', AnaliseCreditoController::class)->names('analise_creditos');
+    Route::get('analise_creditos/{cliente_id}/mostrar', [AnaliseCreditoController::class, 'mostrar'])->name('analise_creditos.mostrar');
+    Route::get('analise_creditos/{cliente_id}/analisar', [AnaliseCreditoController::class, 'analisar'])->name('analise_creditos.analisar');
 
 
     Route::resource('fornecedores', FornecedorController::class)->names('fornecedores');
+    Route::resource('fornecedores.classificacao', ClassificarFornecedorController::class)->names('fornecedores.classificacao');
+    Route::get('fornecedor/{fornecedor_id}/classificar', [ClassificarFornecedorController::class, 'create'])->name('fornecedores.classificar');
     Route::resource('enderecos', EnderecoController::class)->names('enderecos');
     Route::resource('descontos', DescontoController::class)->names('descontos');
     Route::resource('armazens', ArmazemController::class)->names('armazens');
