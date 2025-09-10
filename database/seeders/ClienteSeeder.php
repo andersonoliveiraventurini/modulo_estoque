@@ -2,21 +2,15 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Cliente;
-use App\Models\Contato;
-use GuzzleHttp\Client;
 
 class ClienteSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-
     protected $csvPath = 'database/seeders/_carga_inicial/clientes.csv';
+    protected $batchSize = 100;
 
     public function run(): void
     {
@@ -26,7 +20,6 @@ class ClienteSeeder extends Seeder
             return;
         }
 
-        // Performance
         DB::disableQueryLog();
         @ini_set('auto_detect_line_endings', '1');
 
@@ -36,36 +29,111 @@ class ClienteSeeder extends Seeder
             return;
         }
 
-        // Lê cabeçalho e normaliza chaves
         $header = fgetcsv($handle, 0, ',');
         if ($header === false) {
             fclose($handle);
             $this->command->error("CSV vazio ou inválido.");
             return;
         }
-        // Remove possível BOM e normaliza
         $header[0] = preg_replace('/^\xEF\xBB\xBF/', '', $header[0] ?? '');
         $header = array_map(fn($h) => mb_strtolower(trim($h)), $header);
 
-        $line = 1;          // linha do cabeçalho
+        $line = 1;
         $ok   = 0;
         $fail = 0;
+        $remessa = 0;
         $startedAt = microtime(true);
 
-        $this->command->info("Iniciando importação de clientes a partir de: {$this->csvPath}");
+        $this->command->info("Iniciando importação de clientes em lotes de {$this->batchSize}...");
+
+        $batchClientes = [];
+        $batchContatos = [];
+        $batchEnderecos = [];
+        $batchCreditos = [];
+        $batchBloqueios = [];
+
+        $flushBatch = function () use (&$batchClientes, &$batchContatos, &$batchEnderecos, &$batchCreditos, &$batchBloqueios, &$ok, &$fail, &$remessa) {
+            if (empty($batchClientes)) {
+                return;
+            }
+
+            $remessa++;
+            $inicio = $ok + 1;
+            $fim    = $ok + count($batchClientes);
+            $this->command->info("Processando remessa {$remessa} (clientes {$inicio} até {$fim})...");
+
+            try {
+                DB::transaction(function () use (&$batchClientes, &$batchContatos, &$batchEnderecos, &$batchCreditos, &$batchBloqueios, &$ok) {
+                    // Insere clientes e captura IDs
+                    $ids = [];
+                    foreach ($batchClientes as $c) {
+                        $id = DB::table('clientes')->insertGetId($c);
+                        $ids[] = $id;
+                    }
+
+                    // Monta relacionamentos ajustando cliente_id
+                    $i = 0;
+                    foreach ($ids as $clienteId) {
+                        // Contatos
+                        if (isset($batchContatos[$i])) {
+                            foreach ($batchContatos[$i] as $c) {
+                                $c['cliente_id'] = $clienteId;
+                                DB::table('contatos')->insert($c);
+                            }
+                        }
+                        // Endereço
+                        if (isset($batchEnderecos[$i])) {
+                            $e = $batchEnderecos[$i];
+                            $e['cliente_id'] = $clienteId;
+                            DB::table('enderecos')->insert($e);
+                        }
+                        // Crédito
+                        if (isset($batchCreditos[$i])) {
+                            $cr = $batchCreditos[$i];
+                            $cr['cliente_id'] = $clienteId;
+                            DB::table('analise_creditos')->insert($cr);
+                        }
+                        // Bloqueio
+                        if (isset($batchBloqueios[$i]) && $batchBloqueios[$i] !== null) {
+                            $b = $batchBloqueios[$i];
+                            $b['cliente_id'] = $clienteId;
+                            DB::table('bloqueios')->insert($b);
+
+                            $cliente = Cliente::find($clienteId);
+                            $cliente->bloqueado = true;
+                            $cliente->save();
+                        }
+
+                        $i++;
+                    }
+
+                    $ok += count($ids);
+                });
+
+                $this->command->info("Remessa {$remessa} concluída: {$fim} clientes importados até agora.");
+            } catch (\Throwable $e) {
+                $fail += count($batchClientes);
+                Log::error("Falha ao inserir remessa {$remessa}. Erro: {$e->getMessage()}");
+                $this->command->error("Erro na remessa {$remessa}, consulte os logs.");
+            }
+
+            // Limpa os buffers
+            $batchClientes = [];
+            $batchContatos = [];
+            $batchEnderecos = [];
+            $batchCreditos = [];
+            $batchBloqueios = [];
+        };
 
         try {
             while (($row = fgetcsv($handle, 0, ',')) !== false) {
                 $line++;
-
-                // Garante que o número de colunas bate
                 if (count($row) !== count($header)) {
                     $fail++;
                     Log::warning("Linha {$line}: quantidade de colunas não corresponde ao cabeçalho.");
                     continue;
                 }
 
-                // Combina header => valores
                 $data = array_combine($header, $row);
                 if ($data === false) {
                     $fail++;
@@ -73,11 +141,9 @@ class ClienteSeeder extends Seeder
                     continue;
                 }
 
-                // Helpers de limpeza
                 $digits = fn($v) => $v !== null && $v !== '' ? preg_replace('/\D+/', '', (string) $v) : null;
                 $trimOrNull = fn($v) => ($v !== null && trim((string) $v) !== '') ? trim((string) $v) : null;
 
-                // Monta dados do cliente (mapeamento conforme solicitado)
                 $clienteData = [
                     'numero_brcom'  => $data['numero'] !== '' ? (int) $digits($data['numero']) : null,
                     'cpf'           => $digits($data['cpf'] ?? null),
@@ -90,100 +156,71 @@ class ClienteSeeder extends Seeder
                     'updated_at'    => now(),
                 ];
 
-                // Dados de contato a partir da MESMA linha do CSV
-                $email         = $trimOrNull($data['email'] ?? null);
-                $telComercial  = $trimOrNull($data['telefone_cial'] ?? null);
-                $telCelular    = $trimOrNull($data['celular'] ?? null);
-                // (telefone_res está disponível mas não foi solicitado para inserir)
+                $email        = $trimOrNull($data['email'] ?? null);
+                $telComercial = $trimOrNull($data['telefone_cial'] ?? null);
+                $telCelular   = $trimOrNull($data['celular'] ?? null);
 
-                try {
-                    DB::transaction(function () use ($clienteData, $email, $telComercial, $telCelular, $data, $trimOrNull) {
-                        // Insere cliente
-                        $clienteId = DB::table('clientes')->insertGetId($clienteData);
+                $contatos = [];
+                if ($email !== null || $telComercial !== null) {
+                    $contatos[] = [
+                        'nome'       => $clienteData['nome'] ?? ($clienteData['razao_social'] ?? 'Contato'),
+                        'email'      => $email,
+                        'telefone'   => $telComercial,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+                if ($telCelular !== null && ($telComercial === null || $telCelular !== $telComercial)) {
+                    $contatos[] = [
+                        'nome'       => $clienteData['nome'] ?? ($clienteData['razao_social'] ?? 'Contato'),
+                        'email'      => null,
+                        'telefone'   => $telCelular,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
 
-                        // ---- Contatos ----
-                        $contatos = [];
+                $endereco = [
+                    'logradouro'  => $trimOrNull($data['endereço'] ?? null),
+                    'numero'      => null,
+                    'complemento' => null,
+                    'bairro'      => $trimOrNull($data['bairro'] ?? null),
+                    'cidade'      => $trimOrNull($data['codmun'] ?? ($data['cidade'] ?? null)),
+                    'estado'      => null,
+                    'cep'         => $trimOrNull($data['cep'] ?? null),
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ];
 
-                        if ($email !== null || $telComercial !== null) {
-                            $contatos[] = [
-                                'nome'       => $clienteData['nome'] ?? ($clienteData['razao_social'] ?? 'Contato'),
-                                'email'      => $email,
-                                'telefone'   => $telComercial,
-                                'cliente_id' => $clienteId,
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                            ];
-                        }
+                $credito = [
+                    'limite_credito' => $trimOrNull($data['limite'] ?? null),
+                    'validade'       => $trimOrNull($data['venc_limite'] ?? null),
+                    'observacoes'    => $trimOrNull($data['bloqueio'] ?? null),
+                    'created_at'     => now(),
+                    'updated_at'     => now(),
+                ];
 
-                        if ($telCelular !== null) {
-                            if ($telComercial === null || $telCelular !== $telComercial) {
-                                $contatos[] = [
-                                    'nome'       => $clienteData['nome'] ?? ($clienteData['razao_social'] ?? 'Contato'),
-                                    'email'      => null,
-                                    'telefone'   => $telCelular,
-                                    'cliente_id' => $clienteId,
-                                    'created_at' => now(),
-                                    'updated_at' => now(),
-                                ];
-                            }
-                        }
+                $bloqueio = null;
+                if (($trimOrNull($data['bloqueio'] ?? null) != null) && $trimOrNull($data['bloqueio'] ?? null) != '*') {
+                    $bloqueio = [
+                        'motivo'     => $trimOrNull($data['bloqueio'] ?? null),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
 
-                        if (!empty($contatos)) {
-                            DB::table('contatos')->insert($contatos);
-                        }
+                $batchClientes[]  = $clienteData;
+                $batchContatos[]  = $contatos;
+                $batchEnderecos[] = $endereco;
+                $batchCreditos[]  = $credito;
+                $batchBloqueios[] = $bloqueio;
 
-                        // ---- Endereço ----
-                        $endereco = [
-                            'logradouro'  => $trimOrNull($data['endereço'] ?? null),
-                            'numero'      => null,
-                            'complemento' => null,
-                            'bairro'      => $trimOrNull($data['bairro'] ?? null),
-                            'cidade'      => $trimOrNull($data['codmun'] ?? ($data['cidade'] ?? null)),
-                            'estado'      => null,
-                            'cep'         => $trimOrNull($data['cep'] ?? null),
-                            'cliente_id'  => $clienteId,
-                            'created_at'  => now(),
-                            'updated_at'  => now(),
-                        ];
-
-                        DB::table('enderecos')->insert($endereco);
-
-                        // analise de crédito
-                        DB::table('analise_creditos')->insert([
-                            'cliente_id' => $clienteId,
-                            'limite_credito' => $trimOrNull($data['limite'] ?? null),
-                            'validade' => $trimOrNull($data['venc_limite'] ?? null),
-                            'observacoes' => $trimOrNull($data['bloqueio'] ?? null),
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-
-                        // bloqueio de crédito
-                        if (($trimOrNull($data['bloqueio'] ?? null) != null) && $trimOrNull($data['bloqueio'] ?? null) != '*') {
-                            DB::table('bloqueios')->insert([
-                                'cliente_id' => $clienteId,
-                                'motivo' => $trimOrNull($data['bloqueio'] ?? null),
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                            ]);
-
-                            $cliente = Cliente::find($clienteId);
-                            $cliente->bloqueado = true;
-                            $cliente->save();
-                        }
-                    });
-
-
-                    $ok++;
-                    // Feedback pontual para lotes grandes (opcional)
-                    if ($ok > 0 && $ok % 1000 === 0) {
-                        $this->command->info("Progresso: {$ok} clientes importados...");
-                    }
-                } catch (\Throwable $e) {
-                    $fail++;
-                    Log::error("Linha {$line}: falha ao inserir cliente/contatos. Erro: {$e->getMessage()}");
+                if (count($batchClientes) >= $this->batchSize) {
+                    $flushBatch();
                 }
             }
+
+            $flushBatch();
         } finally {
             fclose($handle);
         }
@@ -195,101 +232,4 @@ class ClienteSeeder extends Seeder
             $this->command->warn("Houveram {$fail} falhas. Consulte storage/logs/laravel.log para detalhes.");
         }
     }
-    // carga de clientes inicial
-    /*
-        numero -> idbrcom
-
-     */
-
-    /*valor para analise de limite de credito 
-        
-       tabela brcom - 
-        referencias,
-        filiação,
-        referencias2,
-        ultima,
-        referencias3,
-
-        // tabela analise_creditos
-        
-$table->unsignedBigInteger('cliente_id')->nullable()
-                    ->comment('Referência ao cliente associado a este orçamento.');
-            $table->foreign('cliente_id')->references('id')->on('clientes')->onDelete('cascade');
-
-            $table->double('limite_boleto')->nullable()
-                    ->comment('Limite de crédito para boleto aprovado para o cliente.');
-            $table->double('limite_credito')->nullable()
-                    ->comment('Limite de crédito aprovado para o cliente.');
-            $table->date('validade')->nullable()
-                    ->comment('Data de validade do limite de crédito.');
-            $table->text('observacoes')->nullable()
-                    ->comment('Observações adicionais sobre a análise de crédito.');
-
-        */
-
-
-
-    /* Após dar a carga do cliente, rodar o comando abaixo para ajustar os campos de endereço
-     tabela brcom* 
-    nome,
-    endereço,
-    bairro,
-    cidade,
-    cep,
-
-    sendo  tabela endereços
-            logradouro,
-            numero,
-            complemento,
-            bairro,
-            cidade,
-            estado,
-            cep,
-            cliente_id
-     */
-
-    /* Após dar a carga do cliente, rodar o comando abaixo para ajustar os campos de telefone
-     * 
-     *tabela brcom*  
-    telefone_res,
-    telefone_cial,
-    celular,
-    email,
-
-    sendo tabela de contatos
-        nome,
-        email,
-        telefone,
-        cliente_id
-     */
-
-
-
-    /* campos descartados
-         * 
-         * relaciona a tabela de clientes 2 - campos cliente     empresa,
-
-valores nulos, 1 ou 0 :
-valor,
-    funcionario,
-
-    ref_cial,
-    emi_rg,
-    carta,
-    seproc,
-    idcarta,
-cliente,
-    complemento,
-    fornecedor,
-    compl,
-    arquivo,
-    vencimento,
-    enviado,
-    nascimento, carteira,
-    cheque,
-    boleto,
-    cadastro,
-avisar,
-    cf,
-         */
 }

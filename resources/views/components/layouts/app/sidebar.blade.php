@@ -60,6 +60,12 @@
             </flux:navlist.item>
         </flux:navlist.group>
 
+        <flux:navlist.group heading="Orçamentos" expandable :expanded="false">
+            <flux:navlist.item icon="home" :href="route('orcamentos.index')"
+                :current="request()->routeIs('orcamentos.index')" wire:navigate>{{ __('Listar orçamentos') }}
+            </flux:navlist.item>
+        </flux:navlist.group>
+
         <flux:navlist variant="outline">
             <flux:navlist.group :heading="__('RD Station')" class="grid">
                 <flux:navlist.item icon="home" :href="route('rdstation.checar-token')"

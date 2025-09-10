@@ -14,7 +14,7 @@
                     Pesquisar
                 </label>
                 <x-input id="search" wire:model.live.debounce.300ms="search"
-                    placeholder="Buscar por nome, quantidade ..." />
+                    placeholder="Buscar  ..." />
             </div>
 
             <!-- Itens por página (largura fixa) -->
@@ -38,13 +38,13 @@
             <thead class="bg-zinc-50 dark:bg-zinc-800">
                 <tr>
                     <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('nome_fantasia')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Nome
+                        <button wire:click="sortBy('obra')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Obra
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('quantidade')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Quantidade
+                        <button wire:click="sortBy('cliente')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Cliente
                         </button>
                     </th>
                 </tr>
@@ -52,13 +52,13 @@
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse($orcamentos as $c)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->nome }}</td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->quantidade }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="{{ route('orcamentos.show', $c) }}">{{ $c->obra }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->cliente->nome }}</td>
                     </tr>
                 @empty
                     <tr>
                         <td colspan="6" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
-                            Nenhum produto encontrado.
+                            Nenhum orçamento encontrado.
                         </td>
                     </tr>
                 @endforelse

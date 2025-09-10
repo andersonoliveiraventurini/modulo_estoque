@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreOrcamentoRequest;
 use App\Http\Requests\UpdateOrcamentoRequest;
+use App\Models\Cliente;
 use App\Models\Orcamento;
+use App\Models\Produto;
 
 class OrcamentoController extends Controller
 {
@@ -13,7 +15,7 @@ class OrcamentoController extends Controller
      */
     public function index()
     {
-        //
+        return view('paginas.orcamentos.index');
     }
 
     /**
@@ -21,7 +23,15 @@ class OrcamentoController extends Controller
      */
     public function create()
     {
-        //
+
+    }
+
+    public function criarOrcamento($cliente_id)
+    {
+        $cliente = Cliente::find($cliente_id);
+        $produtos = Produto::all();
+        return view('paginas.orcamentos.create', compact('produtos', 'cliente'));
+
     }
 
     /**
