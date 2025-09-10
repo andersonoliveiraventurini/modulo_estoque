@@ -41,21 +41,35 @@ class ListaProduto extends Component
     public function render()
     {
         $produtos = Produto::query()
-            ->when($this->search, function ($query) {
-                $query->where(function ($query) {
-                    $query->where('nome', 'like', '%' . $this->search . '%')
-                        ->orWhere('codigo_brcom', 'like', '%' . $this->search . '%')
-                        ->orWhere('sku', 'like', '%' . $this->search . '%')
-                        ->orWhere('codigo_barras', 'like', '%' . $this->search . '%')
-                        ->orWhere('marca', 'like', '%' . $this->search . '%')
-                        ->orWhere('modelo', 'like', '%' . $this->search . '%')
-                        ->orWhere('estoque_minimo', 'like', '%' . $this->search . '%')
-                        ->orWhere('estoque_atual', 'like', '%' . $this->search . '%')
-                        ->orWhere('ncm', 'like', '%' . $this->search . '%');
-                });
-            })
-            ->orderBy($this->sortField, $this->sortDirection)
-            ->paginate($this->perPage);
+    ->when($this->search, function ($query) {
+        // Divide a busca em palavras (tokens)
+        $terms = preg_split('/\s+/', trim($this->search));
+
+        foreach ($terms as $term) {
+            // Normaliza números no formato brasileiro (ex: 19,55 → 19.55)
+            $normalizedTerm = str_replace(',', '.', $term);
+
+            $query->where(function ($q) use ($normalizedTerm) {
+                $q->where('nome', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('codigo_brcom', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('sku', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('preco_venda', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('preco_custo', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('codigo_barras', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('marca', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('modelo', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('estoque_minimo', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('estoque_atual', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('observacoes', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('descricao', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('ncm', 'like', "%{$normalizedTerm}%");
+            });
+        }
+    })
+    ->orderBy($this->sortField, $this->sortDirection)
+    ->paginate($this->perPage);
+
+
 
         return view('livewire.lista-produto', [
             'produtos' => $produtos,

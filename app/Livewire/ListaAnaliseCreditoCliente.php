@@ -50,13 +50,25 @@ class ListaAnaliseCreditoCliente extends Component
     public function render()
     {
         $analises = AnaliseCredito::query()
-            ->where('cliente_id', $this->clienteId)
-            ->when($this->search, function ($query) {
-                $query->where('observacoes', 'like', '%' . $this->search . '%')
-                    ->orWhere('limite_credito', 'like', '%' . $this->search . '%');
-            })
-            ->orderBy($this->sortField, $this->sortDirection)
-            ->paginate($this->perPage);
+        ->where('cliente_id', $this->clienteId)
+        ->when($this->search, function ($query) {
+            // Divide a busca em palavras (tokens)
+            $terms = preg_split('/\s+/', trim($this->search));
+
+            foreach ($terms as $term) {
+
+                // Normaliza números no formato brasileiro (ex: 19,55 → 19.55)
+                $normalizedTerm = str_replace(',', '.', $term);
+
+                $query->where(function ($q) use ($normalizedTerm) {
+                    $q->where('observacoes', 'like', "%{$normalizedTerm}%")
+                    ->orWhere('limite_credito', 'like', "%{$normalizedTerm}%");
+                });
+            }
+        })
+        ->orderBy($this->sortField, $this->sortDirection)
+        ->paginate($this->perPage);
+
 
         $clienteNome = $this->clienteNome;
 

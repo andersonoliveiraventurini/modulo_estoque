@@ -72,18 +72,27 @@ class ListaCliente extends Component
     public function render()
     {
         $clientes = Cliente::query()
-            ->when($this->search, function ($query) {
-                $query->where(function ($query) {
-                    $query->where('nome_fantasia', 'like', '%' . $this->search . '%')
-                        ->orWhere('nome', 'like', '%' . $this->search . '%') // nome no brcom
-                        ->orWhere('razao_social', 'like', '%' . $this->search . '%')
-                        ->orWhere('tratamento', 'like', '%' . $this->search . '%')
-                        ->orWhere('cnpj', 'like', '%' . $this->search . '%')
-                        ->orWhere('desconto', 'like', '%' . $this->search . '%');
+        ->when($this->search, function ($query) {
+            // Divide a busca em palavras (tokens)
+            $terms = preg_split('/\s+/', trim($this->search));
+
+            foreach ($terms as $term) {
+                // Normaliza números no formato brasileiro (ex: 19,55 → 19.55)
+                $normalizedTerm = str_replace(',', '.', $term);
+                
+                $query->where(function ($q) use ($normalizedTerm) {
+                    $q->where('nome_fantasia', 'like', "%{$normalizedTerm}%")
+                    ->orWhere('nome', 'like', "%{$normalizedTerm}%") // nome no brcom
+                    ->orWhere('razao_social', 'like', "%{$normalizedTerm}%")
+                    ->orWhere('tratamento', 'like', "%{$normalizedTerm}%")
+                    ->orWhere('cnpj', 'like', "%{$normalizedTerm}%")
+                    ->orWhere('desconto', 'like', "%{$normalizedTerm}%");
                 });
-            })
-            ->orderBy($this->sortField, $this->sortDirection)
-            ->paginate($this->perPage);
+            }
+        })
+        ->orderBy($this->sortField, $this->sortDirection)
+        ->paginate($this->perPage);
+
 
         return view('livewire.lista-cliente', [
             'clientes' => $clientes,

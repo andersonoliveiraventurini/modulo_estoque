@@ -13,7 +13,13 @@ return new class extends Migration
     {
         Schema::create('classificar_fornecedors', function (Blueprint $table) {
             $table->id();
+
+            // cliente
+            $table->unsignedBigInteger('usuario_id')->nullable()
+                ->comment('Usuário que fez a movimentação.');
+            $table->foreign('usuario_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

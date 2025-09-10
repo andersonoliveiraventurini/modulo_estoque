@@ -5,7 +5,7 @@
     <!-- Cabeçalho -->
     <div class="flex items-center justify-between p-6 border-b border-zinc-200 dark:border-zinc-700">
         <h2 class="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-            Listagem de produtos
+            Consulta de preços
         </h2>
         <div class="flex items-end gap-4">
             <!-- Pesquisa (flexível, ocupa 2x mais espaço) -->
@@ -35,12 +35,12 @@
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="bg-zinc-50 dark:bg-zinc-800">
-                <tr>
+                <tr>    
                     <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('nome')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Nome
+                        <button wire:click="sortBy('ususario_id')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Solicitado por
                         </button>
-                    </th>
+                    </th>                
                     <th class="px-6 py-3 text-left">
                         <button wire:click="sortBy('descricao')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Descrição
@@ -49,11 +49,6 @@
                     <th class="px-6 py-3 text-left">
                         <button wire:click="sortBy('cor')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Cor
-                        </button>
-                    </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('ncm')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            NCM
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
@@ -67,28 +62,27 @@
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('estoque_atual')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Quantidade atual
+                        <button wire:click="sortBy('responsavel_id')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Orçado por
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('estoque_minimo')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Estoque mínimo
+                        <button wire:click="sortBy('observacao')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Observação
                         </button>
                     </th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                @forelse($produtos as $c)
+                @forelse($precos as $p)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/produtos/{{ $c->id }}">{{ $c->nome }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/produtos/{{ $c->id }}">{{ $c->descricao }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/produtos/{{ $c->id }}">{{ $c->cor }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/produtos/{{ $c->id }}">{{ $c->ncm }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/produtos/{{ $c->id }}">R$ {{ number_format($c->preco_venda, 2, ',', '.') }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/produtos/{{ $c->id }}">R$ {{ number_format($c->preco_custo, 2, ',', '.') }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/produtos/{{ $c->id }}">{{ $c->estoque_atual }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/produtos/{{ $c->id }}">{{ $c->estoque_minimo }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/users/{{ $p->ususario_id }}">{{ $p->ususario_id }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $p->descricao }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $p->cor }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">R$ {{ number_format($p->preco_venda, 2, ',', '.') }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">R$ {{ number_format($p->preco_custo, 2, ',', '.') }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/users/{{ $p->responsavel_id }}">{{ $p->responsavel_id }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $p->observacao }}</td>
                     </tr>
                 @empty
                     <tr>
@@ -102,10 +96,10 @@
     </div>
 
     <!-- Paginação -->
-    @if ($produtos->hasPages())
+    @if ($precos->hasPages())
         <div class="p-6 border-t border-zinc-200 dark:border-zinc-700 flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-300">
             <div>
-                {{ $produtos->links() }}
+                {{ $precos->links() }}
             </div>
         </div>
     @endif

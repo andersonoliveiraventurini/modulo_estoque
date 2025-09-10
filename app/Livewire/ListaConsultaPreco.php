@@ -2,16 +2,14 @@
 
 namespace App\Livewire;
 
-use App\Models\Bloqueio;
+use App\Models\ConsultaPreco;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-class ListaBloqueiosCliente extends Component
+class ListaConsultaPreco extends Component
 {
     use WithPagination;
 
-    public $clienteId; // ID do cliente que será passado para o componente
-    public $nome; // Nome do cliente para exibição no título
     public $search = '';
     public $sortField = 'created_at';
     public $sortDirection = 'desc';
@@ -22,13 +20,6 @@ class ListaBloqueiosCliente extends Component
         'sortField' => ['except' => 'created_at'],
         'sortDirection' => ['except' => 'desc'],
     ];
-
-    // Recebe o cliente_id ao montar o componente
-    public function mount($clienteId, $clienteNome)
-    {   
-        $this->clienteId = $clienteId;
-        $this->nome = $clienteNome;
-    }
 
     public function updatingSearch()
     {
@@ -49,29 +40,29 @@ class ListaBloqueiosCliente extends Component
 
     public function render()
     {
-        $bloqueios = Bloqueio::query()
-        ->where('cliente_id', $this->clienteId)
+        $precos = ConsultaPreco::query()
         ->when($this->search, function ($query) {
-            // Divide a busca em palavras (tokens)
+            // Divide a string em palavras (tokens)
             $terms = preg_split('/\s+/', trim($this->search));
 
             foreach ($terms as $term) {
                 // Normaliza números no formato brasileiro (ex: 19,55 → 19.55)
                 $normalizedTerm = str_replace(',', '.', $term);
-                
+
                 $query->where(function ($q) use ($normalizedTerm) {
-                    $q->where('motivo', 'like', "%{$normalizedTerm}%");
+                    $q->where('descricao', 'like', "%{$normalizedTerm}%")
+                      ->orWhere('cor', 'like', "%{$normalizedTerm}%")
+                      ->orWhere('preco', 'like', "%{$normalizedTerm}%")
+                      ->orWhere('preco_venda', 'like', "%{$normalizedTerm}%")
+                      ->orWhere('observacao', 'like', "%{$normalizedTerm}%");
                 });
             }
         })
         ->orderBy($this->sortField, $this->sortDirection)
         ->paginate($this->perPage);
 
-
-            $nome = $this->nome;
-
-        return view('livewire.lista-bloqueios-cliente', compact(
-            'bloqueios', 'nome'
-        ));
+        return view('livewire.lista-consulta-preco', [
+            'precos' => $precos,
+        ]);
     }
 }

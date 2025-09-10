@@ -52,6 +52,12 @@
             <flux:navlist.item icon="home" :href="route('produtos.create')"
                 :current="request()->routeIs('produtos.create')" wire:navigate>{{ __('Criar produto') }}
             </flux:navlist.item>
+            <flux:navlist.item icon="home" :href="route('consulta_preco.index')"
+                :current="request()->routeIs('consulta_preco.index')" wire:navigate>{{ __('Consultas de preço') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="home" :href="route('consulta_preco.create')"
+                :current="request()->routeIs('consulta_preco.create')" wire:navigate>{{ __('Cotação') }}
+            </flux:navlist.item>
         </flux:navlist.group>
 
         <flux:navlist variant="outline">
