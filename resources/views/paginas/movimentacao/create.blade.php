@@ -72,7 +72,7 @@
                                     placeholder="Valor unitário" />
                                 <x-input name="produtos[0][valor_total]" label="Valor total"
                                     placeholder="Valor total" />
-                                <x-input name="produtos[0][armazem]" label="Armazém" placeholder="Armazém" />
+                                <x-input name="produtos[0][armazem]" label="Endereço" placeholder="Armazém" />
                                 <x-input name="produtos[0][corredor]" label="Corredor" placeholder="Corredor" />
                                 <x-input name="produtos[0][posicao]" label="Posição" placeholder="Posição" />
                                

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreMovimentacaoRequest;
 use App\Http\Requests\UpdateMovimentacaoRequest;
+use App\Models\Armazem;
 use App\Models\Fornecedor;
 use App\Models\Movimentacao;
 use App\Models\Pedido;
@@ -26,7 +27,8 @@ class MovimentacaoController extends Controller
     {
         $fornecedores = Fornecedor::all();
         $pedidos = Pedido::all();
-        return view('paginas.movimentacao.create', compact('fornecedores', 'pedidos'));
+        $armazens = Armazem::all();
+        return view('paginas.movimentacao.create', compact('fornecedores', 'pedidos', 'armazens'));
     }
 
     /**

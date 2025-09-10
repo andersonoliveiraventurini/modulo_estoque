@@ -46,7 +46,7 @@ return new class extends Migration
             // cliente
             $table->unsignedBigInteger('usuario_id')->nullable()
                 ->comment('Usuário que fez a movimentação.');
-            $table->foreign('usuario_id')->references('id')->on('usuarios')->onDelete('cascade');
+            $table->foreign('usuario_id')->references('id')->on('users')->onDelete('cascade');
 
             $table->timestamps();
             $table->softDeletes();

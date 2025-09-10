@@ -79,7 +79,7 @@
                         <hr />
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <x-icon name="users" class="w-5 h-5 text-primary-600" />
-                            Endereço do cliente
+                            Endereço
                         </h3>
                         <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
                             Preencha o CEP primeiro e aguarde os dados serem preenchidos automaticamente.
