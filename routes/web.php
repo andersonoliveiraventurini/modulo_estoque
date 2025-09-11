@@ -25,9 +25,8 @@ use App\Http\Controllers\NcmController;
 use App\Http\Controllers\NotaFiscalController;
 use App\Http\Controllers\VendedorController;
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+Volt::route('/', 'auth.login')
+        ->name('home');
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
