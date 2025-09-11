@@ -45,33 +45,36 @@ class ListaProdutoOrcamento extends Component
 
     public function render()
     {
-        $produtos = Produto::query()
-            ->when($this->search, function ($query) {
-                // Divide a busca em palavras (tokens)
-                $terms = preg_split('/\s+/', trim($this->search));
+       $produtos = Produto::query()
+    ->with('fornecedor') // já carrega o fornecedor
+    ->when($this->search, function ($query) {
+        $terms = preg_split('/\s+/', trim($this->search));
 
-                foreach ($terms as $term) {
-                    // Normaliza números no formato brasileiro (ex: 19,55 → 19.55)
-                    $normalizedTerm = str_replace(',', '.', $term);
+        foreach ($terms as $term) {
+            $normalizedTerm = str_replace(',', '.', $term);
 
-                    $query->where(function ($q) use ($normalizedTerm) {
-                        $q->where('nome', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('sku', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('preco_venda', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('preco_custo', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('codigo_barras', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('marca', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('modelo', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('estoque_minimo', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('estoque_atual', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('observacoes', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('descricao', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('ncm', 'like', "%{$normalizedTerm}%");
-                    });
-                }
-            })
-            ->orderBy($this->sortField, $this->sortDirection)
-            ->paginate($this->perPage);
+            $query->where(function ($q) use ($normalizedTerm) {
+                $q->where('nome', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('codigo_brcom', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('sku', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('preco_venda', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('codigo_barras', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('marca', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('modelo', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('observacoes', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('descricao', 'like', "%{$normalizedTerm}%")
+                  ->orWhere('ncm', 'like', "%{$normalizedTerm}%")
+                  ->orWhereHas('fornecedor', function ($fq) use ($normalizedTerm) {
+                      $fq->where('nome_fantasia', 'like', "%{$normalizedTerm}%")
+                         ->orWhere('razao_social', 'like', "%{$normalizedTerm}%")
+                         ->orWhere('tratamento', 'like', "%{$normalizedTerm}%");
+                  });
+            });
+        }
+    })
+    ->orderBy($this->sortField, $this->sortDirection)
+    ->paginate($this->perPage);
+
 
 
 

@@ -37,6 +37,16 @@
             <thead class="bg-zinc-50 dark:bg-zinc-800">
                 <tr>
                     <th class="px-6 py-3 text-left">
+                        <button wire:click="sortBy('id')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Código
+                        </button>
+                    </th>
+                    <th class="px-6 py-3 text-left">
+                        <button wire:click="sortBy('cor')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Cor
+                        </button>
+                    </th>
+                    <th class="px-6 py-3 text-left">
                         <button wire:click="sortBy('nome')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Nome
                         </button>
@@ -47,8 +57,8 @@
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('cor')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Cor
+                        <button wire:click="sortBy('fornecedor_id')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Fornecedor
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
@@ -81,9 +91,12 @@
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse($produtos as $c)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/produtos/{{ $c->id }}">{{ $c->nome }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/produtos/{{ $c->id }}">{{ $c->id }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/produtos/{{ $c->id }}">{{ $c->cor }}</a></td>                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/produtos/{{ $c->id }}">{{ $c->nome }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/produtos/{{ $c->id }}">{{ $c->descricao }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/produtos/{{ $c->id }}">{{ $c->cor }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
+                            {{ $c->fornecedor?->nome_fantasia ?? 'Sem fornecedor' }}
+                        </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/produtos/{{ $c->id }}">{{ $c->ncm }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/produtos/{{ $c->id }}">R$ {{ number_format($c->preco_venda, 2, ',', '.') }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/produtos/{{ $c->id }}">R$ {{ number_format($c->preco_custo, 2, ',', '.') }}</a></td>

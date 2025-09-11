@@ -23,8 +23,10 @@
             <thead class="bg-gray-50 dark:bg-neutral-800">
                 <tr>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Código</th>
-                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Nome</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Cor</th>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Nome</th>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Descrição</th>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Fornecedor</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Preço Venda</th>
                     <th class="px-4 py-2 text-center text-sm font-medium text-gray-600">Ações</th>
                 </tr>
@@ -33,8 +35,12 @@
                 @forelse($produtos as $produto)
                     <tr class="hover:bg-gray-50 dark:hover:bg-neutral-800">
                         <td class="px-4 py-2 text-sm">{{ $produto->id }}</td>
-                        <td class="px-4 py-2 text-sm">{{ $produto->nome }}</td>
                         <td class="px-4 py-2 text-sm">{{ $produto->cor }}</td>
+                        <td class="px-4 py-2 text-sm">{{ $produto->nome }}</td>
+                        <td class="px-4 py-2 text-sm">{{ $produto->descricao }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
+                            {{ $produto->fornecedor?->nome_fantasia ?? 'Sem fornecedor' }}
+                        </td>
                         <td class="px-4 py-2 text-sm">R$ {{ number_format($produto->preco_venda, 2, ',', '.') }}</td>
                         <td class="px-4 py-2 text-center">
                             <button type="button"
