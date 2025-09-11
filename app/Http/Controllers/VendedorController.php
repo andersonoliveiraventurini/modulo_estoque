@@ -22,7 +22,7 @@ class VendedorController extends Controller
      */
     public function create()
     {
-        $usuarios = User::all();
+        $usuarios = User::whereDoesntHave('vendedor')->get();
         return view('paginas.usuarios.vendedores.create', compact('usuarios'));
     }
 

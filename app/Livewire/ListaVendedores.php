@@ -40,23 +40,33 @@ class ListaVendedores extends Component
 
     public function render()
     {
-        $vendedores = Vendedor::query()
-            ->when($this->search, function ($query) {
-                // Divide a busca em palavras (tokens)
-                $terms = preg_split('/\s+/', trim($this->search));
+       $vendedores = Vendedor::query()
+        ->with('user') // já traz o relacionamento
+        ->when($this->search, function ($query) {
+            $terms = preg_split('/\s+/', trim($this->search));
 
-                foreach ($terms as $term) {
-                    // Normaliza números no formato brasileiro (ex: 19,55 → 19.55)
-                    $normalizedTerm = str_replace(',', '.', $term);
+            foreach ($terms as $term) {
+                $normalizedTerm = str_replace(',', '.', $term);
 
-                    $query->where(function ($q) use ($normalizedTerm) {
-                        $q->where('user_id', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('desconto', 'like', "%{$normalizedTerm}%");
+                $query->where(function ($q) use ($normalizedTerm) {
+                    $q->where('desconto', 'like', "%{$normalizedTerm}%")
+                    ->orWhere('user_id', 'like', "%{$normalizedTerm}%")
+                    ->orWhereHas('user', function ($uq) use ($normalizedTerm) {
+                        $uq->where('name', 'like', "%{$normalizedTerm}%");
                     });
-                }
-            })
-            ->orderBy($this->sortField, $this->sortDirection)
-            ->paginate($this->perPage);
+                });
+            }
+        })
+        ->when($this->sortField === 'nome', function ($query) {
+            // ordenar pelo nome do usuário
+            $query->join('users', 'vendedores.user_id', '=', 'users.id')
+                ->orderBy('users.name', $this->sortDirection)
+                ->select('vendedores.*'); // evita conflito de colunas
+        }, function ($query) {
+            $query->orderBy($this->sortField, $this->sortDirection);
+        })
+        ->paginate($this->perPage);
+
 
         return view('livewire.lista-vendedores', [
             'vendedores' => $vendedores,

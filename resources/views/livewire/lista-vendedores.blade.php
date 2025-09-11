@@ -13,7 +13,7 @@
                     Pesquisar
                 </label>
                 <x-input id="search" wire:model.live.debounce.300ms="search"
-                    placeholder="Buscar por nome fantasia, razão social, tratamento, CNPJ, limite ou desconto..." />
+                    placeholder="Buscar por nome ou desconto..." />
             </div>
 
             <!-- Itens por página (largura fixa) -->
@@ -45,7 +45,7 @@
                     <th class="px-6 py-3 text-left">
                         <button wire:click="sortBy('desconto')"
                             class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Desconto
+                            Desconto autorizado (%)
                         </button>
                     </th>
                 </tr>
@@ -54,9 +54,10 @@
                 @forelse($vendedores as $v)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            <a href="/usuarios/{{ $v->id }}">{{ $v->nome }}</a>
+                            <a href="/usuarios/{{ $v->user->id }}">{{ $v->user->name }}</a>
                         </td>
-                        <td class="px-6 py-4 font-mono text-zinc-800 dark:text-zinc-200">{{ $v->desconto }}</td>
+
+                        <td class="px-6 py-4 font-mono text-zinc-800 dark:text-zinc-200">{{ $v->desconto }} %</td>
                     </tr>
                 @empty
                     <tr>

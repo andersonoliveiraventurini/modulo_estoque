@@ -12,4 +12,14 @@ class Vendedor extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'vendedores';
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }   
+
+    protected $fillable = [
+        'user_id',
+        'desconto',
+    ];
 }
