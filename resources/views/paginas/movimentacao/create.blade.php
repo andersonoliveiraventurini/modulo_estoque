@@ -7,7 +7,9 @@
                 class="bg-white p-6 shadow rounded-2xl border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
 
                 <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
-                    <x-icon name="truck" class="w-5 h-5 text-primary-600" />
+                    <x-heroicon-o-truck
+                        class="w-5 h-5 text-primary-600" />
+
                     Receber produto
                 </h2>
                 <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
@@ -42,9 +44,10 @@
                                     <option value="{{ $pedido->id }}">{{ $pedido->id }}</option>
                                 @endforeach
                             </x-select>
-                            <x-input name="nota_fiscal_fornecedor" label="Nota Fiscal Fornecedor" placeholder="(opcional)" />
+                            <x-input name="nota_fiscal_fornecedor" label="Nota Fiscal Fornecedor"
+                                placeholder="(opcional)" />
                             <x-input name="romaneiro" label="Romaneiro" placeholder="(opcional)" />
-                          
+
                         </div>
                     </div>
 
@@ -60,7 +63,7 @@
                         <div id="produtos-wrapper" class="space-y-4">
                             <div
                                 class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-xl dark:border-neutral-700 relative">
-                                <x-input name="produtos[0][nome]" label="Nome" placeholder="Produto" /> 
+                                <x-input name="produtos[0][nome]" label="Nome" placeholder="Produto" />
                                 <x-select name="produtos[0][perecivel]" label="Perecível">
                                     <option value="">Selecione</option>
                                     <option value="sim">Sim</option>
@@ -75,7 +78,7 @@
                                 <x-input name="produtos[0][armazem]" label="Endereço" placeholder="Armazém" />
                                 <x-input name="produtos[0][corredor]" label="Corredor" placeholder="Corredor" />
                                 <x-input name="produtos[0][posicao]" label="Posição" placeholder="Posição" />
-                               
+
                             </div>
                         </div>
 
