@@ -28,6 +28,10 @@
                             class="text-secondary-600 hover:underline text-sm font-medium">
                             Análises de crédito
                         </a>
+                        <a href="{{ route('orcamentos.criar', $cliente->id ?? null) }}"
+                            class="text-secondary-600 hover:underline text-sm font-medium">
+                            Criar Orçamento
+                        </a>
                     </div>
                 </div>
 
