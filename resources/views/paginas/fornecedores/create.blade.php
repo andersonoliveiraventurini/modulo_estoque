@@ -21,7 +21,7 @@
                     <!-- Dados Básicos -->
                     <div class="space-y-4">
                         <h3 class="text-lg font-medium flex items-center gap-2">
-                            <x-icon name="clipboard" class="w-5 h-5 text-primary-600" />
+                            <x-heroicon-o-clipboard class="w-5 h-5 text-primary-600" />
                             Dados Básicos
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
@@ -57,7 +57,7 @@
                     <div class="space-y-4"><br />
                         <hr />
                         <h3 class="text-lg font-medium flex items-center gap-2">
-                            <x-icon name="users" class="w-5 h-5 text-primary-600" />
+                            <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
                             Contatos
                         </h3>
 
@@ -78,7 +78,7 @@
                     <div class="space-y-4"><br />
                         <hr />
                         <h3 class="text-lg font-medium flex items-center gap-2">
-                            <x-icon name="users" class="w-5 h-5 text-primary-600" />
+                            <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
                             Endereço
                         </h3>
                         <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
@@ -131,7 +131,7 @@
             <!-- Botão de excluir -->
             <button type="button" onclick="removeContato(this)"
                 class="absolute top-2 right-2 text-red-600 hover:text-red-800">
-                <x-icon name="trash" class="w-5 h-5" />
+                <x-heroicon-o-trash class="w-5 h-5" />
             </button>`;
             wrapper.appendChild(div);
             contatoIndex++;

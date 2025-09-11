@@ -35,6 +35,7 @@
                 :current="request()->routeIs('fornecedores.create')" wire:navigate>
                 {{ __('Cadastrar fornecedor') }}</flux:navlist.item>
         </flux:navlist.group>
+
         <flux:navlist.group heading="Estoque" expandable :expanded="false">
             <flux:navlist.item icon="home" :href="route('movimentacao.index')"
                 :current="request()->routeIs('movimentacao.index')" wire:navigate>{{ __('Movimentações') }}
@@ -43,7 +44,6 @@
                 :current="request()->routeIs('movimentacao.create')" wire:navigate>
                 {{ __('Receber produto') }}</flux:navlist.item>
         </flux:navlist.group>
-
 
         <flux:navlist.group heading="Produtos" expandable :expanded="false">
             <flux:navlist.item icon="home" :href="route('produtos.index')"
@@ -63,6 +63,27 @@
         <flux:navlist.group heading="Orçamentos" expandable :expanded="false">
             <flux:navlist.item icon="home" :href="route('orcamentos.index')"
                 :current="request()->routeIs('orcamentos.index')" wire:navigate>{{ __('Listar orçamentos') }}
+            </flux:navlist.item>
+        </flux:navlist.group>
+
+        <flux:navlist.group heading="Financeiro" expandable :expanded="false">
+            <flux:navlist.item icon="home" :href="route('descontos.index')"
+                :current="request()->routeIs('descontos.index')" wire:navigate>{{ __('Descontos') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="home" :href="route('notas.index')"
+                :current="request()->routeIs('notas.index')" wire:navigate>{{ __('Listar notas') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="home" :href="route('notas.create')"
+                :current="request()->routeIs('notas.create')" wire:navigate>{{ __('Gerar nota') }}
+            </flux:navlist.item>
+        </flux:navlist.group>
+
+        <flux:navlist.group heading="Usuários" expandable :expanded="false">
+            <flux:navlist.item icon="home" :href="route('vendedores.index')"
+                :current="request()->routeIs('vendedores.index')" wire:navigate>{{ __('Listar vendedores') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="home" :href="route('vendedores.create')"
+                :current="request()->routeIs('vendedores.create')" wire:navigate>{{ __('Criar vendedor') }}
             </flux:navlist.item>
         </flux:navlist.group>
 
@@ -91,29 +112,6 @@
                 </flux:navlist.item>
                 <flux:navlist.item icon="home" :href="route('pedidos.index')"
                     :current="request()->routeIs('pedidos.index')" wire:navigate>{{ __('Listar pedidos') }}
-                </flux:navlist.item>
-            </flux:navlist.group>
-        </flux:navlist>
-
-        <flux:navlist variant="outline">
-            <flux:navlist.group :heading="__('Financeiro')" class="grid">
-                <flux:navlist.item icon="home" :href="route('analise_creditos.index')"
-                    :current="request()->routeIs('analise_creditos.index')" wire:navigate>
-                    {{ __('Análises de crédito') }}
-                </flux:navlist.item>
-
-                <flux:navlist.item icon="home" :href="route('vendas.index')"
-                    :current="request()->routeIs('vendas.index')" wire:navigate>{{ __('Listar vendas') }}
-                </flux:navlist.item>
-
-                <flux:navlist.item icon="home" :href="route('descontos.index')"
-                    :current="request()->routeIs('descontos.index')" wire:navigate>{{ __('Descontos') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('notas.index')"
-                    :current="request()->routeIs('notas.index')" wire:navigate>{{ __('Listar notas') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('notas.create')"
-                    :current="request()->routeIs('notas.create')" wire:navigate>{{ __('Gerar nota') }}
                 </flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist>

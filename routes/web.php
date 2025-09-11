@@ -23,7 +23,7 @@ use App\Http\Controllers\ConsultaPrecoController;
 use App\Http\Controllers\MovimentacaoController;
 use App\Http\Controllers\NcmController;
 use App\Http\Controllers\NotaFiscalController;
-
+use App\Http\Controllers\VendedorController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -73,6 +73,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('enderecos', EnderecoController::class)->names('enderecos');
     Route::resource('descontos', DescontoController::class)->names('descontos');
     Route::resource('armazens', ArmazemController::class)->names('armazens');
+
+    Route::resource('vendedores', VendedorController::class)->names('vendedores');
 
     Route::get('rdstation/checar-token', [RdstationController::class, 'checarToken'])->name('rdstation.checar-token');
     Route::get('rdstation/listar-empresas', [RdstationController::class, 'listarEmpresas'])->name('rdstation.listar-empresas');

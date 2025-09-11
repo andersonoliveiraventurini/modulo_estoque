@@ -10,7 +10,7 @@
                     <!-- 60% (esquerda) -->
                     <div class="col-span-12 md:col-span-8">
                         <h2 class="text-xl font-semibold flex items-center gap-2">
-                            <x-icon name="user" class="w-5 h-5 text-primary-600" />
+                            <x-heroicon-o-user class="w-5 h-5 text-primary-600" />
                             Dados do Cliente
                         </h2>
                         <p class="text-sm text-neutral-500 dark:text-neutral-400">

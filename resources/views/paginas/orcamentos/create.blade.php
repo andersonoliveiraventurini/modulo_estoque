@@ -1,9 +1,9 @@
 <x-layouts.app :title="__('Criar Orçamento')">
-    <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
+    <div class="flex w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
             <div
                 class="bg-white p-6 shadow rounded-2xl border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-                
+
                 <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
                     <x-heroicon-o-document-text class="w-5 h-5 text-primary-600" />
                     Criar Orçamento
@@ -11,28 +11,21 @@
                 <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
                     Defina os dados do orçamento, adicione os produtos e acompanhe o valor total em tempo real.
                 </p>
-
+                <!-- Pesquisa de Produtos -->
+                <div class="space-y-4">
+                    <hr />
+                    <h3 class="text-lg font-medium flex items-center gap-2">
+                        <x-heroicon-o-magnifying-glass class="w-5 h-5 text-primary-600" />
+                        Buscar Produtos
+                    </h3>
+                    <livewire:lista-produto-orcamento />
+                </div>
                 <!-- Campos iniciais -->
                 <form action="{{ route('orcamentos.store') }}" method="POST" class="space-y-8">
                     @csrf
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <x-input name="nome_obra" label="Nome da Obra" placeholder="Digite o nome da obra" required />
-                        <x-input id="valor_total" name="valor_total" label="Valor Total (R$)" readonly
-                            value="0,00" class="bg-gray-100" />
-                        <x-input name="endereco_entrega" label="Endereço de Entrega (opcional)" placeholder="Digite o endereço" />
-                    </div>
-
-                    <!-- Pesquisa de Produtos -->
-                    <div class="space-y-4"><br/><hr/>
-                        <h3 class="text-lg font-medium flex items-center gap-2">
-                            <x-heroicon-o-magnifying-glass class="w-5 h-5 text-primary-600" />
-                            Buscar Produtos
-                        </h3>
-                        <livewire:lista-produto-orcamento />
-                    </div>
-
                     <!-- Produtos Selecionados -->
-                    <div class="space-y-4"><br/><hr/>
+                    <div class="space-y-4"><br />
+                        <hr />
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <x-heroicon-o-shopping-cart class="w-5 h-5 text-primary-600" />
                             Produtos no Orçamento
@@ -41,6 +34,14 @@
                         <div id="produtos-selecionados" class="space-y-4">
                             <!-- Produtos adicionados aparecerão aqui -->
                         </div>
+                    </div>
+                    <br />
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <x-input name="nome_obra" label="Nome da Obra" placeholder="Digite o nome da obra" required />
+                        <x-input id="valor_total" name="valor_total" label="Valor Total (R$)" readonly value="0,00"
+                            class="bg-gray-100" />
+                        <x-input name="endereco_entrega" label="Endereço de Entrega (opcional)"
+                            placeholder="Digite o endereço" />
                     </div>
 
                     <!-- Ações -->
@@ -64,7 +65,12 @@
                 return;
             }
 
-            const produto = { id, nome, preco: parseFloat(preco), quantidade: 1 };
+            const produto = {
+                id,
+                nome,
+                preco: parseFloat(preco),
+                quantidade: 1
+            };
             produtos.push(produto);
             renderProdutos();
         }
@@ -90,26 +96,14 @@
                 total += subtotal;
 
                 const div = document.createElement('div');
-                div.classList = "grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-xl dark:border-neutral-700 relative";
+                div.classList =
+                    "grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 border rounded-xl dark:border-neutral-700 relative";
                 div.innerHTML = `
                     <input type="hidden" name="produtos[${i}][id]" value="${p.id}">
-                    
-                    <div class="flex flex-col">
-                        <label class="text-sm font-medium">Produto</label>
-                        <input type="text" value="${p.nome}" readonly class="border rounded-lg px-3 py-2 w-full bg-gray-100">
-                    </div>
-
-                    <div class="flex flex-col">
-                        <label class="text-sm font-medium">Preço Unitário (R$)</label>
-                        <input type="text" value="${p.preco.toFixed(2)}" readonly class="border rounded-lg px-3 py-2 w-full bg-gray-100">
-                    </div>
-
-                    <div class="flex flex-col">
-                        <label class="text-sm font-medium">Quantidade</label>
-                        <input type="number" name="produtos[${i}][quantidade]" value="${p.quantidade}" min="1"
-                            onchange="alterarQuantidade(${i}, this.value)" 
-                            class="border rounded-lg px-3 py-2 w-full">
-                    </div>
+                    <x-input label="Produto" value="${p.nome}" readonly class="border rounded-lg px-3 py-2 w-full bg-gray-100" />
+                    <x-input label="Preço Unitário (R$)" value="${p.preco.toFixed(2)}" readonly class="border rounded-lg px-3 py-2 w-full bg-gray-100" />
+                    <x-input label="Quantidade" name="produtos[${i}][quantidade]" value="${p.quantidade}" min="1"
+                            onchange="alterarQuantidade(${i}, this.value)" class="border rounded-lg px-3 py-2 w-full bg-gray-100" />
 
                     <div class="flex flex-col justify-between">
                         <span class="text-sm font-semibold">Subtotal: R$ ${subtotal.toFixed(2)}</span>

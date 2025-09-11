@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreVendedorRequest;
 use App\Http\Requests\UpdateVendedorRequest;
+use App\Models\User;
 use App\Models\Vendedor;
 
 class VendedorController extends Controller
@@ -13,7 +14,7 @@ class VendedorController extends Controller
      */
     public function index()
     {
-        //
+        return view('paginas.usuarios.vendedores.index');
     }
 
     /**
@@ -21,7 +22,8 @@ class VendedorController extends Controller
      */
     public function create()
     {
-        //
+        $usuarios = User::all();
+        return view('paginas.usuarios.vendedores.create', compact('usuarios'));
     }
 
     /**

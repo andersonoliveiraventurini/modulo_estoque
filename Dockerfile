@@ -17,10 +17,18 @@ RUN apt-get update && apt-get install -y \
     nodejs \
     tzdata \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install sockets pdo pdo_mysql mbstring zip exif pcntl bcmath gd intl \
-    && docker-php-ext-enable sockets bcmath zip intl \
+    && docker-php-ext-install sockets pdo pdo_mysql mbstring zip exif pcntl bcmath gd intl dom \
+    && docker-php-ext-enable sockets bcmath zip intl dom \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
+
+# Aumenta limite de memória do PHP
+RUN { \
+    echo "memory_limit=512M"; \
+    echo "upload_max_filesize=64M"; \
+    echo "post_max_size=64M"; \
+} > /usr/local/etc/php/conf.d/custom-php.ini
+
 
 # Ajusta o fuso horário para o Brasil
 RUN ln -snf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime && echo "America/Sao_Paulo" > /etc/timezone

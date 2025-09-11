@@ -5,7 +5,7 @@
             <div class="bg-white p-6 shadow rounded-2xl border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
                 <!-- Cabeçalho -->
                 <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
-                    <x-icon name="archive-box" class="w-5 h-5 text-primary-600" />
+                    <x-heroicon-o-archive-box class="w-5 h-5 text-primary-600" />
                     Detalhes do Produto
                 </h2>
                 <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">

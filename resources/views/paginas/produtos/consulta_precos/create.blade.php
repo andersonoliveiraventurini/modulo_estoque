@@ -5,7 +5,7 @@
             <div
                 class="bg-white p-6 shadow rounded-2xl border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
                 <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
-                    <x-icon name="currency-dollar" class="w-5 h-5 text-primary-600" />
+                    <x-heroicon-o-currency-dollar class="w-5 h-5 text-primary-600" />
                     Solicitar cotação
                 </h2>
                 <form action="{{ route('consulta_preco.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">

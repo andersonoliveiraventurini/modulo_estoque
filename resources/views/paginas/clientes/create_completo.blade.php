@@ -5,7 +5,7 @@
             <div
                 class="bg-white p-6  shadow rounded-2xl border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
                 <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
-                    <x-icon name="user" class="w-5 h-5 text-primary-600" />
+                    <x-heroicon-o-user class="w-5 h-5 text-primary-600" />
                     Cadastrar Cliente
                 </h2>
                 <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
@@ -111,7 +111,7 @@
                     <!-- Contatos da Empresa -->
                     <div class="space-y-4"><br/><hr/>
                         <h3 class="text-lg font-medium flex items-center gap-2">
-                            <x-icon name="users" class="w-5 h-5 text-primary-600" />
+                            <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
                             Contatos
                         </h3>
 
@@ -133,7 +133,7 @@
                     <!-- Endereço -->
                     <div class="space-y-4"><br/><hr/>
                         <h3 class="text-lg font-medium flex items-center gap-2">
-                            <x-icon name="users" class="w-5 h-5 text-primary-600" />
+                            <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
                             Endereço do cliente
                         </h3>
                         <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
@@ -162,7 +162,7 @@
                     <!-- Endereço de entrega -->
                     <div class="space-y-4"><br/><hr/>
                         <h3 class="text-lg font-medium flex items-center gap-2">
-                            <x-icon name="users" class="w-5 h-5 text-primary-600" />
+                            <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
                             Endereço de entrega
                         </h3>
                         <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
@@ -216,7 +216,7 @@
             <!-- Botão de excluir -->
             <button type="button" onclick="removeContato(this)"
                 class="absolute top-2 right-2 text-red-600 hover:text-red-800">
-                <x-icon name="trash" class="w-5 h-5" />
+                <x-heroicon-o-trash class="w-5 h-5" />
             </button>`;
             wrapper.appendChild(div);
             contatoIndex++;

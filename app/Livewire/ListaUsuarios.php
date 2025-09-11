@@ -2,11 +2,11 @@
 
 namespace App\Livewire;
 
-use App\Models\Produto;
+use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-class ListaProdutoOrcamento extends Component
+class ListaUsuarios extends Component
 {
     use WithPagination;
 
@@ -20,11 +20,6 @@ class ListaProdutoOrcamento extends Component
         'sortField' => ['except' => 'nome'],
         'sortDirection' => ['except' => 'asc'],
     ];
-
-    public function buscar()
-    {
-        $this->resetPage();
-    }
 
     public function updatingSearch()
     {
@@ -45,7 +40,7 @@ class ListaProdutoOrcamento extends Component
 
     public function render()
     {
-        $produtos = Produto::query()
+        $usuarios = User::query()
             ->when($this->search, function ($query) {
                 // Divide a busca em palavras (tokens)
                 $terms = preg_split('/\s+/', trim($this->search));
@@ -56,27 +51,17 @@ class ListaProdutoOrcamento extends Component
 
                     $query->where(function ($q) use ($normalizedTerm) {
                         $q->where('nome', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('sku', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('preco_venda', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('preco_custo', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('codigo_barras', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('marca', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('modelo', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('estoque_minimo', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('estoque_atual', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('observacoes', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('descricao', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('ncm', 'like', "%{$normalizedTerm}%");
+                            ->orWhere('email', 'like', "%{$normalizedTerm}%")
+                            ->orWhere('cpf', 'like', "%{$normalizedTerm}%")
+                            ->orWhere('data_nascimento', 'like', "%{$normalizedTerm}%");
                     });
                 }
             })
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate($this->perPage);
 
-
-
-        return view('livewire.lista-produto-orcamento', [
-            'produtos' => $produtos,
+        return view('livewire.lista-usuarios', [
+            'usuarios' => $usuarios,
         ]);
     }
 }

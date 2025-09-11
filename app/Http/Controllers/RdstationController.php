@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRdstationRequest;
 use App\Http\Requests\UpdateRdstationRequest;
+use App\Models\Cliente;
+use App\Models\Contato;
 use App\Models\Rdstation;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Session;

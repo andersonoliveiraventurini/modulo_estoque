@@ -5,7 +5,7 @@
             <div
                 class="bg-white p-6 shadow rounded-2xl border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
                 <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
-                    <x-icon name="building-office-2" class="w-5 h-5 text-primary-600" />
+                    <x-heroicon-o-building-office-2 class="w-5 h-5 text-primary-600" />
                     Cadastro de produto
                 </h2>
                 <form action="{{ route('produtos.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
@@ -13,7 +13,7 @@
                     <!-- Dados Básicos -->
                     <div class="space-y-4">
                         <h3 class="text-lg font-medium flex items-center gap-2">
-                            <x-icon name="clipboard" class="w-5 h-5 text-primary-600" />
+                            <x-heroicon-o-clipboard class="w-5 h-5 text-primary-600" />
                             Dados Básicos
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
@@ -66,7 +66,7 @@
                             <div class="space-y-4"><br />
                                 <hr />
                                 <h3 class="text-lg font-medium flex items-center gap-2">
-                                    <x-icon name="users" class="w-5 h-5 text-primary-600" />
+                                    <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
                                     Informações Fiscais - Entrada
                                 </h3>
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
@@ -79,7 +79,7 @@
                                 <br />
                             <hr />
                             <h3 class="text-lg font-medium flex items-center gap-2">
-                                <x-icon name="users" class="w-5 h-5 text-primary-600" />
+                                <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
                                 Financeiro
                             </h3>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
@@ -101,7 +101,7 @@
                                     <div class="space-y-4">
                                         <hr />
                                         <h3 class="text-lg font-medium flex items-center gap-2">
-                                            <x-icon name="users" class="w-5 h-5 text-primary-600" />
+                                            <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
                                             Observações
                                         </h3>
                                         <div class="space-y-6">
@@ -123,7 +123,7 @@
 <div class="space-y-4"><br />
                                     <hr />
                                     <h3 class="text-lg font-medium flex items-center gap-2">
-                                        <x-icon name="users" class="w-5 h-5 text-primary-600" />
+                                        <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
                                         Informações Fiscais - Saída
                                     </h3>
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
