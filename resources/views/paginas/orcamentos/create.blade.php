@@ -38,16 +38,46 @@
                     <br />
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <x-input name="nome_obra" label="Nome da Obra" placeholder="Digite o nome da obra" required />
-                        <x-input id="valor_total" name="valor_total" label="Valor Total (R$)" readonly value="0,00"
-                            class="bg-gray-100" />
-                        <x-input name="endereco_entrega" label="Endereço de Entrega (opcional)"
-                            placeholder="Digite o endereço" />
+                        <x-input id="valor_total" name="valor_total" label="Valor Total dos Itens (R$)" readonly
+                            value="0,00" class="bg-gray-100" />
+                        <x-input name="desconto" label="Desconto %" type="number" min="0" max="30"
+                            value="0" placeholder="Digite a porcentagem de desconto (0 a 30)" />
+                        <x-input name="valor_final" label="Valor final" readonly value="0,00" class="bg-gray-100" />
+                    </div>
+                    <!-- Endereço de entrega -->
+                    <div class="space-y-4"><br />
+                        <hr />
+                        <h3 class="text-lg font-medium flex items-center gap-2">
+                            <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
+                            Endereço de entrega
+                        </h3>
+                        <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
+                            Preencha o CEP primeiro e aguarde os dados serem preenchidos automaticamente.
+                        </p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                            <x-input id="entrega_cep" name="entrega_cep" label="CEP" placeholder="00000-000"
+                                onblur="pesquisacepentrega(this.value);" onkeypress="mascara(this, '#####-###')"
+                                size="10" maxlength="9" value="{{ old('entrega_cep') }}" />
+                            <x-input id="entrega_cidade" name="entrega_cidade" label="Cidade" readonly="readonly"
+                                placeholder="Cidade" value="{{ old('entrega_cidade') }}" />
+                            <x-input id="entrega_estado" name="entrega_estado" label="Estado" placeholder="Estado"
+                                readonly="readonly" value="{{ old('entrega_estado') }}" />
+                            <x-input id="entrega_bairro" name="entrega_bairro" label="Bairro" placeholder="Bairro"
+                                readonly="readonly" value="{{ old('entrega_bairro') }}" />
+                            <x-input id="entrega_numero" name="entrega_numero" label="Número" placeholder="N°"
+                                value="{{ old('entrega_numero') }}" />
+                            <x-input id="entrega_compl" name="entrega_compl" label="Complemento"
+                                placeholder="Complemento - Apto, Bloco, etc." value="{{ old('entrega_compl') }}" />
+                        </div>
+                        <x-input id="entrega_logradouro" name="entrega_logradouro" label="Logradouro"
+                            placeholder="Rua, número, complemento" readonly="readonly"
+                            value="{{ old('entrega_logradouro') }}" />
                     </div>
 
                     <!-- Ações -->
                     <br />
                     <div class="flex gap-4">
-                        <x-button type="submit" >Salvar Orçamento</x-button>
+                        <x-button type="submit">Salvar Orçamento</x-button>
                         <x-button type="reset">Limpar</x-button>
                     </div>
                 </form>
@@ -99,24 +129,60 @@
                 div.classList =
                     "grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 border rounded-xl dark:border-neutral-700 relative";
                 div.innerHTML = `
-                    <input type="hidden" name="produtos[${i}][id]" value="${p.id}">
-                    <x-input label="Produto" value="${p.nome}" readonly class="border rounded-lg px-3 py-2 w-full bg-gray-100" />
-                    <x-input label="Preço Unitário (R$)" value="${p.preco.toFixed(2)}" readonly class="border rounded-lg px-3 py-2 w-full bg-gray-100" />
-                    <x-input label="Quantidade" name="produtos[${i}][quantidade]" value="${p.quantidade}" min="1"
-                            onchange="alterarQuantidade(${i}, this.value)" class="border rounded-lg px-3 py-2 w-full bg-gray-100" />
+                <input type="hidden" name="produtos[${i}][id]" value="${p.id}">
+                <div>
+                    <label class="text-sm font-medium">Produto</label>
+                    <input type="text" value="${p.nome}" readonly class="border rounded-lg px-3 py-2 w-full bg-gray-100" />
+                </div>
+                <div>
+                    <label class="text-sm font-medium">Preço Unitário (R$)</label>
+                    <input type="text" value="${p.preco.toFixed(2)}" readonly class="border rounded-lg px-3 py-2 w-full bg-gray-100" />
+                </div>
+                <div>
+                    <label class="text-sm font-medium">Quantidade</label>
+                    <input type="number" name="produtos[${i}][quantidade]" value="${p.quantidade}" min="1"
+                        onchange="alterarQuantidade(${i}, this.value)"
+                        class="border rounded-lg px-3 py-2 w-full" />
+                </div>
 
-                    <div class="flex flex-col justify-between">
-                        <span class="text-sm font-semibold">Subtotal: R$ ${subtotal.toFixed(2)}</span>
-                        <button type="button" onclick="removerProduto(${i})" class="text-red-600 hover:text-red-800 flex items-center gap-1 mt-2">
-                            <x-heroicon-o-trash class="w-5 h-5" />
-                            Remover
-                        </button>
-                    </div>
-                `;
+                <div class="flex flex-col justify-between">
+                    <span class="text-sm font-semibold">Subtotal: R$ ${subtotal.toFixed(2)}</span>
+                    <button type="button" onclick="removerProduto(${i})" class="text-red-600 hover:text-red-800 flex items-center gap-1 mt-2">
+                        🗑 Remover
+                    </button>
+                </div>
+            `;
                 wrapper.appendChild(div);
             });
 
+            // atualiza o total dos itens
             document.getElementById('valor_total').value = total.toFixed(2);
+
+            // sempre recalcula o valor final
+            atualizarValorFinal();
         }
+
+        function atualizarValorFinal() {
+            const total = parseFloat(document.getElementById('valor_total').value) || 0;
+            let descontoInput = document.querySelector('[name="desconto"]');
+            let desconto = parseFloat(descontoInput.value) || 0;
+
+            if (desconto < 0) desconto = 0;
+            if (desconto > 30) desconto = 30; // trava desconto máximo em 30%
+
+            // corrige valor no input se o usuário digitou algo inválido
+            descontoInput.value = desconto;
+
+            const valorFinal = total - (total * (desconto / 100));
+            document.querySelector('[name="valor_final"]').value = valorFinal.toFixed(2);
+        }
+
+
+        // Listener para o campo de desconto
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelector('[name="desconto"]').addEventListener("input", atualizarValorFinal);
+        });
     </script>
+
+    <script src="{{ asset('js/valida.js') }}"></script>
 </x-layouts.app>

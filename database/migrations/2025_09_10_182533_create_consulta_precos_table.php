@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('consulta_precos', function (Blueprint $table) {
             $table->id();
+            $table->enum('status', ['Pendente', 'Aguardando fornecedor', 'Disponível'])->default('Pendente')
+                ->comment('Status da cotação de preço.');
             $table->string('descricao')->nullable()
                 ->comment('Descrição da classificação do fornecedor.');
             $table->string('cor')->nullable()
