@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Categoria;
 use App\Models\User;
 use App\Models\Venda;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -32,5 +33,7 @@ class DatabaseSeeder extends Seeder
         $this->call(CategoriaSeeder::class);
         $this->call(ProdutoSeeder::class);
         $this->call(ArmazemSeeder::class);
+        $this->call(CategoriaSeeder::class);
+        $this->call(SubCategoriaSeeder::class);
     }
 }

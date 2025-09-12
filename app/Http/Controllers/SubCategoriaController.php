@@ -8,6 +8,14 @@ use App\Models\SubCategoria;
 
 class SubCategoriaController extends Controller
 {
+
+    public function subcategorias($id)
+    {
+        $subcategorias = SubCategoria::where('categoria_id', $id)->get();
+
+        return response()->json($subcategorias);
+    }
+
     /**
      * Display a listing of the resource.
      */

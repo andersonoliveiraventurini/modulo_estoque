@@ -24,6 +24,7 @@ use App\Http\Controllers\MovimentacaoController;
 use App\Http\Controllers\NcmController;
 use App\Http\Controllers\NotaFiscalController;
 use App\Http\Controllers\VendedorController;
+use App\Http\Controllers\SubCategoriaController;
 
 Volt::route('/', 'auth.login')
         ->name('home');
@@ -40,6 +41,8 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('settings/appearance', 'settings.appearance')->name('settings.appearance');
 
     Route::resource('produtos', ProdutoController::class)->names('produtos');
+    Route::get('/categorias/{id}/subcategorias', [SubCategoriaController::class, 'subcategorias']);
+
     Route::resource('movimentacao', MovimentacaoController::class)->names('movimentacao');
     Route::resource('consulta_preco', ConsultaPrecoController::class)->names('consulta_preco');
     Route::resource('ncm', NcmController::class)->names('ncm');
