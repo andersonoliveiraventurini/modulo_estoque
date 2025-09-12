@@ -5,7 +5,7 @@
     <!-- Cabeçalho -->
     <div class="flex items-center justify-between p-6 border-b border-zinc-200 dark:border-zinc-700">
         <h2 class="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-            Listagem de Clientes
+            Listagem de Clientes bloqueados
         </h2>
         <div class="flex items-end gap-4">
             <!-- Pesquisa (flexível, ocupa 2x mais espaço) -->
@@ -39,22 +39,7 @@
                 <tr>
                     <th class="px-6 py-3 text-left">
                         <button wire:click="sortBy('nome_fantasia')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Nome Brcom
-                        </button>
-                    </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('nome_fantasia')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Nome Fantasia
-                        </button>
-                    </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('razao_social')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Razão Social
-                        </button>
-                    </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('tratamento')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Tratamento
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
@@ -63,13 +48,13 @@
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('limite')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Limite
+                        <button wire:click="sortBy('data_bloqueio')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Data Bloqueio
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
                         <button wire:click="sortBy('desconto')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Desconto
+                            Bloqueado por
                         </button>
                     </th>
                 </tr>
@@ -78,14 +63,11 @@
                 @forelse($clientes as $c)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            <a href="/clientes/{{ $c->id }}">{{ $c->nome }}</a>
+                            <a href="/clientes/{{ $c->id }}">{{ $c->nome_fantasia }}</a>
                         </td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/clientes/{{ $c->id }}">{{ $c->nome_fantasia }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/clientes/{{ $c->id }}">{{ $c->razao_social }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/clientes/{{ $c->id }}">{{ $c->tratamento ?? '-' }}</a></td>
-                        <td class="px-6 py-4 font-mono text-zinc-800 dark:text-zinc-200"><a href="/clientes/{{ $c->id }}">{{ $c->cnpj_formatado }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->limite ?? '-' }}</td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->desconto ?? '-' }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/clientes/{{ $c->id }}">{{ $c->cnpj }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ \Carbon\Carbon::parse($c->data_bloqueio)->format('d/m/Y H:i') }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->bloqueado_por ?? '-' }}</td>
                     </tr>
                 @empty
                     <tr>

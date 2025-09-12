@@ -53,7 +53,7 @@
                     <br />
                     <!-- Ações -->
                     <div class="flex gap-4">
-                        <x-button type="submit" class="bg-primary-600 text-white">Bloquear Cliente</x-button>
+                         <x-button type="submit" >Bloquear Cliente</x-button>
                         <x-button type="reset">Limpar Formulário</x-button>
                     </div>
                     <!-- Botões -->

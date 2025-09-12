@@ -47,7 +47,7 @@
                     <!-- Ações -->
                     <br />
                     <div class="flex gap-4">
-                        <x-button type="submit" class="bg-primary-600 text-white">Salvar Orçamento</x-button>
+                        <x-button type="submit" >Salvar Orçamento</x-button>
                         <x-button type="reset">Limpar</x-button>
                     </div>
                 </form>

@@ -65,4 +65,15 @@ class User extends Authenticatable
     {
         return $this->hasOne(Vendedor::class);
     }
+
+     // se o user também pode ser vendedor direto na tabela pedidos
+    public function pedidosComoVendedor()
+    {
+        return $this->hasMany(Pedido::class, 'vendedor_id');
+    }
+
+    public function pedidosComoVendedorExterno()
+    {
+        return $this->hasMany(Pedido::class, 'vendedor_externo_id');
+    }
 }

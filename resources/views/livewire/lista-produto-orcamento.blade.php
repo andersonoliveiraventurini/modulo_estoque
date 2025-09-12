@@ -4,9 +4,10 @@
         <input type="text" wire:model.defer="search" placeholder="Buscar produto..."
             class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500" />
 
-        <button wire:click="buscar" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
-          <x-heroicon-o-magnifying-glass class="w-5 h-5 text-primary-600" /> Buscar
-        </button>
+        <x-button variant="primary" wire:click="buscar">
+            <x-heroicon-o-magnifying-glass class="w-5 h-5" />
+            Buscar
+        </x-button>
 
         <select wire:model="perPage"
             class="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
@@ -43,12 +44,11 @@
                         </td>
                         <td class="px-4 py-2 text-sm">R$ {{ number_format($produto->preco_venda, 2, ',', '.') }}</td>
                         <td class="px-4 py-2 text-center">
-                            <button type="button"
-                                onclick="adicionarProduto('{{ $produto->id }}', '{{ $produto->nome }}', '{{ $produto->preco_venda }}')"
-                                class="inline-flex items-center gap-1 px-3 py-1 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700">
+                          <x-button variant="primary"
+                                onclick="adicionarProduto('{{ $produto->id }}', '{{ $produto->nome }}', '{{ $produto->preco_venda }}')">
                                 <x-heroicon-o-plus class="w-4 h-4" />
                                 Selecionar
-                            </button>
+                            </x-button>
                         </td>
                     </tr>
                 @empty

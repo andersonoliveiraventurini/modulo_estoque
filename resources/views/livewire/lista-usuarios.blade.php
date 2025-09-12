@@ -43,21 +43,9 @@
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('cpf')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            CPF
-                        </button>
-                    </th>
-                    <th class="px-6 py-3 text-left">
                         <button wire:click="sortBy('email')"
                             class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             E-mail
-                        </button>
-                    </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('data_nascimento')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Data de Nascimento
                         </button>
                     </th>
                 </tr>
@@ -66,19 +54,15 @@
                 @forelse($usuarios as $u)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            <a href="/usuarios/{{ $u->id }}">{{ $u->nome }}</a>
+                            <a href="/usuarios/{{ $u->id }}">{{ $u->name }}</a>
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="/usuarios/{{ $u->id }}">{{ $u->cpf }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
                                 href="/usuarios/{{ $u->id }}">{{ $u->email }}</a></td>
-                        <td class="px-6 py-4 font-mono text-zinc-800 dark:text-zinc-200"><a
-                                href="/usuarios/{{ $u->id }}">{{ $u->data_nascimento }}</a></td>
                     </tr>
                 @empty
                     <tr>
                         <td colspan="6" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
-                            Nenhum cliente encontrado.
+                            Nenhum usuários encontrado.
                         </td>
                     </tr>
                 @endforelse

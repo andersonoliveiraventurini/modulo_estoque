@@ -11,7 +11,7 @@ class ListaUsuarios extends Component
     use WithPagination;
 
     public $search = '';
-    public $sortField = 'nome';
+    public $sortField = 'name';
     public $sortDirection = 'asc';
     public $perPage = 10;
 
@@ -50,7 +50,7 @@ class ListaUsuarios extends Component
                     $normalizedTerm = str_replace(',', '.', $term);
 
                     $query->where(function ($q) use ($normalizedTerm) {
-                        $q->where('nome', 'like', "%{$normalizedTerm}%")
+                        $q->where('name', 'like', "%{$normalizedTerm}%")
                             ->orWhere('email', 'like', "%{$normalizedTerm}%")
                             ->orWhere('cpf', 'like', "%{$normalizedTerm}%")
                             ->orWhere('data_nascimento', 'like', "%{$normalizedTerm}%");

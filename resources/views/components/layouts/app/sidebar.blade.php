@@ -79,6 +79,9 @@
         </flux:navlist.group>
 
         <flux:navlist.group heading="Usuários" expandable :expanded="false">
+            <flux:navlist.item icon="home" :href="route('usuarios.index')"
+                :current="request()->routeIs('usuarios.index')" wire:navigate>{{ __('Listar usuários') }}
+            </flux:navlist.item>
             <flux:navlist.item icon="home" :href="route('vendedores.index')"
                 :current="request()->routeIs('vendedores.index')" wire:navigate>{{ __('Listar vendedores') }}
             </flux:navlist.item>

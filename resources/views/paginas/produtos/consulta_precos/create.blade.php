@@ -15,6 +15,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                             <x-input name="nome" label="Descrição do item" placeholder="Digite a descrição" required
                                 class="col-span-2" />
+                            <x-input name="quantidade" label="Quantidade" placeholder="Digite a quantidade" />
                             <x-input name="cor" label="Cor" placeholder="Digite a cor" />
                             <x-select name="fornecedor_id" label="Fornecedor">
                                 <option value="">Selecione...</option>
@@ -23,12 +24,10 @@
                                 @endforeach
                             </x-select>
                         </div>
-                        <br />
                         <x-textarea name="observacoes" label="Observações" placeholder="Digite os detalhes adicionais..." rows="4" />
-                        <br />
                         <!-- Ações -->
                         <div class="flex gap-4">
-                            <x-button type="submit" class="bg-primary-600 text-white">Solicitar Cotação do Produto</x-button>
+                             <x-button type="submit" >Solicitar Cotação do Produto</x-button>
                             <x-button type="reset">Limpar Formulário</x-button>
                         </div>
                     </div>                                

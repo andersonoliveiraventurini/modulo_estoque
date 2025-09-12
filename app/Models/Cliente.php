@@ -20,7 +20,9 @@ class Cliente extends Model
         'tratamento',
         'status',
         'email',
-        'telefone' // novos campos
+        'telefone',  
+        'vendedor_id', 
+        'vendedor_externo_id' // novos campos
     ];
 
     protected $casts = [
@@ -49,7 +51,22 @@ class Cliente extends Model
     }
 
     public function bloqueios()
-{
-    return $this->hasMany(Bloqueio::class);
-}
+    {
+        return $this->hasMany(Bloqueio::class);
+    }
+
+    public function vendedor()
+    {
+        return $this->belongsTo(Vendedor::class, 'vendedor_id');
+    }
+
+    public function vendedorExterno()
+    {
+        return $this->belongsTo(Vendedor::class, 'vendedor_externo_id');
+    }
+
+    public function pedidos()
+    {
+        return $this->hasMany(Pedido::class);
+    }
 }

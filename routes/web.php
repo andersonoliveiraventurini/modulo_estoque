@@ -25,6 +25,7 @@ use App\Http\Controllers\NcmController;
 use App\Http\Controllers\NotaFiscalController;
 use App\Http\Controllers\VendedorController;
 use App\Http\Controllers\SubCategoriaController;
+use App\Http\Controllers\UserController;
 
 Volt::route('/', 'auth.login')
         ->name('home');
@@ -77,6 +78,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('armazens', ArmazemController::class)->names('armazens');
 
     Route::resource('vendedores', VendedorController::class)->names('vendedores');
+    Route::resource('usuarios', UserController::class)->names('usuarios');
 
     Route::get('rdstation/checar-token', [RdstationController::class, 'checarToken'])->name('rdstation.checar-token');
     Route::get('rdstation/listar-empresas', [RdstationController::class, 'listarEmpresas'])->name('rdstation.listar-empresas');

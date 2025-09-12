@@ -90,7 +90,7 @@
 
                 <!-- Botões -->
                 <div class="flex gap-4 mt-6">
-                    <x-button href="/fornecedores/{{ $fornecedor->id }}/edit" class="bg-primary-600 text-white">
+                    <x-button href="/fornecedores/{{ $fornecedor->id }}/edit" >
                         Editar
                     </x-button>
                     <x-button href="{{ route('fornecedores.index') }}">

@@ -164,7 +164,7 @@
                                         <br />
                                         <!-- Ações -->
                                         <div class="flex gap-4">
-                                            <x-button type="submit" class="bg-primary-600 text-white">Cadastrar
+                                             <x-button type="submit" >Cadastrar
                                                 Produto</x-button>
                                             <x-button type="reset">Limpar Formulário</x-button>
                                         </div>

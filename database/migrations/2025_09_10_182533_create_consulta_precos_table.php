@@ -17,6 +17,8 @@ return new class extends Migration
                 ->comment('Descrição da classificação do fornecedor.');
             $table->string('cor')->nullable()
                 ->comment('Cor associada à classificação do fornecedor.');
+            $table->string('quantidade')->nullable()
+                ->comment('Quantidade');
 
             // cliente
             $table->unsignedBigInteger('usuario_id')->nullable()

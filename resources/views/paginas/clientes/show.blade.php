@@ -120,7 +120,7 @@
 
                 <!-- Botões -->
                 <div class="flex gap-4 mt-6">
-                    <x-button href="{{ route('clientes.edit', $cliente) }}" class="bg-primary-600 text-white">
+                    <x-button href="{{ route('clientes.edit', $cliente) }}" >
                         Editar
                     </x-button>
                     <x-button href="{{ route('clientes.index') }}">
