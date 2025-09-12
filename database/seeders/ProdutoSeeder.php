@@ -76,38 +76,56 @@ class ProdutoSeeder extends Seeder
                     DB::transaction(function () use ($data, $trimOrNull, $toFloat, $toInt, $digits) {
                         // Monta dados do produto
                         $produtoData = [
-                            'codigo_brcom' => $trimOrNull($data['codigo'] ?? null),
-                            'sku' => $trimOrNull($data['referencia'] ?? null),
-                            'nome' => $trimOrNull($data['descrição'] ?? null),
-                            'ncm' => $trimOrNull($data['ncm'] ?? null),
-                            'codigo_barras' => $digits($data['codigo'] ?? null), // usando código como código de barras
-                            'preco_custo' => $toFloat($data['custo'] ?? null),
-                            'preco_venda' => $toFloat($data['preço'] ?? null),
+                            'codigo_brcom'   => $trimOrNull($data['codigo'] ?? null),
+                            'sku'            => $trimOrNull($data['referencia'] ?? null),
+                            'nome'           => $trimOrNull($data['descrição'] ?? null),
+                            'ncm'            => $trimOrNull($data['ncm'] ?? null),
+                            'codigo_barras'  => $digits($data['codigo'] ?? null),
+                            'preco_custo'    => $toFloat($data['custo'] ?? null),
+                            'preco_venda'    => $toFloat($data['preço'] ?? null),
                             'estoque_minimo' => $toFloat($data['estmin'] ?? null),
-                            'estoque_atual' => $toFloat($data['saldo'] ?? null),
+                            'estoque_atual'  => $toFloat($data['saldo'] ?? null),
                             'unidade_medida' => $trimOrNull($data['und'] ?? ($data['unidade'] ?? null)),
-                            'marca' => $trimOrNull($data['marca'] ?? null),
-                            'modelo' => $trimOrNull($data['modelo'] ?? null),
-                            'descricao' => $trimOrNull($data['descrição'] ?? null),
-                            'observacoes' => $trimOrNull($data['nomelinha'] ?? null),
-                            'ativo' => isset($data['ativo']) ? (bool) $data['ativo'] : true,
-                            'created_at' => now(),
-                            'updated_at' => now(),
+                            'marca'          => $trimOrNull($data['marca'] ?? null),
+                            'modelo'         => $trimOrNull($data['modelo'] ?? null),
+                            'descricao'      => $trimOrNull($data['descrição'] ?? null),
+                            'observacoes'    => $trimOrNull($data['nomelinha'] ?? null),
+                            'ativo'          => isset($data['ativo']) ? (bool) $data['ativo'] : true,
+                            'created_at'     => now(),
+                            'updated_at'     => now(),
                         ];
 
-                        // Busca fornecedor_id se existir informação de fornecedor
                         $fornecedorId = null;
-                        if (!empty($data['fornecedor'] ?? null)) {
-                            $fornecedor = DB::table('fornecedores')
-                                ->where('nome', 'like', '%' . $data['fornecedor'] . '%')
-                                ->orWhere('codigo', $data['fornecedor'])
+
+                        if (!empty($data['fornecedor']) && $data['fornecedor'] !== '0') {
+                            $cliente = DB::table('clientes')
+                                ->where('numero_brcom', $data['fornecedor'])
                                 ->first();
-                            
-                            if ($fornecedor) {
-                                $fornecedorId = $fornecedor->id;
+
+                            if ($cliente) {
+                                // Verifica se já existe fornecedor com a mesma linha_brcom
+                                $fornecedor = DB::table('fornecedores')
+                                    ->where('linha_brcom', $cliente->numero_brcom)
+                                    ->first();
+
+                                if (!$fornecedor) {
+                                    // Se não existir, insere e pega o ID
+                                    $fornecedorId = DB::table('fornecedores')->insertGetId([
+                                        'nome_fantasia' => $cliente->nome_fantasia,
+                                        'linha_brcom'   => $cliente->numero_brcom,
+                                        'tratamento'    => $cliente->nome,
+                                        'cnpj' => !empty($cliente->cnpj) ? $cliente->cnpj : null,
+                                        'created_at'    => now(),
+                                        'updated_at'    => now(),
+                                    ]);
+
+                                    $this->command->info("Fornecedor criado: {$fornecedorId}");
+                                } else {
+                                    $fornecedorId = $fornecedor->id;
+                                }
                             }
                         }
-                        
+
                         if ($fornecedorId) {
                             $produtoData['fornecedor_id'] = $fornecedorId;
                         }
@@ -115,6 +133,7 @@ class ProdutoSeeder extends Seeder
                         // Insere produto
                         DB::table('produtos')->insert($produtoData);
                     });
+
 
                     $ok++;
                     // Feedback pontual para lotes grandes

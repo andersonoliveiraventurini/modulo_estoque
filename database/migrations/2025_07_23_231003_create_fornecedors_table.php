@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('fornecedores', function (Blueprint $table) {
             $table->id();
+            $table->string('cnpj')->nullable();
             $table->enum('status', ['ativo', 'inativo', 'bloqueado'])->default('ativo');
             $table->integer('linha_brcom')->nullable();
             $table->string('nome_fantasia')->nullable();
@@ -27,7 +28,6 @@ return new class extends Migration
             $table->text('observacao')->nullable();
             $table->string('email')->nullable();
             $table->string('telefone')->nullable();
-            $table->string('cnpj')->unique()->nullable();
 
             // Benefícios e Certificações
             $table->string('beneficio')->nullable();
