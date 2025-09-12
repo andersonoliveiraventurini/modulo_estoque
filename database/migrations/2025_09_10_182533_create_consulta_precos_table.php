@@ -28,7 +28,7 @@ return new class extends Migration
             $table->unsignedBigInteger('orcamento_id')->nullable()
                 ->comment('orçamento a que está vinculado.');
 
-            $table->double('preco')->nullable()
+            $table->double('preco_compra')->nullable()
                 ->comment('Preço cotado pelo fornecedor.');
             $table->double('preco_venda')->nullable()
                 ->comment('Preço de venda.');
@@ -41,9 +41,9 @@ return new class extends Migration
             $table->foreign('fornecedor_id')->references('id')->on('fornecedores')->onDelete('cascade');
 
             // cliente
-            $table->unsignedBigInteger('responsavel_id')->nullable()
+            $table->unsignedBigInteger('comprador_id')->nullable()
                 ->comment('Usuário que fez o cadastro do preço.');
-            $table->foreign('responsavel_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('comprador_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
         });

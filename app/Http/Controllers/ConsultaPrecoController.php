@@ -40,7 +40,7 @@ class ConsultaPrecoController extends Controller
      */
     public function show(ConsultaPreco $consultaPreco)
     {
-        //
+        return view('paginas.produtos.consulta_precos.show', compact('consultaPreco'));
     }
 
     /**
