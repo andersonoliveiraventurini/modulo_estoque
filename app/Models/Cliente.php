@@ -18,11 +18,14 @@ class Cliente extends Model
         'nome_fantasia',
         'razao_social',
         'tratamento',
-        'status',
-        'email',
-        'telefone',  
-        'vendedor_id', 
-        'vendedor_externo_id' // novos campos
+        'data_nascimento',
+        'cnae',
+        'inscricao_estadual',
+        'inscricao_municipal',
+        'data_abertura',
+        'regime_tributario',
+        'vendedor_id',
+        'vendedor_externo_id',
     ];
 
     protected $casts = [
@@ -69,4 +72,17 @@ class Cliente extends Model
     {
         return $this->hasMany(Pedido::class);
     }
+
+    
+
+    public function contatos()
+    {
+        return $this->hasMany(Contato::class);
+    }
+
+    public function enderecos()
+    {
+        return $this->hasMany(Endereco::class);
+    }
+
 }

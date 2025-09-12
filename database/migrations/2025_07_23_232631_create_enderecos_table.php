@@ -20,6 +20,8 @@ return new class extends Migration
             $table->string('cidade')->nullable();
             $table->string('estado')->nullable();
             $table->string('cep')->nullable();
+            $table->enum('tipo', ['comercial', 'entrega'])->default('entrega')
+                  ->comment('Tipo de endereço: comercial ou entrega.');
             $table->unsignedBigInteger('cliente_id')->nullable()
                   ->comment('Referência ao cliente associado a este endereço.');
             $table->foreign('cliente_id')->references('id')->on('clientes')->onDelete('cascade');

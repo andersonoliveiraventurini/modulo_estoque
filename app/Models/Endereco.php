@@ -10,4 +10,22 @@ class Endereco extends Model
 {
     /** @use HasFactory<\Database\Factories\EnderecoFactory> */
     use HasFactory, SoftDeletes;
+
+    protected $fillable = [
+        'logradouro',
+        'numero',
+        'complemento',
+        'bairro',
+        'cidade',
+        'estado',
+        'cep',
+        'tipo',
+        'cliente_id',
+        'fornecedor_id',
+    ];
+
+    public function cliente()
+    {
+        return $this->belongsTo(Cliente::class);
+    }
 }

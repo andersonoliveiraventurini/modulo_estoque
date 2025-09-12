@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('razao_social')->nullable();
             $table->string('tratamento')->nullable();    
             $table->integer('status')->default(1); // 1 - Ativo, 0 - Inativo
+            $table->date('data_nascimento')->nullable();
 
              // Dados da empresa
             $table->string('inscricao_estadual')->nullable();
