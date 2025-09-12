@@ -109,12 +109,17 @@ class ProdutoSeeder extends Seeder
                                     ->first();
 
                                 if (!$fornecedor) {
+                                    // Se nome_fantasia vier como "*", usa o nome do cliente
+                                    $nomeFantasia = ($cliente->nome_fantasia === '*')
+                                        ? $cliente->nome
+                                        : $cliente->nome_fantasia;
+
                                     // Se não existir, insere e pega o ID
                                     $fornecedorId = DB::table('fornecedores')->insertGetId([
-                                        'nome_fantasia' => $cliente->nome_fantasia,
+                                        'nome_fantasia' => $nomeFantasia,
                                         'linha_brcom'   => $cliente->numero_brcom,
                                         'tratamento'    => $cliente->nome,
-                                        'cnpj' => !empty($cliente->cnpj) ? $cliente->cnpj : null,
+                                        'cnpj'          => !empty($cliente->cnpj) ? $cliente->cnpj : null,
                                         'created_at'    => now(),
                                         'updated_at'    => now(),
                                     ]);
