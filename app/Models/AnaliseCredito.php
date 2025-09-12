@@ -11,7 +11,13 @@ class AnaliseCredito extends Model
     /** @use HasFactory<\Database\Factories\AnaliseCreditoFactory> */
     use HasFactory, SoftDeletes;
 
-      
+    protected $fillable = [
+        'cliente_id',
+        'limite_boleto',
+        'limite_carteira',
+        'observacoes',
+        'user_id'
+    ];
 
     
 }

@@ -12,7 +12,7 @@
                     Preencha as informações do cliente para realizar o cadastro.
                 </p>
 
-                <form action="{{ route('clientes.store') }}" method="POST" class="space-y-8">
+                <form action="{{ route('clientes.store') }}" method="POST" class="space-y-8" enctype="multipart/form-data">
                     @csrf
 
                     <!-- Informações Pessoais -->

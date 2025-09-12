@@ -33,6 +33,9 @@ class StoreClienteRequest extends FormRequest
             'nome'           => ['nullable', 'string', 'max:255'],
             'data_nascimento'=> ['nullable', 'date'],
 
+            'certidoes_negativas' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+
+
             // Vendedores
             'vendedor_id'        => ['nullable', 'exists:users,id'],
             'vendedor_externo_id'=> ['nullable', 'exists:users,id'],

@@ -74,7 +74,6 @@ class Cliente extends Model
     }
 
     
-
     public function contatos()
     {
         return $this->hasMany(Contato::class);
@@ -84,5 +83,16 @@ class Cliente extends Model
     {
         return $this->hasMany(Endereco::class);
     }
+
+    public function enderecoComercial()
+    {
+        return $this->hasOne(Endereco::class)->where('tipo', 'comercial');
+    }
+
+    public function enderecoEntrega()
+    {
+        return $this->hasOne(Endereco::class)->where('tipo', 'entrega');
+    }
+
 
 }

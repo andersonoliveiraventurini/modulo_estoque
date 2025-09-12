@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreClienteRequest;
 use App\Http\Requests\UpdateClienteRequest;
+use App\Models\AnaliseCredito;
+use App\Models\Bloqueio;
 use App\Models\Cliente;
 use App\Models\Contato;
 use App\Models\Vendedor;
 use Illuminate\Support\Facades\DB;
+use PhpParser\Node\Stmt\Block;
 
 class ClienteController extends Controller
 {
@@ -48,10 +51,43 @@ class ClienteController extends Controller
             $dadosCliente = array_filter($request->only([
                 'cpf', 'cnpj', 'nome', 'nome_fantasia', 'razao_social', 'tratamento',
                 'data_nascimento', 'cnae', 'inscricao_estadual', 'inscricao_municipal',
-                'data_abertura', 'regime_tributario', 'vendedor_id', 'vendedor_externo_id'
+                'data_abertura', 'regime_tributario', 'vendedor_id', 'vendedor_externo_id',
+                'certidoes_negativas', 'suframa', 'classificacao', 'canal_origem',
+                'desconto', 'negociar_titulos', 'inativar_apos'
             ]));
 
+            // Ajusta o campo cpf_responsavel -> cpf
+            if ($request->filled('cpf_responsavel')) {
+                $dadosCliente['cpf'] = $request->input('cpf_responsavel');
+            }
+
+            // Upload de arquivo (certidões negativas)
+            if ($request->hasFile('certidoes_negativas')) {
+                $path = $request->file('certidoes_negativas')->store('certidoes', 'public');
+                $dadosCliente['certidoes_negativas'] = $path;
+            }
+
             $cliente = Cliente::create($dadosCliente);
+
+            // bloqueio inicial
+            if($request->bloqueado == 1) {
+                Bloqueio::create([
+                    'cliente_id' => $cliente->id,
+                    'motivo' => 'Bloqueio automático no cadastro',
+                    'user_id' => auth()->id()
+                ]);
+            }
+
+            // análise de crédito inicial
+            if(isset($request->limite_boleto)|| isset($request->limite_carteira)) {
+                AnaliseCredito::create([
+                    'cliente_id' => $cliente->id,
+                    'limite_boleto' => $request->limite_boleto ?? 0,
+                    'limite_carteira' => $request->limite_carteira ?? 0,
+                    'observacoes' => 'Análise inicial no cadastro',
+                    'user_id' => auth()->id()
+                ]);
+            }
 
             // contatos
             if ($request->filled('contatos')) {

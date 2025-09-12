@@ -46,15 +46,36 @@
                             <x-show-field label="Inscrição Estadual" :value="$cliente->inscricao_estadual" />
                             <x-show-field label="Inscrição Municipal" :value="$cliente->inscricao_municipal" />
                             <x-show-field label="Data de Abertura" :value="$cliente->data_abertura?->format('d/m/Y')" />
+
+                            {{-- Campos que não estavam sendo exibidos --}}
                             <x-show-field label="CNAE" :value="$cliente->cnae" />
-                            <x-show-field label="Regime Tributário" :value="ucfirst($cliente->regime_tributario)" />
+                            <x-show-field label="Regime Tributário" :value="$cliente->regime_tributario" />
+                               <x-show-field label="Classificação" :value="$cliente->classificacao" />
+                            <x-show-field label="Canal de Origem" :value="$cliente->canal_origem" />
+                          
+                            {{-- Exibição do arquivo --}}
+                            <div class="col-span-3">
+                                <x-show-field label="Certidões Negativas">
+                                    @if($cliente->certidoes_negativas)
+                                        <a href="{{ asset('storage/' . $cliente->certidoes_negativas) }}" 
+                                        target="_blank" 
+                                        class="text-blue-600 hover:underline">
+                                            Ver arquivo
+                                        </a>
+                                    @else
+                                        <span>Não enviado</span>
+                                    @endif
+                                </x-show-field>
+                            </div>
                         </div>
                     </x-tab>
 
+
                     <x-tab name="responsavel" label="Responsável">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-show-field label="CPF" :value="$cliente->cpf_responsavel" />
-                            <x-show-field label="Nome" :value="$cliente->nome" />
+                            <x-show-field label="CPF" :value="$cliente->cpf" />
+                            <x-show-field label="Nome" :value="$cliente->nome" />  <x-show-field label="Data de Nascimento" :value="$cliente->data_nascimento?->format('d/m/Y')" />
+                          
                             <x-show-field label="SUFRAMA" :value="$cliente->suframa" />
                         </div>
                     </x-tab>
@@ -92,30 +113,30 @@
                             @endforelse
                         </div>
                     </x-tab>
-
                     <x-tab name="endereco" label="Endereço">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-show-field label="CEP" :value="$cliente->endereco_cep" />
-                            <x-show-field label="Cidade" :value="$cliente->endereco_cidade" />
-                            <x-show-field label="Estado" :value="$cliente->endereco_estado" />
-                            <x-show-field label="Bairro" :value="$cliente->endereco_bairro" />
-                            <x-show-field label="Número" :value="$cliente->endereco_numero" />
-                            <x-show-field label="Complemento" :value="$cliente->endereco_compl" />
-                            <x-show-field label="Logradouro" :value="$cliente->endereco_logradouro" class="md:col-span-3" />
+                            <x-show-field label="CEP" :value="$cliente->enderecoComercial?->cep" />
+                            <x-show-field label="Cidade" :value="$cliente->enderecoComercial?->cidade" />
+                            <x-show-field label="Estado" :value="$cliente->enderecoComercial?->estado" />
+                            <x-show-field label="Bairro" :value="$cliente->enderecoComercial?->bairro" />
+                            <x-show-field label="Número" :value="$cliente->enderecoComercial?->numero" />
+                            <x-show-field label="Complemento" :value="$cliente->enderecoComercial?->complemento" />
+                            <x-show-field label="Logradouro" :value="$cliente->enderecoComercial?->logradouro" class="md:col-span-3" />
                         </div>
                     </x-tab>
 
                     <x-tab name="entrega" label="Endereço de entrega">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-show-field label="CEP" :value="$cliente->entrega_cep" />
-                            <x-show-field label="Cidade" :value="$cliente->entrega_cidade" />
-                            <x-show-field label="Estado" :value="$cliente->entrega_estado" />
-                            <x-show-field label="Bairro" :value="$cliente->entrega_bairro" />
-                            <x-show-field label="Número" :value="$cliente->entrega_numero" />
-                            <x-show-field label="Complemento" :value="$cliente->entrega_compl" />
-                            <x-show-field label="Logradouro" :value="$cliente->entrega_logradouro" class="md:col-span-3" />
+                            <x-show-field label="CEP" :value="$cliente->enderecoEntrega?->cep" />
+                            <x-show-field label="Cidade" :value="$cliente->enderecoEntrega?->cidade" />
+                            <x-show-field label="Estado" :value="$cliente->enderecoEntrega?->estado" />
+                            <x-show-field label="Bairro" :value="$cliente->enderecoEntrega?->bairro" />
+                            <x-show-field label="Número" :value="$cliente->enderecoEntrega?->numero" />
+                            <x-show-field label="Complemento" :value="$cliente->enderecoEntrega?->complemento" />
+                            <x-show-field label="Logradouro" :value="$cliente->enderecoEntrega?->logradouro" class="md:col-span-3" />
                         </div>
                     </x-tab>
+
                 </x-tabs>
 
                 <!-- Botões -->

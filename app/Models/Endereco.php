@@ -28,4 +28,5 @@ class Endereco extends Model
     {
         return $this->belongsTo(Cliente::class);
     }
+
 }
