@@ -141,12 +141,12 @@
 
                 <!-- Botões -->
                 <div class="flex gap-4 mt-6">
-                    <x-button href="{{ route('clientes.edit', $cliente) }}" >
+                   <a href="{{ route('clientes.edit', $cliente) }}" class="px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700">
                         Editar
-                    </x-button>
-                    <x-button href="{{ route('clientes.index') }}">
+                    </a>
+                    <a href="{{ route('clientes.index') }}" class="px-4 py-2 rounded-lg bg-gray-500 text-white hover:bg-gray-600">
                         Voltar
-                    </x-button>
+                    </a>
                 </div>
             </div>
         </div>
