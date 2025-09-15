@@ -22,7 +22,7 @@
                     <livewire:lista-produto-orcamento />
                 </div>
 
-                <div class="space-y-4"><br/>
+                <div class="space-y-4"><br />
                     <hr />
                     <h3 class="text-lg font-medium flex items-center gap-2">
                         <x-heroicon-o-shopping-cart class="w-5 h-5 text-primary-600" />
@@ -117,6 +117,7 @@
                             value="{{ $cliente->desconto ?? 0 }}" />
                         <x-input name="desconto" label="Desconto na venda %" type="number" min="0"
                             max="30" value="0" placeholder="Digite a porcentagem de desconto (0 a 30)" />
+
                         <x-input name="frete" label="Valor frete (R$)" type="number" min="0"
                             value="0" placeholder="Digite o valor do frete" />
 
@@ -298,7 +299,15 @@
 
         // Listeners
         document.addEventListener("DOMContentLoaded", () => {
-            document.querySelector('[name="desconto"]').addEventListener("input", renderProdutos);
+            document.querySelector('[name="desconto"]').addEventListener("input", function() {
+                let val = parseFloat(this.value) || 0;
+
+                if (val < 0) val = 0;
+                if (val > 30) val = 30;
+
+                this.value = val;
+                renderProdutos(); // recalcula com valor corrigido
+            });
             document.querySelector('[name="frete"]').addEventListener("input", renderProdutos);
         });
     </script>
