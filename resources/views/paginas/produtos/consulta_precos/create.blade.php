@@ -16,7 +16,12 @@
                             <x-input name="nome" label="Descrição do item" placeholder="Digite a descrição" required
                                 class="col-span-2" />
                             <x-input name="quantidade" label="Quantidade" placeholder="Digite a quantidade" />
-                            <x-input name="cor" label="Cor" placeholder="Digite a cor" />
+                             <x-select name="cor" label="Cor">
+                                <option value="">Selecione...</option>
+                                @foreach ($cores as $cor)
+                                    <option value="{{ $cor->id }}">{{ $cor->nome }}</option>
+                                @endforeach
+                            </x-select>
                             <x-select name="fornecedor_id" label="Fornecedor">
                                 <option value="">Selecione...</option>
                                 @foreach ($fornecedores as $fornecedor)

@@ -35,7 +35,12 @@
                             <x-input name="itens[0][nome]" label="Descrição do item" placeholder="Digite a descrição"
                                 required class="col-span-2" />
                             <x-input name="itens[0][quantidade]" label="Quantidade" placeholder="Digite a quantidade" />
-                            <x-input name="itens[0][cor]" label="Cor" placeholder="Digite a cor" />
+                            <x-select name="itens[0][cor]" label="Cor">
+                                <option value="">Selecione...</option>
+                                @foreach ($cores as $cor)
+                                    <option value="{{ $cor->id }}">{{ $cor->nome }}</option>
+                                @endforeach
+                            </x-select>
                             <x-select name="itens[0][fornecedor_id]" label="Fornecedor"
                                 class="col-span-2 md:col-span-4">
                                 <option value="">Selecione...</option>

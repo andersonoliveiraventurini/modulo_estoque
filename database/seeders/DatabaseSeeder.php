@@ -35,5 +35,6 @@ class DatabaseSeeder extends Seeder
         $this->call(ArmazemSeeder::class);
         $this->call(CategoriaSeeder::class);
         $this->call(SubCategoriaSeeder::class);
+        $this->call(CorSeeder::class);
     }
 }

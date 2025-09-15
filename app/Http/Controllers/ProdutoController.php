@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreProdutoRequest;
 use App\Http\Requests\UpdateProdutoRequest;
 use App\Models\Categoria;
+use App\Models\Cor;
 use App\Models\Fornecedor;
 use App\Models\Produto;
 use App\Models\SubCategoria;
@@ -28,7 +29,8 @@ class ProdutoController extends Controller
         $fornecedores = Fornecedor::all();
         $categorias = Categoria::all();
         $subcategorias = SubCategoria::all();
-        return view('paginas.produtos.create', compact('fornecedores', 'categorias', 'subcategorias'));
+        $cores = Cor::orderBy('nome')->get();
+        return view('paginas.produtos.create', compact('fornecedores', 'categorias', 'subcategorias', 'cores'));
     }
 
     /**

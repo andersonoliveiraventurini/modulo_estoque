@@ -29,7 +29,12 @@
                             </x-select>
                             <x-input name="marca" label="Marca" placeholder="Digite a marca" />
                             <x-input name="modelo" label="Modelo" placeholder="Digite o modelo" />
-                            <x-input name="cor" label="Cor" placeholder="Digite a cor" />
+                           <x-select name="cor" label="Cor">
+                                <option value="">Selecione...</option>
+                                @foreach ($cores as $cor)
+                                    <option value="{{ $cor->id }}">{{ $cor->nome }}</option>
+                                @endforeach
+                            </x-select>
 
                             <x-select name="unidade" label="Unidade de Medida *">
                                 <option value="">Selecione...</option>
