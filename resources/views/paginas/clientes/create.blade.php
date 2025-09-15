@@ -90,27 +90,38 @@
                             <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
                             Endereço do cliente
                         </h3>
-                        <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
-                            Preencha o CEP primeiro e aguarde os dados serem preenchidos automaticamente.
-                        </p>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                             <x-input id="endereco_cep" name="endereco_cep" label="CEP" placeholder="00000-000"
                                 onblur="pesquisacep(this.value);" onkeypress="mascara(this, '#####-###')" size="10"
                                 maxlength="9" value="{{ old('endereco_cep') }}" required />
-                            <x-input id="endereco_cidade" name="endereco_cidade" label="Cidade" readonly="readonly"
-                                placeholder="Cidade" value="{{ old('endereco_cidade') }}" />
-                            <x-input id="endereco_estado" name="endereco_estado" label="Estado" placeholder="Estado"
-                                readonly="readonly" value="{{ old('endereco_estado') }}" />
-                            <x-input id="endereco_bairro" name="endereco_bairro" label="Bairro" placeholder="Bairro"
-                                readonly="readonly" value="{{ old('endereco_bairro') }}" />
-                            <x-input id="endereco_numero" name="endereco_numero" label="Número" placeholder="N°"
-                                value="{{ old('endereco_numero') }}" />
-                            <x-input id="endereco_compl" name="endereco_compl" label="Complemento"
-                                placeholder="Complemento - Apto, Bloco, etc." value="{{ old('endereco_compl') }}" />
                         </div>
-                        <x-input id="endereco_logradouro" name="endereco_logradouro" label="Logradouro"
-                            placeholder="Rua, número, complemento" readonly="readonly"
-                            value="{{ old('endereco_logradouro') }}" />
+
+                        <!-- Wrapper que será ocultado até o CEP ser válido -->
+                        <div id="endereco-wrapper">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                                <x-input id="endereco_cidade" name="endereco_cidade" label="Cidade" readonly="readonly"
+                                    placeholder="Cidade" value="{{ old('endereco_cidade') }}" />
+
+                                <x-input id="endereco_estado" name="endereco_estado" label="Estado" placeholder="Estado"
+                                    readonly="readonly" value="{{ old('endereco_estado') }}" />
+
+                                <x-input id="endereco_bairro" name="endereco_bairro" label="Bairro"
+                                    placeholder="Bairro" readonly="readonly" value="{{ old('endereco_bairro') }}" />
+
+                                <x-input id="endereco_logradouro" name="endereco_logradouro" label="Logradouro"
+                                    placeholder="Rua, número, complemento" readonly="readonly"
+                                    value="{{ old('endereco_logradouro') }}" />
+
+                                <x-input id="endereco_numero" name="endereco_numero" label="Número" placeholder="N°"
+                                    value="{{ old('endereco_numero') }}" />
+
+                                <x-input id="endereco_compl" name="endereco_compl" label="Complemento"
+                                    placeholder="Complemento - Apto, Bloco, etc."
+                                    value="{{ old('endereco_compl') }}" />
+                            </div>
+
+                        </div>
+
                     </div>
                     <!-- Endereço de entrega -->
                     <div class="space-y-4"><br />
@@ -119,32 +130,36 @@
                             <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
                             Endereço de entrega
                         </h3>
-                        <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
-                            Preencha o CEP primeiro e aguarde os dados serem preenchidos automaticamente.
-                        </p>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <x-input id="entrega_cep" name="entrega_cep" label="CEP" placeholder="00000-000"
                                 onblur="pesquisacepentrega(this.value);" onkeypress="mascara(this, '#####-###')"
                                 size="10" maxlength="9" value="{{ old('entrega_cep') }}" />
-                            <x-input id="entrega_cidade" name="entrega_cidade" label="Cidade" readonly="readonly"
-                                placeholder="Cidade" value="{{ old('entrega_cidade') }}" />
-                            <x-input id="entrega_estado" name="entrega_estado" label="Estado" placeholder="Estado"
-                                readonly="readonly" value="{{ old('entrega_estado') }}" />
-                            <x-input id="entrega_bairro" name="entrega_bairro" label="Bairro" placeholder="Bairro"
-                                readonly="readonly" value="{{ old('entrega_bairro') }}" />
-                            <x-input id="entrega_numero" name="entrega_numero" label="Número" placeholder="N°"
-                                value="{{ old('entrega_numero') }}" />
-                            <x-input id="entrega_compl" name="entrega_compl" label="Complemento"
-                                placeholder="Complemento - Apto, Bloco, etc." value="{{ old('entrega_compl') }}" />
                         </div>
-                        <x-input id="entrega_logradouro" name="entrega_logradouro" label="Logradouro"
-                            placeholder="Rua, número, complemento" readonly="readonly"
-                            value="{{ old('entrega_logradouro') }}" />
+
+                        <!-- Wrapper que será ocultado até o CEP ser válido -->
+                        <div id="endereco-entrega-wrapper">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                                <x-input id="entrega_cidade" name="entrega_cidade" label="Cidade"
+                                    readonly="readonly" placeholder="Cidade" value="{{ old('entrega_cidade') }}" />
+                                <x-input id="entrega_estado" name="entrega_estado" label="Estado"
+                                    placeholder="Estado" readonly="readonly" value="{{ old('entrega_estado') }}" />
+                                <x-input id="entrega_bairro" name="entrega_bairro" label="Bairro"
+                                    placeholder="Bairro" readonly="readonly" value="{{ old('entrega_bairro') }}" />
+                                <x-input id="entrega_logradouro" name="entrega_logradouro" label="Logradouro"
+                                    placeholder="Rua, número, complemento" readonly="readonly"
+                                    value="{{ old('entrega_logradouro') }}" />
+                                <x-input id="entrega_numero" name="entrega_numero" label="Número" placeholder="N°"
+                                    value="{{ old('entrega_numero') }}" />
+                                <x-input id="entrega_compl" name="entrega_compl" label="Complemento"
+                                    placeholder="Complemento - Apto, Bloco, etc."
+                                    value="{{ old('entrega_compl') }}" />
+                            </div>
+                        </div>
                     </div>
                     <br />
                     <!-- Ações -->
                     <div class="flex gap-4">
-                         <x-button type="submit" >Cadastrar Cliente</x-button>
+                        <x-button type="submit">Cadastrar Cliente</x-button>
                         <x-button type="reset">Limpar Formulário</x-button>
                     </div>
                     <!-- Botões -->

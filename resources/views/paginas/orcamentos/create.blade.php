@@ -6,11 +6,12 @@
 
                 <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
                     <x-heroicon-o-document-text class="w-5 h-5 text-primary-600" />
-                    Criar Orçamento
+                    Criar Orçamento para {{ $cliente->id }} - {{ $cliente->nome_fantasia }}
                 </h2>
                 <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
                     Defina os dados do orçamento, adicione os produtos e acompanhe o valor total em tempo real.
                 </p>
+
                 <!-- Pesquisa de Produtos -->
                 <div class="space-y-4">
                     <hr />
@@ -20,9 +21,43 @@
                     </h3>
                     <livewire:lista-produto-orcamento />
                 </div>
+
+                <div class="space-y-4"><br/>
+                    <hr />
+                    <h3 class="text-lg font-medium flex items-center gap-2">
+                        <x-heroicon-o-shopping-cart class="w-5 h-5 text-primary-600" />
+                        Itens para cotação no orçamento
+                    </h3>
+
+                    <div id="itens-wrapper" class="space-y-4">
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                            <x-input name="itens[0][nome]" label="Descrição do item" placeholder="Digite a descrição"
+                                required class="col-span-2" />
+                            <x-input name="itens[0][quantidade]" label="Quantidade" placeholder="Digite a quantidade" />
+                            <x-input name="itens[0][cor]" label="Cor" placeholder="Digite a cor" />
+                            <x-select name="itens[0][fornecedor_id]" label="Fornecedor"
+                                class="col-span-2 md:col-span-4">
+                                <option value="">Selecione...</option>
+                                @foreach ($fornecedores as $fornecedor)
+                                    <option value="{{ $fornecedor->id }}">{{ $fornecedor->nome_fantasia }}</option>
+                                @endforeach
+                            </x-select>
+                        </div>
+                        <x-textarea name="itens[0][observacoes]" label="Observações"
+                            placeholder="Digite os detalhes adicionais..." rows="2" class="col-span-4" />
+
+                    </div>
+
+                    <x-button type="button" onclick="addItem()">
+                        + Adicionar cotação de item
+                    </x-button>
+                </div>
+
                 <!-- Campos iniciais -->
                 <form action="{{ route('orcamentos.store') }}" method="POST" class="space-y-8">
                     @csrf
+
                     <!-- Produtos Selecionados -->
                     <div class="space-y-4"><br />
                         <hr />
@@ -31,19 +66,9 @@
                             Produtos no Orçamento
                         </h3>
 
-                        <div id="produtos-selecionados" class="space-y-4">
-                            <!-- Produtos adicionados aparecerão aqui -->
-                        </div>
+                        <div id="produtos-selecionados" class="space-y-4"></div>
                     </div>
-                    <br />
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <x-input name="nome_obra" label="Nome da Obra" placeholder="Digite o nome da obra" required />
-                        <x-input id="valor_total" name="valor_total" label="Valor Total dos Itens (R$)" readonly
-                            value="0,00" class="bg-gray-100" />
-                        <x-input name="desconto" label="Desconto %" type="number" min="0" max="30"
-                            value="0" placeholder="Digite a porcentagem de desconto (0 a 30)" />
-                        <x-input name="valor_final" label="Valor final" readonly value="0,00" class="bg-gray-100" />
-                    </div>
+
                     <!-- Endereço de entrega -->
                     <div class="space-y-4"><br />
                         <hr />
@@ -54,24 +79,52 @@
                         <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
                             Preencha o CEP primeiro e aguarde os dados serem preenchidos automaticamente.
                         </p>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <x-input id="entrega_cep" name="entrega_cep" label="CEP" placeholder="00000-000"
                                 onblur="pesquisacepentrega(this.value);" onkeypress="mascara(this, '#####-###')"
                                 size="10" maxlength="9" value="{{ old('entrega_cep') }}" />
-                            <x-input id="entrega_cidade" name="entrega_cidade" label="Cidade" readonly="readonly"
-                                placeholder="Cidade" value="{{ old('entrega_cidade') }}" />
-                            <x-input id="entrega_estado" name="entrega_estado" label="Estado" placeholder="Estado"
-                                readonly="readonly" value="{{ old('entrega_estado') }}" />
-                            <x-input id="entrega_bairro" name="entrega_bairro" label="Bairro" placeholder="Bairro"
-                                readonly="readonly" value="{{ old('entrega_bairro') }}" />
-                            <x-input id="entrega_numero" name="entrega_numero" label="Número" placeholder="N°"
-                                value="{{ old('entrega_numero') }}" />
-                            <x-input id="entrega_compl" name="entrega_compl" label="Complemento"
-                                placeholder="Complemento - Apto, Bloco, etc." value="{{ old('entrega_compl') }}" />
                         </div>
-                        <x-input id="entrega_logradouro" name="entrega_logradouro" label="Logradouro"
-                            placeholder="Rua, número, complemento" readonly="readonly"
-                            value="{{ old('entrega_logradouro') }}" />
+
+                        <!-- Wrapper que será ocultado até o CEP ser válido -->
+                        <div id="endereco-entrega-wrapper">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                                <x-input id="entrega_cidade" name="entrega_cidade" label="Cidade" readonly="readonly"
+                                    placeholder="Cidade" value="{{ old('entrega_cidade') }}" />
+                                <x-input id="entrega_estado" name="entrega_estado" label="Estado" placeholder="Estado"
+                                    readonly="readonly" value="{{ old('entrega_estado') }}" />
+                                <x-input id="entrega_bairro" name="entrega_bairro" label="Bairro" placeholder="Bairro"
+                                    readonly="readonly" value="{{ old('entrega_bairro') }}" />
+                                <x-input id="entrega_logradouro" name="entrega_logradouro" label="Logradouro"
+                                    placeholder="Rua, número, complemento" readonly="readonly"
+                                    value="{{ old('entrega_logradouro') }}" />
+                                <x-input id="entrega_numero" name="entrega_numero" label="Número" placeholder="N°"
+                                    value="{{ old('entrega_numero') }}" />
+                                <x-input id="entrega_compl" name="entrega_compl" label="Complemento"
+                                    placeholder="Complemento - Apto, Bloco, etc." value="{{ old('entrega_compl') }}" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <br />
+                    <hr /><br />
+
+                    <!-- Valores e descontos -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <x-input name="nome_obra" label="Nome da Obra" placeholder="Digite o nome da obra" required />
+                        <x-input id="valor_total" name="valor_total" label="Valor Total dos Itens (R$)" readonly
+                            value="0,00" class="bg-gray-100" />
+                        <x-input name="desconto_aprovado" readonly label="Desconto do cliente %"
+                            value="{{ $cliente->desconto ?? 0 }}" />
+                        <x-input name="desconto" label="Desconto na venda %" type="number" min="0"
+                            max="30" value="0" placeholder="Digite a porcentagem de desconto (0 a 30)" />
+                        <x-input name="frete" label="Valor frete (R$)" type="number" min="0"
+                            value="0" placeholder="Digite o valor do frete" />
+
+                        <!-- Novos campos -->
+                        <x-input id="valor_sem_desconto_final" name="valor_sem_desconto_final"
+                            label="Valor Final s/ desconto (R$)" readonly value="0,00" class="bg-gray-100" />
+                        <x-input id="valor_final" name="valor_final" label="Valor Final c/ desconto (R$)" readonly
+                            value="0,00" class="bg-gray-100" />
                     </div>
 
                     <!-- Ações -->
@@ -85,8 +138,48 @@
         </div>
     </div>
 
+    <script src="{{ asset('js/valida.js') }}"></script>
     <!-- Script para manipulação de produtos -->
     <script>
+        let itemIndex = 1;
+
+        function addItem() {
+            const wrapper = document.getElementById('itens-wrapper');
+
+            // Cria o container do item
+            const itemDiv = document.createElement('div');
+            itemDiv.classList = "space-y-2 relative border border-neutral-200 dark:border-neutral-700 rounded-lg p-4";
+
+            // Conteúdo do bloco
+            itemDiv.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                <x-input name="itens[\${itemIndex}][nome]" label="Descrição do item" placeholder="Digite a descrição" required class="col-span-2" />
+                <x-input name="itens[\${itemIndex}][quantidade]" label="Quantidade" placeholder="Digite a quantidade" />
+                <x-input name="itens[\${itemIndex}][cor]" label="Cor" placeholder="Digite a cor" />
+                <x-select name="itens[\${itemIndex}][fornecedor_id]" label="Fornecedor" class="col-span-2 md:col-span-4">
+                    <option value="">Selecione...</option>
+                    @foreach ($fornecedores as $fornecedor)
+                        <option value="{{ $fornecedor->id }}">{{ $fornecedor->nome_fantasia }}</option>
+                    @endforeach
+                </x-select>
+            </div>
+
+            <x-textarea name="itens[\${itemIndex}][observacoes]" label="Observações" placeholder="Digite os detalhes adicionais..." rows="2" class="col-span-4" />
+
+            <button type="button" onclick="removeItem(this)" class="absolute top-2 right-2 text-red-600 hover:text-red-800">
+                <x-heroicon-o-trash class="w-5 h-5" />
+            </button>
+        `;
+
+            // Adiciona no wrapper
+            wrapper.appendChild(itemDiv);
+            itemIndex++;
+        }
+
+        function removeItem(button) {
+            button.closest('div.space-y-2').remove();
+        }
+
         let produtos = [];
 
         function adicionarProduto(id, nome, preco) {
@@ -118,71 +211,95 @@
         function renderProdutos() {
             const wrapper = document.getElementById('produtos-selecionados');
             wrapper.innerHTML = '';
-
             let total = 0;
+            let totalComDesconto = 0;
+
+            // pega os descontos
+            const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]').value) || 0;
+            let descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]').value) || 0;
+
+            if (descontoOrcamento < 0) descontoOrcamento = 0;
+            if (descontoOrcamento > 30) descontoOrcamento = 30;
+
+            const descontoAplicado = Math.max(descontoCliente, descontoOrcamento);
 
             produtos.forEach((p, i) => {
                 const subtotal = p.preco * p.quantidade;
+                const subtotalComDesconto = subtotal - (subtotal * (descontoAplicado / 100));
                 total += subtotal;
+                totalComDesconto += subtotalComDesconto;
 
                 const div = document.createElement('div');
                 div.classList =
                     "grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 border rounded-xl dark:border-neutral-700 relative";
                 div.innerHTML = `
-                <input type="hidden" name="produtos[${i}][id]" value="${p.id}">
-                <div>
-                    <label class="text-sm font-medium">Produto</label>
-                    <input type="text" value="${p.nome}" readonly class="border rounded-lg px-3 py-2 w-full bg-gray-100" />
-                </div>
-                <div>
-                    <label class="text-sm font-medium">Preço Unitário (R$)</label>
-                    <input type="text" value="${p.preco.toFixed(2)}" readonly class="border rounded-lg px-3 py-2 w-full bg-gray-100" />
-                </div>
-                <div>
-                    <label class="text-sm font-medium">Quantidade</label>
-                    <input type="number" name="produtos[${i}][quantidade]" value="${p.quantidade}" min="1"
-                        onchange="alterarQuantidade(${i}, this.value)"
-                        class="border rounded-lg px-3 py-2 w-full" />
-                </div>
+            <input type="hidden" name="produtos[${i}][id]" value="${p.id}">
+            <div>
+                <label class="text-sm font-medium">Produto</label>
+                <input type="text" value="${p.nome}" readonly class="border rounded-lg px-3 py-2 w-full bg-gray-100" />
+            </div>
+            <div>
+                <label class="text-sm font-medium">Preço Unitário (R$)</label>
+                <input type="text" value="${p.preco.toFixed(2)}" readonly class="border rounded-lg px-3 py-2 w-full bg-gray-100" />
+            </div>
+            <div>
+                <label class="text-sm font-medium">Quantidade</label>
+                <input type="number" name="produtos[${i}][quantidade]" value="${p.quantidade}" min="1"
+                    onchange="alterarQuantidade(${i}, this.value)"
+                    class="border rounded-lg px-3 py-2 w-full" />
+            </div>
 
-                <div class="flex flex-col justify-between">
-                    <span class="text-sm font-semibold">Subtotal: R$ ${subtotal.toFixed(2)}</span>
-                    <button type="button" onclick="removerProduto(${i})" class="text-red-600 hover:text-red-800 flex items-center gap-1 mt-2">
-                        🗑 Remover
-                    </button>
-                </div>
-            `;
+            <div class="flex flex-col justify-between">
+                <span class="text-sm font-semibold">
+                    Subtotal: R$ ${subtotal.toFixed(2)}<br>
+                    <span class="text-green-600">c/ desconto: R$ ${subtotalComDesconto.toFixed(2)}</span>
+                </span>
+                <button type="button" onclick="removerProduto(${i})" class="text-red-600 hover:text-red-800 flex items-center gap-1 mt-2">
+                    🗑 Remover
+                </button>
+            </div>
+        `;
                 wrapper.appendChild(div);
             });
 
-            // atualiza o total dos itens
+            // Atualiza campo total sem desconto
             document.getElementById('valor_total').value = total.toFixed(2);
 
-            // sempre recalcula o valor final
-            atualizarValorFinal();
+            // Chama atualização final
+            atualizarValorFinal(total, totalComDesconto);
         }
 
-        function atualizarValorFinal() {
-            const total = parseFloat(document.getElementById('valor_total').value) || 0;
-            let descontoInput = document.querySelector('[name="desconto"]');
-            let desconto = parseFloat(descontoInput.value) || 0;
+        function atualizarValorFinal(total = null, totalComDesconto = null) {
+            // Se não veio do renderProdutos, calcula os totais
+            if (total === null) {
+                total = parseFloat(document.getElementById('valor_total').value) || 0;
+            }
+            if (totalComDesconto === null) {
+                const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]').value) || 0;
+                let descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]').value) || 0;
 
-            if (desconto < 0) desconto = 0;
-            if (desconto > 30) desconto = 30; // trava desconto máximo em 30%
+                if (descontoOrcamento < 0) descontoOrcamento = 0;
+                if (descontoOrcamento > 30) descontoOrcamento = 30;
 
-            // corrige valor no input se o usuário digitou algo inválido
-            descontoInput.value = desconto;
+                const descontoAplicado = Math.max(descontoCliente, descontoOrcamento);
+                totalComDesconto = total - (total * (descontoAplicado / 100));
+            }
 
-            const valorFinal = total - (total * (desconto / 100));
-            document.querySelector('[name="valor_final"]').value = valorFinal.toFixed(2);
+            let frete = parseFloat(document.querySelector('[name="frete"]').value) || 0;
+
+            // valor final com e sem desconto
+            const valorSemDescontoFinal = total + frete;
+            const valorFinalComDesconto = totalComDesconto + frete;
+
+            // atualiza inputs
+            document.getElementById('valor_sem_desconto_final').value = valorSemDescontoFinal.toFixed(2);
+            document.querySelector('[name="valor_final"]').value = valorFinalComDesconto.toFixed(2);
         }
 
-
-        // Listener para o campo de desconto
+        // Listeners
         document.addEventListener("DOMContentLoaded", () => {
-            document.querySelector('[name="desconto"]').addEventListener("input", atualizarValorFinal);
+            document.querySelector('[name="desconto"]').addEventListener("input", renderProdutos);
+            document.querySelector('[name="frete"]').addEventListener("input", renderProdutos);
         });
     </script>
-
-    <script src="{{ asset('js/valida.js') }}"></script>
 </x-layouts.app>

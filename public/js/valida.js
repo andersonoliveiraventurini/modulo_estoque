@@ -14,7 +14,7 @@ async function buscarCNPJ() {
         // dados principais
         document.querySelector('[name="razao_social"]').value = data.razao_social || "";
         document.querySelector('[name="nome_fantasia"]').value = data.nome_fantasia || "";
-        
+
         // campos especificios completo
         document.querySelector('[name="data_abertura"]').value = data.data_inicio_atividade || "";
         document.querySelector('[name="cnae"]').value = data.cnae_fiscal_descricao || "";
@@ -25,7 +25,7 @@ async function buscarCNPJ() {
         document.getElementById("endereco_cidade").value = data.municipio || "";
         document.getElementById("endereco_estado").value = data.uf || "";
         document.getElementById("endereco_cep").value = data.cep || "";
-      
+
         // Contato
         if (data.ddd_telefone_1) {
             const telefone = `(${data.ddd_telefone_1.substring(0, 2)}) ${data.ddd_telefone_1.substring(2)}`;
@@ -73,7 +73,7 @@ async function buscarCNPJ_precadastro() {
         document.getElementById("endereco_cidade").value = data.municipio || "";
         document.getElementById("endereco_estado").value = data.uf || "";
         document.getElementById("endereco_cep").value = data.cep || "";
-      
+
         // Contato
         if (data.ddd_telefone_1) {
             const telefone = `(${data.ddd_telefone_1.substring(0, 2)}) ${data.ddd_telefone_1.substring(2)}`;
@@ -169,14 +169,15 @@ async function buscarCNPJfornecedor() {
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("cnpj").addEventListener("blur", buscarCNPJ);
 });
-
 function limpa_formulário_cep() {
     document.getElementById('endereco_logradouro').value = "";
     document.getElementById('endereco_bairro').value = "";
     document.getElementById('endereco_cidade').value = "";
     document.getElementById('endereco_estado').value = "";
-}
 
+    // Esconde os campos de endereço
+    document.getElementById('endereco-wrapper').style.display = "none";
+}
 
 async function pesquisacep(valor) {
     let cep = valor.replace(/\D/g, '');
@@ -202,17 +203,34 @@ async function pesquisacep(valor) {
         document.getElementById('endereco_cidade').value = data.localidade || "";
         document.getElementById('endereco_estado').value = data.uf || "";
 
+        // Mostra os campos de endereço
+        document.getElementById('endereco-wrapper').style.display = "block";
+
     } catch (e) {
         limpa_formulário_cep();
         alert("Erro ao consultar o CEP.");
     }
 }
 
+// Esconde os campos no carregamento da página, se não houver CEP
+document.addEventListener("DOMContentLoaded", function() {
+    let cepField = document.getElementById('endereco_cep');
+    if (!cepField.value) {
+        document.getElementById('endereco-wrapper').style.display = "none";
+    } else {
+        // Se já tem CEP (edição de cliente), mostra os campos
+        document.getElementById('endereco-wrapper').style.display = "block";
+    }
+});
+
 function limpa_formulário_entrega_cep() {
     document.getElementById('entrega_logradouro').value = "";
     document.getElementById('entrega_bairro').value = "";
     document.getElementById('entrega_cidade').value = "";
     document.getElementById('entrega_estado').value = "";
+
+    // Esconde os campos de endereço
+    document.getElementById('endereco-entrega-wrapper').style.display = "none";
 }
 
 async function pesquisacepentrega(valor) {
@@ -239,6 +257,9 @@ async function pesquisacepentrega(valor) {
         document.getElementById('entrega_cidade').value = data.localidade || "";
         document.getElementById('entrega_estado').value = data.uf || "";
 
+        // Mostra os campos de endereço
+        document.getElementById('endereco-entrega-wrapper').style.display = "block";
+
     } catch (e) {
         limpa_formulário_entrega_cep();
         alert("Erro ao consultar o CEP.");
@@ -248,8 +269,16 @@ async function pesquisacepentrega(valor) {
 function mascara(t, mask) {
     var i = t.value.length;
     var saida = mask.substring(1, 0);
-    var texto = mask.substring(i)
+    var texto = mask.substring(i);
     if (texto.substring(0, 1) != saida) {
         t.value += texto.substring(0, 1);
     }
 }
+
+// Esconde os campos no carregamento da página, se não houver CEP
+document.addEventListener("DOMContentLoaded", function () {
+    let cepField = document.getElementById('entrega_cep');
+    if (!cepField.value) {
+        document.getElementById('endereco-entrega-wrapper').style.display = "none";
+    }
+});

@@ -30,7 +30,8 @@ class OrcamentoController extends Controller
     {
         $cliente = Cliente::find($cliente_id);
         $produtos = Produto::all();
-        return view('paginas.orcamentos.create', compact('produtos', 'cliente'));
+        $fornecedores = Produto::with('fornecedor')->get();
+        return view('paginas.orcamentos.create', compact('produtos', 'cliente', 'fornecedores'));
 
     }
 

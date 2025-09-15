@@ -23,7 +23,8 @@
                                 <option value="1">Sim</option>
                                 <option value="0">Não</option>
                             </x-select>
-                            <x-input name="desconto" label="% Desconto autorizado" placeholder="5" />
+                            <x-input name="desconto" label="% Desconto autorizado" placeholder="5" min="0" max="30"
+                            value="0"/>
                         </div>
                     </div>
                     
