@@ -16,7 +16,7 @@ class Contato extends Model
         'email',
         'telefone',
         'cliente_id',
-        'fornecedor_id',
+        'fornecedor_id'
     ];
 
     public function cliente()
