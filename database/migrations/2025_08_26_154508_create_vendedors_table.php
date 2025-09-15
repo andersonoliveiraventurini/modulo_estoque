@@ -17,6 +17,8 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->nullable()
                     ->comment('Referência ao usuário que aplicou o desconto, se houver.');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->integer('externo')->default(0)
+                    ->comment('Indica se o vendedor é externo (1) ou interno (0).');
             $table->string('desconto')->nullable();
             $table->timestamps();
             $table->softDeletes();

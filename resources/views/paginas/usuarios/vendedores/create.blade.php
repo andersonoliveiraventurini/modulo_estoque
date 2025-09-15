@@ -18,6 +18,11 @@
                                     <option value="{{ $u->id }}">{{ $u->name }}</option>
                                 @endforeach
                             </x-select>
+                            <x-select name="externo" label="Externo">
+                                <option value="">Selecione</option>
+                                <option value="1">Sim</option>
+                                <option value="0">Não</option>
+                            </x-select>
                             <x-input name="desconto" label="% Desconto autorizado" placeholder="5" />
                         </div>
                     </div>
