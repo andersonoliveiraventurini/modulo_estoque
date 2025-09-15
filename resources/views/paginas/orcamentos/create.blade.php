@@ -44,6 +44,7 @@
                                 @endforeach
                             </x-select>
                         </div>
+                        <BR/>
                         <x-textarea name="itens[0][observacoes]" label="Observações"
                             placeholder="Digite os detalhes adicionais..." rows="2" class="col-span-4" />
 

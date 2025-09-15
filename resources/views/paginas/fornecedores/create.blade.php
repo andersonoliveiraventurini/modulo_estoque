@@ -55,7 +55,7 @@
 
                     <!-- Contatos da Empresa -->
                     <div class="space-y-4"><br />
-                        <hr />
+                        <hr /><br />
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
                             Contatos
