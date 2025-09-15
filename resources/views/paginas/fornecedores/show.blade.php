@@ -43,7 +43,7 @@
                             <x-show-field label="Tratamento" :value="$fornecedor->tratamento" />
                             <x-show-field label="Inscrição Estadual" :value="$fornecedor->inscricao_estadual" />
                             <x-show-field label="Inscrição Municipal" :value="$fornecedor->inscricao_municipal" />
-                            <x-show-field label="Data de Abertura" :value="$fornecedor->data_abertura?->format('d/m/Y')" />
+                            <x-show-field label="Data de Abertura" :value="$fornecedor->data_abertura->format('d/m/Y')" />
                             <x-show-field label="CNAE Principal" :value="$fornecedor->cnae_principal" />
                             <x-show-field label="Regime Tributário" :value="ucfirst($fornecedor->regime_tributario)" />
                             <x-show-field label="Benefício" :value="$fornecedor->beneficio" />
@@ -77,13 +77,13 @@
                     <!-- Endereço -->
                     <x-tab name="endereco" label="Endereço">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-show-field label="CEP" :value="$fornecedor->endereco_cep" />
-                            <x-show-field label="Cidade" :value="$fornecedor->endereco_cidade" />
-                            <x-show-field label="Estado" :value="$fornecedor->endereco_estado" />
-                            <x-show-field label="Bairro" :value="$fornecedor->endereco_bairro" />
-                            <x-show-field label="Número" :value="$fornecedor->endereco_numero" />
-                            <x-show-field label="Complemento" :value="$fornecedor->endereco_compl" />
-                            <x-show-field label="Logradouro" :value="$fornecedor->endereco_logradouro" class="md:col-span-3" />
+                            <x-show-field label="CEP" :value="$fornecedor->endereco->cep ?? ''" />
+                            <x-show-field label="Cidade" :value="$fornecedor->endereco->cidade ?? ''" />
+                            <x-show-field label="Estado" :value="$fornecedor->endereco->estado ?? ''" />
+                            <x-show-field label="Bairro" :value="$fornecedor->endereco->bairro ?? ''" />
+                            <x-show-field label="Número" :value="$fornecedor->endereco->numero ?? ''" />
+                            <x-show-field label="Complemento" :value="$fornecedor->endereco->complemento ?? ''" />
+                            <x-show-field label="Logradouro" :value="$fornecedor->endereco->logradouro ?? ''" class="md:col-span-3" />
                         </div>
                     </x-tab>
                 </x-tabs>

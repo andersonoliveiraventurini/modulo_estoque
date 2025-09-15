@@ -197,6 +197,18 @@ class ClienteController extends Controller
                 ]);
             }
 
+  // contatos
+            if ($request->filled('contatos')) {
+                foreach ($request->contatos as $contato) {
+                    $cliente->contatos()->create(array_filter([
+                        'nome'     => $contato['nome'] ?? null,
+                        'telefone' => $contato['telefone'] ?? null,
+                        'email'    => $contato['email'] ?? null,
+                    ]));
+                }
+            }
+
+
             // atualiza endereço comercial
             if ($request->filled('endereco_cep')) {
                 $cliente->enderecos()

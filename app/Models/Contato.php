@@ -23,4 +23,9 @@ class Contato extends Model
     {
         return $this->belongsTo(Cliente::class);
     }
+
+    public function fornecedor()
+    {
+        return $this->belongsTo(Fornecedor::class);
+    }
 }

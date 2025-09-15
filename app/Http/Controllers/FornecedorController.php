@@ -31,7 +31,42 @@ class FornecedorController extends Controller
      */
     public function store(StoreFornecedorRequest $request)
     {
-        //
+
+        $fornecedor = Fornecedor::create($request->except([
+            'endereco_cep', 'endereco_logradouro', 'endereco_numero', 'endereco_compl',
+            'endereco_bairro', 'endereco_cidade', 'endereco_estado',
+            'contatos', 'certidoes_negativas', 'certificacoes_qualidade', '_token'
+        ]));
+
+
+        // atualiza endereço comercial
+        if ($request->filled('endereco_cep')) {
+            $fornecedor->enderecos()
+                ->updateOrCreate(['tipo' => 'comercial'], array_filter([
+                    'cep'        => $request->endereco_cep,
+                    'logradouro' => $request->endereco_logradouro,
+                    'numero'     => $request->endereco_numero,
+                    'complemento'=> $request->endereco_compl,
+                    'bairro'     => $request->endereco_bairro,
+                    'cidade'     => $request->endereco_cidade,
+                    'estado'     => $request->endereco_estado,
+                    'tipo'       => 'comercial',
+                ]));
+        }
+
+            // contatos
+        if ($request->filled('contatos')) {
+            foreach ($request->contatos as $contato) {
+                $fornecedor->contatos()->create(array_filter([
+                    'nome'     => $contato['nome'] ?? null,
+                    'telefone' => $contato['telefone'] ?? null,
+                    'email'    => $contato['email'] ?? null,
+                ]));
+            }
+        }
+
+
+        return redirect()->route('fornecedores.show', $fornecedor);
     }
 
     public function tabelaPrecos($fornecedor_id)

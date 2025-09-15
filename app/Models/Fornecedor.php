@@ -18,6 +18,21 @@ class Fornecedor extends Model
         'razao_social',
         'tratamento',
         'cnpj',
+        'inscricao_estadual',
+        'inscricao_municipal',
+        'data_abertura',
+        'cnae_principal',
+        'inscricao_estadual',
+        'inscricao_municipal',
+        'regime_tributario',
+        'beneficio',
+        'certidoes_negativas',
+        'certificacoes_qualidade',
+        'status'
+    ];
+
+    protected $casts = [
+        'data_abertura' => 'date',
     ];
 
     public function getCnpjFormatadoAttribute()
@@ -33,4 +48,16 @@ class Fornecedor extends Model
             substr($cnpj, 8, 4) . '-' .
             substr($cnpj, 12, 2);
     }
+
+    public function contatos()
+    {
+        return $this->hasMany(Contato::class);
+    }
+
+    public function endereco()
+{
+    return $this->hasOne(Endereco::class);
+}
+
+
 }

@@ -42,7 +42,7 @@
                             </x-select> <x-input name="beneficio" label="Benefício"
                                 placeholder="Ex: MEI, desconto fiscal, etc." />
                             <x-input type="file" name="certidoes_negativas" label="Certidões Negativas" />
-                            <x-input type="file" name="certificacoes"
+                            <x-input type="file" name="certificacoes_qualidade"
                                 label="Certificações de Qualidade (ISO, PBQP-H, etc.)" />
                             <x-select name="status" label="Status do Fornecedor">
                                 <option value="ativo">Ativo</option>
