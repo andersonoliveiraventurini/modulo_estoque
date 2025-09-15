@@ -12,7 +12,7 @@
                     @csrf
                     <div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                            <x-select name="vendedor_id" label="Vendedor">
+                            <x-select name="user_id" label="Vendedor">
                                 <option value="">Selecione quem será o vendedor</option>
                                 @foreach ($usuarios as $u)
                                     <option value="{{ $u->id }}">{{ $u->name }}</option>

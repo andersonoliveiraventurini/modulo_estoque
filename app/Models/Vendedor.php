@@ -16,6 +16,7 @@ class Vendedor extends Model
     protected $fillable = [
         'user_id',
         'desconto',
+        'externo',
     ];
 
     public function user()

@@ -16,6 +16,7 @@ class VendedorSeeder extends Seeder
         Vendedor::factory()->create([
             'user_id' => 1,
             'desconto' => 30,
+            
         ]);
     }
 }
