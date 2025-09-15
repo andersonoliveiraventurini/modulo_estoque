@@ -32,7 +32,7 @@
         </div>
         <div
             class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-            <livewire:lista-cliente-bloqueado />
+            <livewire:lista-clientes-bloqueados />
         </div>
     </div>
 </x-layouts.app>

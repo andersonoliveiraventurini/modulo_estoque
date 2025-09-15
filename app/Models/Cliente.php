@@ -58,6 +58,11 @@ class Cliente extends Model
         return $this->hasMany(Bloqueio::class);
     }
 
+    public function ultimoBloqueio()
+    {
+        return $this->hasOne(Bloqueio::class)->latestOfMany();
+    }
+
     public function vendedor()
     {
         return $this->belongsTo(Vendedor::class, 'vendedor_id');
@@ -73,7 +78,7 @@ class Cliente extends Model
         return $this->hasMany(Pedido::class);
     }
 
-    
+
     public function contatos()
     {
         return $this->hasMany(Contato::class);
@@ -93,6 +98,4 @@ class Cliente extends Model
     {
         return $this->hasOne(Endereco::class)->where('tipo', 'entrega');
     }
-
-
 }
