@@ -22,6 +22,9 @@
                 {{ __('Cadastrar cliente') }}</flux:navlist.item>
             <flux:navlist.item icon="home" :href="route('clientes.index')"
                 :current="request()->routeIs('clientes.index')" wire:navigate>{{ __('Listar clientes') }}
+            </flux:navlist.item>            
+            <flux:navlist.item icon="home" :href="route('orcamentos.index')"
+                :current="request()->routeIs('orcamentos.index')" wire:navigate>{{ __('Listar orçamentos') }}
             </flux:navlist.item>
             <flux:navlist.item icon="home" :href="route('bloqueios.index')"
                 :current="request()->routeIs('bloqueios.index')" wire:navigate>{{ __('Clientes bloqueados') }}
@@ -57,12 +60,6 @@
             </flux:navlist.item>
             <flux:navlist.item icon="home" :href="route('consulta_preco.create')"
                 :current="request()->routeIs('consulta_preco.create')" wire:navigate>{{ __('Cotação') }}
-            </flux:navlist.item>
-        </flux:navlist.group>
-
-        <flux:navlist.group heading="Orçamentos" expandable :expanded="false">
-            <flux:navlist.item icon="home" :href="route('orcamentos.index')"
-                :current="request()->routeIs('orcamentos.index')" wire:navigate>{{ __('Listar orçamentos') }}
             </flux:navlist.item>
         </flux:navlist.group>
 
