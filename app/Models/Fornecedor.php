@@ -34,6 +34,12 @@ class Fornecedor extends Model
     protected $casts = [
         'data_abertura' => 'date',
     ];
+    
+    // E um accessor para formatação
+    public function getDataAberturaFormatadaAttribute()
+    {
+        return $this->data_abertura?->format('d/m/Y');
+    }
 
     public function getCnpjFormatadoAttribute()
     {
@@ -55,9 +61,7 @@ class Fornecedor extends Model
     }
 
     public function endereco()
-{
-    return $this->hasOne(Endereco::class);
-}
-
-
+    {
+        return $this->hasOne(Endereco::class);
+    }
 }

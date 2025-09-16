@@ -43,7 +43,7 @@
                             <x-show-field label="Tratamento" :value="$fornecedor->tratamento" />
                             <x-show-field label="Inscrição Estadual" :value="$fornecedor->inscricao_estadual" />
                             <x-show-field label="Inscrição Municipal" :value="$fornecedor->inscricao_municipal" />
-                            <x-show-field label="Data de Abertura" :value="$fornecedor->data_abertura->format('d/m/Y')" />
+                            <x-show-field label="Data de Abertura" :value="$fornecedor->dataaberturaformatada" />
                             <x-show-field label="CNAE Principal" :value="$fornecedor->cnae_principal" />
                             <x-show-field label="Regime Tributário" :value="ucfirst($fornecedor->regime_tributario)" />
                             <x-show-field label="Benefício" :value="$fornecedor->beneficio" />

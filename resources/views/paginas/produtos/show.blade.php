@@ -27,7 +27,7 @@
                             <x-show-field label="Unidade de Medida" :value="$produto->unidade_medida" />
                             <x-show-field label="Marca" :value="$produto->marca" />
                             <x-show-field label="Modelo" :value="$produto->modelo" />
-                            <x-show-field label="Cor" :value="$produto->cor" />
+                            <x-show-field label="Cor" :value="$produto->cor->nome " />
                             <x-show-field label="Peso" :value="$produto->peso" />
                             <x-show-field label="Ativo" :value="$produto->ativo ? 'Sim' : 'Não'" />
                         </div>

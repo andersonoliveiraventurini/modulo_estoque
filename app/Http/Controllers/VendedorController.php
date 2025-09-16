@@ -31,7 +31,10 @@ class VendedorController extends Controller
      */
     public function store(StoreVendedorRequest $request)
     {
-        //
+        Vendedor::create($request->except([
+            '_token'
+        ]));
+        return to_route('vendedores.index')->with('success', 'Vendedor criado com sucesso!');
     }
 
     /**

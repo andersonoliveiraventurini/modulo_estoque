@@ -12,4 +12,15 @@ class Imagem extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'imagens';
+
+    protected $fillable = [
+        'produto_id',
+        'caminho',
+        'principal'
+    ];
+
+    public function produto()
+    {
+        return $this->belongsTo(Produto::class);
+    }
 }

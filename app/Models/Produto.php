@@ -12,7 +12,40 @@ class Produto extends Model
     use HasFactory, SoftDeletes;
 
     public function fornecedor()
-{
-    return $this->belongsTo(Fornecedor::class);
-}
+    {
+        return $this->belongsTo(Fornecedor::class);
+    }
+
+    protected $fillable = [
+        'codigo_brcom',
+        'sku',
+        'nome',
+        'tipo_produto_sped',
+        'ncm',
+        'codigo_barras',
+        'fornecedor_id',
+        'preco_custo',
+        'preco_venda',
+        'estoque_minimo',
+        'estoque_atual',
+        'unidade_medida',
+        'marca',
+        'modelo',
+        'cor_id',
+        'peso',
+        'descricao',
+        'observacoes',
+        'imagem_principal',
+        'ativo',
+    ];
+
+    public function images()
+    {
+        return $this->hasMany(Imagem::class, 'produto_id');
+    }
+
+    public function cor()
+    {
+        return $this->belongsTo(Cor::class, 'cor_id');
+    }
 }

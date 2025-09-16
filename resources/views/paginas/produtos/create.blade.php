@@ -29,7 +29,7 @@
                             </x-select>
                             <x-input name="marca" label="Marca" placeholder="Digite a marca" />
                             <x-input name="modelo" label="Modelo" placeholder="Digite o modelo" />
-                           <x-select name="cor" label="Cor">
+                            <x-select name="cor_id" label="Cor">
                                 <option value="">Selecione...</option>
                                 @foreach ($cores as $cor)
                                     <option value="{{ $cor->id }}">{{ $cor->nome }}</option>
@@ -128,10 +128,11 @@
 
                                         <div>
                                             <label class="text-sm font-medium">Imagem do Produto</label>
-                                            <input type="file" name="imagem"
+                                            <input type="file" name="images[]" multiple
                                                 accept="image/png,image/jpeg,image/gif"
                                                 class="mt-2 block w-full text-sm text-gray-600 border rounded-lg p-2">
-                                            <p class="text-xs text-gray-500 mt-1">PNG, JPG ou GIF até 5MB</p>
+                                            <p class="text-xs text-gray-500 mt-1">Selecione uma ou mais imagens (PNG,
+                                                JPG ou GIF até 5MB cada)</p>
                                         </div>
                                     </div>
                                     <div class="space-y-4"><br />
@@ -169,7 +170,7 @@
                                         <br />
                                         <!-- Ações -->
                                         <div class="flex gap-4">
-                                             <x-button type="submit" >Cadastrar
+                                            <x-button type="submit">Cadastrar
                                                 Produto</x-button>
                                             <x-button type="reset">Limpar Formulário</x-button>
                                         </div>

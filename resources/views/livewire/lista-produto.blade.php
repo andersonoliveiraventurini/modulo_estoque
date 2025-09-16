@@ -102,8 +102,17 @@
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
                                 href="/produtos/{{ $c->id }}">{{ $c->id }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="/produtos/{{ $c->id }}">{{ $c->cor }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/produtos/{{ $c->id }}">
+                                @if ($c->cor)
+                                    <span class="inline-flex items-center gap-2">
+                                        <span class="w-4 h-4 rounded-full"
+                                            style="background-color: {{ $c->cor->codigo_hex }}"></span>
+                                        {{ $c->cor->nome }}
+                                    </span>
+                                @else
+                                    Sem cor
+                                @endif
+                            </a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
                                 href="/produtos/{{ $c->id }}">{{ $c->nome }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a

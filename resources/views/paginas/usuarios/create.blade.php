@@ -1,5 +1,5 @@
 <x-layouts.app :title="__('Cadastrar usuário')">
-    <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
+    <div class="flex w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
             <!-- Informações Básicas -->
             <div
@@ -9,31 +9,19 @@
                     Cadastro de usuário
                 </h2>
                 <form action="{{ route('usuarios.store') }}" method="POST" class="space-y-8">
-                    @csrf
-                    <!-- Informações Pessoais -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                        <x-input id="razao_social" name="razao_social" label="Razão social"
-                            placeholder="Digite a razão social" />
-                        <x-input id="nome_fantasia" name="nome_fantasia" label="Nome Fantasia"
-                            placeholder="Digite o nome fantasia" />
-                        <x-input type="text" name="tratamento" label="Tratamento *" placeholder="Apelido" />
-                    </div><br />
-                    <hr />
+                    @csrf                  
                     <br />
-                    <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
-                        <x-heroicon-o-user class="w-5 h-5 text-primary-600" />
-                        Para pessoa física
-                    </h2>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                         <x-input type="text" name="cpf" label="CPF" placeholder="000.000.000-00" />
                         <x-input name="nome" label="Nome" placeholder="Digite o nome completo" />
-                        <x-input type="date" name="data_nascimento" label="Data de Nascimento" />
+                        <x-input name="email" label="E-mail" placeholder="Digite o e-mail" />
+                        <x-input type="password" name="password" label="Senha" placeholder="Digite a senha" />
                     </div>
                     <br />
                     <!-- Ações -->
                     <div class="flex gap-4">
-                         <x-button type="submit" >Cadastrar Cliente</x-button>
-                        <x-button type="reset">Limpar Formulário</x-button>
+                        <x-button type="submit" >Cadastrar usuário</x-button>
+                        <a href="/usuarios">Voltar</a>
                     </div>
                     <!-- Botões -->
                 </form>

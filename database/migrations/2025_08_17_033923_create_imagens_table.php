@@ -14,9 +14,10 @@ return new class extends Migration
         Schema::create('imagens', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('produto_id')->nullable()
-                  ->comment('Referência ao produto associado a esta imagem.');
+                ->comment('Referência ao produto associado a esta imagem.');
             $table->foreign('produto_id')->references('id')->on('produtos')->onDelete('cascade');
             $table->string('caminho')->comment('Caminho do arquivo de imagem - Armazena o caminho do arquivo de imagem associado ao produto.');
+            $table->boolean('principal')->default(false)->comment('Indica se a imagem é a principal do produto.');
             $table->timestamps();
             $table->softDeletes();
         });

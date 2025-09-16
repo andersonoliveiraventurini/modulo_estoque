@@ -27,13 +27,12 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(NcmSeeder::class);
-        //$this->call(FornecedorSeeder::class);
+        $this->call(FornecedorSeeder::class);
         $this->call(VendedorSeeder::class);
         //$this->call(ClienteSeeder::class);
         $this->call(CategoriaSeeder::class);
         //$this->call(ProdutoSeeder::class);
         $this->call(ArmazemSeeder::class);
-        $this->call(CategoriaSeeder::class);
         $this->call(SubCategoriaSeeder::class);
         $this->call(CorSeeder::class);
     }

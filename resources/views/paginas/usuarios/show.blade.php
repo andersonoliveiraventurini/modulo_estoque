@@ -28,16 +28,19 @@
                         <x-tab name="pedidos" label="Pedidos">
                             <div class="space-y-4">
                                 @forelse($usuario->vendedor->pedidos as $pedido)
-                                    <div class="border rounded-lg p-4 dark:border-neutral-700">
-                                        <p><span class="font-medium">#{{ $pedido->id }}</span> - {{ $pedido->status }}
-                                        </p>
-                                        <p class="text-sm text-neutral-500">
-                                            Valor: R$ {{ number_format($pedido->valor_total, 2, ',', '.') }}
-                                        </p>
-                                        <p class="text-sm text-neutral-500">
-                                            Criado em: {{ $pedido->created_at->format('d/m/Y H:i') }}
-                                        </p>
-                                    </div>
+                                    <a href="{{ route('pedidos.show', $pedido) }}">
+                                        <div class="border rounded-lg p-4 dark:border-neutral-700">
+                                            <p><span class="font-medium">#{{ $pedido->id }}</span> -
+                                                {{ $pedido->status }}
+                                            </p>
+                                            <p class="text-sm text-neutral-500">
+                                                Valor: R$ {{ number_format($pedido->valor_total, 2, ',', '.') }}
+                                            </p>
+                                            <p class="text-sm text-neutral-500">
+                                                Criado em: {{ $pedido->created_at->format('d/m/Y H:i') }}
+                                            </p>
+                                        </div>
+                                    </a>
                                 @empty
                                     <p class="text-sm text-neutral-500">Nenhum pedido encontrado.</p>
                                 @endforelse
@@ -47,10 +50,12 @@
                         <x-tab name="clientes" label="Clientes">
                             <div class="space-y-4">
                                 @forelse($usuario->vendedor->clientes as $cliente)
-                                    <div class="border rounded-lg p-4 dark:border-neutral-700">
-                                        <p class="font-medium">{{ $cliente->nome }}</p>
-                                        <p class="text-sm text-neutral-500">{{ $cliente->email }}</p>
-                                    </div>
+                                    <a href="{{ route('clientes.show', $cliente) }}">
+                                        <div class="border rounded-lg p-4 dark:border-neutral-700">
+                                            <p class="font-medium">{{ $cliente->nome }}</p>
+                                            <p class="text-sm text-neutral-500">{{ $cliente->email }}</p>
+                                        </div>
+                                    </a>
                                 @empty
                                     <p class="text-sm text-neutral-500">Nenhum cliente encontrado.</p>
                                 @endforelse
@@ -62,12 +67,12 @@
 
                 <!-- Botões -->
                 <div class="flex gap-4 mt-6">
-                    <x-button href="{{ route('usuarios.edit', $usuario) }}">
+                    <a href="{{ route('usuarios.edit', $usuario) }}">
                         Editar
-                    </x-button>
-                    <x-button href="{{ route('usuarios.index') }}">
+                    </a>
+                    <a href="{{ route('usuarios.index') }}">
                         Voltar
-                    </x-button>
+                    </a>
                 </div>
             </div>
         </div>
