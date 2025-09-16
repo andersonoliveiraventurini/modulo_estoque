@@ -118,7 +118,6 @@
                          <x-button type="submit" >Cadastrar Fornecedor</x-button>
                         <x-button type="reset">Limpar Formulário</x-button>
                     </div>
-
                 </form>
             </div>
         </div>

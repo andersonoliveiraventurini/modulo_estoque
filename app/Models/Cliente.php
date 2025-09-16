@@ -30,6 +30,7 @@ class Cliente extends Model
 
     protected $casts = [
         'data_abertura' => 'date',
+        'data_nascimento' => 'date',
         // outros campos date se houver
     ];
 
@@ -37,6 +38,11 @@ class Cliente extends Model
     public function getDataAberturaFormatadaAttribute()
     {
         return $this->data_abertura?->format('d/m/Y');
+    }
+
+    public function getDataNascimentoFormatadaAttribute()
+    {
+        return $this->data_nascimento->format('d/m/Y');
     }
 
     public function getCnpjFormatadoAttribute()

@@ -45,21 +45,20 @@
                             <x-show-field label="Tratamento" :value="$cliente->tratamento" />
                             <x-show-field label="Inscrição Estadual" :value="$cliente->inscricao_estadual" />
                             <x-show-field label="Inscrição Municipal" :value="$cliente->inscricao_municipal" />
-                            <x-show-field label="Data de Abertura" :value="$cliente->data_abertura?->format('d/m/Y')" />
+                            <x-show-field label="Data de Abertura" :value="$cliente->dataaberturaformatada" />
 
                             {{-- Campos que não estavam sendo exibidos --}}
                             <x-show-field label="CNAE" :value="$cliente->cnae" />
                             <x-show-field label="Regime Tributário" :value="$cliente->regime_tributario" />
-                               <x-show-field label="Classificação" :value="$cliente->classificacao" />
+                            <x-show-field label="Classificação" :value="$cliente->classificacao" />
                             <x-show-field label="Canal de Origem" :value="$cliente->canal_origem" />
-                          
+
                             {{-- Exibição do arquivo --}}
                             <div class="col-span-3">
                                 <x-show-field label="Certidões Negativas">
-                                    @if($cliente->certidoes_negativas)
-                                        <a href="{{ asset('storage/' . $cliente->certidoes_negativas) }}" 
-                                        target="_blank" 
-                                        class="text-blue-600 hover:underline">
+                                    @if ($cliente->certidoes_negativas)
+                                        <a href="{{ asset('storage/' . $cliente->certidoes_negativas) }}"
+                                            target="_blank" class="text-blue-600 hover:underline">
                                             Ver arquivo
                                         </a>
                                     @else
@@ -74,8 +73,9 @@
                     <x-tab name="responsavel" label="Responsável">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <x-show-field label="CPF" :value="$cliente->cpf" />
-                            <x-show-field label="Nome" :value="$cliente->nome" />  <x-show-field label="Data de Nascimento" :value="$cliente->data_nascimento?->format('d/m/Y')" />
-                          
+                            <x-show-field label="Nome" :value="$cliente->nome" /> <x-show-field label="Data de Nascimento"
+                                :value="$cliente->datanascimentoformatada" />
+
                             <x-show-field label="SUFRAMA" :value="$cliente->suframa" />
                         </div>
                     </x-tab>
@@ -141,10 +141,12 @@
 
                 <!-- Botões -->
                 <div class="flex gap-4 mt-6">
-                   <a href="{{ route('clientes.edit', $cliente) }}" class="px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700">
+                    <a href="{{ route('clientes.edit', $cliente) }}"
+                        class="px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700">
                         Editar
                     </a>
-                    <a href="{{ route('clientes.index') }}" class="px-4 py-2 rounded-lg bg-gray-500 text-white hover:bg-gray-600">
+                    <a href="{{ route('clientes.index') }}"
+                        class="px-4 py-2 rounded-lg bg-gray-500 text-white hover:bg-gray-600">
                         Voltar
                     </a>
                 </div>

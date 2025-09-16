@@ -1,5 +1,5 @@
 <x-layouts.app :title="__('Visualizar fornecedor')">
-     <div class="flex w-full flex-1 flex-col gap-4 rounded-xl">
+    <div class="flex w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
 
             <div
@@ -90,12 +90,14 @@
 
                 <!-- Botões -->
                 <div class="flex gap-4 mt-6">
-                    <x-button href="/fornecedores/{{ $fornecedor->id }}/edit" >
+                    <a href="{{ route('fornecedores.edit', $fornecedor->id) }}"
+                        class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
                         Editar
-                    </x-button>
-                    <x-button href="{{ route('fornecedores.index') }}">
+                    </a>
+                    <a href="{{ route('fornecedores.index') }}"
+                        class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
                         Voltar
-                    </x-button>
+                    </a>
                 </div>
             </div>
         </div>
