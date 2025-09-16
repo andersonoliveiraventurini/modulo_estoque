@@ -2,7 +2,8 @@
     <div class="flex w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
 
-            <div class="bg-white p-6 shadow rounded-2xl border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+            <div
+                class="bg-white p-6 shadow rounded-2xl border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
                 <!-- Cabeçalho -->
                 <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
                     <x-heroicon-o-archive-box class="w-5 h-5 text-primary-600" />
@@ -27,7 +28,7 @@
                             <x-show-field label="Unidade de Medida" :value="$produto->unidade_medida" />
                             <x-show-field label="Marca" :value="$produto->marca" />
                             <x-show-field label="Modelo" :value="$produto->modelo" />
-                            <x-show-field label="Cor" :value="$produto->cor->nome " />
+                            <x-show-field label="Cor" :value="$produto->cor->nome" />
                             <x-show-field label="Peso" :value="$produto->peso" />
                             <x-show-field label="Ativo" :value="$produto->ativo ? 'Sim' : 'Não'" />
                         </div>
@@ -62,22 +63,68 @@
                     </x-tab>
 
                     <!-- Imagem -->
-                    <x-tab name="imagem" label="Imagem">
-                        <div class="flex flex-col items-center">
-                            @if($produto->imagem_principal)
-                                <img src="{{ asset('storage/' . $produto->imagem_principal) }}"
-                                     alt="Imagem do Produto"
-                                     class="rounded-2xl shadow-md max-w-xs border border-neutral-200 dark:border-neutral-700">
-                            @else
-                                <p class="text-sm text-neutral-500">Nenhuma imagem cadastrada.</p>
-                            @endif
-                        </div>
+                    <x-tab name="imagem" label="Imagens">
+                        @if ($produto->images->count())
+                            <div x-data="{ lightboxAberto: false, imagemSelecionada: '' }" @keydown.escape.window="lightboxAberto = false"
+                                class="space-y-6 w-full max-w-6xl mx-auto">
+                                @php
+                                    $imagemPrincipal =
+                                        $produto->images->where('principal', true)->first() ??
+                                        $produto->images->first();
+                                    $secundarias = $produto->images->where('id', '!=', $imagemPrincipal->id);
+                                @endphp
+
+                                <!-- Imagem principal -->
+                                <div class="text-center">
+                                    <h3 class="text-lg font-semibold mb-2">Imagem Principal</h3>
+                                    <img src="{{ asset('storage/' . $imagemPrincipal->caminho) }}"
+                                        alt="Imagem Principal"
+                                        class="max-w-[30vw] max-h-[30vw] object-contain rounded-xl shadow-md cursor-pointer mx-auto border border-neutral-200 dark:border-neutral-700"
+                                        @click="lightboxAberto = true; imagemSelecionada = '{{ asset('storage/' . $imagemPrincipal->caminho) }}'">
+                                </div>
+
+                                <!-- Imagens secundárias -->
+                                @if ($secundarias->count())
+                                    <div class="text-center">
+                                        <h3 class="text-lg font-semibold mb-2">Imagens Secundárias</h3>
+                                        <div class="flex flex-wrap justify-center gap-4">
+                                            @foreach ($secundarias as $img)
+                                                <img src="{{ asset('storage/' . $img->caminho) }}"
+                                                    alt="Imagem Secundária"
+                                                    class="max-w-[30vw] max-h-[30vw] object-contain rounded-lg shadow cursor-pointer border border-neutral-200 dark:border-neutral-700"
+                                                    @click="lightboxAberto = true; imagemSelecionada = '{{ asset('storage/' . $img->caminho) }}'">
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <!-- Lightbox -->
+                                <div x-show="lightboxAberto" x-transition
+                                    class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                                    <div class="relative w-full max-w-5xl">
+                                        <!-- Botão fechar -->
+                                        <button @click="lightboxAberto = false"
+                                            class="absolute top-4 right-4 text-white text-3xl font-bold">
+                                            ✕
+                                        </button>
+
+                                        <!-- Imagem em destaque -->
+                                        <img :src="imagemSelecionada" alt="Visualização"
+                                            class="max-w-full max-h-[90vh] mx-auto object-contain rounded-xl shadow-lg">
+                                    </div>
+                                </div>
+                            </div>
+                        @else
+                            <p class="text-sm text-neutral-500">Nenhuma imagem cadastrada.</p>
+                        @endif
                     </x-tab>
+
+
                 </x-tabs>
 
                 <!-- Botões -->
                 <div class="flex gap-4 mt-6">
-                    <x-button href="{{ route('produtos.edit', $produto) }}" >
+                    <x-button href="{{ route('produtos.edit', $produto) }}">
                         Editar
                     </x-button>
                     <x-button href="{{ route('produtos.index') }}">
