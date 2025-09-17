@@ -34,7 +34,10 @@ class VendedorController extends Controller
         Vendedor::create($request->except([
             '_token'
         ]));
-        return to_route('vendedores.index')->with('success', 'Vendedor criado com sucesso!');
+
+        return redirect()
+        ->route('vendedores.index') // 👈 manda para a listagem de clientes
+        ->with('success', 'Vendedor cadastrado com sucesso!');
     }
 
     /**

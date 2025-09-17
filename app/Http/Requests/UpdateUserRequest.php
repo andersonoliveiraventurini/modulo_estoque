@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreVendedorRequest extends FormRequest
+class UpdateUserRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,17 +21,18 @@ class StoreVendedorRequest extends FormRequest
      */
     public function rules(): array
     {
-       return [
-            'user_id' => 'required|exists:users,id|unique:vendedores,user_id',
-            'externo' => 'required|boolean',
-            'desconto' => 'required|numeric|min:0|max:30',
-       ];
+        return [
+            'password' => 'required|string|min:6|confirmed',        
+        ];
     }
-    
+
     public function messages()
     {
         return [
-            'user_id.unique' => 'Este usuário já está cadastrado como vendedor.',
+            'password.required' => 'A senha é obrigatória.',
+            'password.string' => 'A senha deve ser uma letra.',
+            'password.min' => 'A senha deve ter no mínimo :min caracteres.',
+            'password.confirmed' => 'A confirmação da senha não corresponde.',
         ];
     }
 }

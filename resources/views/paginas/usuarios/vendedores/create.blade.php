@@ -8,7 +8,7 @@
                     <x-heroicon-o-user class="w-5 h-5 text-primary-600" />
                     Cadastro de vendedor
                 </h2>
-                <form action="{{ route('clientes.store') }}" method="POST" class="space-y-8">
+                <form action="{{ route('vendedores.store') }}" method="POST" class="space-y-8">
                     @csrf
                     <div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
@@ -23,8 +23,17 @@
                                 <option value="1">Sim</option>
                                 <option value="0">Não</option>
                             </x-select>
-                            <x-input name="desconto" label="% Desconto autorizado" placeholder="5" min="0"
-                                max="30" value="0" />
+                        <x-input 
+    name="desconto" 
+    label="Desconto na venda %" 
+    type="number" 
+    min="0" 
+    max="30" 
+    step="1" 
+    value="0" 
+    placeholder="Digite a porcentagem de desconto (0 a 30)" 
+    required
+/>
                         </div>
                     </div>
 
@@ -41,32 +50,21 @@
         </div>
     </div>
 
-    <script src="{{ asset('js/valida.js') }}"></script>
-
     <script>
-        let contatoIndex = 1;
+        document.addEventListener("DOMContentLoaded", () => {
+            const descontoInput = document.querySelector('[name="desconto"]');
 
-        function addContato() {
-            const wrapper = document.getElementById('contatos-wrapper');
-            const div = document.createElement('div');
-            div.classList = "grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-xl dark:border-neutral-700 relative";
-            div.innerHTML = `
-            <x-input name="contatos[\${contatoIndex}][nome]" label="Nome" placeholder="Nome da pessoa" />
-            <x-input name="contatos[\${contatoIndex}][telefone]" label="Telefone" placeholder="(11) 99999-9999" />
-            <x-input name="contatos[\${contatoIndex}][email]" label="E-mail" placeholder="contato@empresa.com" />
+            descontoInput.addEventListener("input", function () {
+                let val = this.value.replace(/[^0-9]/g, ""); // só números
+                val = parseInt(val) || 0;
 
-            <!-- Botão de excluir -->
-            <button type="button" onclick="removeContato(this)"
-                class="absolute top-2 right-2 text-red-600 hover:text-red-800">
-                <x-heroicon-o-trash class="w-5 h-5" />
-            </button>
-        `;
-            wrapper.appendChild(div);
-            contatoIndex++;
-        }
+                if (val < 0) val = 0;
+                if (val > 30) val = 30;
 
-        function removeContato(button) {
-            button.closest('div').remove();
-        }
+                this.value = val;
+                renderProdutos?.(); // só chama se a função existir
+            });
+        });
     </script>
+
 </x-layouts.app>
