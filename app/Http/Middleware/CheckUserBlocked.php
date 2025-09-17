@@ -9,7 +9,7 @@ class CheckUserBlocked
 {
     public function handle($request, Closure $next)
     {
-        if (Auth::check() && Auth::user()->blocked) {
+        if (Auth::check() && Auth::user()->is_blocked) {
             Auth::logout();
 
             return redirect()

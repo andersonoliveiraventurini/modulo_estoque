@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreConsultaPrecoRequest;
 use App\Http\Requests\UpdateConsultaPrecoRequest;
 use App\Models\ConsultaPreco;
+use App\Models\Cor;
 use App\Models\Fornecedor;
 
 class ConsultaPrecoController extends Controller
@@ -24,7 +25,8 @@ class ConsultaPrecoController extends Controller
     public function create()
     {
         $fornecedores = Fornecedor::all();
-        return view('paginas.produtos.consulta_precos.create', compact('fornecedores'));
+        $cores = Cor::orderBy('nome')->get();
+        return view('paginas.produtos.consulta_precos.create', compact('fornecedores', 'cores'));
     }
 
     /**

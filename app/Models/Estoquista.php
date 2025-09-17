@@ -6,15 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Desconto extends Model
+class Estoquista extends Model
 {
-    /** @use HasFactory<\Database\Factories\DescontoFactory> */
+    /** @use HasFactory<\Database\Factories\EstoquistaFactory> */
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'valor',
-        'motivo',
         'user_id',
-        
     ];
 }

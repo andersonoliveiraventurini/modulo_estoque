@@ -68,13 +68,11 @@ class UserController extends Controller
 
     public function updatePassword(UpdateUserRequest $request, User $user)
     {
-        
-
         $user->update([
             'password' => Hash::make($request->password),
         ]);
 
-        return redirect()->route('paginas.usuarios.index')
+        return redirect()->route('usuarios.index')
             ->with('success', 'Senha do usuário atualizada com sucesso!');
     }
 

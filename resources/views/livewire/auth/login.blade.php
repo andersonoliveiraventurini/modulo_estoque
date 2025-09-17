@@ -29,11 +29,34 @@ new #[Layout('components.layouts.auth')] class extends Component {
 
         $this->ensureIsNotRateLimited();
 
+        /*
         if (! Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
+            ]);
+        }*/
+
+        $credentials = ['email' => $this->email, 'password' => $this->password];
+
+        // Tentativa de login SEM lembrar
+        if (! Auth::attempt($credentials, $this->remember)) {
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => __('auth.failed'),
+            ]);
+        }
+
+        // Aqui já temos um usuário autenticado
+        $user = Auth::user();
+
+        // Verifica se está bloqueado
+        if ($user->is_blocked) {
+            Auth::logout(); // derruba o login
+            throw ValidationException::withMessages([
+                'email' => 'Sua conta está bloqueada. Contate o administrador.',
             ]);
         }
 

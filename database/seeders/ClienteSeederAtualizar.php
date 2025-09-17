@@ -10,7 +10,7 @@ use App\Models\Cliente;
 use App\Models\Contato;
 use GuzzleHttp\Client;
 
-class ClienteSeeder extends Seeder
+class ClienteSeederAtualizar extends Seeder
 {
     /**
      * Run the database seeds.
