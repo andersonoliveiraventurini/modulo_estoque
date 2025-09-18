@@ -45,24 +45,31 @@ class CorController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Cor $cor)
+    public function edit($cor_id)
     {
-        //
+        $cor = Cor::findOrFail($cor_id);
+        return view('paginas.adm.cores.edit', compact('cor'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateCorRequest $request, Cor $cor)
+    public function update(UpdateCorRequest $request, $cor_id)
     {
-        //
+        $cor = Cor::findOrFail($cor_id);
+        $cor->update($request->validated());
+
+        return redirect()->route('cores.index')->with('success', 'Cor atualizada com sucesso.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Cor $cor)
+    public function destroy($cor_id)
     {
-        //
+        $cor = Cor::findOrFail($cor_id);
+        $cor->delete();
+
+        return redirect()->route('cores.index')->with('success', 'Cor deletada com sucesso.');
     }
 }
