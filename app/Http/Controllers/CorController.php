@@ -39,7 +39,7 @@ class CorController extends Controller
      */
     public function show(Cor $cor)
     {
-        //
+        return view('paginas.adm.cores.show', compact('cor'));
     }
 
     /**

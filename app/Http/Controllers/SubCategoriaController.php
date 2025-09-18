@@ -39,7 +39,11 @@ class SubCategoriaController extends Controller
      */
     public function store(StoreSubCategoriaRequest $request)
     {
-        //
+        SubCategoria::create($request->validated());
+
+        return redirect()
+            ->route('subcategorias.index')
+            ->with('success', 'Subcategoria criada com sucesso!');
     }
 
     /**
@@ -47,7 +51,7 @@ class SubCategoriaController extends Controller
      */
     public function show(SubCategoria $subCategoria)
     {
-        //
+        return view('paginas.adm.subcategorias.show', compact('subCategoria'));
     }
 
     /**
@@ -55,22 +59,33 @@ class SubCategoriaController extends Controller
      */
     public function edit(SubCategoria $subCategoria)
     {
-        //
+        $categorias = Categoria::all();
+        return view('paginas.adm.subcategorias.edit', compact('subCategoria', 'categorias'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateSubCategoriaRequest $request, SubCategoria $subCategoria)
+    public function update(UpdateSubCategoriaRequest $request, $subCategoria_id)
     {
-        //
+        $subCategoria = SubCategoria::findOrFail($subCategoria_id);
+        $subCategoria->update($request->validated());
+
+        return redirect()
+            ->route('subcategorias.index')
+            ->with('success', 'Subcategoria atualizada com sucesso!');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(SubCategoria $subCategoria)
+    public function destroy($subCategoria_id)
     {
-        //
+        $subCategoria = SubCategoria::findOrFail($subCategoria_id);
+        $subCategoria->delete();
+
+        return redirect()
+            ->route('subcategorias.index')
+            ->with('success', 'Subcategoria deletada com sucesso!');
     }
 }
