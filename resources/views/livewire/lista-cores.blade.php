@@ -61,12 +61,15 @@
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
                                 href="/cores/{{ $c->id }}">{{ $c->id }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/cores/{{ $c->id }}">
+                            @if($c->codigo_hex != null)
                                 <span class="inline-flex items-center gap-2">
                                     <span class="w-4 h-4 border border-zinc-300 dark:border-zinc-600 rounded-sm"
                                         style="background-color: {{ $c->codigo_hex }}">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
                                     {{ $c->nome }}
                                 </span>
-
+                            @else
+                                {{ $c->nome }}
+                            @endif
                             </a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
                                 href="/cores/{{ $c->id }}">{{ $c->codigo_hex }}</a></td>

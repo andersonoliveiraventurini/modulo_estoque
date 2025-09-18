@@ -29,7 +29,9 @@ class CorController extends Controller
      */
     public function store(StoreCorRequest $request)
     {
-        //
+        Cor::create($request->validated());
+
+        return redirect()->route('cores.index')->with('success', 'Cor criada com sucesso.');
     }
 
     /**
