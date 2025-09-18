@@ -106,8 +106,8 @@
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/produtos/{{ $c->id }}">
                                 @if ($c->cor)
                                     <span class="inline-flex items-center gap-2">
-                                        <span class="w-4 h-4 border border-zinc-300 dark:border-zinc-600 rounded-sm"
-                                            style="background-color: {{ $c->cor->codigo_hex }}">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                                        <span class="w-5 h-5 border border-zinc-300 dark:border-zinc-600 rounded"
+                                            style="background-color: {{ $c->cor->codigo_hex }}"></span>
                                         {{ $c->cor->nome }}
                                     </span>
                                 @else

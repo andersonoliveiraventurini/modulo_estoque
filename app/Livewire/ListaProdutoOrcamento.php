@@ -13,7 +13,7 @@ class ListaProdutoOrcamento extends Component
     public $search = '';
     public $sortField = 'nome';
     public $sortDirection = 'asc';
-    public $perPage = 10;
+    public $perPage = 5;
 
     protected $queryString = [
         'search' => ['except' => ''],

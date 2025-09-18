@@ -36,7 +36,17 @@
                 @forelse($produtos as $produto)
                     <tr class="hover:bg-gray-50 dark:hover:bg-neutral-800">
                         <td class="px-4 py-2 text-sm">{{ $produto->id }}</td>
-                        <td class="px-4 py-2 text-sm">{{ $produto->cor }}</td>
+                        <td class="px-4 py-2 text-sm">
+                            @if ($produto->cor)
+                                <span class="inline-flex items-center gap-2">
+                                    <span class="w-5 h-5 border border-zinc-300 dark:border-zinc-600 rounded"
+                                        style="background-color: {{ $produto->cor->codigo_hex }}"></span>
+                                    {{ $produto->cor->nome }}
+                                </span>
+                            @else
+                                Sem cor
+                            @endif
+                        </td>
                         <td class="px-4 py-2 text-sm">{{ $produto->nome }}</td>
                         <td class="px-4 py-2 text-sm">{{ $produto->descricao }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
@@ -44,7 +54,7 @@
                         </td>
                         <td class="px-4 py-2 text-sm">R$ {{ number_format($produto->preco_venda, 2, ',', '.') }}</td>
                         <td class="px-4 py-2 text-center">
-                          <x-button variant="primary"
+                            <x-button variant="primary"
                                 onclick="adicionarProduto('{{ $produto->id }}', '{{ $produto->nome }}', '{{ $produto->preco_venda }}')">
                                 <x-heroicon-o-plus class="w-4 h-4" />
                                 Selecionar
