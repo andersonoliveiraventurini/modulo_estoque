@@ -50,7 +50,7 @@
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                                 <x-input name="itens[0][nome]" label="Descrição do item" placeholder="Digite a descrição"
-                                    required class="col-span-2" />
+                                    class="col-span-2" />
                                 <x-input name="itens[0][quantidade]" label="Quantidade" placeholder="Digite a quantidade" />
                                 <x-select name="itens[0][cor]" label="Cor">
                                     <option value="">Selecione...</option>
