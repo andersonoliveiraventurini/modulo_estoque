@@ -12,7 +12,7 @@
                     @csrf
 
                     <x-input name="nome" label="Nome" value="{{ old('nome') }}" required />
-                    <x-input name="codigo_hex" label="Código Hexadecimal" value="{{ old('codigo_hex') }}" required />
+                    <x-input name="codigo_hex" label="Código Hexadecimal" value="{{ old('codigo_hex') }}"  />
 
                     <div class="flex gap-4">
                         <x-button type="submit">Cadastrar</x-button>

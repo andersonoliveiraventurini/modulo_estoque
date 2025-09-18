@@ -20,7 +20,7 @@
                             </option>
                         @endforeach
                     </x-select>
-                    <x-textarea name="descricao" label="Descrição" value="{{ old('descricao') }}" required />
+                    <x-textarea name="descricao" label="Descrição" value="{{ old('descricao') }}"  />
 
                     <div class="flex gap-4">
                         <x-button type="submit">Cadastrar</x-button>

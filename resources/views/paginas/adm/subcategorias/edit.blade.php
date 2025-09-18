@@ -24,7 +24,7 @@
                         @endforeach
                     </x-select>
 
-                    <x-textarea name="descricao" label="Descrição" required>{{ old('descricao', $subcategoria->descricao) }}</x-textarea>
+                    <x-textarea name="descricao" label="Descrição" >{{ old('descricao', $subcategoria->descricao) }}</x-textarea>
 
                     <div class="flex gap-4">
                         <x-button type="submit">Salvar Alterações</x-button>

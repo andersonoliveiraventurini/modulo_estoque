@@ -13,7 +13,7 @@
                     @method('PUT')
 
                     <x-input name="nome" label="Nome" value="{{ old('nome', $categoria->nome) }}" required />
-                    <x-textarea name="descricao" label="Descrição" required>{{ old('descricao', $categoria->descricao) }}</x-textarea>
+                    <x-textarea name="descricao" label="Descrição">{{ old('descricao', $categoria->descricao) }}</x-textarea>
 
                     <div class="flex gap-4">
                         <x-button type="submit">Salvar Alterações</x-button>

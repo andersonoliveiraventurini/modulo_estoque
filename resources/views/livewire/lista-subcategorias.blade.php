@@ -59,6 +59,7 @@
                             Categoria
                         </button>
                     </th>
+                    <th class="px-6 py-3 text-left">Ações</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
@@ -77,6 +78,26 @@
                             <a href="/categorias/{{ $sub->categoria?->id }}">
                                 {{ $sub->categoria?->nome ?? '—' }}
                             </a>
+                        </td>
+                        <td class="px-6 py-4 flex gap-2">
+                            <!-- Editar -->
+                            <a href="{{ route('subcategorias.edit', $sub->id) }}">
+                                <x-button size="sm" variant="secondary">
+                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                    Editar
+                                </x-button>
+                            </a>
+
+                            <!-- Excluir -->
+                            <form action="{{ route('subcategorias.destroy', $sub->id) }}" method="POST"
+                                onsubmit="return confirm('Tem certeza que deseja excluir esta subcategoria?');">
+                                @csrf
+                                @method('DELETE')
+                                <x-button size="sm" variant="danger">
+                                    <x-heroicon-o-trash class="w-4 h-4" />
+                                    Excluir
+                                </x-button>
+                            </form>
                         </td>
                     </tr>
                 @empty

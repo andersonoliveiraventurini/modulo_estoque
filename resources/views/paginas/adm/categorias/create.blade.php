@@ -12,7 +12,7 @@
                     @csrf
 
                     <x-input name="nome" label="Nome" value="{{ old('nome') }}" required />
-                    <x-textarea name="descricao" label="Descrição" value="{{ old('descricao') }}" required />
+                    <x-textarea name="descricao" label="Descrição" value="{{ old('descricao') }}" />
 
                     <div class="flex gap-4">
                         <x-button type="submit">Cadastrar</x-button>

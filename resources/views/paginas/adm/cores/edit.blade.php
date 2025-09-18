@@ -13,7 +13,7 @@
                     @method('PUT')
 
                     <x-input name="nome" label="Nome" value="{{ old('nome', $cor->nome) }}" required />
-                    <x-input name="codigo_hex" label="Código Hexadecimal" value="{{ old('codigo_hex', $cor->codigo_hex) }}" required />
+                    <x-input name="codigo_hex" label="Código Hexadecimal" value="{{ old('codigo_hex', $cor->codigo_hex) }}"  />
 
                     <div class="flex gap-4">
                         <x-button type="submit">Salvar Alterações</x-button>

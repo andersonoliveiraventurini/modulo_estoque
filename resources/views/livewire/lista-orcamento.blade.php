@@ -1,4 +1,3 @@
-
 <!-- Container -->
 <div class="bg-white dark:bg-zinc-900 shadow rounded-2xl border border-zinc-200 dark:border-zinc-700">
 
@@ -13,8 +12,7 @@
                 <label for="search" class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                     Pesquisar
                 </label>
-                <x-input id="search" wire:model.live.debounce.300ms="search"
-                    placeholder="Buscar  ..." />
+                <x-input id="search" wire:model.live.debounce.300ms="search" placeholder="Buscar  ..." />
             </div>
 
             <!-- Itens por página (largura fixa) -->
@@ -38,22 +36,45 @@
             <thead class="bg-zinc-50 dark:bg-zinc-800">
                 <tr>
                     <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('obra')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                        <button wire:click="sortBy('obra')"
+                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Obra
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('cliente')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                        <button wire:click="sortBy('cliente')"
+                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Cliente
                         </button>
                     </th>
+                    <th class="px-6 py-3 text-left">Ações</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse($orcamentos as $c)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="{{ route('orcamentos.show', $c) }}">{{ $c->obra }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
+                                href="{{ route('orcamentos.show', $c) }}">{{ $c->obra }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->cliente->nome }}</td>
+                        <td class="px-6 py-4 flex gap-2">
+                            <a href="{{ route('orcamentos.edit', $c->id) }}">
+                                <x-button size="sm" variant="secondary">
+                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                    Editar
+                                </x-button>
+                            </a>
+
+                            <form action="{{ route('orcamentos.destroy', $c->id) }}" method="POST"
+                                onsubmit="return confirm('Deseja excluir este orçamento?');">
+                                @csrf
+                                @method('DELETE')
+                                <x-button size="sm" variant="danger">
+                                    <x-heroicon-o-trash class="w-4 h-4" />
+                                    Excluir
+                                </x-button>
+                            </form>
+                        </td>
+
                     </tr>
                 @empty
                     <tr>
@@ -68,7 +89,8 @@
 
     <!-- Paginação -->
     @if ($orcamentos->hasPages())
-        <div class="p-6 border-t border-zinc-200 dark:border-zinc-700 flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-300">
+        <div
+            class="p-6 border-t border-zinc-200 dark:border-zinc-700 flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-300">
             <div>
                 {{ $orcamentos->links() }}
             </div>

@@ -1,4 +1,3 @@
-
 <!-- Container -->
 <div class="bg-white dark:bg-zinc-900 shadow rounded-2xl border border-zinc-200 dark:border-zinc-700">
 
@@ -38,40 +37,48 @@
             <thead class="bg-zinc-50 dark:bg-zinc-800">
                 <tr>
                     <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('nome_fantasia')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                        <button wire:click="sortBy('nome_fantasia')"
+                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Nome Brcom
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('nome_fantasia')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                        <button wire:click="sortBy('nome_fantasia')"
+                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Nome Fantasia
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('razao_social')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                        <button wire:click="sortBy('razao_social')"
+                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Razão Social
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('tratamento')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                        <button wire:click="sortBy('tratamento')"
+                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Tratamento
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('cnpj')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                        <button wire:click="sortBy('cnpj')"
+                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             CNPJ
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('limite')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                        <button wire:click="sortBy('limite')"
+                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Limite
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('desconto')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                        <button wire:click="sortBy('desconto')"
+                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Desconto
                         </button>
                     </th>
+                    <th class="px-6 py-3 text-left">Ações</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
@@ -80,12 +87,35 @@
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             <a href="/clientes/{{ $c->id }}">{{ $c->nome }}</a>
                         </td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/clientes/{{ $c->id }}">{{ $c->nome_fantasia }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/clientes/{{ $c->id }}">{{ $c->razao_social }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/clientes/{{ $c->id }}">{{ $c->tratamento ?? '-' }}</a></td>
-                        <td class="px-6 py-4 font-mono text-zinc-800 dark:text-zinc-200"><a href="/clientes/{{ $c->id }}">{{ $c->cnpj_formatado }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
+                                href="/clientes/{{ $c->id }}">{{ $c->nome_fantasia }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
+                                href="/clientes/{{ $c->id }}">{{ $c->razao_social }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
+                                href="/clientes/{{ $c->id }}">{{ $c->tratamento ?? '-' }}</a></td>
+                        <td class="px-6 py-4 font-mono text-zinc-800 dark:text-zinc-200"><a
+                                href="/clientes/{{ $c->id }}">{{ $c->cnpj_formatado }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->limite ?? '-' }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->desconto ?? '-' }}</td>
+                        <td class="px-6 py-4 flex gap-2">
+                            <a href="{{ route('clientes.edit', $c->id) }}">
+                                <x-button size="sm" variant="secondary">
+                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                    Editar
+                                </x-button>
+                            </a>
+
+                            <form action="{{ route('clientes.destroy', $c->id) }}" method="POST"
+                                onsubmit="return confirm('Tem certeza que deseja excluir este cliente?');">
+                                @csrf
+                                @method('DELETE')
+                                <x-button size="sm" variant="danger">
+                                    <x-heroicon-o-trash class="w-4 h-4" />
+                                    Excluir
+                                </x-button>
+                            </form>
+                        </td>
+
                     </tr>
                 @empty
                     <tr>
@@ -100,7 +130,8 @@
 
     <!-- Paginação -->
     @if ($clientes->hasPages())
-        <div class="p-6 border-t border-zinc-200 dark:border-zinc-700 flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-300">
+        <div
+            class="p-6 border-t border-zinc-200 dark:border-zinc-700 flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-300">
             <div>
                 {{ $clientes->links() }}
             </div>
