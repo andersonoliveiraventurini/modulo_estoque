@@ -7,8 +7,11 @@ use App\Http\Requests\UpdateProdutoRequest;
 use App\Models\Categoria;
 use App\Models\Cor;
 use App\Models\Fornecedor;
+use App\Models\Imagem;
 use App\Models\Produto;
 use App\Models\SubCategoria;
+use Illuminate\Support\Facades\Storage;
+
 
 class ProdutoController extends Controller
 {
@@ -70,7 +73,11 @@ class ProdutoController extends Controller
      */
     public function edit(Produto $produto)
     {
-        //
+        $fornecedores = Fornecedor::all();
+        $categorias = Categoria::all();
+        $subcategorias = SubCategoria::all();
+        $cores = Cor::orderBy('nome')->get();
+        return view('paginas.produtos.edit', compact('produto', 'fornecedores', 'categorias', 'subcategorias', 'cores'));
     }
 
     /**
@@ -78,7 +85,39 @@ class ProdutoController extends Controller
      */
     public function update(UpdateProdutoRequest $request, Produto $produto)
     {
-        //
+        $produto->update($request->except('_token'));
+
+        // Upload de novas imagens
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('produtos', 'public');
+                $produto->images()->create([
+                    'caminho' => $path,
+                    'principal' => false,
+                ]);
+            }
+        }
+
+        return redirect()->route('produtos.index')->with('success', 'Produto atualizado com sucesso!');
+    }
+
+    // Definir imagem principal
+    public function definirPrincipal(Produto $produto, Imagem $imagem)
+    {
+        // Zera as outras
+        $produto->images()->update(['principal' => false]);
+        $imagem->update(['principal' => true]);
+
+        return back()->with('success', 'Imagem principal atualizada!');
+    }
+
+    // Remover imagem
+    public function destroyImagem(Produto $produto, Imagem $imagem)
+    {
+        Storage::disk('public')->delete($imagem->caminho);
+        $imagem->delete();
+
+        return back()->with('success', 'Imagem removida!');
     }
 
     /**

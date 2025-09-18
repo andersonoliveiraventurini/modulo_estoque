@@ -124,12 +124,12 @@
 
                 <!-- Botões -->
                 <div class="flex gap-4 mt-6">
-                    <x-button href="{{ route('produtos.edit', $produto) }}">
+                    <a href="{{ route('produtos.edit', $produto) }}">
                         Editar
-                    </x-button>
-                    <x-button href="{{ route('produtos.index') }}">
+                    </a>
+                    <a href="{{ route('produtos.index') }}">
                         Voltar
-                    </x-button>
+                    </a>
                 </div>
             </div>
         </div>

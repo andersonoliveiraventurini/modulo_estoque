@@ -28,7 +28,7 @@ use App\Http\Controllers\SubCategoriaController;
 use App\Http\Controllers\UserController;
 
 Volt::route('/', 'auth.login')
-        ->name('home');
+    ->name('home');
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
@@ -44,10 +44,16 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('produtos', ProdutoController::class)->names('produtos');
     Route::get('/categorias/{id}/subcategorias', [SubCategoriaController::class, 'subcategorias']);
 
+    Route::patch('produtos/{produto}/imagens/{imagem}/principal', [ProdutoController::class, 'definirPrincipal'])
+        ->name('produtos.imagens.principal');
+
+    Route::delete('produtos/{produto}/imagens/{imagem}', [ProdutoController::class, 'destroyImagem'])
+        ->name('produtos.imagens.destroy');
+
     Route::resource('movimentacao', MovimentacaoController::class)->names('movimentacao');
     Route::resource('consulta_preco', ConsultaPrecoController::class)->names('consulta_preco');
     Route::resource('ncm', NcmController::class)->names('ncm');
-    
+
     Route::resource('blocok/descartes', BlocokDescartesController::class)->names('blocok.descartes');
     Route::resource('blocok/insumos', BlocokInsumosController::class)->names('blocok.insumos');
     Route::resource('blocok/items', BlocokItemController::class)->names('blocok.items');
@@ -84,7 +90,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('rdstation/listar-empresas', [RdstationController::class, 'listarEmpresas'])->name('rdstation.listar-empresas');
     Route::get('rdstation/listar-negociacoes', [RdstationController::class, 'listarNegociacoes'])->name('rdstation.listar-negociacoes');
     Route::any('rdstation/criar-empresa/{id}', [RdstationController::class, 'criarEmpresa'])->name('rdstation.criar-empresa.id');
-
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
