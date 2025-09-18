@@ -49,11 +49,27 @@ class ClienteController extends Controller
         DB::transaction(function () use ($request) {
             // salva apenas os valores preenchidos
             $dadosCliente = array_filter($request->only([
-                'cpf', 'cnpj', 'nome', 'nome_fantasia', 'razao_social', 'tratamento',
-                'data_nascimento', 'cnae', 'inscricao_estadual', 'inscricao_municipal',
-                'data_abertura', 'regime_tributario', 'vendedor_id', 'vendedor_externo_id',
-                'certidoes_negativas', 'suframa', 'classificacao', 'canal_origem',
-                'desconto', 'negociar_titulos', 'inativar_apos'
+                'cpf',
+                'cnpj',
+                'nome',
+                'nome_fantasia',
+                'razao_social',
+                'tratamento',
+                'data_nascimento',
+                'cnae',
+                'inscricao_estadual',
+                'inscricao_municipal',
+                'data_abertura',
+                'regime_tributario',
+                'vendedor_id',
+                'vendedor_externo_id',
+                'certidoes_negativas',
+                'suframa',
+                'classificacao',
+                'canal_origem',
+                'desconto',
+                'negociar_titulos',
+                'inativar_apos'
             ]));
 
             // Ajusta o campo cpf_responsavel -> cpf
@@ -70,7 +86,7 @@ class ClienteController extends Controller
             $cliente = Cliente::create($dadosCliente);
 
             // bloqueio inicial
-            if($request->bloqueado == 1) {
+            if ($request->bloqueado == 1) {
                 Bloqueio::create([
                     'cliente_id' => $cliente->id,
                     'motivo' => 'Bloqueio automático no cadastro',
@@ -79,7 +95,7 @@ class ClienteController extends Controller
             }
 
             // análise de crédito inicial
-            if(isset($request->limite_boleto)|| isset($request->limite_carteira)) {
+            if (isset($request->limite_boleto) || isset($request->limite_carteira)) {
                 AnaliseCredito::create([
                     'cliente_id' => $cliente->id,
                     'limite_boleto' => $request->limite_boleto ?? 0,
@@ -106,7 +122,7 @@ class ClienteController extends Controller
                     'cep'        => $request->endereco_cep,
                     'logradouro' => $request->endereco_logradouro,
                     'numero'     => $request->endereco_numero,
-                    'complemento'=> $request->endereco_compl,
+                    'complemento' => $request->endereco_compl,
                     'bairro'     => $request->endereco_bairro,
                     'cidade'     => $request->endereco_cidade,
                     'estado'     => $request->endereco_estado,
@@ -120,7 +136,7 @@ class ClienteController extends Controller
                     'cep'        => $request->entrega_cep,
                     'logradouro' => $request->entrega_logradouro,
                     'numero'     => $request->entrega_numero,
-                    'complemento'=> $request->entrega_compl,
+                    'complemento' => $request->entrega_compl,
                     'bairro'     => $request->entrega_bairro,
                     'cidade'     => $request->entrega_cidade,
                     'estado'     => $request->entrega_estado,
@@ -160,11 +176,27 @@ class ClienteController extends Controller
     {
         DB::transaction(function () use ($request, $cliente) {
             $dadosCliente = array_filter($request->only([
-                'cpf', 'cnpj', 'nome', 'nome_fantasia', 'razao_social', 'tratamento',
-                'data_nascimento', 'cnae', 'inscricao_estadual', 'inscricao_municipal',
-                'data_abertura', 'regime_tributario', 'vendedor_id', 'vendedor_externo_id',
-                'certidoes_negativas', 'suframa', 'classificacao', 'canal_origem',
-                'desconto', 'negociar_titulos', 'inativar_apos'
+                'cpf',
+                'cnpj',
+                'nome',
+                'nome_fantasia',
+                'razao_social',
+                'tratamento',
+                'data_nascimento',
+                'cnae',
+                'inscricao_estadual',
+                'inscricao_municipal',
+                'data_abertura',
+                'regime_tributario',
+                'vendedor_id',
+                'vendedor_externo_id',
+                'certidoes_negativas',
+                'suframa',
+                'classificacao',
+                'canal_origem',
+                'desconto',
+                'negociar_titulos',
+                'inativar_apos'
             ]));
 
             if ($request->filled('cpf_responsavel')) {
@@ -197,7 +229,7 @@ class ClienteController extends Controller
                 ]);
             }
 
-  // contatos
+            // contatos
             if ($request->filled('contatos')) {
                 foreach ($request->contatos as $contato) {
                     $cliente->contatos()->create(array_filter([
@@ -216,7 +248,7 @@ class ClienteController extends Controller
                         'cep'        => $request->endereco_cep,
                         'logradouro' => $request->endereco_logradouro,
                         'numero'     => $request->endereco_numero,
-                        'complemento'=> $request->endereco_compl,
+                        'complemento' => $request->endereco_compl,
                         'bairro'     => $request->endereco_bairro,
                         'cidade'     => $request->endereco_cidade,
                         'estado'     => $request->endereco_estado,
@@ -231,7 +263,7 @@ class ClienteController extends Controller
                         'cep'        => $request->entrega_cep,
                         'logradouro' => $request->entrega_logradouro,
                         'numero'     => $request->entrega_numero,
-                        'complemento'=> $request->entrega_compl,
+                        'complemento' => $request->entrega_compl,
                         'bairro'     => $request->entrega_bairro,
                         'cidade'     => $request->entrega_cidade,
                         'estado'     => $request->entrega_estado,
@@ -248,8 +280,12 @@ class ClienteController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Cliente $cliente)
+    public function destroy($cliente_id)
     {
-        //
+        $cliente = Cliente::findOrFail($cliente_id);
+        $cliente->delete();
+
+        return redirect()->route('clientes.index')
+            ->with('success', 'Cliente excluído com sucesso!');
     }
 }
