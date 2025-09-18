@@ -59,14 +59,11 @@
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse($categorias as $c)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="/categorias/{{ $c->id }}">{{ $c->id }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="/categorias/{{ $c->id }}">
-                                {{ $c->nome }}
-                            </a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="/categorias/{{ $c->id }}">{{ $c->descricao }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->id }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
+                            {{ $c->nome }}
+                        </td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->descricao }}</td>
                         <td class="px-6 py-4 flex gap-2">
                             <a href="{{ route('categorias.edit', $c->id) }}">
                                 <x-button size="sm" variant="secondary">

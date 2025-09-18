@@ -66,13 +66,12 @@
                 @forelse($subcategorias as $sub)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            <a href="/sub-categorias/{{ $sub->id }}">{{ $sub->id }}</a>
+                            {{ $sub->id }}
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            <a href="/sub-categorias/{{ $sub->id }}">{{ $sub->nome }}</a>
+                            {{ $sub->nome }}
                         </td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            <a href="/sub-categorias/{{ $sub->id }}">{{ $sub->descricao }}</a>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $sub->descricao }}
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             <a href="/categorias/{{ $sub->categoria?->id }}">
