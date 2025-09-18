@@ -19,7 +19,6 @@
 
                     <div class="flex gap-4">
                         <x-button type="submit">Atualizar Senha</x-button>
-                        <a href="{{ route('usuarios.index') }}" class="text-gray-600 hover:underline">Voltar</a>
                     </div>
                 </form>
             </div>

@@ -41,7 +41,6 @@ class ProdutoController extends Controller
      */
     public function store(StoreProdutoRequest $request)
     {
-
         $produto = Produto::create($request->except('_token'));
 
         // Processar múltiplas imagens
@@ -85,7 +84,7 @@ class ProdutoController extends Controller
      */
     public function update(UpdateProdutoRequest $request, Produto $produto)
     {
-        $produto->update($request->except('_token'));
+        $produto->update($request->validated());
 
         // Upload de novas imagens
         if ($request->hasFile('images')) {

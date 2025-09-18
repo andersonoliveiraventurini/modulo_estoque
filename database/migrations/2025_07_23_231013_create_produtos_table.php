@@ -26,7 +26,7 @@ return new class extends Migration
             $table->decimal('preco_venda', 15, 2)->nullable()->comment('Preço de venda do produto - Valor pelo qual o produto é comercializado.');
             $table->decimal('estoque_minimo', 15, 2)->nullable()->comment('Estoque mínimo - Quantidade mínima que deve ser mantida em estoque para evitar falta.');
             $table->decimal('estoque_atual', 15, 2)->nullable()->comment('Estoque atual - Quantidade atual disponível em estoque.');
-            $table->string('unidade_medida', 10)->nullable()->comment('Unidade de medida - Unidade utilizada para quantificar o produto, como kg, g, L, etc.');
+            $table->string('unidade_medida', 20)->nullable()->comment('Unidade de medida - Unidade utilizada para quantificar o produto, como kg, g, L, etc.');
             $table->string('marca')->nullable()->comment('Marca do produto - Nome da marca ou fabricante do produto.');
             $table->string('modelo')->nullable()->comment('Modelo do produto - Identificação específica do modelo do produto.'); // Adiciona a chave estrangeira para cores
             $table->unsignedBigInteger('cor_id')->nullable()

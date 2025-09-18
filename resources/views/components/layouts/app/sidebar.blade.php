@@ -59,19 +59,13 @@
                 :current="request()->routeIs('consulta_preco.index')" wire:navigate>{{ __('Consultas de preço') }}
             </flux:navlist.item>
             <flux:navlist.item icon="home" :href="route('consulta_preco.create')"
-                :current="request()->routeIs('consulta_preco.create')" wire:navigate>{{ __('Cotação') }}
+                :current="request()->routeIs('consulta_preco.create')" wire:navigate>{{ __('Cotações de preço') }}
             </flux:navlist.item>
         </flux:navlist.group>
 
         <flux:navlist.group heading="Financeiro" expandable :expanded="false">
             <flux:navlist.item icon="home" :href="route('descontos.index')"
                 :current="request()->routeIs('descontos.index')" wire:navigate>{{ __('Descontos') }}
-            </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('notas.index')"
-                :current="request()->routeIs('notas.index')" wire:navigate>{{ __('Listar notas') }}
-            </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('notas.create')"
-                :current="request()->routeIs('notas.create')" wire:navigate>{{ __('Gerar nota') }}
             </flux:navlist.item>
         </flux:navlist.group>
 
@@ -102,7 +96,7 @@
             </flux:navlist.item>
             <flux:navlist.item icon="home" :href="route('subcategorias.create')"
                 :current="request()->routeIs('subcategorias.create')" wire:navigate>{{ __('Criar subcategoria') }}
-            </flux:navlist.item>    
+            </flux:navlist.item>
         </flux:navlist.group>
 
         <flux:navlist variant="outline">
@@ -116,20 +110,6 @@
                 <flux:navlist.item icon="shopping-cart" :href="route('rdstation.listar-negociacoes')"
                     :current="request()->routeIs('rdstation.listar-negociacoes')" wire:navigate>
                     {{ __('Negociações') }}
-                </flux:navlist.item>
-            </flux:navlist.group>
-        </flux:navlist>
-
-        <flux:navlist variant="outline">
-            <flux:navlist.group :heading="__('Vendas')" class="grid">
-                <flux:navlist.item icon="home" :href="route('orcamentos.create')"
-                    :current="request()->routeIs('orcamentos.create')" wire:navigate>{{ __('Gerar orçamento') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('orcamentos.index')"
-                    :current="request()->routeIs('orcamentos.index')" wire:navigate>{{ __('Listar orçamentos') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('pedidos.index')"
-                    :current="request()->routeIs('pedidos.index')" wire:navigate>{{ __('Listar pedidos') }}
                 </flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist>

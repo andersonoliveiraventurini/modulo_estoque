@@ -23,17 +23,9 @@
                                 <option value="1">Sim</option>
                                 <option value="0">Não</option>
                             </x-select>
-                        <x-input 
-    name="desconto" 
-    label="Desconto na venda %" 
-    type="number" 
-    min="0" 
-    max="30" 
-    step="1" 
-    value="0" 
-    placeholder="Digite a porcentagem de desconto (0 a 30)" 
-    required
-/>
+                            <x-input name="desconto" label="Desconto na venda %" type="number" min="0"
+                                max="30" step="1" value="0"
+                                placeholder="Digite a porcentagem de desconto (0 a 30)" required />
                         </div>
                     </div>
 
@@ -41,8 +33,6 @@
                     <!-- Ações -->
                     <div class="flex gap-4">
                         <x-button type="submit">Cadastrar vendedor</x-button>
-                        <a href="{{ route('vendedores.index') }}">Voltar
-                        </a>
                     </div>
                     <!-- Botões -->
                 </form>
@@ -54,7 +44,7 @@
         document.addEventListener("DOMContentLoaded", () => {
             const descontoInput = document.querySelector('[name="desconto"]');
 
-            descontoInput.addEventListener("input", function () {
+            descontoInput.addEventListener("input", function() {
                 let val = this.value.replace(/[^0-9]/g, ""); // só números
                 val = parseInt(val) || 0;
 

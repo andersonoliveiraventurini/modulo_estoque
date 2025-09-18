@@ -29,7 +29,6 @@
 
                     <div class="flex gap-4">
                         <x-button type="submit">Salvar Alterações</x-button>
-                        <a href="{{ route('subcategorias.index') }}" class="text-gray-600 hover:underline">Voltar</a>
                     </div>
                 </form>
             </div>

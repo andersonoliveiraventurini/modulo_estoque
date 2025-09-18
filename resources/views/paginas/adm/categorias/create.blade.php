@@ -16,7 +16,6 @@
 
                     <div class="flex gap-4">
                         <x-button type="submit">Cadastrar</x-button>
-                        <a href="{{ route('categorias.index') }}" class="text-gray-600 hover:underline">Voltar</a>
                     </div>
                 </form>
             </div>

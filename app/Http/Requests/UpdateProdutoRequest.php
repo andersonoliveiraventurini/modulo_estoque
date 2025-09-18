@@ -28,8 +28,8 @@ class UpdateProdutoRequest extends FormRequest
             'fornecedor_id' => 'nullable|exists:fornecedores,id',
             'marca' => 'nullable|string|max:255',
             'modelo' => 'nullable|string|max:255',
-            'cor' => 'nullable|exists:cores,id',
-            'unidade' => 'required|string|max:255',
+            'cor_id' => 'nullable|exists:cores,id', // corrigido
+            'unidade_medida' => 'required|string|max:255', // corrigido
             'peso' => 'nullable|numeric',
             'estoque_minimo' => 'nullable|numeric',
             'flag_encomenda' => 'nullable|boolean',
@@ -42,6 +42,8 @@ class UpdateProdutoRequest extends FormRequest
             'margem_lucro' => 'nullable|numeric',
             'preco_venda' => 'nullable|numeric',
             'liberar_desconto' => 'nullable|boolean',
+            'descricao' => 'nullable|string',
+            'observacoes' => 'nullable|string',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
         ];
     }
