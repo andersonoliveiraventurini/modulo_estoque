@@ -4,14 +4,14 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreVendedorRequest extends FormRequest
+class StoreEstoquistaRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -21,17 +21,8 @@ class StoreVendedorRequest extends FormRequest
      */
     public function rules(): array
     {
-       return [
-            'user_id' => 'required|exists:users,id|unique:vendedores,user_id',
-            'externo' => 'required|boolean',
-            'desconto' => 'required|numeric|min:0|max:30',
-       ];
-    }
-    
-    public function messages()
-    {
         return [
-            'user_id.unique' => 'Este usuário já está cadastrado como vendedor.',
+            //
         ];
     }
 }

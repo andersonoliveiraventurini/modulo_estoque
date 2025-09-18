@@ -37,12 +37,20 @@ class Cliente extends Model
     // E um accessor para formatação
     public function getDataAberturaFormatadaAttribute()
     {
-        return $this->data_abertura?->format('d/m/Y');
+        if($this->data_abertura === null) {
+            return null;
+        }else{
+            return $this->data_abertura->format('d/m/Y');
+        }
     }
 
     public function getDataNascimentoFormatadaAttribute()
     {
-        return $this->data_nascimento->format('d/m/Y');
+        if($this->data_nascimento === null) {
+            return null;
+        }else{
+            return $this->data_nascimento->format('d/m/Y');
+        }
     }
 
     public function getCnpjFormatadoAttribute()

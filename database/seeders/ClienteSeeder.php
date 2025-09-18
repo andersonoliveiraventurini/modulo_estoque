@@ -193,7 +193,7 @@ class ClienteSeeder extends Seeder
                 ];
 
                 $credito = [
-                    'limite_credito' => $trimOrNull($data['limite'] ?? null),
+                    'limite_carteira' => $trimOrNull($data['limite'] ?? null),
                     'validade'       => $trimOrNull($data['venc_limite'] ?? null),
                     'observacoes'    => $trimOrNull($data['bloqueio'] ?? null),
                     'created_at'     => now(),

@@ -22,43 +22,7 @@
                     <livewire:lista-produto-orcamento />
                 </div>
 
-                <div class="space-y-4"><br />
-                    <hr />
-                    <h3 class="text-lg font-medium flex items-center gap-2">
-                        <x-heroicon-o-shopping-cart class="w-5 h-5 text-primary-600" />
-                        Itens para cotação no orçamento
-                    </h3>
-
-                    <div id="itens-wrapper" class="space-y-4">
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                            <x-input name="itens[0][nome]" label="Descrição do item" placeholder="Digite a descrição"
-                                required class="col-span-2" />
-                            <x-input name="itens[0][quantidade]" label="Quantidade" placeholder="Digite a quantidade" />
-                            <x-select name="itens[0][cor]" label="Cor">
-                                <option value="">Selecione...</option>
-                                @foreach ($cores as $cor)
-                                    <option value="{{ $cor->id }}">{{ $cor->nome }}</option>
-                                @endforeach
-                            </x-select>
-                            <x-select name="itens[0][fornecedor_id]" label="Fornecedor"
-                                class="col-span-2 md:col-span-4">
-                                <option value="">Selecione...</option>
-                                @foreach ($fornecedores as $fornecedor)
-                                    <option value="{{ $fornecedor->id }}">{{ $fornecedor->nome_fantasia }}</option>
-                                @endforeach
-                            </x-select>
-                        </div>
-                        <BR/>
-                        <x-textarea name="itens[0][observacoes]" label="Observações"
-                            placeholder="Digite os detalhes adicionais..." rows="2" class="col-span-4" />
-
-                    </div>
-
-                    <x-button type="button" onclick="addItem()">
-                        + Adicionar cotação de item
-                    </x-button>
-                </div>
+                
 
                 <!-- Campos iniciais -->
                 <form action="{{ route('orcamentos.store') }}" method="POST" class="space-y-8">
@@ -73,6 +37,44 @@
                         </h3>
 
                         <div id="produtos-selecionados" class="space-y-4"></div>
+                    </div>
+                    
+                    <div class="space-y-4"><br />
+                        <hr />
+                        <h3 class="text-lg font-medium flex items-center gap-2">
+                            <x-heroicon-o-shopping-cart class="w-5 h-5 text-primary-600" />
+                            Itens para cotação no orçamento
+                        </h3>
+
+                        <div id="itens-wrapper" class="space-y-4">
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                                <x-input name="itens[0][nome]" label="Descrição do item" placeholder="Digite a descrição"
+                                    required class="col-span-2" />
+                                <x-input name="itens[0][quantidade]" label="Quantidade" placeholder="Digite a quantidade" />
+                                <x-select name="itens[0][cor]" label="Cor">
+                                    <option value="">Selecione...</option>
+                                    @foreach ($cores as $cor)
+                                        <option value="{{ $cor->id }}">{{ $cor->nome }}</option>
+                                    @endforeach
+                                </x-select>
+                                <x-select name="itens[0][fornecedor_id]" label="Fornecedor"
+                                    class="col-span-2 md:col-span-4">
+                                    <option value="">Selecione...</option>
+                                    @foreach ($fornecedores as $fornecedor)
+                                        <option value="{{ $fornecedor->id }}">{{ $fornecedor->nome_fantasia }}</option>
+                                    @endforeach
+                                </x-select>
+                            </div>
+                            <BR/>
+                            <x-textarea name="itens[0][observacoes]" label="Observações"
+                                placeholder="Digite os detalhes adicionais..." rows="2" class="col-span-4" />
+
+                        </div>
+
+                        <x-button type="button" onclick="addItem()">
+                            + Adicionar cotação de item
+                        </x-button>
                     </div>
 
                     <!-- Endereço de entrega -->

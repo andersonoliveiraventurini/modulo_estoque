@@ -23,7 +23,10 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'cpf',
         'password',
+        'criado_por',
+        'is_blocked',
     ];
 
     /**
@@ -76,4 +79,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(Pedido::class, 'vendedor_externo_id');
     }
+
+    
 }

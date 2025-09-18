@@ -85,6 +85,11 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('vendedores', VendedorController::class)->names('vendedores');
     Route::resource('usuarios', UserController::class)->names('usuarios');
+    Route::get('/usuarios/{user}/edit-password', [UserController::class, 'editPassword'])->name('usuarios.editPassword');
+    Route::put('/usuarios/{user}/update-password', [UserController::class, 'updatePassword'])->name('usuarios.updatePassword');
+
+    Route::put('/usuarios/{user}/toggle-block', [UserController::class, 'toggleBlock'])->name('usuarios.toggleBlock');
+
 
     Route::get('rdstation/checar-token', [RdstationController::class, 'checarToken'])->name('rdstation.checar-token');
     Route::get('rdstation/listar-empresas', [RdstationController::class, 'listarEmpresas'])->name('rdstation.listar-empresas');
