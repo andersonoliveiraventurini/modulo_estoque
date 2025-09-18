@@ -57,10 +57,11 @@ class SubCategoriaController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(SubCategoria $subCategoria)
+    public function edit($subcategoria_id)
     {
+        $subcategoria = SubCategoria::findOrFail($subcategoria_id);
         $categorias = Categoria::all();
-        return view('paginas.adm.subcategorias.edit', compact('subCategoria', 'categorias'));
+        return view('paginas.adm.subcategorias.edit', compact('subcategoria', 'categorias'));
     }
 
     /**

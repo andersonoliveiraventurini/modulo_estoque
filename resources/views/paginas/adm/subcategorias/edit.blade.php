@@ -11,6 +11,7 @@
                  <form action="{{ route('subcategorias.update', $subcategoria->id) }}" method="POST" class="space-y-6" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
+                    <input type="hidden" name="id" value="{{ $subcategoria->id }}">
 
                     <x-input name="nome" label="Nome" value="{{ old('nome', $subcategoria->nome) }}" required />
                     
