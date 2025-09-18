@@ -42,6 +42,8 @@ class ListaProduto extends Component
     {
         $produtos = Produto::query()
             ->with(['fornecedor', 'cor']) // eager loading
+            ->leftJoin('cores', 'produtos.cor_id', '=', 'cores.id') // join para ordenação
+            ->select('produtos.*') // importante para não quebrar o modelo
             ->when($this->search, function ($query) {
                 $terms = preg_split('/\s+/', trim($this->search));
 
@@ -69,9 +71,11 @@ class ListaProduto extends Component
                     });
                 }
             })
-            ->orderBy($this->sortField, $this->sortDirection)
+            ->orderBy(
+                $this->sortField === 'cor' ? 'cores.nome' : $this->sortField, // ordena por cores.nome se for 'cor'
+                $this->sortDirection
+            )
             ->paginate($this->perPage);
-
 
         return view('livewire.lista-produto', [
             'produtos' => $produtos,
