@@ -13,7 +13,7 @@ class CorController extends Controller
      */
     public function index()
     {
-        //
+        return view('paginas.adm.cores.index');
     }
 
     /**
@@ -21,7 +21,7 @@ class CorController extends Controller
      */
     public function create()
     {
-        //
+        return view('paginas.adm.cores.create');
     }
 
     /**

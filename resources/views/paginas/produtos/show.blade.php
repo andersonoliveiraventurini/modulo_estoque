@@ -28,7 +28,17 @@
                             <x-show-field label="Unidade de Medida" :value="$produto->unidade_medida" />
                             <x-show-field label="Marca" :value="$produto->marca" />
                             <x-show-field label="Modelo" :value="$produto->modelo" />
-                            <x-show-field label="Cor" :value="$produto->cor->nome" />
+                            @if ($produto->cor)
+                                <x-show-field label="Cor" :value="$produto->cor->nome" />
+                                <span class="inline-flex items-center gap-2">
+                                    <span class="w-4 h-4 rounded-full"
+                                        style="background-color: {{ $produto->cor->codigo_hex }}">
+                                        {{ $produto->cor->nome }}</span>
+
+                                </span>
+                            @else
+                                <x-show-field label="Cor" :value="'Sem cor'" />
+                            @endif
                             <x-show-field label="Peso" :value="$produto->peso" />
                             <x-show-field label="Ativo" :value="$produto->ativo ? 'Sim' : 'Não'" />
                         </div>

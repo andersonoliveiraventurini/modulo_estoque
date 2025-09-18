@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreSubCategoriaRequest;
 use App\Http\Requests\UpdateSubCategoriaRequest;
+use App\Models\Categoria;
 use App\Models\SubCategoria;
 
 class SubCategoriaController extends Controller
@@ -21,7 +22,7 @@ class SubCategoriaController extends Controller
      */
     public function index()
     {
-        //
+        return view('paginas.adm.subcategorias.index');
     }
 
     /**
@@ -29,7 +30,8 @@ class SubCategoriaController extends Controller
      */
     public function create()
     {
-        //
+        $categorias = Categoria::all();
+        return view('paginas.adm.subcategorias.create', compact('categorias'));
     }
 
     /**

@@ -26,6 +26,8 @@ use App\Http\Controllers\NotaFiscalController;
 use App\Http\Controllers\VendedorController;
 use App\Http\Controllers\SubCategoriaController;
 use App\Http\Controllers\UserController;
+use  App\Http\Controllers\CorController;
+use App\Http\Controllers\CategoriaController;
 
 Volt::route('/', 'auth.login')
     ->name('home');
@@ -49,6 +51,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::delete('produtos/{produto}/imagens/{imagem}', [ProdutoController::class, 'destroyImagem'])
         ->name('produtos.imagens.destroy');
+
+    Route::resource('cores', CorController::class)->names('cores');
+    Route::resource('categorias', CategoriaController::class)->names('categorias');
+    Route::resource('subcategorias', SubCategoriaController::class)->names('subcategorias');
 
     Route::resource('movimentacao', MovimentacaoController::class)->names('movimentacao');
     Route::resource('consulta_preco', ConsultaPrecoController::class)->names('consulta_preco');

@@ -13,7 +13,7 @@ class CategoriaController extends Controller
      */
     public function index()
     {
-        //
+        return view('paginas.adm.categorias.index');
     }
 
     /**
@@ -21,7 +21,7 @@ class CategoriaController extends Controller
      */
     public function create()
     {
-        //
+        return view('paginas.adm.categorias.create');
     }
 
     /**

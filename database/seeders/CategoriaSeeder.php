@@ -45,7 +45,7 @@ class CategoriaSeeder extends Seeder
         ]);
         
         Categoria::create([
-            'nome' => 'ferramenta'
+            'nome' => 'Ferramenta'
         ]);
 
     }
