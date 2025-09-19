@@ -524,7 +524,7 @@
                 totalProdutosComDesconto += subtotalComDesconto;
 
                 const div = document.createElement('div');
-                div.className = "grid grid-cols-1 md:grid-cols-4 gap-4 mt-2 border rounded-xl p-4 relative";
+                div.className = "grid grid-cols-1 md:grid-cols-3 gap-3 mt-2 border rounded-xl p-4 relative";
                 div.innerHTML = `
                     <input type="hidden" name="produtos[${i}][id]" value="${p.id}">
                     <div>
