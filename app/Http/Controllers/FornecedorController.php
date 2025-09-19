@@ -31,6 +31,10 @@ class FornecedorController extends Controller
      */
     public function store(StoreFornecedorRequest $request)
     {
+        // normaliza CNPJ
+        $request->merge([
+            'cnpj' => preg_replace('/\D/', '', $request->cnpj),
+        ]);
 
         $fornecedor = Fornecedor::create($request->except([
             'endereco_cep',
@@ -46,19 +50,18 @@ class FornecedorController extends Controller
             '_token'
         ]));
 
-
         // atualiza endereço comercial
         if ($request->filled('endereco_cep')) {
             $fornecedor->endereco()
                 ->updateOrCreate(['tipo' => 'comercial'], array_filter([
-                    'cep'        => $request->endereco_cep,
-                    'logradouro' => $request->endereco_logradouro,
-                    'numero'     => $request->endereco_numero,
-                    'complemento' => $request->endereco_compl,
-                    'bairro'     => $request->endereco_bairro,
-                    'cidade'     => $request->endereco_cidade,
-                    'estado'     => $request->endereco_estado,
-                    'tipo'       => 'comercial',
+                    'endereco_cep' => $request->endereco_cep ? preg_replace('/\D/', '', $request->endereco_cep) : null,
+                    'logradouro'   => $request->endereco_logradouro,
+                    'numero'       => $request->endereco_numero,
+                    'complemento'  => $request->endereco_compl,
+                    'bairro'       => $request->endereco_bairro,
+                    'cidade'       => $request->endereco_cidade,
+                    'estado'       => $request->endereco_estado,
+                    'tipo'         => 'comercial',
                 ]));
         }
 
@@ -67,15 +70,41 @@ class FornecedorController extends Controller
             foreach ($request->contatos as $contato) {
                 $fornecedor->contatos()->create(array_filter([
                     'nome'     => $contato['nome'] ?? null,
-                    'telefone' => $contato['telefone'] ?? null,
+                    'telefone' => !empty($contato['telefone']) ? preg_replace('/\D/', '', $contato['telefone']) : null,
                     'email'    => $contato['email'] ?? null,
                 ]));
             }
         }
 
+        // Upload de Certidões Negativas (1 único arquivo)
+        if ($request->hasFile('certidoes_negativas')) {
+            $path = $request->file('certidoes_negativas')->store('documentos/certidoes', 'public');
+
+            $fornecedor->documentos()->create([
+                'tipo'           => 'certidao_negativa',
+                'descricao'      => 'Certidão negativa',
+                'caminho_arquivo' => $path,
+                'user_id'        => auth()->id(),
+            ]);
+        }
+
+        // Upload de Certificações de Qualidade (vários arquivos)
+        if ($request->hasFile('certificacoes_qualidade')) {
+            foreach ($request->file('certificacoes_qualidade') as $file) {
+                $path = $file->store('documentos/certificacoes', 'public');
+
+                $fornecedor->documentos()->create([
+                    'tipo'           => 'certificacao_qualidade',
+                    'descricao'      => 'Certificação de qualidade',
+                    'caminho_arquivo' => $path,
+                    'user_id'        => auth()->id(),
+                ]);
+            }
+        }
 
         return redirect()->route('fornecedores.show', $fornecedor);
     }
+
 
     public function tabelaPrecos($fornecedor_id)
     {
@@ -108,11 +137,11 @@ class FornecedorController extends Controller
      */
     public function update(UpdateFornecedorRequest $request, Fornecedor $fornecedor)
     {
-        $fornecedor = Fornecedor::find($request->fornecedor_id);
+        $fornecedor = Fornecedor::findOrFail($request->fornecedor_id);
 
-        // Atualiza os dados do fornecedor, exceto CNPJ
+        // Atualiza os dados do fornecedor (exceto CNPJ e campos tratados separadamente)
         $fornecedor->update($request->except([
-            'cnpj', // não pode ser alterado
+            'cnpj',
             'endereco_cep',
             'endereco_logradouro',
             'endereco_numero',
@@ -132,7 +161,7 @@ class FornecedorController extends Controller
          */
         if ($request->filled('endereco_cep')) {
             $enderecoData = array_filter([
-                'cep'        => $request->endereco_cep,
+                'cep'        => preg_replace('/\D/', '', $request->endereco_cep),
                 'logradouro' => $request->endereco_logradouro,
                 'numero'     => $request->endereco_numero,
                 'complemento' => $request->endereco_compl,
@@ -142,14 +171,12 @@ class FornecedorController extends Controller
                 'tipo'       => 'comercial',
             ]);
 
-            // Se veio o ID, tenta atualizar o endereço existente
             if ($request->filled('endereco_id')) {
                 $fornecedor->endereco()->updateOrCreate(
                     ['id' => $request->endereco_id],
                     $enderecoData
                 );
             } else {
-                // Caso contrário cria um novo
                 $fornecedor->endereco()->create($enderecoData);
             }
         }
@@ -161,25 +188,71 @@ class FornecedorController extends Controller
             foreach ($request->contatos as $contato) {
                 $contatoData = array_filter([
                     'nome'     => $contato['nome'] ?? null,
-                    'telefone' => $contato['telefone'] ?? null,
+                    'telefone' => !empty($contato['telefone']) ? preg_replace('/\D/', '', $contato['telefone']) : null,
                     'email'    => $contato['email'] ?? null,
                 ]);
 
                 if (!empty($contato['id'])) {
-                    // Atualiza contato existente
-                    $fornecedor->contatos()
-                        ->where('id', $contato['id'])
-                        ->update($contatoData);
+                    $fornecedor->contatos()->where('id', $contato['id'])->update($contatoData);
                 } else {
-                    // Cria novo contato
                     $fornecedor->contatos()->create($contatoData);
                 }
             }
         }
 
+        /**
+         * DOCUMENTOS
+         */
+
+        // Certidões Negativas (apenas um arquivo, substitui o anterior)
+        if ($request->hasFile('certidoes_negativas')) {
+            $path = $request->file('certidoes_negativas')->store('documentos', 'public');
+
+            // remove o arquivo anterior se existir
+            $fornecedor->documentos()->where('tipo', 'certidao_negativa')->delete();
+
+            $fornecedor->documentos()->create([
+                'tipo'           => 'certidao_negativa',
+                'descricao'      => 'Certidão Negativa',
+                'caminho_arquivo' => $path,
+                'user_id'        => auth()->id(),
+            ]);
+        }
+
+        // Certificações de Qualidade (vários arquivos)
+        if ($request->hasFile('certificacoes_qualidade')) {
+            foreach ($request->file('certificacoes_qualidade') as $file) {
+                $path = $file->store('documentos', 'public');
+
+                $fornecedor->documentos()->create([
+                    'tipo'           => 'certificacao_qualidade',
+                    'descricao'      => 'Certificação de Qualidade',
+                    'caminho_arquivo' => $path,
+                    'user_id'        => auth()->id(),
+                ]);
+            }
+        }
+
+        /**
+         * DOCUMENTOS - Remoção
+         */
+        if ($request->filled('delete_documents')) {
+            foreach ($request->delete_documents as $docId) {
+                $doc = $fornecedor->documentos()->find($docId);
+                if ($doc) {
+                    // Remove arquivo físico também
+                    //\Storage::disk('public')->delete($doc->caminho_arquivo);
+
+                    $doc->delete(); // SoftDeletes
+                }
+            }
+        }
+
+
         return $this->show($fornecedor->id)
             ->with('success', 'Fornecedor atualizado com sucesso!');
     }
+
 
     /**
      * Remove the specified resource from storage.
@@ -192,6 +265,5 @@ class FornecedorController extends Controller
         return redirect()
             ->route('fornecedores.index')
             ->with('success', 'Fornecedor deletado com sucesso!');
-        
     }
 }

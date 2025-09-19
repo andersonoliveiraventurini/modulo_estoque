@@ -10,6 +10,9 @@
                     <x-heroicon-o-truck class="w-5 h-5 text-primary-600" />
                     Editar Fornecedor
                 </h2>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
+                    O CNPJ não pode ser alterado. Caso precise alterar, favor excluir este fornecedor e criar um novo.
+                </p>
 
                 <form action="/fornecedores/{{ $fornecedor->id }}" method="POST" enctype="multipart/form-data"
                     class="space-y-8">
@@ -49,30 +52,71 @@
                                 value="{{ old('beneficio', $fornecedor->beneficio) }}" />
 
                             <!-- Certidões -->
+                            <!-- Certidões Negativas -->
                             <div class="col-span-3">
                                 <label class="block text-sm font-medium mb-1">Certidões Negativas</label>
-                                @if ($fornecedor->certidoes_negativas)
-                                    <p class="mb-2">
-                                        <a href="{{ asset('storage/' . $fornecedor->certidoes_negativas) }}"
-                                            target="_blank" class="text-blue-600 hover:underline">Ver arquivo atual</a>
-                                    </p>
+
+                                @php
+                                    $certidoes = $fornecedor->documentos()->where('tipo', 'certidao_negativa')->get();
+                                @endphp
+
+                                @if ($certidoes->count())
+                                    <ul class="mb-2 space-y-1">
+                                        @foreach ($certidoes as $doc)
+                                            <li class="flex items-center gap-2">
+                                                <a href="{{ asset('storage/' . $doc->caminho_arquivo) }}"
+                                                    target="_blank" class="text-blue-600 hover:underline">
+                                                    📄 {{ $doc->descricao ?? 'Arquivo' }}
+                                                </a>
+
+                                                <!-- Checkbox para excluir -->
+                                                <label class="text-red-600 text-sm cursor-pointer">
+                                                    <input type="checkbox" name="delete_documents[]"
+                                                        value="{{ $doc->id }}">
+                                                    Remover
+                                                </label>
+                                            </li>
+                                        @endforeach
+                                    </ul>
                                 @endif
+
                                 <input type="file" name="certidoes_negativas"
-                                    class="block w-full border rounded-lg px-3 py-2" />
+                                    class="block w-full border rounded-lg px-3 py-2" accept=".pdf,image/*" />
                             </div>
 
-                            <!-- Certificações -->
+                            <!-- Certificações de Qualidade -->
                             <div class="col-span-3">
                                 <label class="block text-sm font-medium mb-1">Certificações de Qualidade</label>
-                                @if ($fornecedor->certificacoes_qualidade)
-                                    <p class="mb-2">
-                                        <a href="{{ asset('storage/' . $fornecedor->certificacoes_qualidade) }}"
-                                            target="_blank" class="text-blue-600 hover:underline">Ver arquivo atual</a>
-                                    </p>
+
+                                @php
+                                    $certificacoes = $fornecedor
+                                        ->documentos()
+                                        ->where('tipo', 'certificacao_qualidade')
+                                        ->get();
+                                @endphp
+
+                                @if ($certificacoes->count())
+                                    <ul class="mb-2 space-y-1">
+                                        @foreach ($certificacoes as $doc)
+                                            <li class="flex items-center gap-2">
+                                                <a href="{{ asset('storage/' . $doc->caminho_arquivo) }}"
+                                                    target="_blank" class="text-blue-600 hover:underline">
+                                                    📄 {{ $doc->descricao ?? 'Arquivo' }}
+                                                </a>
+                                                <label class="text-red-600 text-sm cursor-pointer">
+                                                    <input type="checkbox" name="delete_documents[]"
+                                                        value="{{ $doc->id }}">
+                                                    Remover
+                                                </label>
+                                            </li>
+                                        @endforeach
+                                    </ul>
                                 @endif
-                                <input type="file" name="certificacoes_qualidade"
-                                    class="block w-full border rounded-lg px-3 py-2" />
+
+                                <input type="file" name="certificacoes_qualidade[]"
+                                    class="block w-full border rounded-lg px-3 py-2" accept=".pdf,image/*" multiple />
                             </div>
+
 
                             <x-select name="status" label="Status do Fornecedor">
                                 <option value="ativo" @selected(old('status', $fornecedor->status) == 'ativo')>Ativo</option>

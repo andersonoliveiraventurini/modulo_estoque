@@ -41,9 +41,13 @@
                                 <option value="lucro_real">Lucro Real</option>
                             </x-select> <x-input name="beneficio" label="Benefício"
                                 placeholder="Ex: MEI, desconto fiscal, etc." />
-                            <x-input type="file" name="certidoes_negativas" label="Certidões Negativas" />
-                            <x-input type="file" name="certificacoes_qualidade"
-                                label="Certificações de Qualidade (ISO, PBQP-H, etc.)" />
+                            <!-- Certidões Negativas (um único arquivo) -->
+                            <x-input type="file" name="certidoes_negativas"
+                                label="Certidões Negativas (PDF ou Imagem)" accept=".pdf,image/*" />
+
+                            <!-- Certificações de Qualidade (vários arquivos) -->
+                            <x-input type="file" name="certificacoes_qualidade[]"
+                                label="Certificações de Qualidade (ISO, PBQP-H, etc.)" multiple accept=".pdf,image/*" />
                             <x-select name="status" label="Status do Fornecedor">
                                 <option value="ativo">Ativo</option>
                                 <option value="inativo">Inativo</option>
@@ -83,15 +87,15 @@
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                             <x-input id="endereco_cep" name="endereco_cep" label="CEP" placeholder="00000-000"
-                                onblur="pesquisacep(this.value);" onkeypress="mascara(this, '#####-###')"
-                                size="10" maxlength="9" value="{{ old('endereco_cep') }}" required />
+                                onblur="pesquisacep(this.value);" onkeypress="mascara(this, '#####-###')" size="10"
+                                maxlength="9" value="{{ old('endereco_cep') }}" required />
                         </div>
 
                         <!-- Wrapper que será ocultado até o CEP ser válido -->
                         <div id="endereco-wrapper">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                                <x-input id="endereco_cidade" name="endereco_cidade" label="Cidade"
-                                    readonly="readonly" placeholder="Cidade" value="{{ old('endereco_cidade') }}" />
+                                <x-input id="endereco_cidade" name="endereco_cidade" label="Cidade" readonly="readonly"
+                                    placeholder="Cidade" value="{{ old('endereco_cidade') }}" />
 
                                 <x-input id="endereco_estado" name="endereco_estado" label="Estado"
                                     placeholder="Estado" readonly="readonly" value="{{ old('endereco_estado') }}" />
@@ -115,7 +119,7 @@
                     <br />
                     <!-- Ações -->
                     <div class="flex gap-4">
-                         <x-button type="submit" >Cadastrar Fornecedor</x-button>
+                        <x-button type="submit">Cadastrar Fornecedor</x-button>
                         <x-button type="reset">Limpar Formulário</x-button>
                     </div>
                 </form>

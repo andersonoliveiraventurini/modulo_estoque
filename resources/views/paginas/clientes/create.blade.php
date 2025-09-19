@@ -21,6 +21,7 @@
                     </h2>
                     <div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                            <input type="hidden" name="pre_cadastro" value="1">
                             <x-input id="cnpj" type="text" name="cnpj" label="CNPJ"
                                 placeholder="00.000.000/0000-00" onblur="buscarCNPJ_precadastro(this.value);" />
                             <x-input id="razao_social" name="razao_social" label="Razão social"

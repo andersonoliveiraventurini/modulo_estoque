@@ -54,8 +54,36 @@
                     <!-- Documentos -->
                     <x-tab name="documentos" label="Documentos">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <x-show-field label="Certidões Negativas" :value="$fornecedor->certidoes_negativas" />
-                            <x-show-field label="Certificações" :value="$fornecedor->certificacoes" />
+                            <!-- Certidões Negativas -->
+                            <div>
+                                <h4 class="font-medium">Certidões Negativas</h4>
+                                @forelse($fornecedor->certidoesNegativas as $doc)
+                                    <p>
+                                        <a href="{{ asset('storage/' . $doc->caminho_arquivo) }}" target="_blank"
+                                            class="text-blue-600 hover:underline">
+                                            {{ $doc->descricao ?? 'Ver arquivo' }}
+                                        </a>
+                                    </p>
+                                @empty
+                                    <p class="text-gray-500">Nenhuma certidão cadastrada</p>
+                                @endforelse
+                            </div>
+
+                            <!-- Certificações de Qualidade -->
+                            <div>
+                                <h4 class="font-medium">Certificações de Qualidade</h4>
+                                @forelse($fornecedor->certificacoesQualidade as $doc)
+                                    <p>
+                                        <a href="{{ asset('storage/' . $doc->caminho_arquivo) }}" target="_blank"
+                                            class="text-blue-600 hover:underline">
+                                            {{ $doc->descricao ?? 'Ver arquivo' }}
+                                        </a>
+                                    </p>
+                                @empty
+                                    <p class="text-gray-500">Nenhuma certificação cadastrada</p>
+                                @endforelse
+                            </div>
+
                         </div>
                     </x-tab>
 

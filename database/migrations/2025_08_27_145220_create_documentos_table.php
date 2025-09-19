@@ -13,10 +13,24 @@ return new class extends Migration
     {
         Schema::create('documentos', function (Blueprint $table) {
             $table->id();
+            // qual tipo de documento
+            $table->string('tipo')->comment('Tipo de documento, como nota fiscal, recibo, contrato, etc.');
+            // descrição opcional
+            $table->string('descricao')->nullable()->comment('Descrição ou título do documento.');
+            // caminho do arquivo
+            $table->string('caminho_arquivo')->comment('Caminho do arquivo armazenado.');
             // quem criou
             $table->unsignedBigInteger('user_id')->nullable()
                     ->comment('Referência ao usuário que aplicou o desconto, se houver.');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            // qual cliente
+            $table->unsignedBigInteger('cliente_id')->nullable()
+                    ->comment('Referência ao cliente associado ao documento, se aplicável.');
+            $table->foreign('cliente_id')->references('id')->on('clientes')->onDelete('cascade');
+            // qual fornecedor
+            $table->unsignedBigInteger('fornecedor_id')->nullable()
+                    ->comment('Referência ao fornecedor associado ao documento, se aplicável.');
+            $table->foreign('fornecedor_id')->references('id')->on('fornecedores')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
         });

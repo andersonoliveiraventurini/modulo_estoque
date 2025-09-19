@@ -46,7 +46,8 @@ class ClienteController extends Controller
      */
     public function store(StoreClienteRequest $request)
     {
-        DB::transaction(function () use ($request) {
+        $cliente_id = DB::transaction(function () use ($request) {
+
             // salva apenas os valores preenchidos
             $dadosCliente = array_filter($request->only([
                 'cpf',
@@ -83,25 +84,36 @@ class ClienteController extends Controller
                 $dadosCliente['certidoes_negativas'] = $path;
             }
 
+            // Normalização dos campos numéricos
+            if (!empty($dadosCliente['cnpj'])) {
+                $dadosCliente['cnpj'] = preg_replace('/\D/', '', $dadosCliente['cnpj']);
+            }
+
+            // Normalização dos campos numéricos
+            if (!empty($dadosCliente['suframa'])) {
+                $dadosCliente['suframa'] = preg_replace('/\D/', '', $dadosCliente['suframa']);
+            }
+
+            // cria cliente
             $cliente = Cliente::create($dadosCliente);
 
             // bloqueio inicial
             if ($request->bloqueado == 1) {
                 Bloqueio::create([
                     'cliente_id' => $cliente->id,
-                    'motivo' => 'Bloqueio automático no cadastro',
-                    'user_id' => auth()->id()
+                    'motivo'     => 'Bloqueio automático no cadastro',
+                    'user_id'    => auth()->id()
                 ]);
             }
 
             // análise de crédito inicial
             if (isset($request->limite_boleto) || isset($request->limite_carteira)) {
                 AnaliseCredito::create([
-                    'cliente_id' => $cliente->id,
-                    'limite_boleto' => $request->limite_boleto ?? 0,
+                    'cliente_id'     => $cliente->id,
+                    'limite_boleto'  => $request->limite_boleto ?? 0,
                     'limite_carteira' => $request->limite_carteira ?? 0,
-                    'observacoes' => 'Análise inicial no cadastro',
-                    'user_id' => auth()->id()
+                    'observacoes'    => 'Análise inicial no cadastro',
+                    'user_id'        => auth()->id()
                 ]);
             }
 
@@ -110,7 +122,7 @@ class ClienteController extends Controller
                 foreach ($request->contatos as $contato) {
                     $cliente->contatos()->create(array_filter([
                         'nome'     => $contato['nome'] ?? null,
-                        'telefone' => $contato['telefone'] ?? null,
+                        'telefone' => !empty($contato['telefone']) ? preg_replace('/\D/', '', $contato['telefone']) : null,
                         'email'    => $contato['email'] ?? null,
                     ]));
                 }
@@ -119,34 +131,42 @@ class ClienteController extends Controller
             // endereço comercial
             if ($request->filled('endereco_cep')) {
                 $cliente->enderecos()->create(array_filter([
-                    'cep'        => $request->endereco_cep,
-                    'logradouro' => $request->endereco_logradouro,
-                    'numero'     => $request->endereco_numero,
+                    'cep'         => preg_replace('/\D/', '', $request->endereco_cep),
+                    'logradouro'  => $request->endereco_logradouro,
+                    'numero'      => $request->endereco_numero,
                     'complemento' => $request->endereco_compl,
-                    'bairro'     => $request->endereco_bairro,
-                    'cidade'     => $request->endereco_cidade,
-                    'estado'     => $request->endereco_estado,
-                    'tipo'       => 'comercial',
+                    'bairro'      => $request->endereco_bairro,
+                    'cidade'      => $request->endereco_cidade,
+                    'estado'      => $request->endereco_estado,
+                    'tipo'        => 'comercial',
                 ]));
             }
 
             // endereço de entrega
             if ($request->filled('entrega_cep')) {
                 $cliente->enderecos()->create(array_filter([
-                    'cep'        => $request->entrega_cep,
-                    'logradouro' => $request->entrega_logradouro,
-                    'numero'     => $request->entrega_numero,
+                    'cep'         => preg_replace('/\D/', '', $request->entrega_cep),
+                    'logradouro'  => $request->entrega_logradouro,
+                    'numero'      => $request->entrega_numero,
                     'complemento' => $request->entrega_compl,
-                    'bairro'     => $request->entrega_bairro,
-                    'cidade'     => $request->entrega_cidade,
-                    'estado'     => $request->entrega_estado,
-                    'tipo'       => 'entrega',
+                    'bairro'      => $request->entrega_bairro,
+                    'cidade'      => $request->entrega_cidade,
+                    'estado'      => $request->entrega_estado,
+                    'tipo'        => 'entrega',
                 ]));
             }
+
+            // retorna o id no final
+            return $cliente->id;
         });
 
-        return redirect()->route('clientes.index')
-            ->with('success', 'Cliente cadastrado com sucesso!');
+        if ($request->has('pre_cadastro')) {
+            return redirect()->route('orcamentos.criar', ['cliente_id' => $cliente_id])
+                ->with('success', 'Pré-cadastro realizado com sucesso! Em breve entraremos em contato.');
+        } else {
+            return redirect()->route('clientes.index')
+                ->with('success', 'Cliente cadastrado com sucesso!');
+        }
     }
 
     /**

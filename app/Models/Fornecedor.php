@@ -34,7 +34,7 @@ class Fornecedor extends Model
     protected $casts = [
         'data_abertura' => 'date',
     ];
-    
+
     // E um accessor para formatação
     public function getDataAberturaFormatadaAttribute()
     {
@@ -63,5 +63,20 @@ class Fornecedor extends Model
     public function endereco()
     {
         return $this->hasOne(Endereco::class);
+    }
+
+    public function documentos()
+    {
+        return $this->hasMany(Documento::class);
+    }
+
+    public function certidoesNegativas()
+    {
+        return $this->documentos()->where('tipo', 'certidao_negativa');
+    }
+
+    public function certificacoesQualidade()
+    {
+        return $this->documentos()->where('tipo', 'certificacao_qualidade');
     }
 }

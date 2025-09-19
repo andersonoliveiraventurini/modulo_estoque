@@ -112,4 +112,9 @@ class Cliente extends Model
     {
         return $this->hasOne(Endereco::class)->where('tipo', 'entrega');
     }
+
+    public function documentos()
+{
+    return $this->hasMany(Documento::class);
+}
 }

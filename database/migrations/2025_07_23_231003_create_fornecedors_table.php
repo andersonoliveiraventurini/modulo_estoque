@@ -31,8 +31,6 @@ return new class extends Migration
 
             // Benefícios e Certificações
             $table->string('beneficio')->nullable();
-            $table->string('certidoes_negativas')->nullable();
-            $table->string('certificacoes')->nullable();
 
             // Status
             $table->timestamps();

@@ -21,11 +21,27 @@ class UpdateFornecedorRequest extends FormRequest
      */
     public function rules(): array
     {
-         return [
+        return [
             // Pessoa Jurídica
-            'cnpj'           => ['required', 'string', 'max:18'],
-            'certidoes_negativas' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-            'certificacoes_qualidade' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048']            
+            'cnpj' => ['required', 'string', 'max:18'],
+
+            // Certidão (um único arquivo)
+            'certidoes_negativas' => [
+                'nullable',
+                'file',
+                'mimes:pdf,jpg,jpeg,png',
+                'max:2048'
+            ],
+
+            // Certificações (vários arquivos)
+            'certificacoes_qualidade'   => ['nullable', 'array'],
+            'certificacoes_qualidade.*' => [
+                'file',
+                'mimes:pdf,jpg,jpeg,png',
+                'max:2048'
+            ],
+            'delete_documents'   => ['nullable', 'array'],
+            'delete_documents.*' => ['integer', 'exists:documentos,id'],
         ];
     }
 }

@@ -19,7 +19,8 @@
                     <div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                             <x-input id="cnpj" type="text" name="cnpj" label="CNPJ"
-                                placeholder="00.000.000/0000-00" onblur="buscarCNPJ(this.value);" />
+                                placeholder="00.000.000/0000-00" onblur="buscarCNPJ(this.value);" size="18"
+                                 maxlength="18"  onkeypress="mascara(this, '##.###.###/####-##')" />
                             <x-input id="razao_social" name="razao_social" label="Razão social"
                                 placeholder="Digite a razão social" required />
                             <x-input id="nome_fantasia" name="nome_fantasia" label="Nome Fantasia"
@@ -46,8 +47,9 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <x-input name="cpf_responsavel" label="CPF do Responsável" />
                             <x-input name="nome" label="Nome" placeholder="Digite o nome completo" required />
-                            <x-input type="file" name="certidoes_negativas" label="Certidões Negativas" />
-                            <x-input name="suframa" label="Inscrição SUFRAMA (se aplicável)" />
+                            <x-input name="suframa" label="Inscrição SUFRAMA (se aplicável)" size="18"
+                                maxlength="18" placeholder="00.000.000/0000-00"
+                                onkeypress="mascara(this, '##.###.###/####-##')" />
                         </div>
                     </div>
 
@@ -108,6 +110,7 @@
                                     label="Limite Carteira (R$)" />
                                 <x-input type="number" name="inativar_apos"
                                     label="Inativar após (meses sem comprar)" />
+                                <x-input type="file" name="certidoes_negativas" label="Certidões Negativas" />
                             </div>
                         </div>
                     </div>
