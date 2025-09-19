@@ -54,7 +54,7 @@ class FornecedorController extends Controller
         if ($request->filled('endereco_cep')) {
             $fornecedor->endereco()
                 ->updateOrCreate(['tipo' => 'comercial'], array_filter([
-                    'endereco_cep' => $request->endereco_cep ? preg_replace('/\D/', '', $request->endereco_cep) : null,
+                    'cep' => $request->endereco_cep ? preg_replace('/\D/', '', $request->endereco_cep) : null,
                     'logradouro'   => $request->endereco_logradouro,
                     'numero'       => $request->endereco_numero,
                     'complemento'  => $request->endereco_compl,
