@@ -4,10 +4,10 @@
        <x-input id="search" wire:model.live.debounce.300ms="search"
                     placeholder="Buscar por nome, quantidade ..." />
 
-        <x-button variant="primary" wire:click="buscar">
+<!--         <x-button variant="primary" wire:click="buscar">
             <x-heroicon-o-magnifying-glass class="w-5 h-5" />
             Buscar
-        </x-button>
+        </x-button>-->
 
         <select wire:model="perPage"
             class="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">

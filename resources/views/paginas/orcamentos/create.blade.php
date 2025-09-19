@@ -124,8 +124,8 @@
                                 class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                                 + Adicionar Vidro/Esteira
                             </button>
-                            <br />
                         </div>
+                            <br />
                     </div>
 
                     <!-- Seção de Itens para Cotação -->
