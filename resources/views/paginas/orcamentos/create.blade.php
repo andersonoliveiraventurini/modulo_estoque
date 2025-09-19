@@ -30,7 +30,9 @@
                 </div>
 
                 <!-- Campos iniciais -->
-                <form action="#" method="POST" class="space-y-8">
+                <form action="{{ route('orcamentos.store') }}" method="POST" class="space-y-8" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" name="cliente_id" value="{{ $cliente->id }}" />
                     <!-- Token CSRF seria aqui -->
 
                     <!-- Produtos Selecionados -->
