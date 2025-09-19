@@ -1,8 +1,11 @@
-<x-layouts.app :title="__('Editar Produto')">
+<x-layouts.app :title="__('Editar cliente')">
     <div class="flex w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-            <div class="bg-white p-6 shadow rounded-2xl border-e border-zinc-200 bg-zinc-50 dark:border-zinc-900">
 
+            <div
+                class="bg-white p-6 shadow rounded-2xl border border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+                <!-- Cabeçalho -->
+           
                 <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
                     <x-heroicon-o-pencil-square class="w-5 h-5 text-primary-600" />
                     Editar Produto
@@ -12,6 +15,7 @@
                     class="space-y-8">
                     @csrf
                     @method('PUT')
+                    <input type="hidden" name="id" value="{{ $produto->id }}">
 
                     <!-- Dados Básicos -->
                     <div class="space-y-4">

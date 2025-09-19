@@ -30,12 +30,7 @@
                             <x-show-field label="Modelo" :value="$produto->modelo" />
                             @if ($produto->cor)
                                 <x-show-field label="Cor" :value="$produto->cor->nome" />
-                                <span class="inline-flex items-center gap-2">
-                                    <span class="w-4 h-4 rounded-full"
-                                        style="background-color: {{ $produto->cor->codigo_hex }}">
-                                        {{ $produto->cor->nome }}</span>
-
-                                </span>
+                                
                             @else
                                 <x-show-field label="Cor" :value="'Sem cor'" />
                             @endif
@@ -136,9 +131,6 @@
                 <div class="flex gap-4 mt-6">
                     <a href="{{ route('produtos.edit', $produto) }}">
                         Editar
-                    </a>
-                    <a href="{{ route('produtos.index') }}">
-                        Voltar
                     </a>
                 </div>
             </div>
