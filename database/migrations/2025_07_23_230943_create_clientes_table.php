@@ -31,7 +31,6 @@ return new class extends Migration
             $table->string('regime_tributario')->nullable();
 
             // Responsável legal
-            $table->string('certidoes_negativas')->nullable(); // caminho do arquivo
             $table->string('suframa')->nullable();
 
             // Classificação

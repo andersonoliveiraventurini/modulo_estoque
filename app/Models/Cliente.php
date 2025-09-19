@@ -37,18 +37,18 @@ class Cliente extends Model
     // E um accessor para formatação
     public function getDataAberturaFormatadaAttribute()
     {
-        if($this->data_abertura === null) {
+        if ($this->data_abertura === null) {
             return null;
-        }else{
+        } else {
             return $this->data_abertura->format('d/m/Y');
         }
     }
 
     public function getDataNascimentoFormatadaAttribute()
     {
-        if($this->data_nascimento === null) {
+        if ($this->data_nascimento === null) {
             return null;
-        }else{
+        } else {
             return $this->data_nascimento->format('d/m/Y');
         }
     }
@@ -114,7 +114,12 @@ class Cliente extends Model
     }
 
     public function documentos()
-{
-    return $this->hasMany(Documento::class);
-}
+    {
+        return $this->hasMany(Documento::class);
+    }
+    
+    public function certidoesNegativas()
+    {
+        return $this->documentos()->where('tipo', 'certidao_negativa');
+    }
 }

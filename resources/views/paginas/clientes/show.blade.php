@@ -53,19 +53,8 @@
                             <x-show-field label="Classificação" :value="$cliente->classificacao" />
                             <x-show-field label="Canal de Origem" :value="$cliente->canal_origem" />
 
-                            {{-- Exibição do arquivo --}}
-                            <div class="col-span-3">
-                                <x-show-field label="Certidões Negativas">
-                                    @if ($cliente->certidoes_negativas)
-                                        <a href="{{ asset('storage/' . $cliente->certidoes_negativas) }}"
-                                            target="_blank" class="text-blue-600 hover:underline">
-                                            Ver arquivo
-                                        </a>
-                                    @else
-                                        <span>Não enviado</span>
-                                    @endif
-                                </x-show-field>
-                            </div>
+
+
                         </div>
                     </x-tab>
 
@@ -97,6 +86,21 @@
                             <x-show-field label="Limite Boleto (R$)" :value="number_format($cliente->limite_boleto, 2, ',', '.')" />
                             <x-show-field label="Limite Carteira (R$)" :value="number_format($cliente->limite_carteira, 2, ',', '.')" />
                             <x-show-field label="Inativar após (meses)" :value="$cliente->inativar_apos" />
+                            {{-- Exibição do arquivo --}}
+                            <div>
+                                <h4 class="font-medium">Certidões Negativas</h4>
+                                @forelse($cliente->certidoesNegativas as $doc)
+                                    <p>
+                                        <a href="{{ asset('storage/' . $doc->caminho_arquivo) }}" target="_blank"
+                                            class="text-blue-600 hover:underline">
+                                            {{ $doc->descricao ?? 'Ver arquivo' }}
+                                        </a>
+                                    </p>
+                                @empty
+                                    <p class="text-gray-500">Nenhuma certidão cadastrada</p>
+                                @endforelse
+                            </div>
+
                         </div>
                     </x-tab>
 
@@ -144,10 +148,6 @@
                     <a href="{{ route('clientes.edit', $cliente) }}"
                         class="px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700">
                         Editar
-                    </a>
-                    <a href="{{ route('clientes.index') }}"
-                        class="px-4 py-2 rounded-lg bg-gray-500 text-white hover:bg-gray-600">
-                        Voltar
                     </a>
                 </div>
             </div>

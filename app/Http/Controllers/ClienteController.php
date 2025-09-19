@@ -156,6 +156,18 @@ class ClienteController extends Controller
                 ]));
             }
 
+            if ($request->hasFile('certidoes_negativas')) {
+                $path = $request->file('certidoes_negativas')->store('documentos', 'public');
+
+                $cliente->documentos()->create([
+                    'tipo'            => 'certidao_negativa',
+                    'descricao'       => 'Certidão Negativa',
+                    'caminho_arquivo' => $path,
+                    'user_id'         => auth()->id(),
+                    'cliente_id'     => $cliente->id,
+                ]);
+            }
+
             // retorna o id no final
             return $cliente->id;
         });
@@ -229,6 +241,32 @@ class ClienteController extends Controller
             }
 
             $cliente->update($dadosCliente);
+
+            // Remoção de documentos
+            if ($request->filled('delete_documents')) {
+                foreach ($request->delete_documents as $docId) {
+                    $doc = $cliente->documentos()->find($docId);
+                    if ($doc) {
+                        // Storage::disk('public')->delete($doc->caminho_arquivo);
+                        $doc->delete();
+                    }
+                }
+            }
+
+            // Certidões Negativas (apenas 1, substitui anterior)
+            if ($request->hasFile('certidoes_negativas')) {
+                $path = $request->file('certidoes_negativas')->store('documentos', 'public');
+
+                $cliente->documentos()->where('tipo', 'certidao_negativa')->delete();
+
+                $cliente->documentos()->create([
+                    'tipo'            => 'certidao_negativa',
+                    'descricao'       => 'Certidão Negativa',
+                    'caminho_arquivo' => $path,
+                    'user_id'         => auth()->id(),
+                    'cliente_id'      => $cliente->id,
+                ]);
+            }
 
             // atualiza bloqueio
             if ($request->bloqueado == 1 && !$cliente->bloqueado) {
