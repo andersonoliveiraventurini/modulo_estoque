@@ -180,12 +180,11 @@
                                         <option value="2">Fornecedor B</option>
                                     </select>
                                 </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Observações</label>
-                                <textarea name="itens[0][observacoes]" placeholder="Digite os detalhes adicionais..." rows="2"
-                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"></textarea>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Observações</label>
+                                    <textarea name="itens[0][observacoes]" placeholder="Digite os detalhes adicionais..." rows="2"
+                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"></textarea>
+                                </div>
                             </div>
 
                             <button type="button" onclick="addItem()"
@@ -451,13 +450,14 @@
                             <option value="2">Fornecedor B</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Observações</label>
+                        <textarea name="itens[${itemIndex}][observacoes]" placeholder="Digite os detalhes adicionais..." rows="2"
+                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"></textarea>
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Observações</label>
-                    <textarea name="itens[${itemIndex}][observacoes]" placeholder="Digite os detalhes adicionais..." rows="2"
-                              class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"></textarea>
-                </div>
+                
 
                 <button type="button" onclick="removeItem(this)" class="absolute top-2 right-2 text-red-600 hover:text-red-800">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
