@@ -25,13 +25,13 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('12345'),
             'email_verified_at' => Carbon::now()
         ]);
+        //$this->call(FornecedorSeeder::class);
 
         $this->call(NcmSeeder::class);
-        //$this->call(FornecedorSeeder::class);
         $this->call(VendedorSeeder::class);
-        //$this->call(ClienteSeeder::class);
+        $this->call(ClienteSeeder::class);
         $this->call(CategoriaSeeder::class);
-        //$this->call(ProdutoSeeder::class);
+        $this->call(ProdutoSeeder::class);
         $this->call(ArmazemSeeder::class);
         $this->call(SubCategoriaSeeder::class);
         $this->call(CorSeeder::class);
