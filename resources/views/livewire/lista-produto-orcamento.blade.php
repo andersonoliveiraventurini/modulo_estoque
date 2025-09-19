@@ -1,8 +1,8 @@
 <div>
     <!-- Campo de busca -->
     <div class="flex items-center gap-2 mb-4">
-        <input type="text" wire:model.defer="search" placeholder="Buscar produto..."
-            class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500" />
+       <x-input id="search" wire:model.live.debounce.300ms="search"
+                    placeholder="Buscar por nome, quantidade ..." />
 
         <x-button variant="primary" wire:click="buscar">
             <x-heroicon-o-magnifying-glass class="w-5 h-5" />
