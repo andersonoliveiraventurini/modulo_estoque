@@ -138,7 +138,6 @@
                                     d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 7h9m0 0V10"></path>
                             </svg>
                             Itens para cotação no orçamento
-
                             <!-- Botão toggle -->
                             <button type="button" @click="aberto = !aberto"
                                 class="ml-2 p-1 rounded-full border border-neutral-300 hover:bg-neutral-100">
@@ -186,7 +185,6 @@
                                         class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"></textarea>
                                 </div>
                             </div>
-
                             <button type="button" onclick="addItem()"
                                 class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
                                 + Adicionar cotação de item
