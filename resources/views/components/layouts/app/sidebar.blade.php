@@ -30,7 +30,7 @@
                 :current="request()->routeIs('bloqueios.index')" wire:navigate>{{ __('Clientes bloqueados') }}
             </flux:navlist.item>
         </flux:navlist.group>
-        <flux:navlist.group heading="Fornecedores" expandable :expanded="false">
+        <flux:navlist.group heading="Compras" expandable :expanded="false">
             <flux:navlist.item icon="home" :href="route('fornecedores.index')"
                 :current="request()->routeIs('fornecedores.index')" wire:navigate>{{ __('Listar fornecedores') }}
             </flux:navlist.item>
@@ -40,6 +40,9 @@
         </flux:navlist.group>
 
         <flux:navlist.group heading="Estoque" expandable :expanded="false">
+            <flux:navlist.item icon="home" :href="route('consulta_preco.index')"
+                :current="request()->routeIs('consulta_preco.index')" wire:navigate>{{ __('Consultas de preço') }}
+            </flux:navlist.item>
             <flux:navlist.item icon="home" :href="route('movimentacao.index')"
                 :current="request()->routeIs('movimentacao.index')" wire:navigate>{{ __('Movimentações') }}
             </flux:navlist.item>
