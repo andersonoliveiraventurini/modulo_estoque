@@ -45,7 +45,7 @@ return new class extends Migration
             // cliente
             $table->unsignedBigInteger('comprador_id')->nullable()
                 ->comment('Usuário que fez o cadastro do preço.');
-            $table->foreign('comprador_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('comprador_id')->references('id')->on('users');
             $table->timestamps();
             $table->softDeletes();
         });

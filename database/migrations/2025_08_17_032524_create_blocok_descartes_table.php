@@ -17,12 +17,12 @@ return new class extends Migration
             // produto que será criado 
             $table->unsignedBigInteger('produto_id')->nullable()
                   ->comment('Referência ao produto relacionado a este descarte do Bloco K.');
-            $table->foreign('produto_id')->references('id')->on('produtos')->onDelete('cascade');
+            $table->foreign('produto_id')->references('id')->on('produtos');
 
             // produto que será descartado
             $table->unsignedBigInteger('produto_descartado_id')->nullable()
                   ->comment('Referência ao produto que foi descartado.');
-            $table->foreign('produto_descartado_id')->references('id')->on('produtos')->onDelete('cascade');
+            $table->foreign('produto_descartado_id')->references('id')->on('produtos');
 
             // quantidade descartada
             $table->decimal('quantidade_descarte', 15, 2)->nullable()

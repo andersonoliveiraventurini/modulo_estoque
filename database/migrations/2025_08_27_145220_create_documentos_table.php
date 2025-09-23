@@ -22,15 +22,15 @@ return new class extends Migration
             // quem criou
             $table->unsignedBigInteger('user_id')->nullable()
                     ->comment('Referência ao usuário que aplicou o desconto, se houver.');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users');
             // qual cliente
             $table->unsignedBigInteger('cliente_id')->nullable()
                     ->comment('Referência ao cliente associado ao documento, se aplicável.');
-            $table->foreign('cliente_id')->references('id')->on('clientes')->onDelete('cascade');
+            $table->foreign('cliente_id')->references('id')->on('clientes');
             // qual fornecedor
             $table->unsignedBigInteger('fornecedor_id')->nullable()
                     ->comment('Referência ao fornecedor associado ao documento, se aplicável.');
-            $table->foreign('fornecedor_id')->references('id')->on('fornecedores')->onDelete('cascade');
+            $table->foreign('fornecedor_id')->references('id')->on('fornecedores');
             $table->timestamps();
             $table->softDeletes();
         });

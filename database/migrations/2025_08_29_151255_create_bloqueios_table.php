@@ -22,7 +22,7 @@ return new class extends Migration
 
             $table->unsignedBigInteger('user_id')->nullable()
                     ->comment('Referência ao usuário que aplicou o desconto, se houver.');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users');
 
             $table->timestamps();
             $table->softDeletes();

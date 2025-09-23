@@ -16,7 +16,7 @@ return new class extends Migration
             // produto que será orçado
             $table->unsignedBigInteger('produto_id')->nullable()
                   ->comment('Referência ao produto relacionado a este item do orçamento.');
-            $table->foreign('produto_id')->references('id')->on('produtos')->onDelete('cascade');
+            $table->foreign('produto_id')->references('id')->on('produtos');
 
             // quantidade do produto
             $table->decimal('quantidade', 15, 2)->nullable()
@@ -34,7 +34,7 @@ return new class extends Migration
             // quem deu o desconto
             $table->unsignedBigInteger('user_id')->nullable()
                     ->comment('Referência ao usuário que aplicou o desconto, se houver.');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users');
 
             // unidade de medida do produto
             $table->timestamps();

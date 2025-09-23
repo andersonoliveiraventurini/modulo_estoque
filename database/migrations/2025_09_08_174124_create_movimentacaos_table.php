@@ -31,22 +31,22 @@ return new class extends Migration
             // produto a ser movimentado
             $table->unsignedBigInteger('produto_id')->nullable()
                 ->comment('Produto movimentado.');
-            $table->foreign('produto_id')->references('id')->on('produtos')->onDelete('cascade');
+            $table->foreign('produto_id')->references('id')->on('produtos');
 
             // fornecedor
             $table->unsignedBigInteger('fornecedor_id')->nullable()
                 ->comment('Referência ao fornecedor - para recebimento.');
-            $table->foreign('fornecedor_id')->references('id')->on('fornecedores')->onDelete('cascade');
+            $table->foreign('fornecedor_id')->references('id')->on('fornecedores');
 
             // pedido
             $table->unsignedBigInteger('pedido_id')->nullable()
                 ->comment('Referência de pedido - para recebimento.');
-            $table->foreign('pedido_id')->references('id')->on('pedidos')->onDelete('cascade');
+            $table->foreign('pedido_id')->references('id')->on('pedidos');
 
             // cliente
             $table->unsignedBigInteger('usuario_id')->nullable()
                 ->comment('Usuário que fez a movimentação.');
-            $table->foreign('usuario_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('usuario_id')->references('id')->on('users');
 
             $table->timestamps();
             $table->softDeletes();

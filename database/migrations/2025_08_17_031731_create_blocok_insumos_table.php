@@ -16,7 +16,7 @@ return new class extends Migration
             // produto que será usado como insumo
             $table->unsignedBigInteger('produto_id')->nullable()
                   ->comment('Referência ao produto relacionado a este item do Bloco K.');
-            $table->foreign('produto_id')->references('id')->on('produtos')->onDelete('cascade');
+            $table->foreign('produto_id')->references('id')->on('produtos');
             // quantidade do insumo
             $table->decimal('quantidade', 15, 2)->nullable()
                     ->comment('Quantidade do insumo utilizado na produção.');

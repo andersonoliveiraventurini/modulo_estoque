@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('codigo_barras')->nullable()->comment('Código de barras - Código utilizado para identificar o produto de forma única.');
             $table->unsignedBigInteger('fornecedor_id')->nullable()
                 ->comment('Referência ao fornecedor deste produto.');
-            $table->foreign('fornecedor_id')->references('id')->on('fornecedores')->onDelete('cascade');
+            $table->foreign('fornecedor_id')->references('id')->on('fornecedores');
             $table->decimal('preco_custo', 15, 2)->nullable()->comment('Preço de custo do produto - Valor gasto para adquirir ou produzir o produto.');
             $table->decimal('preco_venda', 15, 2)->nullable()->comment('Preço de venda do produto - Valor pelo qual o produto é comercializado.');
             $table->decimal('estoque_minimo', 15, 2)->nullable()->comment('Estoque mínimo - Quantidade mínima que deve ser mantida em estoque para evitar falta.');

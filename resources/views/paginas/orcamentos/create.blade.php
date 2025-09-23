@@ -12,10 +12,6 @@
                     </svg>
                     Criar Orçamento para Cliente {{ $cliente->id }} - {{ $cliente->nome_fantasia }}
                 </h2>
-                <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
-                    Defina os dados do orçamento, adicione os produtos e acompanhe o valor total em tempo real.
-                </p>
-
                 <!-- Pesquisa de Produtos -->
                 <div class="space-y-4">
                     <hr />
@@ -124,8 +120,8 @@
                                 class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                                 + Adicionar Vidro/Esteira
                             </button>
-                        </div>
                             <br />
+                        </div>
                     </div>
 
                     <!-- Seção de Itens para Cotação -->
@@ -188,12 +184,12 @@
                             <button type="button" onclick="addItem()"
                                 class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
                                 + Adicionar cotação de item
-                            </button>
+                            </button><br />
                         </div>
                     </div>
 
                     <!-- Endereço de entrega -->
-                    <div class="space-y-4"><br />
+                    <div class="space-y-4">
                         <hr />
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
@@ -206,9 +202,6 @@
                             </svg>
                             Endereço de entrega
                         </h3>
-                        <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
-                            Preencha o CEP primeiro e aguarde os dados serem preenchidos automaticamente.
-                        </p>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <x-input id="entrega_cep" name="entrega_cep" label="CEP" placeholder="00000-000"
                                 onblur="pesquisacepentrega(this.value);" onkeypress="mascara(this, '#####-###')"
@@ -253,7 +246,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Desconto do cliente %</label>
-                            <input type="number" name="desconto_aprovado" value="10"
+                            <input type="number" name="desconto_aprovado" value="10" readonly
                                 class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" />
                         </div>
                         <div>
