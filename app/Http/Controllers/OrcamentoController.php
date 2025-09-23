@@ -6,6 +6,7 @@ use App\Http\Requests\StoreOrcamentoRequest;
 use App\Http\Requests\UpdateOrcamentoRequest;
 use App\Models\Cliente;
 use App\Models\Cor;
+use App\Models\Fornecedor;
 use App\Models\Orcamento;
 use App\Models\Produto;
 
@@ -31,7 +32,7 @@ class OrcamentoController extends Controller
     {
         $cliente = Cliente::find($cliente_id);
         $produtos = Produto::all();
-        $fornecedores = Produto::with('fornecedor')->get();
+        $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
         $cores = Cor::orderBy('nome')->get();
         return view('paginas.orcamentos.create', compact('produtos', 'cliente', 'fornecedores', 'cores'));
 

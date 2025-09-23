@@ -161,9 +161,9 @@
                                     <select name="itens[0][cor]"
                                         class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
                                         <option value="">Selecione...</option>
-                                        <option value="1">Branco</option>
-                                        <option value="2">Preto</option>
-                                        <option value="3">Cinza</option>
+                                        @foreach ($cores as $cor)
+                                            <option value="{{ $cor->nome }}">{{ $cor->nome }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 <div class="col-span-2">
@@ -171,8 +171,10 @@
                                     <select name="itens[0][fornecedor_id]"
                                         class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
                                         <option value="">Selecione...</option>
-                                        <option value="1">Fornecedor A</option>
-                                        <option value="2">Fornecedor B</option>
+                                        @foreach ($fornecedores as $fornecedor)
+                                            <option value="{{ $fornecedor->id }}">{{ $fornecedor->nome_fantasia }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 <div>
@@ -299,6 +301,9 @@
             const vidroDiv = document.createElement('div');
             vidroDiv.className = "space-y-2 relative border border-neutral-200 dark:border-neutral-700 rounded-lg p-4";
             vidroDiv.innerHTML = `
+                <button type="button" onclick="removeVidro(this)" class="absolute top-2 right-2 text-red-600 hover:text-red-800">
+                    Remover
+                </button><br/>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Descrição do Item</label>
@@ -337,11 +342,6 @@
                     <strong>Valor Total:</strong> R$ <span class="valor">0.00</span> |
                     <strong>c/ desconto:</strong> R$ <span class="valor-desconto">0.00</span>
                 </div>
-                <button type="button" onclick="removeVidro(this)" class="absolute top-2 right-2 text-red-600 hover:text-red-800">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                    </svg>
-                </button>
                 
             `;
             wrapper.appendChild(vidroDiv);
@@ -411,55 +411,67 @@
 
         let itemIndex = 1;
 
+        const cores = @json($cores);
+        const fornecedores = @json($fornecedores);
+
         function addItem() {
             const wrapper = document.getElementById('itens-wrapper');
             const itemDiv = document.createElement('div');
             itemDiv.className = "space-y-2 relative border border-neutral-200 dark:border-neutral-700 rounded-lg p-4";
 
-            itemDiv.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium text-gray-700">Descrição do item</label>
-                        <input type="text" name="itens[${itemIndex}][nome]" placeholder="Digite a descrição" required
-                               class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Quantidade</label>
-                        <input type="number" name="itens[${itemIndex}][quantidade]" placeholder="Digite a quantidade"
-                               class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Cor</label>
-                        <input type="text" name="itens[${itemIndex}][cor]" placeholder="Digite a cor"
-                               class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                    </div>
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium text-gray-700">Fornecedor</label>
-                        <select name="itens[${itemIndex}][fornecedor_id]" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
-                            <option value="">Selecione...</option>
-                            <option value="1">Fornecedor A</option>
-                            <option value="2">Fornecedor B</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Observações</label>
-                        <textarea name="itens[${itemIndex}][observacoes]" placeholder="Digite os detalhes adicionais..." rows="2"
-                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"></textarea>
-                    </div>
+            // Monta opções de cores
+            let coresOptions = `<option value="">Selecione...</option>`;
+            cores.forEach(cor => {
+                coresOptions += `<option value="${cor.nome}">${cor.nome}</option>`;
+            });
+
+            // Monta opções de fornecedores
+            let fornecedoresOptions = `<option value="">Selecione...</option>`;
+            fornecedores.forEach(f => {
+                fornecedoresOptions += `<option value="${f.id}">${f.nome_fantasia}</option>`;
+            });
+
+            itemDiv.innerHTML = ` <button type="button" onclick="removeItem(this)" class="absolute top-2 right-2 text-red-600 hover:text-red-800">
+                 Remover
+            </button>
+            <br/>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Descrição do item</label>
+                    <input type="text" name="itens[${itemIndex}][nome]" placeholder="Digite a descrição" required
+                           class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Quantidade</label>
+                    <input type="number" name="itens[${itemIndex}][quantidade]" placeholder="Digite a quantidade"
+                           class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Cor</label>
+                    <select name="itens[${itemIndex}][cor]" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                        ${coresOptions}
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Fornecedor</label>
+                    <select name="itens[${itemIndex}][fornecedor_id]" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                        ${fornecedoresOptions}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Observações</label>
+                    <textarea name="itens[${itemIndex}][observacoes]" placeholder="Digite os detalhes adicionais..." rows="2"
+                            class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"></textarea>
+                </div>
+            </div>
 
-                
-
-                <button type="button" onclick="removeItem(this)" class="absolute top-2 right-2 text-red-600 hover:text-red-800">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                    </svg>
-                </button>
-            `;
+           
+        `;
 
             wrapper.appendChild(itemDiv);
             itemIndex++;
         }
+
 
         function removeItem(button) {
             button.closest('div.space-y-2').remove();
