@@ -61,7 +61,9 @@ class OrcamentoController extends Controller
      */
     public function store(StoreOrcamentoRequest $request)
     {
-        //
+        dd($request->all());
+
+        
     }
 
     /**

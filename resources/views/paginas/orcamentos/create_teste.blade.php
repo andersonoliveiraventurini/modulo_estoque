@@ -454,7 +454,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                 <div class="col-span-2">
                     <label class="block text-sm font-medium text-gray-700">Descrição do item</label>
-                    <input hidden type="number" name="itens[${itemIndex}][id]" value="${itemIndex}" />
+                    <input type="hidden" name="itens[${itemIndex}][id]" value="${itemIndex}" />
                     <input type="text" name="itens[${itemIndex}][nome]" placeholder="Digite a descrição" required
                            class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                 </div>
@@ -496,10 +496,9 @@
 
         let produtos = [];
 
-
-
         function alterarQuantidade(index, valor) {
-            produtos[index].quantidade = parseInt(valor) || 1;
+            const quantidade = parseInt(valor) || 1; // nunca deixar null
+            produtos[index].quantidade = quantidade;
             renderProdutos();
         }
 
@@ -518,7 +517,7 @@
                 id,
                 nome,
                 preco: parseFloat(preco),
-                quantidade: 1,
+                quantidade: 1, // <-- garante valor inicial
                 fornecedor,
                 cor
             };
@@ -526,6 +525,7 @@
             produtos.push(produto);
             renderProdutos();
         }
+
 
 
         function renderProdutos() {
@@ -548,27 +548,35 @@
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
-            <td class="px-3 py-2 border">
-                <input type="hidden" name="produtos[${i}][id]" value="${p.id}">
-                ${p.id}
-            </td>
-            <td class="px-3 py-2 border">${p.nome}</td>
-            <td class="px-3 py-2 border">${p.fornecedor}</td>
-            <td class="px-3 py-2 border">${p.cor}</td>
-            <td class="px-3 py-2 border">R$ ${p.preco.toFixed(2)}</td>
-            <td class="px-3 py-2 border">
-                <input type="number" name="produtos[${i}][quantidade]"
-                       value="${p.quantidade}" min="1"
-                       onchange="alterarQuantidade(${i}, this.value)"
-                       class="w-16 border rounded px-2 py-1" />
-            </td>
-            <td class="px-3 py-2 border">R$ ${subtotal.toFixed(2)}</td>
-            <td class="px-3 py-2 border text-green-600">R$ ${subtotalComDesconto.toFixed(2)}</td>
-            <td class="px-3 py-2 border text-center">
-                <button type="button" onclick="removerProduto(${i})"
-                        class="text-red-600 hover:text-red-800">🗑</button>
-            </td>
-        `;
+                    <td class="px-3 py-2 border">
+                        <input type="hidden" name="itens[${i}][id]" value="${p.id}">
+                        ${p.id}
+                    </td>
+                    <td class="px-3 py-2 border">${p.nome}</td>
+                    <td class="px-3 py-2 border">R$ ${p.preco.toFixed(2)}
+                        <input type="hidden" name="itens[${i}][preco_unitario]" value="${p.preco}">
+                    </td>
+                    <td class="px-3 py-2 border">
+                        <input type="number" 
+                            name="itens[${i}][quantidade]" 
+                            value="${p.quantidade}" 
+                            min="1"
+                            onchange="alterarQuantidade(${i}, this.value)"
+                            class="w-16 border rounded px-2 py-1" />
+                    </td>
+                    <td class="px-3 py-2 border">R$ ${subtotal.toFixed(2)}
+                        <input type="hidden" name="itens[${i}][subtotal]" value="${subtotal.toFixed(2)}">
+                    </td>
+                    <td class="px-3 py-2 border text-green-600">R$ ${subtotalComDesconto.toFixed(2)}
+                        <input type="hidden" name="itens[${i}][subtotal_com_desconto]" value="${subtotalComDesconto.toFixed(2)}">
+                        <input type="hidden" name="itens[${i}][preco_unitario_com_desconto]" value="${(subtotalComDesconto / p.quantidade).toFixed(2)}">
+                    </td>
+                    <td class="px-3 py-2 border text-center">
+                        <button type="button" onclick="removerProduto(${i})"
+                                class="text-red-600 hover:text-red-800">🗑</button>
+                    </td>
+                `;
+
                 wrapper.appendChild(row);
             });
 
