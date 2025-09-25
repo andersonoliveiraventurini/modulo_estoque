@@ -51,20 +51,20 @@ class ListaProduto extends Component
                     $normalizedTerm = str_replace(',', '.', $term);
 
                     $query->where(function ($q) use ($normalizedTerm) {
-                        $q->where('nome', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('codigo_brcom', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('sku', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('preco_venda', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('preco_custo', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('codigo_barras', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('estoque_minimo', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('estoque_atual', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('observacoes', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('descricao', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('ncm', 'like', "%{$normalizedTerm}%")
+                        $q->where('produtos.nome', 'like', "%{$normalizedTerm}%")
+                            ->orWhere('produtos.codigo_brcom', 'like', "%{$normalizedTerm}%")
+                            ->orWhere('produtos.sku', 'like', "%{$normalizedTerm}%")
+                            ->orWhere('produtos.preco_venda', 'like', "%{$normalizedTerm}%")
+                            ->orWhere('produtos.preco_custo', 'like', "%{$normalizedTerm}%")
+                            ->orWhere('produtos.codigo_barras', 'like', "%{$normalizedTerm}%")
+                            ->orWhere('produtos.estoque_minimo', 'like', "%{$normalizedTerm}%")
+                            ->orWhere('produtos.estoque_atual', 'like', "%{$normalizedTerm}%")
+                            ->orWhere('produtos.observacoes', 'like', "%{$normalizedTerm}%")
+                            ->orWhere('produtos.descricao', 'like', "%{$normalizedTerm}%")
+                            ->orWhere('produtos.ncm', 'like', "%{$normalizedTerm}%")
                             ->orWhereHas('cor', function ($cq) use ($normalizedTerm) {
-                                $cq->where('nome', 'like', "%{$normalizedTerm}%")
-                                    ->orWhere('codigo_hex', 'like', "%{$normalizedTerm}%");
+                                $cq->where('cores.nome', 'like', "%{$normalizedTerm}%")
+                                    ->orWhere('cores.codigo_hex', 'like', "%{$normalizedTerm}%");
                             });
                     });
                 }
