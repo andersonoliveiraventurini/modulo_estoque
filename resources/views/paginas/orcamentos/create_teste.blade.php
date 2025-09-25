@@ -497,9 +497,9 @@
         let produtos = [];
 
         function alterarQuantidade(index, valor) {
-            const quantidade = parseInt(valor) || 1; // nunca deixar null
+            const quantidade = parseInt(valor) || 1;
             produtos[index].quantidade = quantidade;
-            renderProdutos();
+            renderProdutos(); // vai redesenhar tudo já com quantidade atualizada
         }
 
         function removerProduto(index) {
@@ -526,8 +526,6 @@
             renderProdutos();
         }
 
-
-
         function renderProdutos() {
             const wrapper = document.getElementById('produtos-selecionados');
             wrapper.innerHTML = '';
@@ -553,6 +551,8 @@
                         ${p.id}
                     </td>
                     <td class="px-3 py-2 border">${p.nome}</td>
+                    <td class="px-3 py-2 border">${p.fornecedor}</td>
+                    <td class="px-3 py-2 border">${p.cor}</td>
                     <td class="px-3 py-2 border">R$ ${p.preco.toFixed(2)}
                         <input type="hidden" name="itens[${i}][preco_unitario]" value="${p.preco}">
                     </td>
