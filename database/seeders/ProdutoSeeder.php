@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Produto;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -155,6 +156,85 @@ class ProdutoSeeder extends Seeder
 
         $elapsed = round(microtime(true) - $startedAt, 2);
         $this->command->info("Importação finalizada em {$elapsed}s. Sucesso: {$ok}, Falhas: {$fail}.");
+
+        // Pacre - Atualiza fornecedor_id para 25
+        $produtos = Produto::where('fornecedor_id', null)->where('nome', 'like', '%Pacre%')->get();
+        foreach ($produtos as $produto) {
+            $this->command->info("Atualizando fornecedor do produto: {$produto->id} - {$produto->nome} - para Pacre");
+            $p = Produto::find($produto->id);
+            if (!$p) {
+                $this->command->error("Produto não encontrado: {$produto->id}");
+                continue;
+            }
+            $p->fornecedor_id = 25;
+            $p->save();
+        }
+
+        // glasspeças - Atualiza fornecedor_id para 4
+        $produtos = Produto::where('fornecedor_id', null)->where('nome', 'like', '%glasspeças%')->get();
+        foreach ($produtos as $produto) {
+            $this->command->info("Atualizando fornecedor do produto: {$produto->id} - {$produto->nome} - para Glasspeças");
+            $p = Produto::find($produto->id);
+            if (!$p) {
+                $this->command->error("Produto não encontrado: {$produto->id}");
+                continue;
+            }
+            $p->fornecedor_id = 4;
+            $p->save();
+        }
+
+        // Ideia Glass - Atualiza fornecedor_id para 4
+        $produtos = Produto::where('fornecedor_id', null)->where('nome', 'like', '%Ideia Glass%')->get();
+        foreach ($produtos as $produto) {
+            $this->command->info("Atualizando fornecedor do produto: {$produto->id} - {$produto->nome} - para Ideia Glass");
+            $p = Produto::find($produto->id);
+            if (!$p) {
+                $this->command->error("Produto não encontrado: {$produto->id}");
+                continue;
+            }
+            $p->fornecedor_id = 28;
+            $p->save();
+        }
+
+        
+        // Zapparoli - Atualiza fornecedor_id para 47
+        $produtos = Produto::where('fornecedor_id', null)->where('nome', 'like', '%Zapparoli%')->get();
+        foreach ($produtos as $produto) {
+            $this->command->info("Atualizando fornecedor do produto: {$produto->id} - {$produto->nome} - para Zapparoli");
+            $p = Produto::find($produto->id);
+            if (!$p) {
+                $this->command->error("Produto não encontrado: {$produto->id}");
+                continue;
+            }
+            $p->fornecedor_id = 47;
+            $p->save();
+        }
+
+        // Irwin - Atualiza fornecedor_id para 48
+        $produtos = Produto::where('fornecedor_id', null)->where('nome', 'like', '%Irwin%')->get();
+        foreach ($produtos as $produto) {
+            $this->command->info("Atualizando fornecedor do produto: {$produto->id} - {$produto->nome} - para Irwin");
+            $p = Produto::find($produto->id);
+            if (!$p) {
+                $this->command->error("Produto não encontrado: {$produto->id}");
+                continue;
+            }
+            $p->fornecedor_id = 48;
+            $p->save();
+        }
+
+        // Emteco - Atualiza fornecedor_id para 89
+        $produtos = Produto::where('fornecedor_id', null)->where('nome', 'like', '%Emteco%')->get();
+        foreach ($produtos as $produto) {
+            $this->command->info("Atualizando fornecedor do produto: {$produto->id} - {$produto->nome} - para Emteco");
+            $p = Produto::find($produto->id);
+            if (!$p) {
+                $this->command->error("Produto não encontrado: {$produto->id}");
+                continue;
+            }
+            $p->fornecedor_id = 89;
+            $p->save();
+        }
 
         if ($fail > 0) {
             $this->command->warn("Houveram {$fail} falhas. Consulte storage/logs/laravel.log para detalhes.");

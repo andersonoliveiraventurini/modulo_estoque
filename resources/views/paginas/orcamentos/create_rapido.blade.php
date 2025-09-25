@@ -22,7 +22,7 @@
                         </svg>
                         Buscar Produtos
                     </h3>
-                    <livewire:lista-produto-orcamento />
+                    <livewire:lista-produto-fixo-orcamento />
                 </div>
 
                 <!-- Campos iniciais -->
@@ -32,7 +32,7 @@
                     <input type="hidden" name="cliente_id" value="{{ $cliente->id }}" />
                     <!-- Token CSRF seria aqui -->
 
-                    <!-- Produtos no Orçamento -->
+                    <!-- Produtos Selecionados -->
                     <div class="space-y-4"><br />
                         <hr />
                         <h3 class="text-lg font-medium flex items-center gap-2">
@@ -43,24 +43,7 @@
                             Produtos no Orçamento
                         </h3>
 
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full text-sm text-left border border-gray-200 rounded-lg">
-                                <thead class="bg-gray-100">
-                                    <tr>
-                                        <th class="px-3 py-2 border">Código</th>
-                                        <th class="px-3 py-2 border">Produto</th>
-                                        <th class="px-3 py-2 border">Fornecedor</th>
-                                        <th class="px-3 py-2 border">Cor</th>
-                                        <th class="px-3 py-2 border">Preço Unit. (R$)</th>
-                                        <th class="px-3 py-2 border">Qtd.</th>
-                                        <th class="px-3 py-2 border">Subtotal (R$)</th>
-                                        <th class="px-3 py-2 border">c/ Desconto (R$)</th>
-                                        <th class="px-3 py-2 border">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="produtos-selecionados" class="divide-y"></tbody>
-                            </table>
-                        </div>
+                        <div id="produtos-selecionados" class="space-y-4"></div>
                     </div>
 
                     <!-- Seção de Vidros Corrigida -->
@@ -141,72 +124,6 @@
                         </div>
                     </div>
 
-                    <!-- Seção de Itens para Cotação -->
-                    <div x-data="{ aberto: false }" class="space-y-4">
-                        <hr />
-                        <h3 class="text-lg font-medium flex items-center gap-2">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 7h9m0 0V10"></path>
-                            </svg>
-                            Itens para cotação no orçamento
-                            <!-- Botão toggle -->
-                            <button type="button" @click="aberto = !aberto"
-                                class="ml-2 p-1 rounded-full border border-neutral-300 hover:bg-neutral-100">
-                                <span x-show="!aberto">+</span>
-                                <span x-show="aberto">-</span>
-                            </button>
-                        </h3>
-
-                        <!-- Wrapper que só aparece quando aberto -->
-                        <div x-show="aberto" x-transition id="itens-wrapper" class="space-y-4">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                                <div class="col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700">Descrição do item</label>
-                                    <input type="text" name="itens[0][nome]" placeholder="Digite a descrição"
-                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Quantidade</label>
-                                    <input type="number" name="itens[0][quantidade]"
-                                        placeholder="Digite a quantidade"
-                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Cor</label>
-                                    <select name="itens[0][cor]"
-                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
-                                        <option value="">Selecione...</option>
-                                        @foreach ($cores as $cor)
-                                            <option value="{{ $cor->nome }}">{{ $cor->nome }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700">Fornecedor</label>
-                                    <select name="itens[0][fornecedor_id]"
-                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
-                                        <option value="">Selecione...</option>
-                                        @foreach ($fornecedores as $fornecedor)
-                                            <option value="{{ $fornecedor->id }}">{{ $fornecedor->nome_fantasia }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Observações</label>
-                                    <textarea name="itens[0][observacoes]" placeholder="Digite os detalhes adicionais..." rows="2"
-                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"></textarea>
-                                </div>
-                            </div>
-                            <button type="button" onclick="addItem()"
-                                class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-                                + Adicionar cotação de item
-                            </button><br />
-                        </div>
-                    </div>
-
                     <!-- Endereço de entrega -->
                     <div class="space-y-4">
                         <hr />
@@ -259,33 +176,35 @@
                                 class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Valor Total dos Itens
-                                (R$)</label>
+                            <label class="block text-sm font-medium text-gray-700">Valor Total dos Itens (R$)</label>
                             <input type="text" id="valor_total" name="valor_total" readonly value="0,00"
                                 class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" />
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Desconto do cliente %</label>
-                            <input type="number" name="desconto_aprovado"
-                                value="{{ $cliente->desconto_aprovado ?? 0 }}" readonly
+                            <input type="number" name="desconto_aprovado" value="10" readonly
                                 class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Desconto na vendedor %</label>
+                            <label class="block text-sm font-medium text-gray-700">Desconto na venda %</label>
                             <input type="number" name="desconto" min="0" max="30" value="0"
                                 placeholder="Digite a porcentagem de desconto (0 a 30)"
                                 class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Valor Final s/ desconto
-                                (R$)</label>
+                            <label class="block text-sm font-medium text-gray-700">Valor frete (R$)</label>
+                            <input type="number" name="frete" min="0" value="0"
+                                placeholder="Digite o valor do frete"
+                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Valor Final s/ desconto (R$)</label>
                             <input type="text" id="valor_sem_desconto_final" name="valor_sem_desconto_final"
                                 readonly value="0,00"
                                 class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Valor Final c/ desconto
-                                (R$)</label>
+                            <label class="block text-sm font-medium text-gray-700">Valor Final c/ desconto (R$)</label>
                             <input type="text" id="valor_final" name="valor_final" readonly value="0,00"
                                 class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" />
                         </div>
@@ -424,7 +343,6 @@
             };
         }
 
-
         let itemIndex = 1;
 
         const cores = @json($cores);
@@ -454,7 +372,6 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                 <div class="col-span-2">
                     <label class="block text-sm font-medium text-gray-700">Descrição do item</label>
-                    <input hidden type="number" name="itens[${itemIndex}][id]" value="${itemIndex}" />
                     <input type="text" name="itens[${itemIndex}][nome]" placeholder="Digite a descrição" required
                            class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                 </div>
@@ -496,7 +413,21 @@
 
         let produtos = [];
 
+        function adicionarProduto(id, nome, preco) {
+            if (produtos.find(p => p.id === id)) {
+                alert("Produto já adicionado!");
+                return;
+            }
 
+            const produto = {
+                id,
+                nome,
+                preco: parseFloat(preco),
+                quantidade: 1
+            };
+            produtos.push(produto);
+            renderProdutos();
+        }
 
         function alterarQuantidade(index, valor) {
             produtos[index].quantidade = parseInt(valor) || 1;
@@ -508,36 +439,19 @@
             renderProdutos();
         }
 
-        function adicionarProduto(id, nome, preco, fornecedor = 'Sem fornecedor', cor = 'Sem cor') {
-            if (produtos.find(p => p.id == id)) {
-                alert("Produto já adicionado!");
-                return;
-            }
-
-            const produto = {
-                id,
-                nome,
-                preco: parseFloat(preco),
-                quantidade: 1,
-                fornecedor,
-                cor
-            };
-
-            produtos.push(produto);
-            renderProdutos();
-        }
-
-
         function renderProdutos() {
             const wrapper = document.getElementById('produtos-selecionados');
             wrapper.innerHTML = '';
             let totalProdutos = 0;
             let totalProdutosComDesconto = 0;
 
+            // Calcular descontos
             const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]').value) || 0;
             let descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]').value) || 0;
+
             if (descontoOrcamento < 0) descontoOrcamento = 0;
             if (descontoOrcamento > 30) descontoOrcamento = 30;
+
             const descontoAplicado = Math.max(descontoCliente, descontoOrcamento);
 
             produtos.forEach((p, i) => {
@@ -546,43 +460,53 @@
                 totalProdutos += subtotal;
                 totalProdutosComDesconto += subtotalComDesconto;
 
-                const row = document.createElement('tr');
-                row.innerHTML = `
-            <td class="px-3 py-2 border">
-                <input type="hidden" name="produtos[${i}][id]" value="${p.id}">
-                ${p.id}
-            </td>
-            <td class="px-3 py-2 border">${p.nome}</td>
-            <td class="px-3 py-2 border">${p.fornecedor}</td>
-            <td class="px-3 py-2 border">${p.cor}</td>
-            <td class="px-3 py-2 border">R$ ${p.preco.toFixed(2)}</td>
-            <td class="px-3 py-2 border">
-                <input type="number" name="produtos[${i}][quantidade]"
-                       value="${p.quantidade}" min="1"
-                       onchange="alterarQuantidade(${i}, this.value)"
-                       class="w-16 border rounded px-2 py-1" />
-            </td>
-            <td class="px-3 py-2 border">R$ ${subtotal.toFixed(2)}</td>
-            <td class="px-3 py-2 border text-green-600">R$ ${subtotalComDesconto.toFixed(2)}</td>
-            <td class="px-3 py-2 border text-center">
-                <button type="button" onclick="removerProduto(${i})"
-                        class="text-red-600 hover:text-red-800">🗑</button>
-            </td>
-        `;
-                wrapper.appendChild(row);
+                const div = document.createElement('div');
+                div.className = "grid grid-cols-1 md:grid-cols-3 gap-3 mt-2 border rounded-xl p-4 relative";
+                div.innerHTML = `
+                    <input type="hidden" name="produtos[${i}][id]" value="${p.id}">
+                    <div>
+                        <label class="text-sm font-medium">Produto</label>
+                        <input type="text" value="${p.nome}" readonly class="border rounded-lg px-3 py-2 w-full bg-gray-100" />
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium">Preço Unitário (R$)</label>
+                        <input type="text" value="${p.preco.toFixed(2)}" readonly class="border rounded-lg px-3 py-2 w-full bg-gray-100" />
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium">Quantidade</label>
+                        <input type="number" name="produtos[${i}][quantidade]" value="${p.quantidade}" min="1"
+                            onchange="alterarQuantidade(${i}, this.value)"
+                            class="border rounded-lg px-3 py-2 w-full" />
+                    </div>
+                    <div class="flex flex-col justify-between">
+                        <span class="text-sm font-semibold">
+                            Subtotal: R$ ${subtotal.toFixed(2)}<br>
+                            <span class="text-green-600">c/ desconto: R$ ${subtotalComDesconto.toFixed(2)}</span>
+                        </span>
+                        <button type="button" onclick="removerProduto(${i})" class="text-red-600 hover:text-red-800 flex items-center gap-1 mt-2">
+                            🗑 Remover
+                        </button>
+                    </div>
+                `;
+                wrapper.appendChild(div);
             });
 
+            // Calcular total dos vidros
             const {
                 totalVidros,
                 totalVidrosComDesconto
             } = calcularTotalVidros();
+
+            // Total geral (produtos + vidros)
             const totalGeral = totalProdutos + totalVidros;
             const totalGeralComDesconto = totalProdutosComDesconto + totalVidrosComDesconto;
 
+            // Atualizar campo total
             document.getElementById('valor_total').value = totalGeral.toFixed(2);
+
+            // Atualizar valores finais
             atualizarValorFinal(totalGeral, totalGeralComDesconto);
         }
-
 
         function atualizarValorFinal(total = null, totalComDesconto = null) {
             console.log('Atualizando valor final...'); // Debug

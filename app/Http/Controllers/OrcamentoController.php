@@ -37,6 +37,24 @@ class OrcamentoController extends Controller
         return view('paginas.orcamentos.create', compact('produtos', 'cliente', 'fornecedores', 'cores'));
 
     }
+    public function criarOrcamentoTeste($cliente_id)
+    {
+        $cliente = Cliente::find($cliente_id);
+        $produtos = Produto::all();
+        $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
+        $cores = Cor::orderBy('nome')->get();
+        return view('paginas.orcamentos.create_teste', compact('produtos', 'cliente', 'fornecedores', 'cores'));
+
+    }
+
+    public function criarOrcamentoRapido($cliente_id)
+    {
+        $cliente = Cliente::find($cliente_id);
+        $produtos = Produto::all();
+        $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
+        $cores = Cor::orderBy('nome')->get();
+        return view('paginas.orcamentos.create_rapido', compact('produtos', 'cliente', 'fornecedores', 'cores'));
+    }
 
     /**
      * Store a newly created resource in storage.
