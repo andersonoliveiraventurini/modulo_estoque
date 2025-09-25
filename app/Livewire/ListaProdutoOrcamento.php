@@ -64,8 +64,6 @@ class ListaProdutoOrcamento extends Component
                   ->orWhere('sku', 'like', "%{$normalizedTerm}%")
                   ->orWhere('preco_venda', 'like', "%{$normalizedTerm}%")
                   ->orWhere('codigo_barras', 'like', "%{$normalizedTerm}%")
-                  ->orWhere('marca', 'like', "%{$normalizedTerm}%")
-                  ->orWhere('modelo', 'like', "%{$normalizedTerm}%")
                   ->orWhere('observacoes', 'like', "%{$normalizedTerm}%")
                   ->orWhere('descricao', 'like', "%{$normalizedTerm}%")
                   ->orWhere('ncm', 'like', "%{$normalizedTerm}%")

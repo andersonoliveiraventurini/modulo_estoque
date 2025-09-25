@@ -41,9 +41,7 @@
                                 @endforeach
                             </x-select>
 
-                            <x-input name="marca" label="Marca" value="{{ old('marca', $produto->marca) }}" />
-
-                            <x-input name="modelo" label="Modelo" value="{{ old('modelo', $produto->modelo) }}" />
+                            <x-input name="part_number" label="Part Number" value="{{ old('part_number', $produto->part_number) }}" />
 
                             <x-select name="cor_id" label="Cor">
                                 <option value="">Selecione...</option>
@@ -106,6 +104,9 @@
                                 Informações Fiscais - Entrada
                             </h3>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                                 <x-input name="preco_base" label="Preço de Base - sem imposto" placeholder="0.00" 
+                                   value="{{ old('preco_base', $produto->preco_base) }}" />
+                                   
                                 <x-input type="number" step="0.01" name="icms" label="% ICMS"
                                     value="{{ old('icms', $produto->icms) }}" />
 
@@ -114,6 +115,9 @@
 
                                 <x-input type="number" step="0.01" name="cofins" label="Cofins"
                                     value="{{ old('cofins', $produto->cofins) }}" />
+
+                                    <x-input type="number" step="0.01" name="mva" label="MVA"
+                                    value="{{ old('mva', $produto->mva) }}" />
                             </div>
 
                             <!-- Financeiro -->
@@ -124,6 +128,7 @@
                                 Financeiro
                             </h3>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+
                                 <x-input name="preco_custo" label="Preço de Custo" placeholder="0.00"
                                     value="{{ old('preco_custo', $produto->preco_custo) }}" />
 

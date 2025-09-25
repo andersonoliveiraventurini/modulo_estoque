@@ -27,8 +27,7 @@
                                     <option value="{{ $fornecedor->id }}">{{ $fornecedor->nome_fantasia }}</option>
                                 @endforeach
                             </x-select>
-                            <x-input name="marca" label="Marca" placeholder="Digite a marca" />
-                            <x-input name="modelo" label="Modelo" placeholder="Digite o modelo" />
+                            <x-input name="part_number" label="Part Number" placeholder="Digite o código do fornecedor" />
                             <x-select name="cor_id" label="Cor">
                                 <option value="">Selecione...</option>
                                 @foreach ($cores as $cor)
@@ -85,9 +84,11 @@
                                 </h3>
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
 
+                                    <x-input name="preco_base" label="Preço de Base - sem imposto" placeholder="0.00" />
                                     <x-input type="number" step="0.01" name="icms" label="% ICMS" />
                                     <x-input type="number" step="0.01" name="pis" label="PIS" />
                                     <x-input type="number" step="0.01" name="cofins" label="Cofins" />
+                                    <x-input type="number" step="0.01" name="mva" label="MVA" />
                                 </div>
                                 <!-- Endereço -->
                                 <br />
@@ -110,6 +111,8 @@
                                         <option value="1">Sim</option>
                                         <option value="0">Não</option>
                                     </x-select>
+                                    <x-input name="porcentagem_desconto" label="Porcentagem de Desconto" placeholder="0.00" />
+                                    <x-input name="valor_desconto" label="Valor do Desconto" placeholder="0.00" />
                                 </div>
                                 <!-- Endereço -->
                                 <div class="space-y-4">

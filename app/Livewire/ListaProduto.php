@@ -57,8 +57,6 @@ class ListaProduto extends Component
                             ->orWhere('preco_venda', 'like', "%{$normalizedTerm}%")
                             ->orWhere('preco_custo', 'like', "%{$normalizedTerm}%")
                             ->orWhere('codigo_barras', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('marca', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('modelo', 'like', "%{$normalizedTerm}%")
                             ->orWhere('estoque_minimo', 'like', "%{$normalizedTerm}%")
                             ->orWhere('estoque_atual', 'like', "%{$normalizedTerm}%")
                             ->orWhere('observacoes', 'like', "%{$normalizedTerm}%")

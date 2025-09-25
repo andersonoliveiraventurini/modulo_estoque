@@ -86,8 +86,6 @@ class ProdutoSeeder extends Seeder
                             'estoque_minimo' => $toFloat($data['estmin'] ?? null),
                             'estoque_atual'  => $toFloat($data['saldo'] ?? null),
                             'unidade_medida' => $trimOrNull($data['und'] ?? ($data['unidade'] ?? null)),
-                            'marca'          => $trimOrNull($data['marca'] ?? null),
-                            'modelo'         => $trimOrNull($data['modelo'] ?? null),
                             'descricao'      => $trimOrNull($data['descrição'] ?? null),
                             'observacoes'    => $trimOrNull($data['nomelinha'] ?? null),
                             'ativo'          => isset($data['ativo']) ? (bool) $data['ativo'] : true,

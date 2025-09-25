@@ -15,43 +15,43 @@ class SubCategoriaSeeder extends Seeder
     {
         SubCategoria::create([
             'nome' => 'Nylon',
-            'categoria_id' => 4
+            'categoria_id' => 3
         ]);
         SubCategoria::create([
             'nome' => 'Suprema',
-            'categoria_id' => 4
+            'categoria_id' => 3
         ]);
         SubCategoria::create([
             'nome' => 'Gold',
-            'categoria_id' => 4
+            'categoria_id' => 3
         ]);
         SubCategoria::create([
             'nome' => 'Linha 20',
-            'categoria_id' => 4
+            'categoria_id' => 3
         ]);
         SubCategoria::create([
             'nome' => 'Linha 25',
-            'categoria_id' => 4
+            'categoria_id' => 3
         ]);
         SubCategoria::create([
             'nome' => 'Linha 30',
-            'categoria_id' => 4
+            'categoria_id' => 3
         ]);
         SubCategoria::create([
-            'nome' => 'Linha 42',
-            'categoria_id' => 4
+            'nome' => 'Linha 32',
+            'categoria_id' => 3
         ]);
         SubCategoria::create([
             'nome' => 'Contra Marco',
-            'categoria_id' => 4
+            'categoria_id' => 3
         ]);
         SubCategoria::create([
             'nome' => 'Macho Cunha',
-            'categoria_id' => 4
+            'categoria_id' => 3
         ]);
         SubCategoria::create([
             'nome' => 'Portão',
-            'categoria_id' => 4
+            'categoria_id' => 3
         ]);
     }
 }
