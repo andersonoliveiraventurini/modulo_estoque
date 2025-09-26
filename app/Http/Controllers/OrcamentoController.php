@@ -223,8 +223,12 @@ class OrcamentoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Orcamento $orcamento)
+    public function destroy($orcamento_id)
     {
-        //
+         $orcamento = Orcamento::findOrFail($orcamento_id);
+        $orcamento->delete();
+
+        return redirect()->route('orcamentos.index')
+            ->with('success', 'Orçamento excluído com sucesso!');
     }
 }
