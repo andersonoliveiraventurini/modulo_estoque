@@ -13,6 +13,9 @@ return new class extends Migration
       {
             Schema::create('orcamentos', function (Blueprint $table) {
                   $table->id();
+                  $table->date('validade')
+                        ->nullable()
+                        ->comment('Data de validade do orçamento, geralmente 2 dias após a emissão.');
                   $table->unsignedBigInteger('cliente_id')->nullable()
                         ->comment('Referência ao cliente associado a este orçamento.');
                   $table->foreign('cliente_id')->references('id')->on('clientes');
@@ -32,6 +35,7 @@ return new class extends Migration
                         ->comment('Status do orçamento, como pendente, aprovado, cancelado, etc.');
                   $table->text('observacoes')->nullable()
                         ->comment('Observações adicionais sobre o orçamento.');
+                  $table->string('pdf_path')->nullable();
                   $table->timestamps();
                   $table->softDeletes();
             });

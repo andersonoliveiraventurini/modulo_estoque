@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('orcamento_itens', function (Blueprint $table) {
             $table->id();
+
+            $table->unsignedBigInteger('orcamento_id')->nullable()
+                  ->comment('Referência ao orçamento relacionado a este item.');
+            $table->foreign('orcamento_id')->references('id')->on('orcamentos');
+
             // produto que será orçado
             $table->unsignedBigInteger('produto_id')->nullable()
                   ->comment('Referência ao produto relacionado a este item do orçamento.');

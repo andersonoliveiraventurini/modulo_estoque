@@ -68,9 +68,14 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('vendas', VendaController::class)->names('vendas');
     Route::resource('pedidos', PedidoController::class)->names('pedidos');
     Route::resource('orcamentos', OrcamentoController::class)->names('orcamentos');
-    Route::get('orcamento/criar/{cliente_id}', [OrcamentoController::class, 'criarOrcamento'])->name('orcamentos.criar');  
+    Route::get('orcamento/cliente/{cliente_id}', [OrcamentoController::class, 'clienteOrcamento'])->name('orcamentos.cliente');  
+    Route::get('orcamento/criar/{cliente_id}', [OrcamentoController::class, 'criarOrcamento'])->name('orcamentos.criar'); 
     Route::get('orcamento/rapido/{cliente_id}', [OrcamentoController::class, 'criarOrcamentoRapido'])->name('orcamentos.rapido');    
     Route::get('orcamento/teste/{cliente_id}', [OrcamentoController::class, 'criarOrcamentoTeste'])->name('orcamentos.teste');    
+Route::post('/orcamentos/{id}/duplicar', [OrcamentoController::class, 'duplicar'])
+    ->name('orcamentos.duplicar');
+
+
     Route::resource('notas', NotaFiscalController::class)->names('notas');
 
     Route::resource('clientes', ClienteController::class)->names('clientes');

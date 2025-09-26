@@ -4,18 +4,18 @@
     <!-- Cabeçalho -->
     <div class="flex items-center justify-between p-6 border-b border-zinc-200 dark:border-zinc-700">
         <h2 class="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-            Listagem de orçamentos
+            Orçamentos do Cliente
         </h2>
         <div class="flex items-end gap-4">
-            <!-- Pesquisa (flexível, ocupa 2x mais espaço) -->
+            <!-- Pesquisa -->
             <div class="flex flex-col flex-[2]">
                 <label for="search" class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                     Pesquisar
                 </label>
-                <x-input id="search" wire:model.live.debounce.300ms="search" placeholder="Buscar  ..." />
+                <x-input id="search" wire:model.live.debounce.300ms="search" placeholder="Buscar ..." />
             </div>
 
-            <!-- Itens por página (largura fixa) -->
+            <!-- Itens por página -->
             <div class="flex flex-col w-28">
                 <label for="perPage" class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                     Itens por página:
@@ -42,23 +42,21 @@
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('cliente')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Cliente
-                        </button>
+                        Cliente
                     </th>
-                    <th class="px-6 py-3 text-left">
-                        PDF 
-                    </th>
+                    <th class="px-6 py-3 text-left">PDF</th>
                     <th class="px-6 py-3 text-left">Ações</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse($orcamentos as $c)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="{{ route('orcamentos.show', $c) }}">{{ $c->obra }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->cliente->nome }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
+                            <a href="{{ route('orcamentos.show', $c) }}">{{ $c->obra }}</a>
+                        </td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
+                            {{ $c->cliente->nome }}
+                        </td>
                         <td class="px-6 py-4">
                             @if($c->pdf_path)
                                 <a href="{{ asset('storage/'.$c->pdf_path) }}" target="_blank">
@@ -76,6 +74,7 @@
                                     Editar
                                 </x-button>
                             </a>
+
                             <form action="{{ route('orcamentos.duplicar', $c->id) }}" method="POST"
                                 onsubmit="return confirm('Deseja duplicar este orçamento?');">
                                 @csrf
@@ -84,6 +83,7 @@
                                     Duplicar
                                 </x-button>
                             </form>
+
                             <form action="{{ route('orcamentos.destroy', $c->id) }}" method="POST"
                                 onsubmit="return confirm('Deseja excluir este orçamento?');">
                                 @csrf
@@ -94,11 +94,10 @@
                                 </x-button>
                             </form>
                         </td>
-
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
+                        <td colspan="4" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
                             Nenhum orçamento encontrado.
                         </td>
                     </tr>
