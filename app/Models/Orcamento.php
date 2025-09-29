@@ -35,4 +35,9 @@ class Orcamento extends Model
     {
         return $this->hasMany(OrcamentoItens::class);
     }
+
+    public function vidros()
+    {
+        return $this->hasMany(OrcamentoVidro::class);
+    }
 }

@@ -17,8 +17,8 @@ RUN apt-get update && apt-get install -y \
     nodejs \
     tzdata \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install sockets pdo pdo_mysql mbstring zip exif pcntl bcmath gd intl dom \
-    && docker-php-ext-enable sockets bcmath zip intl dom \
+    && docker-php-ext-install sockets pdo pdo_mysql mbstring zip exif pcntl bcmath gd intl \
+    && docker-php-ext-enable sockets bcmath zip intl \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 

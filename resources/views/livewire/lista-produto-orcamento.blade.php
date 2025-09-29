@@ -19,7 +19,7 @@
     </div>
 
     <!-- Tabela de produtos -->
-    <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-neutral-700">
+    <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-neutral-700" style="max-height: 280px;">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
             <thead class="bg-gray-50 dark:bg-neutral-800">
                 <tr>

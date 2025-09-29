@@ -141,71 +141,6 @@
                         </div>
                     </div>
 
-                    <!-- Seção de Itens para Cotação -->
-                    <div x-data="{ aberto: false }" class="space-y-4">
-                        <hr />
-                        <h3 class="text-lg font-medium flex items-center gap-2">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 7h9m0 0V10"></path>
-                            </svg>
-                            Itens para cotação no orçamento
-                            <!-- Botão toggle -->
-                            <button type="button" @click="aberto = !aberto"
-                                class="ml-2 p-1 rounded-full border border-neutral-300 hover:bg-neutral-100">
-                                <span x-show="!aberto">+</span>
-                                <span x-show="aberto">-</span>
-                            </button>
-                        </h3>
-
-                        <!-- Wrapper que só aparece quando aberto -->
-                        <div x-show="aberto" x-transition id="itens-wrapper" class="space-y-4">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                                <div class="col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700">Descrição do item</label>
-                                    <input type="text" name="itens[0][nome]" placeholder="Digite a descrição"
-                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Quantidade</label>
-                                    <input type="number" name="itens[0][quantidade]"
-                                        placeholder="Digite a quantidade"
-                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Cor</label>
-                                    <select name="itens[0][cor]"
-                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
-                                        <option value="">Selecione...</option>
-                                        @foreach ($cores as $cor)
-                                            <option value="{{ $cor->nome }}">{{ $cor->nome }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700">Fornecedor</label>
-                                    <select name="itens[0][fornecedor_id]"
-                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
-                                        <option value="">Selecione...</option>
-                                        @foreach ($fornecedores as $fornecedor)
-                                            <option value="{{ $fornecedor->id }}">{{ $fornecedor->nome_fantasia }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Observações</label>
-                                    <textarea name="itens[0][observacoes]" placeholder="Digite os detalhes adicionais..." rows="2"
-                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"></textarea>
-                                </div>
-                            </div>
-                            <button type="button" onclick="addItem()"
-                                class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-                                + Adicionar cotação de item
-                            </button><br />
-                        </div>
-                    </div>
 
                     <!-- Endereço de entrega -->
                     <div class="space-y-4">
@@ -258,6 +193,12 @@
                             <input type="text" name="nome_obra" placeholder="Digite o nome da obra" required
                                 class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                         </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Frete (R$)</label>
+                            <input type="number" step="0.01" name="frete" value="0"
+                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                        </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Valor Total dos Itens
                                 (R$)</label>
@@ -277,17 +218,16 @@
                                 class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Valor Final s/ desconto
-                                (R$)</label>
-                            <input type="text" id="valor_sem_desconto_final" name="valor_sem_desconto_final"
-                                readonly value="0,00"
-                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" />
+                            <label class="block text-sm font-medium text-gray-700">Valor Final s/ desconto (R$)</label>
+                            <input type="text" id="valor_sem_desconto_final"
+                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 font-semibold"
+                                value="0.00" readonly>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Valor Final c/ desconto
-                                (R$)</label>
-                            <input type="text" id="valor_final" name="valor_final" readonly value="0,00"
-                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" />
+                            <label class="block text-sm font-medium text-gray-700">Valor Final c/ desconto (R$)</label>
+                            <input type="text" id="valor_final"
+                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 font-semibold text-green-700"
+                                value="0.00" readonly>
                         </div>
                     </div>
 
@@ -424,7 +364,6 @@
             };
         }
 
-
         let itemIndex = 1;
 
         const cores = @json($cores);
@@ -454,7 +393,6 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                 <div class="col-span-2">
                     <label class="block text-sm font-medium text-gray-700">Descrição do item</label>
-                    <input type="hidden" name="itens[${itemIndex}][id]" value="${itemIndex}" />
                     <input type="text" name="itens[${itemIndex}][nome]" placeholder="Digite a descrição" required
                            class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                 </div>
@@ -496,19 +434,8 @@
 
         let produtos = [];
 
-        function alterarQuantidade(index, valor) {
-            const quantidade = parseInt(valor) || 1;
-            produtos[index].quantidade = quantidade;
-            renderProdutos(); // vai redesenhar tudo já com quantidade atualizada
-        }
-
-        function removerProduto(index) {
-            produtos.splice(index, 1);
-            renderProdutos();
-        }
-
-        function adicionarProduto(id, nome, preco, fornecedor = 'Sem fornecedor', cor = 'Sem cor') {
-            if (produtos.find(p => p.id == id)) {
+        function adicionarProduto(id, nome, preco, fornecedor = '', cor = '') {
+            if (produtos.find(p => p.id === id)) {
                 alert("Produto já adicionado!");
                 return;
             }
@@ -517,77 +444,89 @@
                 id,
                 nome,
                 preco: parseFloat(preco),
-                quantidade: 1, // <-- garante valor inicial
-                fornecedor,
-                cor
+                quantidade: 1,
+                fornecedor, // ✅ agora salva fornecedor
+                cor // ✅ agora salva cor
             };
-
             produtos.push(produto);
+            renderProdutos();
+        }
+
+        function alterarQuantidade(index, valor) {
+            produtos[index].quantidade = parseInt(valor) || 1;
+            renderProdutos();
+        }
+
+        function removerProduto(index) {
+            produtos.splice(index, 1);
             renderProdutos();
         }
 
         function renderProdutos() {
             const wrapper = document.getElementById('produtos-selecionados');
             wrapper.innerHTML = '';
-            let totalProdutos = 0;
-            let totalProdutosComDesconto = 0;
 
             const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]').value) || 0;
             let descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]').value) || 0;
-            if (descontoOrcamento < 0) descontoOrcamento = 0;
-            if (descontoOrcamento > 30) descontoOrcamento = 30;
+            descontoOrcamento = Math.min(Math.max(descontoOrcamento, 0), 30);
+
             const descontoAplicado = Math.max(descontoCliente, descontoOrcamento);
+
+            // 🔹 Inicializar totais dos produtos aqui
+            let totalProdutos = 0;
+            let totalProdutosComDesconto = 0;
 
             produtos.forEach((p, i) => {
                 const subtotal = p.preco * p.quantidade;
                 const subtotalComDesconto = subtotal - (subtotal * (descontoAplicado / 100));
-                totalProdutos += subtotal;
-                totalProdutosComDesconto += subtotalComDesconto;
+
+                totalProdutos += subtotal; // ✅ acumula total
+                totalProdutosComDesconto += subtotalComDesconto; // ✅ acumula total c/ desconto
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td class="px-3 py-2 border">
-                        <input type="hidden" name="itens[${i}][id]" value="${p.id}">
-                        ${p.id}
-                    </td>
-                    <td class="px-3 py-2 border">${p.nome}</td>
-                    <td class="px-3 py-2 border">${p.fornecedor}</td>
-                    <td class="px-3 py-2 border">${p.cor}</td>
-                    <td class="px-3 py-2 border">R$ ${p.preco.toFixed(2)}
-                        <input type="hidden" name="itens[${i}][preco_unitario]" value="${p.preco}">
-                    </td>
-                    <td class="px-3 py-2 border">
-                        <input type="number" 
-                            name="itens[${i}][quantidade]" 
-                            value="${p.quantidade}" 
-                            min="1"
-                            onchange="alterarQuantidade(${i}, this.value)"
-                            class="w-16 border rounded px-2 py-1" />
-                    </td>
-                    <td class="px-3 py-2 border">R$ ${subtotal.toFixed(2)}
-                        <input type="hidden" name="itens[${i}][subtotal]" value="${subtotal.toFixed(2)}">
-                    </td>
-                    <td class="px-3 py-2 border text-green-600">R$ ${subtotalComDesconto.toFixed(2)}
-                        <input type="hidden" name="itens[${i}][subtotal_com_desconto]" value="${subtotalComDesconto.toFixed(2)}">
-                        <input type="hidden" name="itens[${i}][preco_unitario_com_desconto]" value="${(subtotalComDesconto / p.quantidade).toFixed(2)}">
-                    </td>
-                    <td class="px-3 py-2 border text-center">
-                        <button type="button" onclick="removerProduto(${i})"
-                                class="text-red-600 hover:text-red-800">🗑</button>
-                    </td>
-                `;
-
+            <td class="px-3 py-2 border"><input type="hidden" name="itens[${i}][id]" value="${p.id}">${p.id}</td>
+            <td class="px-3 py-2 border">${p.nome}</td>
+            <td class="px-3 py-2 border">${p.fornecedor || ''}</td>
+            <td class="px-3 py-2 border">${p.cor || ''}</td>
+            <td class="px-3 py-2 border">R$ ${p.preco.toFixed(2)}
+                <input type="hidden" name="itens[${i}][preco_unitario]" value="${p.preco}">
+            </td>
+            <td class="px-3 py-2 border">
+                <input type="number" name="itens[${i}][quantidade]" 
+                    value="${p.quantidade}" min="1"
+                    onchange="alterarQuantidade(${i}, this.value)"
+                    class="w-16 border rounded px-2 py-1" />
+            </td>
+            <td class="px-3 py-2 border">R$ ${subtotal.toFixed(2)}
+                <input type="hidden" name="itens[${i}][subtotal]" value="${subtotal.toFixed(2)}">
+            </td>
+            <td class="px-3 py-2 border text-green-600">R$ ${subtotalComDesconto.toFixed(2)}
+                <input type="hidden" name="itens[${i}][subtotal_com_desconto]" value="${subtotalComDesconto.toFixed(2)}">
+                <input type="hidden" name="itens[${i}][preco_unitario_com_desconto]" value="${(subtotalComDesconto / p.quantidade).toFixed(2)}">
+            </td>
+            <td class="px-3 py-2 border text-center">
+                <button type="button" onclick="removerProduto(${i})"
+                        class="text-red-600 hover:text-red-800">🗑</button>
+            </td>
+        `;
                 wrapper.appendChild(row);
             });
 
+            // Calcular total dos vidros
             const {
                 totalVidros,
                 totalVidrosComDesconto
             } = calcularTotalVidros();
+
+            // Total geral (produtos + vidros)
             const totalGeral = totalProdutos + totalVidros;
             const totalGeralComDesconto = totalProdutosComDesconto + totalVidrosComDesconto;
 
+            // Atualizar campo total
             document.getElementById('valor_total').value = totalGeral.toFixed(2);
+
+            // Atualizar valores finais
             atualizarValorFinal(totalGeral, totalGeralComDesconto);
         }
 
@@ -682,4 +621,8 @@
             });
         });
     </script>
+
+
+
+
 </x-layouts.app>
