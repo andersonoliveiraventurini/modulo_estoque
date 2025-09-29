@@ -14,6 +14,7 @@ use App\Models\OrcamentoItem;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use DragonCode\Contracts\Cashier\Auth\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -84,7 +85,7 @@ class OrcamentoController extends Controller
         // Criação do orçamento (sem endereço ainda)
         $orcamento = Orcamento::create([
             'cliente_id'   => $request->cliente_id,
-            'vendedor_id'  => $request->vendedor_id,
+            'vendedor_id'  => Auth()->user()->id,
             'obra'         => $request->nome_obra,
             'valor_total'  => $request->valor_total,
             'desconto'     => $desconto,

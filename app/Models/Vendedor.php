@@ -39,6 +39,11 @@ class Vendedor extends Model
         return $this->hasMany(Pedido::class, 'vendedor_id');
     }
 
+    public function orcamentos()
+    {
+        return $this->hasMany(Orcamento::class, 'vendedor_id');
+    }
+
     public function pedidosExternos()
     {
         return $this->hasMany(Pedido::class, 'vendedor_externo_id');

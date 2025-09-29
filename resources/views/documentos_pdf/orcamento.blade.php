@@ -39,7 +39,7 @@
         <tr>
             <!-- Coluna da Logo -->
             <td width="20%" align="left" style="vertical-align: top;">
-                <img src="{{ public_path('images/logo.png') }}" alt="Logo" style="max-width: 80px;">
+                <img src="{{ public_path('images/logo.png') }}" alt="Logo" style="max-width: 90px;">
             </td>
 
             <!-- Coluna dos Dados -->
@@ -53,10 +53,16 @@
             </td>
             <td width="25%" align="right" style="vertical-align: top;">
                 <div style="flex: 1; text-align: right; font-size: 11px; line-height: 1.2; margin-left: 10px;">
-                    <p style="margin: 2px 0;"><strong>Orçamento Nº:</strong> 00000{{ $orcamento->id }}</p><br />
+                    <p style="margin: 2px 0;"><strong>Orçamento nº:</strong> {{ $orcamento->id }}</p><br />
                     <p style="margin: 2px 0;"><strong>Data:</strong> {{ $orcamento->created_at->format('d/m/Y') }}</p>
                     <p style="margin: 2px 0;"><strong>Validade:</strong>
                         {{ \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }}</p>
+                    @php
+                        $usuario = \App\Models\User::find($orcamento->vendedor_id); // Substitua 1 pelo ID desejado
+                    @endphp
+                    <p style="margin: 2px 0;"><strong>Vendedor: </strong>{{ $usuario->name }} 
+                    </p>
+
                 </div>
             </td>
         </tr>
@@ -139,4 +145,5 @@
         <p><strong>Total com Desconto:</strong> R$ {{ number_format($totalComDesconto, 2, ',', '.') }}</p>
     </div>
 </body>
+
 </html>
