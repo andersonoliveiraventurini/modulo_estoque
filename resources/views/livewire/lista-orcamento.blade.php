@@ -48,6 +48,12 @@
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
+                        <button wire:click="sortBy('vendedor_id')"
+                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Vendedor
+                        </button>
+                    </th>
+                    <th class="px-6 py-3 text-left">
                         PDF 
                     </th>
                     <th class="px-6 py-3 text-left">Ações</th>
@@ -59,6 +65,7 @@
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
                                 href="{{ route('orcamentos.show', $c) }}">{{ $c->obra }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->cliente->nome }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->vendedor->name }}</td>
                         <td class="px-6 py-4">
                             @if($c->pdf_path)
                                 <a href="{{ asset('storage/'.$c->pdf_path) }}" target="_blank">
