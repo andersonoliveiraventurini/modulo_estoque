@@ -74,13 +74,20 @@ class OrcamentoController extends Controller
      */
     public function store(StoreOrcamentoRequest $request)
     {
-        $desconto = 0;
-        if ($request->has('desconto_aprovado')) {
-            $desconto = $request->desconto_aprovado;
+        // 1) Definir desconto percentual (cliente x vendedor)
+        $descontoPercentual = null;
+
+        if ($request->filled('desconto_aprovado') || $request->filled('desconto')) {
+            $descontoPercentual = max(
+                (float) $request->desconto_aprovado ?? 0,
+                (float) $request->desconto ?? 0
+            );
         }
-        if ($desconto < $request->desconto) {
-            $desconto = $request->desconto;
-        }
+
+        // 2) Definir desconto específico em valor (reais)
+        $descontoEspecifico = $request->filled('desconto_especifico')
+            ? (float) $request->desconto_especifico
+            : null;
 
         // Criação do orçamento (sem endereço ainda)
         $orcamento = Orcamento::create([
@@ -88,30 +95,45 @@ class OrcamentoController extends Controller
             'vendedor_id'  => Auth()->user()->id,
             'obra'         => $request->nome_obra,
             'valor_total'  => $request->valor_total,
-            'desconto'     => $desconto,
             'status'       => 'pendente',
             'observacoes'  => $request->observacoes,
             'validade'     => Carbon::now()->addDays(2), // sempre +2 dias
         ]);
 
-        // Criação dos itens
         foreach ($request->itens as $item) {
+            $valorUnitario = $item['preco_unitario'] ?? 0;
+            $quantidade    = $item['quantidade'] ?? 0;
+            $subtotal      = $valorUnitario * $quantidade;
+
+            // Aplica desconto percentual no item (se existir)
+            $valorComDesconto = $subtotal;
+            if ($descontoPercentual) {
+                $valorComDesconto = $subtotal - ($subtotal * ($descontoPercentual / 100));
+            }
+
             $orcamento->itens()->create([
                 'produto_id'         => $item['id'],
-                'quantidade'         => $item['quantidade'] ?? 0,
-                'valor_unitario'     => $item['preco_unitario'] ?? 0,
-                'desconto'           => $desconto,
-                'valor_com_desconto' => $item['subtotal_com_desconto'] ?? $item['subtotal'],
+                'quantidade'         => $quantidade,
+                'valor_unitario'     => $valorUnitario,
+                'desconto'           => $descontoPercentual ?? 0,
+                'valor_com_desconto' => $valorComDesconto,
                 'user_id'            => $request->user()->id ?? null,
             ]);
         }
 
-        // Criação dos vidros
+        // 5) Criar vidros
         if ($request->has('vidros')) {
             foreach ($request->vidros as $vidro) {
-                if ($vidro['preco_m2'] != null && $vidro['quantidade'] != null && $vidro['altura'] != null && $vidro['largura'] != null) {
-                    $vidro['valor_total'] = ($vidro['preco_m2'] * ($vidro['altura'] / 100) * ($vidro['largura'] / 100)) * $vidro['quantidade'];
-                    $vidro['valor_com_desconto'] = $vidro['valor_total'] - ($vidro['desconto'] ?? 0);
+                if ($vidro['preco_m2'] && $vidro['quantidade'] && $vidro['altura'] && $vidro['largura']) {
+                    $valorTotal = ($vidro['preco_m2'] * ($vidro['altura'] / 100) * ($vidro['largura'] / 100)) * $vidro['quantidade'];
+
+                    $valorComDesconto = $valorTotal;
+                    if ($descontoPercentual) {
+                        $valorComDesconto -= ($valorTotal * ($descontoPercentual / 100));
+                    }
+                    if ($descontoEspecifico) {
+                        $valorComDesconto -= $descontoEspecifico;
+                    }
 
                     $orcamento->vidros()->create([
                         'descricao'            => $vidro['descricao'] ?? null,
@@ -119,12 +141,35 @@ class OrcamentoController extends Controller
                         'altura'               => $vidro['altura'] ?? 0,
                         'largura'              => $vidro['largura'] ?? 0,
                         'preco_metro_quadrado' => $vidro['preco_m2'] ?? 0,
-                        'desconto'             => $desconto,
-                        'valor_com_desconto'   => $vidro['valor_com_desconto'] ?? 0,
+                        'desconto'             => $descontoPercentual ?? 0,
+                        'valor_com_desconto'   => $valorComDesconto,
                         'user_id'              => $request->user()->id ?? null,
                     ]);
                 }
             }
+        }
+
+        // 6) Salvar descontos na tabela "descontos"
+        if ($descontoPercentual) {
+            $orcamento->descontos()->create([
+                'motivo'      => 'Desconto percentual aplicado (cliente ou vendedor)',
+                'valor'       => 0,
+                'porcentagem' => $descontoPercentual,
+                'tipo'        => 'percentual',
+                'cliente_id'  => $request->cliente_id,
+                'user_id'     => Auth()->id(),
+            ]);
+        }
+
+        if ($descontoEspecifico) {
+            $orcamento->descontos()->create([
+                'motivo'      => 'Desconto específico em reais',
+                'valor'       => $descontoEspecifico,
+                'porcentagem' => null,
+                'tipo'        => 'fixo',
+                'cliente_id'  => $request->cliente_id,
+                'user_id'     => Auth()->id(),
+            ]);
         }
 
         // Se o request trouxe endereço de entrega → cria/atualiza

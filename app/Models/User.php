@@ -60,7 +60,7 @@ class User extends Authenticatable
         return Str::of($this->name)
             ->explode(' ')
             ->take(2)
-            ->map(fn ($word) => Str::substr($word, 0, 1))
+            ->map(fn($word) => Str::substr($word, 0, 1))
             ->implode('');
     }
 
@@ -69,7 +69,7 @@ class User extends Authenticatable
         return $this->hasOne(Vendedor::class);
     }
 
-     // se o user também pode ser vendedor direto na tabela pedidos
+    // se o user também pode ser vendedor direto na tabela pedidos
     public function pedidosComoVendedor()
     {
         return $this->hasMany(Pedido::class, 'vendedor_id');
@@ -80,5 +80,8 @@ class User extends Authenticatable
         return $this->hasMany(Pedido::class, 'vendedor_externo_id');
     }
 
-    
+    public function descontos()
+    {
+        return $this->hasMany(Desconto::class);
+    }
 }

@@ -23,6 +23,7 @@ class StoreOrcamentoRequest extends FormRequest
     {
         return [
             'nome_obra' => 'required|string|max:255',
+            
         ];
     }
 }

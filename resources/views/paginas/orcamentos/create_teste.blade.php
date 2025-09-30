@@ -218,6 +218,12 @@
                                 class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                         </div>
                         <div>
+                            <label class="block text-sm font-medium text-gray-700">Desconto na específico R$</label>
+                            <input type="number" name="desconto_especifico" value="0"
+                                placeholder="Digite o valor do desconto específico"
+                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-gray-700">Valor Final s/ desconto (R$)</label>
                             <input type="text" id="valor_sem_desconto_final"
                                 class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 font-semibold"

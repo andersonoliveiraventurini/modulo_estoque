@@ -11,9 +11,15 @@ class Pedido extends Model
     /** @use HasFactory<\Database\Factories\PedidoFactory> */
     use HasFactory, SoftDeletes;
 
-     protected $fillable = [
-        'cliente_id', 'vendedor_id', 'vendedor_externo_id',
-        'endereco_id', 'obra', 'valor_total', 'status', 'observacoes'
+    protected $fillable = [
+        'cliente_id',
+        'vendedor_id',
+        'vendedor_externo_id',
+        'endereco_id',
+        'obra',
+        'valor_total',
+        'status',
+        'observacoes'
     ];
 
     public function cliente()
@@ -29,5 +35,10 @@ class Pedido extends Model
     public function vendedorExterno()
     {
         return $this->belongsTo(User::class, 'vendedor_externo_id');
+    }
+
+    public function descontos()
+    {
+        return $this->hasMany(Desconto::class);
     }
 }

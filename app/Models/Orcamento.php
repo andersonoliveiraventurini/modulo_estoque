@@ -12,8 +12,15 @@ class Orcamento extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'cliente_id', 'vendedor_id', 'endereco_id', 'obra',
-        'valor_total', 'status', 'observacoes', 'validade', 'pdf_path'
+        'cliente_id',
+        'vendedor_id',
+        'endereco_id',
+        'obra',
+        'valor_total',
+        'status',
+        'observacoes',
+        'validade',
+        'pdf_path'
     ];
 
     public function cliente()
@@ -39,5 +46,10 @@ class Orcamento extends Model
     public function vidros()
     {
         return $this->hasMany(OrcamentoVidro::class);
+    }
+
+    public function descontos()
+    {
+        return $this->hasMany(Desconto::class);
     }
 }
