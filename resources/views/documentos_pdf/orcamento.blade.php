@@ -6,155 +6,224 @@
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;
-            font-size: 12px;
+            font-size: 11px;
             color: #333;
+            margin: 0;
+            padding: 0;
         }
 
         h2,
         h3,
         h4 {
-            margin: 6px 0;
+            margin: 4px 0;
             text-align: center;
+            font-weight: 600;
         }
 
-        /* Cabeçalho */
+        /* ===========================
+           CABEÇALHO
+        =========================== */
         .header {
             width: 100%;
-            border-bottom: 2px solid #000;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+            border-bottom: 1.5px solid #000;
+            margin-bottom: 15px;
         }
 
         .header td {
             vertical-align: top;
+            font-size: 10.5px;
         }
 
-        .header .empresa {
-            font-size: 14px;
+        .header h2 {
+            margin: 0;
+            font-size: 13px;
+        }
+
+        .header p {
+            margin: 1px 0;
+            line-height: 1.2;
+        }
+
+        /* ===========================
+           DADOS DO CLIENTE
+        =========================== */
+        .cliente-info {
+            width: 100%;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            font-size: 10px;
+        }
+
+        .cliente-info td {
+            padding: 4px 6px;
+            vertical-align: top;
+        }
+
+        .cliente-info .label {
             font-weight: bold;
+            color: #000;
+            width: 18%;
+            white-space: nowrap;
         }
 
-        .info-box {
-            border: 1px solid #000;
-            border-radius: 5px;
-            padding: 8px;
-            margin-bottom: 15px;
+        .cliente-info .value {
+            color: #444;
+            word-break: break-word;
         }
 
-        /* Tabelas */
+        .cliente-info tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* ===========================
+           TABELAS DE ITENS E VIDROS
+        =========================== */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 11px;
+            margin-top: 6px;
+            font-size: 10.5px;
+        }
+
+        th,
+        td {
+            border: 1px solid #000;
+            padding: 4px 5px;
         }
 
         th {
             background: #f2f2f2;
-            border: 1px solid #000;
-            padding: 6px;
             text-align: center;
             font-weight: bold;
-        }
-
-        td {
-            border: 1px solid #000;
-            padding: 6px;
         }
 
         td.valor {
             text-align: right;
         }
 
-        /* Totais */
+        table th:nth-child(1) {
+            width: 6%;
+        }
+
+        table th:nth-child(2) {
+            width: 40%;
+        }
+
+        table th:nth-child(3) {
+            width: 14%;
+        }
+
+        table th:nth-child(4) {
+            width: 10%;
+        }
+
+        table th:nth-child(5) {
+            width: 15%;
+        }
+
+        /* ===========================
+           TOTAIS
+        =========================== */
         .totais {
-            margin-top: 20px;
-            width: 50%;
+            width: 45%;
             float: right;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 10.5px;
         }
 
         .totais td {
-            padding: 6px;
+            padding: 4px 6px;
+            border-bottom: 1px solid #ddd;
         }
 
-        .totais th {
-            background: #e6e6e6;
-            text-align: left;
-            font-size: 12px;
+        .totais .valor {
+            text-align: right;
         }
 
-        /* Rodapé */
+        .totais tr:last-child {
+            background: #f5f5f5;
+            font-weight: bold;
+        }
+
+        /* ===========================
+           RODAPÉ
+        =========================== */
         .footer {
-            margin-top: 40px;
-            font-size: 10px;
+            font-size: 9px;
             text-align: center;
             border-top: 1px solid #ccc;
+            margin-top: 25px;
             padding-top: 5px;
+            color: #666;
+            line-height: 1.3;
+        }
+
+        /* ===========================
+           EVITAR QUEBRAS DE PÁGINA
+        =========================== */
+        table,
+        tr,
+        td {
+            page-break-inside: avoid;
         }
     </style>
 </head>
 
 <body>
-    <div>
-    <table width="100%" style="border-bottom:1px solid #000; padding-bottom:10px; margin-bottom:20px;">
+    <!-- ===========================
+         CABEÇALHO
+    =========================== -->
+    <table class="header">
         <tr>
-            <!-- Coluna da Logo -->
-            <td width="20%" align="left" style="vertical-align: top;">
-                <img src="{{ public_path('images/logo.png') }}" alt="Logo" style="max-width: 90px;">
+            <td width="20%">
+                <img src="{{ public_path('images/logo.png') }}" alt="Logo" style="max-width: 70px;">
             </td>
-
-            <!-- Coluna dos Dados -->
-            <td width="55%" align="left" style="vertical-align: top;">
-                <div style="flex: 1; text-align: left; font-size: 11px; line-height: 1.2; margin-left: 10px;">
-                    <h2 style="margin: 0; font-size: 14px;">{{ config('app.name', 'Minha Empresa LTDA') }}</h2>
-                    <p style="margin: 2px 0;"><strong>Endereço:</strong> Rua Exemplo, 123 - Centro - Campinas/SP</p>
-                    <p style="margin: 2px 0;"><strong>Telefone:</strong> (11) 99999-9999</p>
-                    <p style="margin: 2px 0;"><strong>E-mail:</strong> contato@minhaempresa.com.br</p>
-                </div>
+            <td width="50%">
+                <h2>{{ config('app.name', 'Minha Empresa LTDA') }}</h2>
+                <p>Rua Exemplo, 123 - Centro - Campinas/SP</p>
+                <p>(11) 99999-9999 - contato@minhaempresa.com.br</p>
             </td>
-            <td width="25%" align="right" style="vertical-align: top;">
-                <div style="flex: 1; text-align: right; font-size: 11px; line-height: 1.2; margin-left: 10px;">
-                    <p style="margin: 2px 0;"><strong>Orçamento nº:</strong> {{ $orcamento->id }}</p><br />
-                    <p style="margin: 2px 0;"><strong>Data:</strong> {{ $orcamento->created_at->format('d/m/Y') }}</p>
-                    <p style="margin: 2px 0;"><strong>Validade:</strong>
-                        {{ \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }}</p>
-                    @php
-                        $usuario = \App\Models\User::find($orcamento->vendedor_id); // Substitua 1 pelo ID desejado
-                    @endphp
-                    <p style="margin: 2px 0;"><strong>Vendedor: </strong>{{ $usuario->name }}
-                    </p>
-
-                </div>
+            <td width="30%" style="text-align:right;">
+                <p><strong>Orçamento nº:</strong> {{ $orcamento->id }}</p>
+                <p><strong>Data:</strong> {{ $orcamento->created_at->format('d/m/Y') }}</p>
+                <p><strong>Validade:</strong> {{ \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }}</p>
+                @php
+                    $usuario = \App\Models\User::find($orcamento->vendedor_id);
+                @endphp
+                <p><strong>Vendedor:</strong> {{ $usuario->name }}</p>
             </td>
         </tr>
     </table>
 
-    <!-- Dados do Cliente -->
+    <!-- ===========================
+         DADOS DO CLIENTE
+    =========================== -->
     <h3>Dados do Cliente</h3>
-    <table class="info-box">
+    <table class="cliente-info">
         <tr>
-            <td><strong>Nome:</strong></td>
-            <td>{{ $orcamento->cliente->nome ?? '---' }}</td>
+            <td class="label">Nome:</td>
+            <td class="value">{{ $orcamento->cliente->nome ?? '---' }}</td>
+            <td class="label">Obra:</td>
+            <td class="value">{{ $orcamento->obra ?? '---' }}</td>
         </tr>
         <tr>
-            <td><strong>Obra:</strong></td>
-            <td>{{ $orcamento->obra ?? '---' }}</td>
+            <td class="label">E-mail:</td>
+            <td class="value">{{ $orcamento->cliente->email ?? '---' }}</td>
+            <td class="label">Telefone:</td>
+            <td class="value">{{ $orcamento->cliente->telefone ?? '---' }}</td>
         </tr>
         <tr>
-            <td><strong>Endereço:</strong></td>
-            <td>{{ $orcamento->cliente->endereco ?? '---' }}</td>
-        </tr>
-        <tr>
-            <td><strong>Telefone:</strong></td>
-            <td>{{ $orcamento->cliente->telefone ?? '---' }}</td>
-        </tr>
-        <tr>
-            <td><strong>E-mail:</strong></td>
-            <td>{{ $orcamento->cliente->email ?? '---' }}</td>
+            <td class="label">Endereço:</td>
+            <td class="value" colspan="3">{{ $orcamento->cliente->endereco ?? '---' }}</td>
         </tr>
     </table>
 
-    <!-- Itens do Orçamento -->
+    <!-- ===========================
+         ITENS DO ORÇAMENTO
+    =========================== -->
     <h3>Itens do Orçamento</h3>
     <table>
         <thead>
@@ -162,8 +231,8 @@
                 <th>Qtd</th>
                 <th>Produto</th>
                 <th>Unitário (R$)</th>
-                <th>Desconto</th>
-                <th>Total (R$)</th>
+                <th>Unitário com desconto (R$)</th>
+                <th>Valor final (R$)</th>
             </tr>
         </thead>
         <tbody>
@@ -172,37 +241,39 @@
                     <td align="center">{{ $item->quantidade }}</td>
                     <td>{{ $item->produto->nome ?? '---' }}</td>
                     <td class="valor">{{ number_format($item->valor_unitario, 2, ',', '.') }}</td>
-                    <td class="valor">{{ $item->desconto }}%</td>
+                    <td class="valor">{{ number_format($item->valor_unitario_com_desconto, 2, ',', '.') }}</td>
                     <td class="valor">{{ number_format($item->valor_com_desconto, 2, ',', '.') }}</td>
                 </tr>
             @endforeach
         </tbody>
     </table>
 
-    <!-- Vidros -->
+    <!-- ===========================
+         VIDROS E ESTEIRAS
+    =========================== -->
     @if ($orcamento->vidros->count() > 0)
         <h4>Vidros e Esteiras</h4>
         <table>
             <thead>
                 <tr>
-                    <th>Descrição</th>
                     <th>Qtd</th>
+                    <th>Descrição</th>
                     <th>Altura (mm)</th>
                     <th>Largura (mm)</th>
                     <th>Preço m² (R$)</th>
-                    <th>Desconto</th>
-                    <th>Total (R$)</th>
+                    <th>Desc.</th>
+                    <th>Valor final (R$)</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($orcamento->vidros as $vidro)
                     <tr>
-                        <td>{{ $vidro->descricao }}</td>
                         <td align="center">{{ $vidro->quantidade }}</td>
+                        <td>{{ $vidro->descricao }}</td>
                         <td class="valor">{{ $vidro->altura }}</td>
                         <td class="valor">{{ $vidro->largura }}</td>
                         <td class="valor">{{ number_format($vidro->preco_metro_quadrado, 2, ',', '.') }}</td>
-                        <td class="valor">{{ $vidro->desconto }} %</td>
+                        <td class="valor">{{ $vidro->desconto }}%</td>
                         <td class="valor">{{ number_format($vidro->valor_com_desconto, 2, ',', '.') }}</td>
                     </tr>
                 @endforeach
@@ -210,70 +281,70 @@
         </table>
     @endif
 
-    <!-- Totais -->
-    <!-- Totais -->
+    <!-- ===========================
+         TOTAIS E DESCONTOS
+    =========================== -->
     @php
         $totalProdutos = $orcamento->itens->sum(fn($item) => $item->quantidade * $item->valor_unitario);
         $totalItensComDesconto = $orcamento->itens->sum('valor_com_desconto');
         $totalVidros = $orcamento->vidros->sum(fn($v) => $v->valor_com_desconto);
         $totalComDescontos = $totalItensComDesconto + $totalVidros;
-
-        // Total de descontos (percentuais + fixos)
         $descontosPercentuais = $orcamento->descontos->where('tipo', 'percentual');
         $descontosFixos = $orcamento->descontos->where('tipo', 'fixo');
-
         $valorDescontosFixos = $descontosFixos->sum('valor');
         $percentualAplicado = $descontosPercentuais->max('porcentagem') ?? 0;
-
-        // Aplica desconto fixo no total
         $valorFinal = $totalComDescontos - $valorDescontosFixos;
     @endphp
 
-    <h3 style="margin-top:30px;">Totais e Descontos</h3>
-
-    <table style="width: 50%; float: right; border-collapse: collapse; font-size: 11px;">
-        <tr style="background: #f2f2f2;">
-            <th style="border: 1px solid #000; padding: 5px; text-align: left;">Descrição</th>
-            <th style="border: 1px solid #000; padding: 5px; text-align: right;">Valor</th>
+    <h3>Totais e Descontos</h3>
+    <table class="totais">
+        <tr>
+            <td>Valor Total em Produtos</td>
+            <td class="valor">R$ {{ number_format($totalProdutos, 2, ',', '.') }}</td>
         </tr>
         <tr>
-            <td style="border: 1px solid #000; padding: 5px;">Valor Total em Produtos</td>
-            <td style="border: 1px solid #000; padding: 5px; text-align: right;">
-                R$ {{ number_format($totalProdutos, 2, ',', '.') }}
-            </td>
+            <td>Valor Total em Vidros</td>
+            <td class="valor">R$ {{ number_format($totalVidros, 2, ',', '.') }}</td>
         </tr>
-
         @if ($percentualAplicado > 0)
             <tr>
-                <td style="border: 1px solid #000; padding: 5px;">Desconto Percentual</td>
-                <td style="border: 1px solid #000; padding: 5px; text-align: right;">
-                    {{ number_format($percentualAplicado, 2, ',', '.') }} %
-                </td>
+                <td>Desconto Percentual</td>
+                <td class="valor">{{ number_format($percentualAplicado, 2, ',', '.') }}%</td>
             </tr>
         @endif
 
         @foreach ($descontosFixos as $desc)
             <tr>
-                <td style="border: 1px solid #000; padding: 5px;">
-                    {{ $desc->motivo }}
-                </td>
-                <td style="border: 1px solid #000; padding: 5px; text-align: right;">
-                    - R$ {{ number_format($desc->valor, 2, ',', '.') }}
-                </td>
+                <td>{{ $desc->motivo }}</td>
+                <td class="valor">- R$ {{ number_format($desc->valor, 2, ',', '.') }}</td>
             </tr>
         @endforeach
 
-        <tr style="background: #e6e6e6; font-weight: bold;">
-            <td style="border: 1px solid #000; padding: 5px;">Valor Final do Orçamento</td>
-            <td style="border: 1px solid #000; padding: 5px; text-align: right;">
-                R$ {{ number_format($valorFinal, 2, ',', '.') }}
-            </td>
+        @if ($orcamento->frete > 0)
+            <tr>
+                <td>Frete</td>
+                <td class="valor">R$ {{ number_format($orcamento->frete, 2, ',', '.') }}</td>
+            </tr>
+        @endif
+
+        <tr>
+            <td>Valor Final do Orçamento</td>
+            <td class="valor">R$ {{ number_format($valorFinal, 2, ',', '.') }}</td>
         </tr>
     </table>
-</div>
 
-    <!-- Rodapé -->
-    <div class="footer">
+    <!-- ===========================
+         RODAPÉ
+    =========================== -->
+    <div class="footer"
+        style="
+    position: fixed;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 11px;
+    color: #666;">
         <p>Este orçamento é válido até {{ \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }}.</p>
         <p>Condições de pagamento e prazo de entrega podem variar conforme negociação.</p>
         <p>© {{ date('Y') }} {{ config('app.name') }} - Todos os direitos reservados.</p>

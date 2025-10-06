@@ -6,52 +6,56 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::create('orcamento_itens', function (Blueprint $table) {
-            $table->id();
+        /**
+         * Run the migrations.
+         */
+        public function up(): void
+        {
+                Schema::create('orcamento_itens', function (Blueprint $table) {
+                        $table->id();
 
-            $table->unsignedBigInteger('orcamento_id')->nullable()
-                  ->comment('Referência ao orçamento relacionado a este item.');
-            $table->foreign('orcamento_id')->references('id')->on('orcamentos');
+                        $table->unsignedBigInteger('orcamento_id')->nullable()
+                                ->comment('Referência ao orçamento relacionado a este item.');
+                        $table->foreign('orcamento_id')->references('id')->on('orcamentos');
 
-            // produto que será orçado
-            $table->unsignedBigInteger('produto_id')->nullable()
-                  ->comment('Referência ao produto relacionado a este item do orçamento.');
-            $table->foreign('produto_id')->references('id')->on('produtos');
+                        // produto que será orçado
+                        $table->unsignedBigInteger('produto_id')->nullable()
+                                ->comment('Referência ao produto relacionado a este item do orçamento.');
+                        $table->foreign('produto_id')->references('id')->on('produtos');
 
-            // quantidade do produto
-            $table->decimal('quantidade', 15, 2)->nullable()
-                    ->comment('Quantidade do produto orçado.');
-            // valor por unidade
-            $table->decimal('valor_unitario', 15, 2)->nullable()
-                    ->comment('Valor unitário do produto orçado.');
-            // recebeu desconto
-            $table->decimal('desconto', 15, 2)->nullable()
-                    ->comment('Desconto aplicado ao produto orçado, se houver.');
-            // valor com desconto
-            $table->decimal('valor_com_desconto', 15, 2)->nullable()
-                    ->comment('Valor do produto orçado com desconto aplicado, se houver.');
+                        // quantidade do produto
+                        $table->decimal('quantidade', 15, 2)->nullable()
+                                ->comment('Quantidade do produto orçado.');
+                        // valor por unidade
+                        $table->decimal('valor_unitario', 15, 2)->nullable()
+                                ->comment('Valor unitário do produto orçado.');
+                        // valor unitário com desconto
+                        $table->decimal('valor_unitario_com_desconto', 15, 2)->nullable()
+                                ->comment('Valor unitário do produto orçado com desconto aplicado, se houver.');
 
-            // quem deu o desconto
-            $table->unsignedBigInteger('user_id')->nullable()
-                    ->comment('Referência ao usuário que aplicou o desconto, se houver.');
-            $table->foreign('user_id')->references('id')->on('users');
+                        // recebeu desconto
+                        $table->decimal('desconto', 15, 2)->nullable()
+                                ->comment('Desconto aplicado ao produto orçado, se houver.');
+                        // valor com desconto
+                        $table->decimal('valor_com_desconto', 15, 2)->nullable()
+                                ->comment('Valor do produto orçado com desconto aplicado, se houver.');
 
-            // unidade de medida do produto
-            $table->timestamps();
-            $table->softDeletes();
-        });
-    }
+                        // quem deu o desconto
+                        $table->unsignedBigInteger('user_id')->nullable()
+                                ->comment('Referência ao usuário que aplicou o desconto, se houver.');
+                        $table->foreign('user_id')->references('id')->on('users');
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('orcamento_itens');
-    }
+                        // unidade de medida do produto
+                        $table->timestamps();
+                        $table->softDeletes();
+                });
+        }
+
+        /**
+         * Reverse the migrations.
+         */
+        public function down(): void
+        {
+                Schema::dropIfExists('orcamento_itens');
+        }
 };

@@ -27,6 +27,7 @@
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Cor</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Nome</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Descrição</th>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Part Number</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Fornecedor</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Preço Venda</th>
                     <th class="px-4 py-2 text-center text-sm font-medium text-gray-600">Ações</th>
@@ -49,6 +50,9 @@
                         </td>
                         <td class="px-4 py-2 text-sm">{{ $produto->nome }}</td>
                         <td class="px-4 py-2 text-sm">{{ $produto->descricao }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
+                            {{ $produto->part_number }}
+                        </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             {{ $produto->fornecedor?->nome_fantasia ?? 'Sem fornecedor' }}
                         </td>

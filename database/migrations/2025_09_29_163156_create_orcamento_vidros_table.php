@@ -22,15 +22,15 @@ return new class extends Migration
                     ->comment('Descrição detalhada do vidro orçado.');
             
             // quantidade do produto
-            $table->decimal('quantidade', 15, 2)->nullable()
+            $table->integer('quantidade')->nullable()
                     ->comment('Quantidade do produto orçado.');
 
             // altura do produto
-            $table->decimal('altura', 15, 2)->nullable()
+            $table->integer('altura')->nullable()
                     ->comment('Altura do produto orçado.');
 
             // largura do produto
-            $table->decimal('largura', 15, 2)->nullable()
+            $table->integer('largura')->nullable()
                     ->comment('Largura do produto orçado.');
 
             // valor por unidade
@@ -42,6 +42,9 @@ return new class extends Migration
             // valor com desconto
             $table->decimal('valor_com_desconto', 15, 2)->nullable()
                     ->comment('Valor do produto orçado com desconto aplicado, se houver.');
+
+            $table->decimal('valor_total', 15, 2)->nullable()
+                    ->comment('Valor total do produto orçado, sem considerar descontos.');
 
             // quem deu o desconto
             $table->unsignedBigInteger('user_id')->nullable()

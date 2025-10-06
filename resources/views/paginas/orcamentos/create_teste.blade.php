@@ -10,7 +10,7 @@
                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                         </path>
                     </svg>
-                    Criar Orçamento para Cliente {{ $cliente->id }} - {{ $cliente->nome_fantasia }}
+                    Criar Orçamento para Cliente {{ $cliente->id }} - {{ $cliente->nome ?? $cliente->nome_fantasia }}
                 </h2>
                 <!-- Pesquisa de Produtos -->
                 <div class="space-y-4">
@@ -43,16 +43,17 @@
                             Produtos no Orçamento
                         </h3>
 
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full text-sm text-left border border-gray-200 rounded-lg">
+                        <div class="overflow-x-auto rounded-lg border border-gray-200">
+                            <table class="min-w-full text-sm text-left">
                                 <thead class="bg-gray-100">
                                     <tr>
                                         <th class="px-3 py-2 border">Código</th>
                                         <th class="px-3 py-2 border">Produto</th>
+                                        <th class="px-3 py-2 border">Part Number</th>
                                         <th class="px-3 py-2 border">Fornecedor</th>
                                         <th class="px-3 py-2 border">Cor</th>
                                         <th class="px-3 py-2 border">Preço Unit. (R$)</th>
-                                        <th class="px-3 py-2 border">Qtd.</th>
+                                        <th class="px-3 py-2 border w-16 text-center">Qtd.</th>
                                         <th class="px-3 py-2 border">Subtotal (R$)</th>
                                         <th class="px-3 py-2 border">c/ Desconto (R$)</th>
                                         <th class="px-3 py-2 border">Ações</th>
@@ -61,6 +62,7 @@
                                 <tbody id="produtos-selecionados" class="divide-y"></tbody>
                             </table>
                         </div>
+
                     </div>
 
                     <!-- Seção de Vidros Corrigida -->
@@ -154,9 +156,11 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             </svg>
-                            Endereço de entrega
+                            Nome da Obra e Endereço de entrega
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <x-input type="text" name="nome_obra" placeholder="Digite o nome da obra"
+                                label="Nome da Obra" required />
                             <x-input id="entrega_cep" name="entrega_cep" label="CEP" placeholder="00000-000"
                                 onblur="pesquisacepentrega(this.value);" onkeypress="mascara(this, '#####-###')"
                                 size="10" maxlength="9" value="{{ old('entrega_cep') }}" />
@@ -187,53 +191,49 @@
                     <hr /><br />
 
                     <!-- Valores e descontos -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Nome da Obra</label>
-                            <input type="text" name="nome_obra" placeholder="Digite o nome da obra" required
-                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                        </div>
+                    <div class="overflow-x-auto">
+                        <div class="flex gap-4 min-w-max">
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700">Desconto do cliente %</label>
+                                <input type="number" name="desconto_aprovado"
+                                    value="{{ $cliente->desconto_aprovado ?? 0 }}" readonly
+                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" />
+                            </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Frete (R$)</label>
-                            <input type="number" step="0.01" name="frete" value="0"
-                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Valor Total dos Itens
-                                (R$)</label>
-                            <input type="text" id="valor_total" name="valor_total" readonly value="0,00"
-                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Desconto do cliente %</label>
-                            <input type="number" name="desconto_aprovado"
-                                value="{{ $cliente->desconto_aprovado ?? 0 }}" readonly
-                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Desconto na vendedor %</label>
-                            <input type="number" name="desconto" min="0" max="30" value="0"
-                                placeholder="Digite a porcentagem de desconto (0 a 30)"
-                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Desconto na específico R$</label>
-                            <input type="number" name="desconto_especifico" value="0"
-                                placeholder="Digite o valor do desconto específico"
-                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Valor Final s/ desconto (R$)</label>
-                            <input type="text" id="valor_sem_desconto_final"
-                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 font-semibold"
-                                value="0.00" readonly>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Valor Final c/ desconto (R$)</label>
-                            <input type="text" id="valor_final"
-                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 font-semibold text-green-700"
-                                value="0.00" readonly>
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700">Desconto na vendedor %</label>
+                                <input type="number" name="desconto" min="0" max="30" value="0"
+                                    placeholder="Digite a porcentagem de desconto (0 a 30)"
+                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                            </div>
+
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700">Desconto específico R$</label>
+                                <input type="number" name="desconto_especifico" value="0.00" 
+                                    placeholder="Digite o valor do desconto específico"
+                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                            </div>
+
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700">Frete (R$)</label>
+                                <input type="number" step="0.01" name="frete" value="0" value="0.00" 
+                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                            </div>
+
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700">Valor Total dos Itens s/
+                                    desconto (R$)</label>
+                                <input type="text" id="valor_total" name="valor_total" readonly value="0,00"
+                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" />
+                            </div>
+
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700">Valor Final c/ desconto
+                                    (R$)</label>
+                                <input type="text" id="valor_final"
+                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 font-semibold text-green-700"
+                                    value="0.00" readonly />
+                            </div>
                         </div>
                     </div>
 
@@ -493,6 +493,7 @@
                 row.innerHTML = `
             <td class="px-3 py-2 border"><input type="hidden" name="itens[${i}][id]" value="${p.id}">${p.id}</td>
             <td class="px-3 py-2 border">${p.nome}</td>
+            <td class="px-3 py-2 border">${p.part_number || ''}</td>
             <td class="px-3 py-2 border">${p.fornecedor || ''}</td>
             <td class="px-3 py-2 border">${p.cor || ''}</td>
             <td class="px-3 py-2 border">R$ ${p.preco.toFixed(2)}
@@ -502,7 +503,8 @@
                 <input type="number" name="itens[${i}][quantidade]" 
                     value="${p.quantidade}" min="1"
                     onchange="alterarQuantidade(${i}, this.value)"
-                    class="w-16 border rounded px-2 py-1" />
+                    class="w-12 border rounded px-2 py-1 text-center" style="max-width: 4rem;"/>
+
             </td>
             <td class="px-3 py-2 border">R$ ${subtotal.toFixed(2)}
                 <input type="hidden" name="itens[${i}][subtotal]" value="${subtotal.toFixed(2)}">
@@ -586,7 +588,7 @@
             console.log('Valor final com desconto:', valorFinalComDesconto); // Debug
 
             // Atualizar campos
-            document.getElementById('valor_sem_desconto_final').value = valorSemDescontoFinal.toFixed(2);
+            //document.getElementById('valor_sem_desconto_final').value = valorSemDescontoFinal.toFixed(2);
             document.getElementById('valor_final').value = valorFinalComDesconto.toFixed(2);
         }
 

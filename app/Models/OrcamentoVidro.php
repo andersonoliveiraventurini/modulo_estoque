@@ -21,6 +21,7 @@ class OrcamentoVidro extends Model
         'largura',
         'preco_metro_quadrado',
         'desconto',
+        'valor_total',
         'valor_com_desconto',
         'user_id',
     ];

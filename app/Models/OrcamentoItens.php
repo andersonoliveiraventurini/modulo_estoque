@@ -13,7 +13,7 @@ class OrcamentoItens extends Model
 
     protected $fillable = [
         'orcamento_id', 'produto_id', 'quantidade',
-        'valor_unitario', 'desconto', 'valor_com_desconto', 'user_id'
+        'valor_unitario', 'desconto', 'valor_com_desconto', 'user_id', 'valor_unitario_com_desconto'
     ];
 
     public function orcamento()

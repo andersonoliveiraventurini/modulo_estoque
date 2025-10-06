@@ -29,8 +29,13 @@ return new class extends Migration
                   $table->foreign('endereco_id')->references('id')->on('enderecos');
                   $table->string('obra')->nullable()
                         ->comment('Apelido do cliente para a obra ou projeto relacionado ao orçamento.');
+
+                  $table->decimal('frete', 15, 2)->nullable()
+                        ->comment('Valor do frete associado ao orçamento.');
+
                   $table->decimal('valor_total', 15, 2)->nullable()
                         ->comment('Valor total do orçamento.');
+
                   $table->string('status', 20)->default('pendente')
                         ->comment('Status do orçamento, como pendente, aprovado, cancelado, etc.');
                   $table->text('observacoes')->nullable()
