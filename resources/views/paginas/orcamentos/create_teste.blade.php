@@ -66,7 +66,7 @@
                     </div>
 
                     <!-- Seção de Vidros Corrigida -->
-                    <div x-data="{ abertoVidro: false }" class="space-y-4">
+                    <div class="space-y-4">
                         <br />
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,76 +74,15 @@
                                     d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z">
                                 </path>
                             </svg>
-                            Vidro ou Esteira
-
-                            <!-- Botão toggle -->
-                            <button type="button" @click="abertoVidro = !abertoVidro"
-                                class="ml-2 p-1 rounded-full border border-neutral-300 hover:bg-neutral-100">
-                                <span x-show="!abertoVidro">+</span>
-                                <span x-show="abertoVidro">-</span>
-                            </button>
-                        </h3>
-
-                        <!-- Wrapper dos vidros (só aparece quando aberto) -->
-                        <div x-show="abertoVidro" x-transition id="vidros-wrapper" class="space-y-4">
-                            <!-- Primeiro vidro -->
-                            <div
-                                class="space-y-2 relative border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
-                                <div class="overflow-x-auto">
-                                    <div class="flex gap-4 min-w-max">
-                                        <div class="flex-1">
-
-                                            <label class="block text-sm font-medium text-gray-700">Descrição do
-                                                Item</label>
-                                            <input type="text" name="vidros[0][descricao]"
-                                                placeholder="Ex: Vidro incolor 8mm"
-                                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                        </div>
-                                        <div class="flex-1">
-                                            <label class="block text-sm font-medium text-gray-700">Quantidade</label>
-                                            <input type="number" name="vidros[0][quantidade]" value="1"
-                                                placeholder="Digite a quantidade" oninput="calcularVidro(this)"
-                                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                        </div>
-                                        <div class="flex-1">
-                                            <label class="block text-sm font-medium text-gray-700">Preço do m²</label>
-                                            <input type="number" step="0.01" name="vidros[0][preco_m2]"
-                                                placeholder="Digite o preço" oninput="calcularVidro(this)"
-                                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                        </div>
-                                        <div class="flex-1" >
-                                            <label class="block text-sm font-medium text-gray-700">Altura (mm)</label>
-                                            <input type="number" name="vidros[0][altura]"
-                                                placeholder="Digite a altura em mm" oninput="calcularVidro(this)"
-                                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                        </div>
-                                        <div class="flex-1">
-                                            <label class="block text-sm font-medium text-gray-700">Largura (mm)</label>
-                                            <input type="number" name="vidros[0][largura]"
-                                                placeholder="Digite a largura em mm" oninput="calcularVidro(this)"
-                                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Campos hidden para valores calculados -->
-                                <input type="hidden" name="vidros[0][area]" class="area-hidden" />
-                                <input type="hidden" name="vidros[0][valor_total]" class="valor-hidden" />
-                                <input type="hidden" name="vidros[0][valor_com_desconto]"
-                                    class="valor-desconto-hidden" />
-
-                                <div class="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
-                                    <strong>Área (m²):</strong> <span class="area">0.00</span> |
-                                    <strong>Valor Total:</strong> R$ <span class="valor">0.00</span> |
-                                    <strong>c/ desconto:</strong> R$ <span class="valor-desconto">0.00</span>
-                                </div>
-                            </div>
+                            Vidros ou Esteiras
 
                             <button type="button" onclick="addVidro()"
                                 class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                                 + Adicionar Vidro/Esteira
                             </button>
-                            <br />
+                        </h3>
+                        <!-- Wrapper dos vidros (só aparece quando aberto) -->
+                        <div x-transition id="vidros-wrapper" class="space-y-4">
                         </div>
                     </div>
 
@@ -152,8 +91,7 @@
                     <div class="space-y-4">
                         <hr />
                         <h3 class="text-lg font-medium flex items-center gap-2">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
                                 </path>
@@ -173,8 +111,8 @@
                         <!-- Wrapper que será ocultado até o CEP ser válido -->
                         <div id="endereco-entrega-wrapper">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                                <x-input id="entrega_cidade" name="entrega_cidade" label="Cidade"
-                                    readonly="readonly" placeholder="Cidade" value="{{ old('entrega_cidade') }}" />
+                                <x-input id="entrega_cidade" name="entrega_cidade" label="Cidade" readonly="readonly"
+                                    placeholder="Cidade" value="{{ old('entrega_cidade') }}" />
                                 <x-input id="entrega_estado" name="entrega_estado" label="Estado"
                                     placeholder="Estado" readonly="readonly" value="{{ old('entrega_estado') }}" />
                                 <x-input id="entrega_bairro" name="entrega_bairro" label="Bairro"
@@ -544,13 +482,9 @@
             atualizarValorFinal(totalGeral, totalGeralComDesconto);
         }
 
-
         function atualizarValorFinal(total = null, totalComDesconto = null) {
-            console.log('Atualizando valor final...'); // Debug
-
-            // Se não veio parâmetros, calcular
+            // Se não veio parâmetros, calcular novamente
             if (total === null) {
-                // Total dos produtos
                 let totalProdutos = 0;
                 let totalProdutosComDesconto = 0;
 
@@ -561,7 +495,6 @@
                 if (descontoOrcamento > 30) descontoOrcamento = 30;
 
                 const descontoAplicado = Math.max(descontoCliente, descontoOrcamento);
-                console.log('Desconto aplicado:', descontoAplicado); // Debug
 
                 produtos.forEach(p => {
                     const subtotal = p.preco * p.quantidade;
@@ -570,33 +503,48 @@
                     totalProdutosComDesconto += subtotalComDesconto;
                 });
 
-                // Total dos vidros
                 const {
                     totalVidros,
                     totalVidrosComDesconto
                 } = calcularTotalVidros();
-                console.log('Total vidros:', totalVidros, 'Com desconto:', totalVidrosComDesconto); // Debug
 
                 total = totalProdutos + totalVidros;
                 totalComDesconto = totalProdutosComDesconto + totalVidrosComDesconto;
 
-                // Atualizar o campo valor_total
                 document.getElementById('valor_total').value = total.toFixed(2);
             }
 
             const frete = parseFloat(document.querySelector('[name="frete"]').value) || 0;
+            const descontoEspecificoInput = document.querySelector('[name="desconto_especifico"]');
 
-            // Valores finais
+            // Converte valor mascarado (ex: "1.234,56") para número
+            let descontoEspecifico = parseFloat(
+                descontoEspecificoInput.value.replace(/\./g, '').replace(',', '.')
+            ) || 0;
+
+            // Calcula valores finais
             const valorSemDescontoFinal = total + frete;
-            const valorFinalComDesconto = totalComDesconto + frete;
+            let valorFinalComDesconto = totalComDesconto + frete - descontoEspecifico;
 
-            console.log('Valor sem desconto final:', valorSemDescontoFinal); // Debug
-            console.log('Valor final com desconto:', valorFinalComDesconto); // Debug
+            // 🔹 Impede valor final negativo
+            if (valorFinalComDesconto < 0) valorFinalComDesconto = 0;
 
-            // Atualizar campos
-            //document.getElementById('valor_sem_desconto_final').value = valorSemDescontoFinal.toFixed(2);
+            // 🔹 Impede desconto maior que o total
+            const maxDesconto = totalComDesconto + frete;
+            if (descontoEspecifico > maxDesconto) {
+                descontoEspecifico = maxDesconto;
+                // Atualiza campo mascarado
+                descontoEspecificoInput.value = maxDesconto.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+
+            // Atualiza valor final
             document.getElementById('valor_final').value = valorFinalComDesconto.toFixed(2);
         }
+
+
 
         // Event listeners
         document.addEventListener("DOMContentLoaded", () => {
@@ -623,6 +571,10 @@
                 atualizarValorFinal();
             });
 
+            document.querySelector('[name="desconto_especifico"]').addEventListener("input", () => {
+                atualizarValorFinal();
+            });
+
             // Listener para desconto aprovado (caso seja editável)
             document.querySelector('[name="desconto_aprovado"]').addEventListener("input", function() {
                 // Recalcular todos os vidros
@@ -635,8 +587,4 @@
             });
         });
     </script>
-
-
-
-
 </x-layouts.app>
