@@ -24,7 +24,7 @@ return new class extends Migration
                         $table->foreign('produto_id')->references('id')->on('produtos');
 
                         // quantidade do produto
-                        $table->decimal('quantidade', 15, 2)->nullable()
+                        $table->integer('quantidade')->nullable()
                                 ->comment('Quantidade do produto orçado.');
                         // valor por unidade
                         $table->decimal('valor_unitario', 15, 2)->nullable()

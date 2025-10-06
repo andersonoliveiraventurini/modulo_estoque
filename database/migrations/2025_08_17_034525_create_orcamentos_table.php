@@ -33,8 +33,8 @@ return new class extends Migration
                   $table->decimal('frete', 15, 2)->nullable()
                         ->comment('Valor do frete associado ao orçamento.');
 
-                  $table->decimal('valor_total', 15, 2)->nullable()
-                        ->comment('Valor total do orçamento.');
+                  $table->decimal('valor_total_itens', 15, 2)->nullable()
+                        ->comment('Valor total dos itens do orçamento.');
 
                   $table->string('status', 20)->default('pendente')
                         ->comment('Status do orçamento, como pendente, aprovado, cancelado, etc.');

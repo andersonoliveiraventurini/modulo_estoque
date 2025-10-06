@@ -64,7 +64,7 @@
         .cliente-info .label {
             font-weight: bold;
             color: #000;
-            width: 18%;
+            width: 10%;
             white-space: nowrap;
         }
 
@@ -224,29 +224,31 @@
     <!-- ===========================
          ITENS DO ORÇAMENTO
     =========================== -->
-    <h3>Itens do Orçamento</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Qtd</th>
-                <th>Produto</th>
-                <th>Unitário (R$)</th>
-                <th>Unitário com desconto (R$)</th>
-                <th>Valor final (R$)</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($orcamento->itens as $item)
+    @if ($orcamento->itens->count() > 0)
+        <h3>Itens do Orçamento</h3>
+        <table>
+            <thead>
                 <tr>
-                    <td align="center">{{ $item->quantidade }}</td>
-                    <td>{{ $item->produto->nome ?? '---' }}</td>
-                    <td class="valor">{{ number_format($item->valor_unitario, 2, ',', '.') }}</td>
-                    <td class="valor">{{ number_format($item->valor_unitario_com_desconto, 2, ',', '.') }}</td>
-                    <td class="valor">{{ number_format($item->valor_com_desconto, 2, ',', '.') }}</td>
+                    <th>Qtd</th>
+                    <th>Produto</th>
+                    <th>Unitário</th>
+                    <th>Unitário com desconto</th>
+                    <th>Valor final</th>
                 </tr>
-            @endforeach
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach ($orcamento->itens as $item)
+                    <tr>
+                        <td align="center">{{ $item->quantidade }}</td>
+                        <td>{{ $item->produto->nome ?? '---' }}</td>
+                        <td class="valor">R$ {{ number_format($item->valor_unitario, 2, ',', '.') }}</td>
+                        <td class="valor">R$ {{ number_format($item->valor_unitario_com_desconto, 2, ',', '.') }}</td>
+                        <td class="valor">R$ {{ number_format($item->valor_com_desconto, 2, ',', '.') }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endif
 
     <!-- ===========================
          VIDROS E ESTEIRAS
@@ -258,11 +260,11 @@
                 <tr>
                     <th>Qtd</th>
                     <th>Descrição</th>
-                    <th>Altura (mm)</th>
-                    <th>Largura (mm)</th>
-                    <th>Preço m² (R$)</th>
-                    <th>Desc.</th>
-                    <th>Valor final (R$)</th>
+                    <th style="width: 3rem">Altura (mm)</th>
+                    <th style="width: 3rem">Largura (mm)</th>
+                    <th style="width: 5rem">Preço m²</th>
+                    <th style="width: 5rem">Desc.</th>
+                    <th style="width: 5rem">Valor final</th>
                 </tr>
             </thead>
             <tbody>
@@ -272,9 +274,11 @@
                         <td>{{ $vidro->descricao }}</td>
                         <td class="valor">{{ $vidro->altura }}</td>
                         <td class="valor">{{ $vidro->largura }}</td>
-                        <td class="valor">{{ number_format($vidro->preco_metro_quadrado, 2, ',', '.') }}</td>
-                        <td class="valor">{{ $vidro->desconto }}%</td>
-                        <td class="valor">{{ number_format($vidro->valor_com_desconto, 2, ',', '.') }}</td>
+                        <td class="valor">R$ {{ number_format($vidro->preco_metro_quadrado, 2, ',', '.') }}</td>
+                        <td class="valor">R$
+                            {{ number_format($vidro->preco_metro_quadrado * ($percentualAplicado / 100), 2, ',', '.') }}
+                        </td>
+                        <td class="valor">R$ {{ number_format($vidro->valor_com_desconto, 2, ',', '.') }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -298,14 +302,18 @@
 
     <h3>Totais e Descontos</h3>
     <table class="totais">
-        <tr>
-            <td>Valor Total em Produtos</td>
-            <td class="valor">R$ {{ number_format($totalProdutos, 2, ',', '.') }}</td>
-        </tr>
-        <tr>
-            <td>Valor Total em Vidros</td>
-            <td class="valor">R$ {{ number_format($totalVidros, 2, ',', '.') }}</td>
-        </tr>
+        @if ($orcamento->itens->count() > 0)
+            <tr>
+                <td>Valor Total em Produtos</td>
+                <td class="valor">R$ {{ number_format($totalItensComDesconto, 2, ',', '.') }}</td>
+            </tr>
+        @endif
+        @if ($orcamento->vidros->count() > 0)
+            <tr>
+                <td>Valor Total em Vidros</td>
+                <td class="valor">R$ {{ number_format($totalVidros, 2, ',', '.') }}</td>
+            </tr>
+        @endif
         @if ($percentualAplicado > 0)
             <tr>
                 <td>Desconto Percentual</td>
@@ -329,7 +337,7 @@
 
         <tr>
             <td>Valor Final do Orçamento</td>
-            <td class="valor">R$ {{ number_format($valorFinal, 2, ',', '.') }}</td>
+            <td class="valor">R$ {{ number_format($valorFinal + $orcamento->frete, 2, ',', '.') }}</td>
         </tr>
     </table>
 
@@ -337,17 +345,9 @@
          RODAPÉ
     =========================== -->
     <div class="footer"
-        style="
-    position: fixed;
-    bottom: 20px;
-    left: 0;
-    right: 0;
-    text-align: center;
-    font-size: 11px;
-    color: #666;">
-        <p>Este orçamento é válido até {{ \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }}.</p>
-        <p>Condições de pagamento e prazo de entrega podem variar conforme negociação.</p>
-        <p>© {{ date('Y') }} {{ config('app.name') }} - Todos os direitos reservados.</p>
+        style="position: fixed; bottom: 20px;left: 0; right: 0; text-align: center;font-size: 11px;color: #666;">
+        <p>Este orçamento é válido até {{ \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }}. ©
+            {{ date('Y') }} {{ config('app.name') }} - Todos os direitos reservados.</p>
     </div>
 
 </body>

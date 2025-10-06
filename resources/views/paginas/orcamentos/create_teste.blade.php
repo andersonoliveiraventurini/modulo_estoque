@@ -43,7 +43,7 @@
                             Produtos no Orçamento
                         </h3>
 
-                        <div class="overflow-x-auto rounded-lg border border-gray-200">
+                        <div class="overflow-x-auto rounded-lg">
                             <table class="min-w-full text-sm text-left">
                                 <thead class="bg-gray-100">
                                     <tr>
@@ -67,7 +67,7 @@
 
                     <!-- Seção de Vidros Corrigida -->
                     <div x-data="{ abertoVidro: false }" class="space-y-4">
-                        <hr />
+                        <br />
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -89,36 +89,40 @@
                             <!-- Primeiro vidro -->
                             <div
                                 class="space-y-2 relative border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Descrição do Item</label>
-                                        <input type="text" name="vidros[0][descricao]"
-                                            placeholder="Ex: Vidro incolor 8mm"
-                                            class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Quantidade</label>
-                                        <input type="number" name="vidros[0][quantidade]" value="1"
-                                            placeholder="Digite a quantidade" oninput="calcularVidro(this)"
-                                            class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Preço do m²</label>
-                                        <input type="number" step="0.01" name="vidros[0][preco_m2]"
-                                            placeholder="Digite o preço" oninput="calcularVidro(this)"
-                                            class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Altura (mm)</label>
-                                        <input type="number" name="vidros[0][altura]"
-                                            placeholder="Digite a altura em mm" oninput="calcularVidro(this)"
-                                            class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Largura (mm)</label>
-                                        <input type="number" name="vidros[0][largura]"
-                                            placeholder="Digite a largura em mm" oninput="calcularVidro(this)"
-                                            class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                <div class="overflow-x-auto">
+                                    <div class="flex gap-4 min-w-max">
+                                        <div class="flex-1">
+
+                                            <label class="block text-sm font-medium text-gray-700">Descrição do
+                                                Item</label>
+                                            <input type="text" name="vidros[0][descricao]"
+                                                placeholder="Ex: Vidro incolor 8mm"
+                                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                        </div>
+                                        <div class="flex-1">
+                                            <label class="block text-sm font-medium text-gray-700">Quantidade</label>
+                                            <input type="number" name="vidros[0][quantidade]" value="1"
+                                                placeholder="Digite a quantidade" oninput="calcularVidro(this)"
+                                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                        </div>
+                                        <div class="flex-1">
+                                            <label class="block text-sm font-medium text-gray-700">Preço do m²</label>
+                                            <input type="number" step="0.01" name="vidros[0][preco_m2]"
+                                                placeholder="Digite o preço" oninput="calcularVidro(this)"
+                                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                        </div>
+                                        <div class="flex-1" >
+                                            <label class="block text-sm font-medium text-gray-700">Altura (mm)</label>
+                                            <input type="number" name="vidros[0][altura]"
+                                                placeholder="Digite a altura em mm" oninput="calcularVidro(this)"
+                                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                        </div>
+                                        <div class="flex-1">
+                                            <label class="block text-sm font-medium text-gray-700">Largura (mm)</label>
+                                            <input type="number" name="vidros[0][largura]"
+                                                placeholder="Digite a largura em mm" oninput="calcularVidro(this)"
+                                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -209,14 +213,14 @@
 
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Desconto específico R$</label>
-                                <input type="number" name="desconto_especifico" value="0.00" 
+                                <input type="number" name="desconto_especifico" value="0.00"
                                     placeholder="Digite o valor do desconto específico"
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                             </div>
 
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Frete (R$)</label>
-                                <input type="number" step="0.01" name="frete" value="0" value="0.00" 
+                                <input type="number" step="0.01" name="frete" value="0" value="0.00"
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                             </div>
 
@@ -265,31 +269,33 @@
                 <button type="button" onclick="removeVidro(this)" class="absolute top-2 right-2 text-red-600 hover:text-red-800">
                     Remover
                 </button><br/>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Descrição do Item</label>
-                        <input type="text" name="vidros[${vidroIndex}][descricao]" placeholder="Ex: Vidro incolor 8mm" 
+                <div class="overflow-x-auto">
+                    <div class="flex gap-4 min-w-max">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700">Descrição do Item</label>
+                            <input type="text" name="vidros[${vidroIndex}][descricao]" placeholder="Ex: Vidro incolor 8mm" 
                             class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Quantidade</label>
-                        <input type="number" name="vidros[${vidroIndex}][quantidade]" value="1" placeholder="Digite a quantidade" 
-                               oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Preço do m²</label>
-                        <input type="number" step="0.01" name="vidros[${vidroIndex}][preco_m2]" placeholder="Digite o preço" 
-                               oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Altura (mm)</label>
-                        <input type="number" name="vidros[${vidroIndex}][altura]" placeholder="Digite a altura em mm" 
-                               oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Largura (mm)</label>
-                        <input type="number" name="vidros[${vidroIndex}][largura]" placeholder="Digite a largura em mm" 
-                               oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700">Quantidade</label>
+                            <input type="number" name="vidros[${vidroIndex}][quantidade]" value="1" placeholder="Digite a quantidade" 
+                                oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700">Preço do m²</label>
+                            <input type="number" step="0.01" name="vidros[${vidroIndex}][preco_m2]" placeholder="Digite o preço" 
+                                oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700">Altura (mm)</label>
+                            <input type="number" name="vidros[${vidroIndex}][altura]" placeholder="Digite a altura em mm" 
+                                oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700">Largura (mm)</label>
+                            <input type="number" name="vidros[${vidroIndex}][largura]" placeholder="Digite a largura em mm" 
+                                oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                        </div>     
                     </div>                    
                 </div>                
 

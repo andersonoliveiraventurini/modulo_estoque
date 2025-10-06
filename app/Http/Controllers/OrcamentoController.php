@@ -98,7 +98,7 @@ class OrcamentoController extends Controller
             'cliente_id'   => $request->cliente_id,
             'vendedor_id'  => Auth()->user()->id,
             'obra'         => $request->nome_obra,
-            'valor_total'  => $request->valor_total,
+            'valor_total_itens'  => $request->valor_total,
             'status'       => 'pendente',
             'frete'        => $request->frete ?? 0,
             'observacoes'  => $request->observacoes,
