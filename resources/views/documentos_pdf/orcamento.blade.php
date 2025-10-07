@@ -183,9 +183,7 @@
                 <img src="{{ public_path('images/logo.png') }}" alt="Logo" style="max-width: 70px;">
             </td>
             <td style="padding:5px; border:1px solid #ccc; background-color:#f9f9f9;">
-                <div style="text-align:center; margin-bottom:15px;">
-                    
-                    
+                <div style="text-align:center; margin-bottom:15px;">                    
                    <!-- <p style="margin:0; font-size:12px;">
                         Data: { { $orcamento->created_at->format('d/m/Y') }} - Validade: { { \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }} | Vendedor: { { $usuario->name }}
                     </p>-->
