@@ -190,9 +190,9 @@
                         Data: { { $orcamento->created_at->format('d/m/Y') }} - Validade: { { \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }} | Vendedor: { { $usuario->name }}
                     </p>-->
                     <p style="margin:2px 0;"><strong>ACAV</strong> - Comércio de Acessórios para Alumínios e Vidro Temperado<br/><br/>
-R. São Luís do Paraitinga, 1338 - Jardim do Trevo - Campinas - SP - CEP: 13030-105
-<br/>  (19) 99999-9999 (19) 3274-1717
-<a href="mailto:contato@acavacessorios.com.br">contato@acavacessorios.com.br</a> - <a href="http://www.acavacessorios.com.br" target="_blank">www.acavacessorios.com.br</a>
+                        R. São Luís do Paraitinga, 1338 - Jardim do Trevo - Campinas - SP - CEP: 13030-105
+                        <br/>  (19) 99999-9999 (19) 3274-1717
+                        <a href="mailto:contato@acavacessorios.com.br">contato@acavacessorios.com.br</a> - <a href="http://www.acavacessorios.com.br" target="_blank">www.acavacessorios.com.br</a>
                     </p>
                 </div>
             </td>
@@ -205,8 +205,8 @@ R. São Luís do Paraitinga, 1338 - Jardim do Trevo - Campinas - SP - CEP: 13030
          DADOS DO CLIENTE
     =========================== -->
     @php
-                        $usuario = \App\Models\User::find($orcamento->vendedor_id);
-                    @endphp
+        $usuario = \App\Models\User::find($orcamento->vendedor_id);
+    @endphp
     <table class="cliente-info">
         <tr>
             <td class="label">Cliente:</td>
