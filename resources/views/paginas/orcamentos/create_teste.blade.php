@@ -137,28 +137,31 @@
                         <div class="flex gap-4 min-w-max">
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Desconto do cliente %</label>
-                                <input type="number" name="desconto_aprovado"
+                                <input type="text" name="desconto_aprovado"
                                     value="{{ $cliente->desconto_aprovado ?? 0 }}" readonly
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" />
                             </div>
 
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Desconto na vendedor %</label>
-                                <input type="number" name="desconto" min="0" max="30" value="0"
+                                <input type="text" name="desconto" min="0" max="30" value="0"
                                     placeholder="Digite a porcentagem de desconto (0 a 30)"
+                                    oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                             </div>
 
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Desconto específico R$</label>
-                                <input type="number" name="desconto_especifico" value="0.00"
-                                    placeholder="Digite o valor do desconto específico"
+                                <input type="text" name="desconto_especifico" value="0.00"
+                                    placeholder="Digite o valor do desconto específico" 
+                                    oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                             </div>
 
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Frete (R$)</label>
-                                <input type="number" step="0.01" name="frete" value="0" value="0.00"
+                                <input type="text" step="0.01" name="frete" value="0" value="0.00"
+                                    oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                             </div>
 

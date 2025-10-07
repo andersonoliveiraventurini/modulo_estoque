@@ -80,6 +80,12 @@ class OrcamentoController extends Controller
         // 1) Definir desconto percentual (cliente x vendedor)
         $descontoPercentual = null;
 
+        $request->merge([
+            'desconto_especifico' => str_replace(',', '.', str_replace('.', '', $request->desconto_especifico)),
+            'frete' => str_replace(',', '.', str_replace('.', '', $request->frete)),
+            'desconto_aprovado' => str_replace(',', '.', str_replace('.', '', $request->desconto_aprovado)),
+        ]);
+
         if ($request->filled('desconto_aprovado') || $request->filled('desconto')) {
             $descontoPercentual = max(
                 (float) $request->desconto_aprovado ?? 0,
