@@ -21,7 +21,9 @@ class Orcamento extends Model
         'status',
         'observacoes',
         'validade',
-        'pdf_path'
+        'pdf_path',
+        'token_acesso',
+        'token_expira_em'
     ];
 
     public function cliente()

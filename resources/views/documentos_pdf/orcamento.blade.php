@@ -187,6 +187,10 @@
                 <p>(11) 99999-9999 - contato@minhaempresa.com.br</p>
             </td>
             <td width="30%" style="text-align:right;">
+                <div style="position: fixed; bottom: 40px; right: 40px; text-align: center;">
+                    <img src="data:image/png;base64,{{ $qrCode }}" width="110" height="110">
+                    <p style="font-size: 9px;">Link válido por 2 dias</p>
+                </div>  
                 <p><strong>Orçamento nº:</strong> {{ $orcamento->id }}</p>
                 <p><strong>Data:</strong> {{ $orcamento->created_at->format('d/m/Y') }}</p>
                 <p><strong>Validade:</strong> {{ \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }}</p>

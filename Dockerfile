@@ -13,11 +13,14 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libicu-dev \
+    libmagickwand-dev \    
     npm \
     nodejs \
     tzdata \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install sockets pdo pdo_mysql mbstring zip exif pcntl bcmath gd intl \
+    && pecl install imagick \           
+    && docker-php-ext-enable imagick \  
     && docker-php-ext-enable sockets bcmath zip intl \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean

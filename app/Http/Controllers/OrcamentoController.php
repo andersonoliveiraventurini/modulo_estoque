@@ -18,6 +18,9 @@ use DragonCode\Contracts\Cashier\Auth\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
+use Illuminate\Support\Str;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+
 class OrcamentoController extends Controller
 {
     /**
@@ -195,29 +198,48 @@ class OrcamentoController extends Controller
             $orcamento->update(['endereco_id' => $endereco->id]);
         }
 
-        // Gerar PDF e salvar no storage
-        try {
-            $pdf = Pdf::loadView('documentos_pdf.orcamento', compact('orcamento'))
-                ->setPaper('a4');
+        // Gera token e expiração de 2 dias
+        $token = Str::uuid();
+        $tokenExpiraEm = Carbon::now()->addDays(2);
 
-            // Adicionar numeração de páginas
+        // Atualiza modelo e mantém sincronizado
+        $orcamento->forceFill([
+            'token_acesso' => $token,
+            'token_expira_em' => $tokenExpiraEm,
+        ])->save();
+
+        // Gera link seguro
+        $linkSeguro = route('orcamentos.view', ['token' => $orcamento->token_acesso]);
+
+        // Gera QR Code em base64 (GD processa PNG sem Imagick)
+        $qrCodeBase64 = base64_encode(
+            QrCode::format('png')
+                ->size(130)
+                ->margin(1)
+                ->generate($linkSeguro)
+        );
+
+        try {
+            $pdf = Pdf::loadView('documentos_pdf.orcamento', [
+                'orcamento' => $orcamento,
+                'percentualAplicado' => $descontoPercentual,
+                'qrCode' => $qrCodeBase64,
+            ])->setPaper('a4');
+
+            // Numeração de páginas
             $canvas = $pdf->getDomPDF()->getCanvas();
             $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
                 $text = "Página $pageNumber / $pageCount";
                 $font = $fontMetrics->get_font("Helvetica", "normal");
-                // posição x=270, y=820 (ajuste conforme necessário)
                 $canvas->text(270, 820, $text, $font, 10);
             });
 
-            // Caminho de armazenamento
             $path = "orcamentos/orcamento_{$orcamento->id}.pdf";
-
-            // Salva o arquivo no disco 'public'
             Storage::disk('public')->put($path, $pdf->output());
 
-            // Testa se o PDF foi salvo
             if (Storage::disk('public')->exists($path)) {
                 $orcamento->update(['pdf_path' => $path]);
+
                 return redirect()
                     ->route('orcamentos.index')
                     ->with('success', 'Orçamento criado com sucesso!');
@@ -226,14 +248,40 @@ class OrcamentoController extends Controller
                     ->route('orcamentos.index')
                     ->with('error', 'Orçamento criado, mas falha ao gerar o PDF.');
             }
+
         } catch (\Exception $e) {
             Log::error("Erro ao gerar PDF: " . $e->getMessage());
             return redirect()
                 ->route('orcamentos.index')
                 ->with('error', 'Orçamento criado, mas falha ao gerar o PDF: ' . $e->getMessage());
         }
+
     }
 
+    public function visualizarPublico($token)
+    {
+        // Busca o orçamento pelo token
+        $orcamento = Orcamento::where('token_acesso', $token)->firstOrFail();
+
+        // ✅ Verifica se o token ainda é válido
+        if (!$orcamento->token_expira_em || now()->greaterThan($orcamento->token_expira_em)) {
+            abort(403, 'O link deste orçamento expirou. Solicite um novo ao vendedor.');
+        }
+
+        // ✅ Verifica se o PDF existe
+        if (!$orcamento->pdf_path || !Storage::disk('public')->exists($orcamento->pdf_path)) {
+            abort(404, 'PDF não encontrado.');
+        }
+
+        // ✅ Retorna o PDF para visualização inline no navegador
+        return response()->file(
+            Storage::disk('public')->path($orcamento->pdf_path),
+            [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="orcamento_' . $orcamento->id . '.pdf"',
+            ]
+        );
+    }
 
     // ...
 

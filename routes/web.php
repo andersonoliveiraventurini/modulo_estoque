@@ -36,6 +36,10 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+    // orçamento não precisa estar logado para acessar
+Route::get('/orcamento/view/{token}', [OrcamentoController::class, 'visualizarPublico'])
+    ->name('orcamentos.view');
+
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
