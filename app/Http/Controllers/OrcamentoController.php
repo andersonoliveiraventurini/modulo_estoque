@@ -287,50 +287,115 @@ class OrcamentoController extends Controller
 
     public function duplicar($id)
     {
-        $orcamentoOriginal = Orcamento::with('itens')->findOrFail($id);
+        $orcamentoOriginal = Orcamento::with(['itens', 'vidros', 'descontos', 'endereco'])->findOrFail($id);
 
         // Novo nome da obra com data e hora
         $dataHora = Carbon::now()->format('d/m/Y H:i');
         $novaObra = "{$dataHora} - {$orcamentoOriginal->obra}";
 
-        // Criar novo orçamento (sem endereço)
+        // Criar novo orçamento
         $novoOrcamento = Orcamento::create([
             'cliente_id'   => $orcamentoOriginal->cliente_id,
             'vendedor_id'  => $orcamentoOriginal->vendedor_id,
             'obra'         => $novaObra,
-            'valor_total'  => $orcamentoOriginal->valor_total,
+            'valor_total_itens' => $orcamentoOriginal->valor_total_itens,
             'status'       => 'pendente',
             'observacoes'  => $orcamentoOriginal->observacoes,
+            'frete'        => $orcamentoOriginal->frete,
             'validade'     => Carbon::now()->addDays(2),
         ]);
 
-        // Copiar os itens
+        // 1) Copiar itens
         foreach ($orcamentoOriginal->itens as $item) {
             $novoOrcamento->itens()->create([
                 'produto_id'         => $item->produto_id,
                 'quantidade'         => $item->quantidade,
                 'valor_unitario'     => $item->valor_unitario,
+                'valor_unitario_com_desconto' => $item->valor_unitario_com_desconto,
                 'desconto'           => $item->desconto,
                 'valor_com_desconto' => $item->valor_com_desconto,
                 'user_id'            => $item->user_id,
             ]);
         }
 
-        // Gerar PDF e salvar no storage
-        $pdf = Pdf::loadView('documentos_pdf.orcamento', ['orcamento' => $novoOrcamento])
-            ->setPaper('a4');
+        // 2) Copiar vidros
+        foreach ($orcamentoOriginal->vidros as $vidro) {
+            $novoOrcamento->vidros()->create([
+                'descricao'            => $vidro->descricao,
+                'quantidade'           => $vidro->quantidade,
+                'altura'               => $vidro->altura,
+                'largura'              => $vidro->largura,
+                'preco_metro_quadrado' => $vidro->preco_metro_quadrado,
+                'desconto'             => $vidro->desconto,
+                'valor_total'          => $vidro->valor_total,
+                'valor_com_desconto'   => $vidro->valor_com_desconto,
+                'user_id'              => $vidro->user_id,
+            ]);
+        }
+
+        // 3) Copiar descontos
+        foreach ($orcamentoOriginal->descontos as $desconto) {
+            $novoOrcamento->descontos()->create([
+                'motivo'      => $desconto->motivo,
+                'valor'       => $desconto->valor,
+                'porcentagem' => $desconto->porcentagem,
+                'tipo'        => $desconto->tipo,
+                'cliente_id'  => $desconto->cliente_id,
+                'user_id'     => $desconto->user_id,
+            ]);
+        }
+
+        // 4) Copiar endereço de entrega
+        if ($orcamentoOriginal->endereco) {
+            $novoEndereco = Endereco::create([
+                'tipo'       => $orcamentoOriginal->endereco->tipo,
+                'cliente_id' => $orcamentoOriginal->endereco->cliente_id,
+                'cep'        => $orcamentoOriginal->endereco->cep,
+                'logradouro' => $orcamentoOriginal->endereco->logradouro,
+                'numero'     => $orcamentoOriginal->endereco->numero,
+                'complemento'=> $orcamentoOriginal->endereco->complemento,
+                'bairro'     => $orcamentoOriginal->endereco->bairro,
+                'cidade'     => $orcamentoOriginal->endereco->cidade,
+                'estado'     => $orcamentoOriginal->endereco->estado,
+            ]);
+            $novoOrcamento->update(['endereco_id' => $novoEndereco->id]);
+        }
+
+        // 5) Gerar token e expiração
+        $novoOrcamento->update([
+            'token_acesso' => Str::uuid(),
+            'token_expira_em' => Carbon::now()->addDays(2),
+        ]);
+
+        // 6) Gerar PDF com QR Code
+        $linkSeguro = route('orcamentos.view', ['token' => $novoOrcamento->token_acesso]);
+        $qrCodeBase64 = base64_encode(
+            QrCode::format('png')->size(130)->margin(1)->generate($linkSeguro)
+        );
+
+        $pdf = Pdf::loadView('documentos_pdf.orcamento', [
+            'orcamento' => $novoOrcamento,
+            'percentualAplicado' => $novoOrcamento->descontos->where('tipo', 'percentual')->first()?->porcentagem ?? null,
+            'qrCode' => $qrCodeBase64,
+        ])->setPaper('a4');
+
+        $canvas = $pdf->getDomPDF()->getCanvas();
+        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
+            $text = "Página $pageNumber / $pageCount";
+            $font = $fontMetrics->get_font("Helvetica", "normal");
+            $canvas->text(270, 820, $text, $font, 10);
+        });
 
         $path = "orcamentos/orcamento_{$novoOrcamento->id}.pdf";
         Storage::disk('public')->put($path, $pdf->output());
-
-        if (Storage::disk('public')->exists($path)) {
-            $novoOrcamento->update(['pdf_path' => $path]);
-        }
+        $novoOrcamento->update(['pdf_path' => $path]);
 
         return redirect()
             ->route('orcamentos.index')
             ->with('success', 'Orçamento duplicado com sucesso!');
     }
+
+
 
 
     /**

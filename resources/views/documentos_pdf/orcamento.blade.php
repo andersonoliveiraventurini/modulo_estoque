@@ -176,48 +176,53 @@
     <!-- ===========================
          CABEÇALHO
     =========================== -->
-    <table class="header">
+
+    <table style="width:100%; font-family: Arial, sans-serif; font-size:12px; color:#333; border-collapse:collapse; margin-bottom:15px;">
         <tr>
-            <td width="20%">
+            <td style="width:4rem;">
                 <img src="{{ public_path('images/logo.png') }}" alt="Logo" style="max-width: 70px;">
             </td>
-            <td width="50%">
-                <h2>{{ config('app.name', 'Minha Empresa LTDA') }}</h2>
-                <p>Rua Exemplo, 123 - Centro - Campinas/SP</p>
-                <p>(11) 99999-9999 - contato@minhaempresa.com.br</p>
+            <td style="padding:5px; border:1px solid #ccc; background-color:#f9f9f9;">
+                <div style="text-align:center; margin-bottom:15px;">
+                    
+                    
+                   <!-- <p style="margin:0; font-size:12px;">
+                        Data: { { $orcamento->created_at->format('d/m/Y') }} - Validade: { { \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }} | Vendedor: { { $usuario->name }}
+                    </p>-->
+                    <p style="margin:2px 0;"><strong>ACAV</strong> - Comércio de Acessórios para Alumínios e Vidro Temperado<br/><br/>
+R. São Luís do Paraitinga, 1338 - Jardim do Trevo - Campinas - SP - CEP: 13030-105
+<br/>  (19) 99999-9999 (19) 3274-1717
+<a href="mailto:contato@acavacessorios.com.br">contato@acavacessorios.com.br</a> - <a href="http://www.acavacessorios.com.br" target="_blank">www.acavacessorios.com.br</a>
+                    </p>
+                </div>
             </td>
-            <td width="30%" style="text-align:right;">
-                <div style="position: fixed; bottom: 40px; right: 40px; text-align: center;">
-                    <img src="data:image/png;base64,{{ $qrCode }}" width="110" height="110">
-                    <p style="font-size: 9px;">Link válido por 2 dias</p>
-                </div>  
-                <p><strong>Orçamento nº:</strong> {{ $orcamento->id }}</p>
-                <p><strong>Data:</strong> {{ $orcamento->created_at->format('d/m/Y') }}</p>
-                <p><strong>Validade:</strong> {{ \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }}</p>
-                @php
-                    $usuario = \App\Models\User::find($orcamento->vendedor_id);
-                @endphp
-                <p><strong>Vendedor:</strong> {{ $usuario->name }}</p>
+            <td style="width:4rem;">
+                <img src="data:image/png;base64,{{ $qrCode }}" width="80" height="80">
             </td>
         </tr>
-    </table>
-
+    </table><h2 style="margin:0; font-size:18px; text-transform:uppercase;">ORÇAMENTO n° {{ $orcamento->id }}</h2>
     <!-- ===========================
          DADOS DO CLIENTE
     =========================== -->
-    <h3>Dados do Cliente</h3>
+    @php
+                        $usuario = \App\Models\User::find($orcamento->vendedor_id);
+                    @endphp
     <table class="cliente-info">
         <tr>
-            <td class="label">Nome:</td>
+            <td class="label">Cliente:</td>
             <td class="value">{{ $orcamento->cliente->nome ?? '---' }}</td>
-            <td class="label">Obra:</td>
-            <td class="value">{{ $orcamento->obra ?? '---' }}</td>
+            <td class="label">Vendedor:</td>
+            <td class="value">{{ $usuario->name }}</td>
         </tr>
         <tr>
             <td class="label">E-mail:</td>
             <td class="value">{{ $orcamento->cliente->email ?? '---' }}</td>
             <td class="label">Telefone:</td>
             <td class="value">{{ $orcamento->cliente->telefone ?? '---' }}</td>
+        </tr> 
+        <tr>
+            <td class="label">Obra:</td>
+            <td class="value" colspan="3">{{ $orcamento->obra }}</td>
         </tr>
         <tr>
             <td class="label">Endereço:</td>
@@ -349,7 +354,7 @@
          RODAPÉ
     =========================== -->
     <div class="footer"
-        style="position: fixed; bottom: 20px;left: 0; right: 0; text-align: center;font-size: 11px;color: #666;">
+        style="position: fixed; bottom: 10px;left: 0; right: 0; text-align: center;font-size: 11px;color: #666;">
         <p>Este orçamento é válido até {{ \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }}. ©
             {{ date('Y') }} {{ config('app.name') }} - Todos os direitos reservados.</p>
     </div>
