@@ -213,6 +213,12 @@
             <td class="value">{{ $usuario->name }}</td>
         </tr>
         <tr>
+            <td class="label"><strong>Data do Orçamento:</strong></td>
+            <td class="value">{{ $orcamento->created_at->format('d/m/Y') }}</td>
+            <td class="label"><strong>Validade:</strong></td>
+            <td class="value">{{ \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }}</td>
+        </tr>
+        <tr>
             <td class="label">E-mail:</td>
             <td class="value">{{ $orcamento->cliente->email ?? '---' }}</td>
             <td class="label">Telefone:</td>
