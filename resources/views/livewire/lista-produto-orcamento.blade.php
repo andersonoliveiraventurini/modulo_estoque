@@ -25,7 +25,7 @@
                 <tr>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Código</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Cor</th>
-                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Nome</th>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Estoque atual</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Descrição</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Part Number</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Fornecedor</th>
@@ -48,7 +48,7 @@
                                 Sem cor
                             @endif
                         </td>
-                        <td class="px-4 py-2 text-sm">{{ $produto->nome }}</td>
+                        <td class="px-4 py-2 text-sm">{{ $produto->estoque_atual }}</td>
                         <td class="px-4 py-2 text-sm">{{ $produto->descricao }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             {{ $produto->part_number }}
