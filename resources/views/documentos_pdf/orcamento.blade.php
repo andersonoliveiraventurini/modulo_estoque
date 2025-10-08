@@ -187,9 +187,9 @@
                    <!-- <p style="margin:0; font-size:12px;">
                         Data: { { $orcamento->created_at->format('d/m/Y') }} - Validade: { { \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }} | Vendedor: { { $usuario->name }}
                     </p>-->
-                    <p style="margin:2px 0;"><strong>ACAV</strong> - Comércio de Acessórios para Alumínios e Vidro Temperado<br/><br/>
+                    <p style="margin:2px 0;"><strong>ACAV</strong> - Comércio de Acessórios LTDA<br/><br/>
                         R. São Luís do Paraitinga, 1338 - Jardim do Trevo - Campinas - SP - CEP: 13030-105
-                        <br/>  (19) 99999-9999 (19) 3274-1717
+                        <br/>  (19) 3273-3783 (19) 3274-1717
                         <a href="mailto:contato@acavacessorios.com.br">contato@acavacessorios.com.br</a> - <a href="http://www.acavacessorios.com.br" target="_blank">www.acavacessorios.com.br</a>
                     </p>
                 </div>
@@ -198,7 +198,7 @@
                 <img src="data:image/png;base64,{{ $qrCode }}" width="80" height="80">
             </td>
         </tr>
-    </table><h2 style="margin:0; font-size:18px; text-transform:uppercase;">ORÇAMENTO n° {{ $orcamento->id }}</h2>
+    </table><h2 style="margin:0; font-size:20px; text-transform:uppercase;">ORÇAMENTO n° {{ $orcamento->id }} - transportadora/sedex</h2>
     <!-- ===========================
          DADOS DO CLIENTE
     =========================== -->
@@ -340,14 +340,6 @@
                 <td class="valor">- R$ {{ number_format($desc->valor, 2, ',', '.') }}</td>
             </tr>
         @endforeach
-
-        @if ($orcamento->frete > 0)
-            <tr>
-                <td>Frete</td>
-                <td class="valor">R$ {{ number_format($orcamento->frete, 2, ',', '.') }}</td>
-            </tr>
-        @endif
-
         <tr>
             <td>Valor Final do Orçamento</td>
             <td class="valor">R$ {{ number_format($valorFinal + $orcamento->frete, 2, ',', '.') }}</td>

@@ -12,6 +12,11 @@
                     </svg>
                     Criar Orçamento para Cliente {{ $cliente->id }} - {{ $cliente->nome ?? $cliente->nome_fantasia }}
                 </h2>
+                 <p> Vendedor interno: {{ $cliente->vendedor_interno ?? 'Não atribuído' }} </p>
+                    <p> Vendedor externo: {{ $cliente->vendedor_externo ?? 'Não atribuído' }} </p>
+                    <p> Desconto aprovado: {{ $cliente->desconto_aprovado ?? 'Não atribuído' }} </p>
+                    <input type="hidden" id="desconto_aprovado" value="{{ $cliente->desconto_aprovado ?? 0 }}" />
+ 
                 <!-- Pesquisa de Produtos -->
                 <div class="space-y-4">
                     <hr />
@@ -103,6 +108,14 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <x-input type="text" name="nome_obra" placeholder="Digite o nome da obra"
                                 label="Nome da Obra" required />
+                                <x-input type="text" name="prazo_entrega" placeholder="Ex: 15 dias úteis"
+                                label="Prazo de Entrega" />
+                            <x-select name="vendedor_id" label="Atendido por" required>
+                            <option value="">Selecione...</option>
+                                @foreach($vendedores as $vendedor)
+                                    <option value="{{ $vendedor->id }}">{{ $vendedor->nome }}</option>
+                                @endforeach
+                            </x-select>
                             <x-input id="entrega_cep" name="entrega_cep" label="CEP" placeholder="00000-000"
                                 onblur="pesquisacepentrega(this.value);" onkeypress="mascara(this, '#####-###')"
                                 size="10" maxlength="9" value="{{ old('entrega_cep') }}" />
@@ -159,10 +172,18 @@
                             </div>
 
                             <div class="flex-1">
-                                <label class="block text-sm font-medium text-gray-700">Frete (R$)</label>
-                                <input type="text" step="0.01" name="frete" value="0" value="0.00"
+                                <label class="block text-sm font-medium text-gray-700">Guia Recolhimento</label>
+                                <input type="text" step="0.01" name="guia_recolhimento" value="0" value="0.00"
                                     oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                            </div>
+
+                            <div class="flex-1">
+                                    <x-select name="tipo_frete" label="Tipo de Frete">
+                                        <option value="">Selecione...</option>
+                                        <option value="cif">CIF</option>
+                                        <option value="fob">FOB</option>
+                                    </x-select>
                             </div>
 
                             <div class="flex-1">
@@ -179,6 +200,23 @@
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 font-semibold text-green-700"
                                     value="0.00" readonly />
                             </div>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <hr />
+                        <h3 class="text-lg font-medium flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
+                                </path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            Observações Gerais
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <x-input type="textarea" name="observacoes" placeholder="Digite as observações"
+                                label="Observações" required />
                         </div>
                     </div>
 
@@ -517,7 +555,7 @@
                 document.getElementById('valor_total').value = total.toFixed(2);
             }
 
-            const frete = parseFloat(document.querySelector('[name="frete"]').value) || 0;
+            //const frete = parseFloat(document.querySelector('[name="frete"]').value) || 0;
             const descontoEspecificoInput = document.querySelector('[name="desconto_especifico"]');
 
             // Converte valor mascarado (ex: "1.234,56") para número
@@ -526,14 +564,14 @@
             ) || 0;
 
             // Calcula valores finais
-            const valorSemDescontoFinal = total + frete;
-            let valorFinalComDesconto = totalComDesconto + frete - descontoEspecifico;
+            const valorSemDescontoFinal = total;// + frete;
+            let valorFinalComDesconto = totalComDesconto - descontoEspecifico;//frete
 
             // 🔹 Impede valor final negativo
             if (valorFinalComDesconto < 0) valorFinalComDesconto = 0;
 
             // 🔹 Impede desconto maior que o total
-            const maxDesconto = totalComDesconto + frete;
+            const maxDesconto = totalComDesconto; // + frete;
             if (descontoEspecifico > maxDesconto) {
                 descontoEspecifico = maxDesconto;
                 // Atualiza campo mascarado
@@ -570,9 +608,9 @@
             });
 
             // Listener para frete
-            document.querySelector('[name="frete"]').addEventListener("input", () => {
+           /* document.querySelector('[name="frete"]').addEventListener("input", () => {
                 atualizarValorFinal();
-            });
+            });*/
 
             document.querySelector('[name="desconto_especifico"]').addEventListener("input", () => {
                 atualizarValorFinal();

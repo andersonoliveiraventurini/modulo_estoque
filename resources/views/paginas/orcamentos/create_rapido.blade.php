@@ -10,8 +10,16 @@
                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                         </path>
                     </svg>
-                    Criar Orçamento para Cliente {{ $cliente->id }} - {{ $cliente->nome_fantasia }}
-                </h2>
+                    {{ $cliente->id }} - {{ $cliente->razao_social ?? $cliente->nome}}
+                   
+
+                </h2> <p> Vendedor interno: {{ $cliente->vendedor_interno ?? 'Não atribuído' }} </p>
+                    <p> Vendedor externo: {{ $cliente->vendedor_externo ?? 'Não atribuído' }} </p>
+                    <p> Desconto aprovado: {{ $cliente->desconto_aprovado ?? 'Não atribuído' }} </p>
+                    <input type="hidden" id="desconto_aprovado" value="{{ $cliente->desconto_aprovado ?? 0 }}" />
+
+                <!-- Campos iniciais -->
+                
                 <!-- Pesquisa de Produtos -->
                 <div class="space-y-4">
                     <hr />
@@ -22,17 +30,17 @@
                         </svg>
                         Buscar Produtos
                     </h3>
-                    <livewire:lista-produto-fixo-orcamento />
+                    <livewire:lista-produto-orcamento />
                 </div>
 
-                <!-- Campos iniciais -->
-                <form action="{{ route('orcamentos.store') }}" method="POST" class="space-y-8"
+                    <!-- Token CSRF seria aqui -->
+<!-- Endereço de entrega -->
+            <form action="{{ route('orcamentos.store') }}" method="POST" class="space-y-8"
                     enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="cliente_id" value="{{ $cliente->id }}" />
-                    <!-- Token CSRF seria aqui -->
-
-                    <!-- Produtos Selecionados -->
+               
+                    <!-- Produtos no Orçamento -->
                     <div class="space-y-4"><br />
                         <hr />
                         <h3 class="text-lg font-medium flex items-center gap-2">
@@ -43,100 +51,62 @@
                             Produtos no Orçamento
                         </h3>
 
-                        <div id="produtos-selecionados" class="space-y-4"></div>
+                        <div class="overflow-x-auto rounded-lg">
+                            <table class="min-w-full text-sm text-left">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="px-3 py-2 border">Código</th>
+                                        <th class="px-3 py-2 border">Produto</th>
+                                        <th class="px-3 py-2 border">Part Number</th>
+                                        <th class="px-3 py-2 border">Fornecedor</th>
+                                        <th class="px-3 py-2 border">Cor</th>
+                                        <th class="px-3 py-2 border">Preço Unit. (R$)</th>
+                                        <th class="px-3 py-2 border w-16 text-center">Qtd.</th>
+                                        <th class="px-3 py-2 border">Subtotal (R$)</th>
+                                        <th class="px-3 py-2 border">c/ Desconto (R$)</th>
+                                        <th class="px-3 py-2 border">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="produtos-selecionados" class="divide-y"></tbody>
+                            </table>
+                        </div>
+
                     </div>
 
                     <!-- Seção de Vidros Corrigida -->
-                    <div x-data="{ abertoVidro: false }" class="space-y-4">
-                        <hr />
+                    <div class="space-y-4">
+                        <br />
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z">
                                 </path>
                             </svg>
-                            Vidro ou Esteira
-
-                            <!-- Botão toggle -->
-                            <button type="button" @click="abertoVidro = !abertoVidro"
-                                class="ml-2 p-1 rounded-full border border-neutral-300 hover:bg-neutral-100">
-                                <span x-show="!abertoVidro">+</span>
-                                <span x-show="abertoVidro">-</span>
-                            </button>
-                        </h3>
-
-                        <!-- Wrapper dos vidros (só aparece quando aberto) -->
-                        <div x-show="abertoVidro" x-transition id="vidros-wrapper" class="space-y-4">
-                            <!-- Primeiro vidro -->
-                            <div
-                                class="space-y-2 relative border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Descrição do Item</label>
-                                        <input type="text" name="vidros[0][descricao]"
-                                            placeholder="Ex: Vidro incolor 8mm"
-                                            class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Quantidade</label>
-                                        <input type="number" name="vidros[0][quantidade]" value="1"
-                                            placeholder="Digite a quantidade" oninput="calcularVidro(this)"
-                                            class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Preço do m²</label>
-                                        <input type="number" step="0.01" name="vidros[0][preco_m2]"
-                                            placeholder="Digite o preço" oninput="calcularVidro(this)"
-                                            class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Altura (mm)</label>
-                                        <input type="number" name="vidros[0][altura]"
-                                            placeholder="Digite a altura em mm" oninput="calcularVidro(this)"
-                                            class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Largura (mm)</label>
-                                        <input type="number" name="vidros[0][largura]"
-                                            placeholder="Digite a largura em mm" oninput="calcularVidro(this)"
-                                            class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                    </div>
-                                </div>
-
-                                <!-- Campos hidden para valores calculados -->
-                                <input type="hidden" name="vidros[0][area]" class="area-hidden" />
-                                <input type="hidden" name="vidros[0][valor_total]" class="valor-hidden" />
-                                <input type="hidden" name="vidros[0][valor_com_desconto]"
-                                    class="valor-desconto-hidden" />
-
-                                <div class="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
-                                    <strong>Área (m²):</strong> <span class="area">0.00</span> |
-                                    <strong>Valor Total:</strong> R$ <span class="valor">0.00</span> |
-                                    <strong>c/ desconto:</strong> R$ <span class="valor-desconto">0.00</span>
-                                </div>
-                            </div>
+                            Vidros ou Esteiras
 
                             <button type="button" onclick="addVidro()"
                                 class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                                 + Adicionar Vidro/Esteira
                             </button>
-                            <br />
+                        </h3>
+                        <!-- Wrapper dos vidros (só aparece quando aberto) -->
+                        <div x-transition id="vidros-wrapper" class="space-y-4">
                         </div>
                     </div>
+
 
                     <!-- Endereço de entrega -->
                     <div class="space-y-4">
                         <hr />
                         <h3 class="text-lg font-medium flex items-center gap-2">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
                                 </path>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             </svg>
-                            Endereço de entrega
+                           Endereço de entrega
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <x-input id="entrega_cep" name="entrega_cep" label="CEP" placeholder="00000-000"
@@ -147,8 +117,8 @@
                         <!-- Wrapper que será ocultado até o CEP ser válido -->
                         <div id="endereco-entrega-wrapper">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                                <x-input id="entrega_cidade" name="entrega_cidade" label="Cidade"
-                                    readonly="readonly" placeholder="Cidade" value="{{ old('entrega_cidade') }}" />
+                                <x-input id="entrega_cidade" name="entrega_cidade" label="Cidade" readonly="readonly"
+                                    placeholder="Cidade" value="{{ old('entrega_cidade') }}" />
                                 <x-input id="entrega_estado" name="entrega_estado" label="Estado"
                                     placeholder="Estado" readonly="readonly" value="{{ old('entrega_estado') }}" />
                                 <x-input id="entrega_bairro" name="entrega_bairro" label="Bairro"
@@ -164,49 +134,69 @@
                             </div>
                         </div>
                     </div>
+                    <div class="space-y-4">
+                    <hr />
+                    <h3 class="text-lg font-medium flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
+                            </path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Nome da Obra
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <x-input type="text" name="nome_obra" placeholder="Digite o nome da obra"
+                            label="Nome da Obra" required />
 
+                        <x-input type="text" name="desconto" label="Desconto %" min="0" max="30" value="0"
+                            placeholder="Digite a porcentagem de desconto (0 a 30)"
+                            oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"
+                           />
+
+                        <x-input type="text" name="desconto_especifico" label="Desconto específico R$" value="0.00"
+                            placeholder="Digite o valor do desconto específico" 
+                            oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"/>
+                        <x-select name="vendedor_id" label="Atendido por">
+                            <option value="">Selecione...</option>
+                            @foreach($vendedores as $vendedor)
+                                <option value="{{ $vendedor->id }}">{{ $vendedor->nome }}</option>
+                            @endforeach
+                        </x-select>
+                    </div>
+
+                    
+                </div>
                     <br />
                     <hr /><br />
 
                     <!-- Valores e descontos -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Nome da Obra</label>
-                            <input type="text" name="nome_obra" placeholder="Digite o nome da obra" required
-                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Valor Total dos Itens (R$)</label>
-                            <input type="text" id="valor_total" name="valor_total" readonly value="0,00"
-                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Desconto do cliente %</label>
-                            <input type="number" name="desconto_aprovado" value="10" readonly
-                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Desconto na venda %</label>
-                            <input type="number" name="desconto" min="0" max="30" value="0"
-                                placeholder="Digite a porcentagem de desconto (0 a 30)"
-                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Valor frete (R$)</label>
-                            <input type="number" name="frete" min="0" value="0"
-                                placeholder="Digite o valor do frete"
-                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Valor Final s/ desconto (R$)</label>
-                            <input type="text" id="valor_sem_desconto_final" name="valor_sem_desconto_final"
-                                readonly value="0,00"
-                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Valor Final c/ desconto (R$)</label>
-                            <input type="text" id="valor_final" name="valor_final" readonly value="0,00"
-                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" />
+                    <div class="overflow-x-auto">
+                        <div class="flex gap-4 min-w-max">
+                           
+
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700">Frete (R$)</label>
+                                <input type="text" step="0.01" name="frete" value="0" value="0.00"
+                                    oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"
+                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                            </div>
+
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700">Valor Total dos Itens s/
+                                    desconto (R$)</label>
+                                <input type="text" id="valor_total" name="valor_total" readonly value="0,00"
+                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" />
+                            </div>
+
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700">Valor Final c/ desconto
+                                    (R$)</label>
+                                <input type="text" id="valor_final"
+                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 font-semibold text-green-700"
+                                    value="0.00" readonly />
+                            </div>
                         </div>
                     </div>
 
@@ -238,31 +228,33 @@
                 <button type="button" onclick="removeVidro(this)" class="absolute top-2 right-2 text-red-600 hover:text-red-800">
                     Remover
                 </button><br/>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Descrição do Item</label>
-                        <input type="text" name="vidros[${vidroIndex}][descricao]" placeholder="Ex: Vidro incolor 8mm" 
+                <div class="overflow-x-auto">
+                    <div class="flex gap-4 min-w-max">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700">Descrição do Item</label>
+                            <input type="text" name="vidros[${vidroIndex}][descricao]" placeholder="Ex: Vidro incolor 8mm" 
                             class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Quantidade</label>
-                        <input type="number" name="vidros[${vidroIndex}][quantidade]" value="1" placeholder="Digite a quantidade" 
-                               oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Preço do m²</label>
-                        <input type="number" step="0.01" name="vidros[${vidroIndex}][preco_m2]" placeholder="Digite o preço" 
-                               oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Altura (mm)</label>
-                        <input type="number" name="vidros[${vidroIndex}][altura]" placeholder="Digite a altura em mm" 
-                               oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Largura (mm)</label>
-                        <input type="number" name="vidros[${vidroIndex}][largura]" placeholder="Digite a largura em mm" 
-                               oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700">Quantidade</label>
+                            <input type="number" name="vidros[${vidroIndex}][quantidade]" value="1" placeholder="Digite a quantidade" 
+                                oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700">Preço do m²</label>
+                            <input type="number" step="0.01" name="vidros[${vidroIndex}][preco_m2]" placeholder="Digite o preço" 
+                                oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700">Altura (mm)</label>
+                            <input type="number" name="vidros[${vidroIndex}][altura]" placeholder="Digite a altura em mm" 
+                                oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700">Largura (mm)</label>
+                            <input type="number" name="vidros[${vidroIndex}][largura]" placeholder="Digite a largura em mm" 
+                                oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                        </div>     
                     </div>                    
                 </div>                
 
@@ -413,7 +405,7 @@
 
         let produtos = [];
 
-        function adicionarProduto(id, nome, preco) {
+        function adicionarProduto(id, nome, preco, fornecedor = '', cor = '') {
             if (produtos.find(p => p.id === id)) {
                 alert("Produto já adicionado!");
                 return;
@@ -423,7 +415,9 @@
                 id,
                 nome,
                 preco: parseFloat(preco),
-                quantidade: 1
+                quantidade: 1,
+                fornecedor, // ✅ agora salva fornecedor
+                cor // ✅ agora salva cor
             };
             produtos.push(produto);
             renderProdutos();
@@ -442,53 +436,54 @@
         function renderProdutos() {
             const wrapper = document.getElementById('produtos-selecionados');
             wrapper.innerHTML = '';
-            let totalProdutos = 0;
-            let totalProdutosComDesconto = 0;
 
-            // Calcular descontos
             const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]').value) || 0;
             let descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]').value) || 0;
-
-            if (descontoOrcamento < 0) descontoOrcamento = 0;
-            if (descontoOrcamento > 30) descontoOrcamento = 30;
+            descontoOrcamento = Math.min(Math.max(descontoOrcamento, 0), 30);
 
             const descontoAplicado = Math.max(descontoCliente, descontoOrcamento);
+
+            // 🔹 Inicializar totais dos produtos aqui
+            let totalProdutos = 0;
+            let totalProdutosComDesconto = 0;
 
             produtos.forEach((p, i) => {
                 const subtotal = p.preco * p.quantidade;
                 const subtotalComDesconto = subtotal - (subtotal * (descontoAplicado / 100));
-                totalProdutos += subtotal;
-                totalProdutosComDesconto += subtotalComDesconto;
 
-                const div = document.createElement('div');
-                div.className = "grid grid-cols-1 md:grid-cols-3 gap-3 mt-2 border rounded-xl p-4 relative";
-                div.innerHTML = `
-                    <input type="hidden" name="produtos[${i}][id]" value="${p.id}">
-                    <div>
-                        <label class="text-sm font-medium">Produto</label>
-                        <input type="text" value="${p.nome}" readonly class="border rounded-lg px-3 py-2 w-full bg-gray-100" />
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium">Preço Unitário (R$)</label>
-                        <input type="text" value="${p.preco.toFixed(2)}" readonly class="border rounded-lg px-3 py-2 w-full bg-gray-100" />
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium">Quantidade</label>
-                        <input type="number" name="produtos[${i}][quantidade]" value="${p.quantidade}" min="1"
-                            onchange="alterarQuantidade(${i}, this.value)"
-                            class="border rounded-lg px-3 py-2 w-full" />
-                    </div>
-                    <div class="flex flex-col justify-between">
-                        <span class="text-sm font-semibold">
-                            Subtotal: R$ ${subtotal.toFixed(2)}<br>
-                            <span class="text-green-600">c/ desconto: R$ ${subtotalComDesconto.toFixed(2)}</span>
-                        </span>
-                        <button type="button" onclick="removerProduto(${i})" class="text-red-600 hover:text-red-800 flex items-center gap-1 mt-2">
-                            🗑 Remover
-                        </button>
-                    </div>
-                `;
-                wrapper.appendChild(div);
+                totalProdutos += subtotal; // ✅ acumula total
+                totalProdutosComDesconto += subtotalComDesconto; // ✅ acumula total c/ desconto
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+            <td class="px-3 py-2 border"><input type="hidden" name="itens[${i}][id]" value="${p.id}">${p.id}</td>
+            <td class="px-3 py-2 border">${p.nome}</td>
+            <td class="px-3 py-2 border">${p.part_number || ''}</td>
+            <td class="px-3 py-2 border">${p.fornecedor || ''}</td>
+            <td class="px-3 py-2 border">${p.cor || ''}</td>
+            <td class="px-3 py-2 border">R$ ${p.preco.toFixed(2)}
+                <input type="hidden" name="itens[${i}][preco_unitario]" value="${p.preco}">
+            </td>
+            <td class="px-3 py-2 border">
+                <input type="number" name="itens[${i}][quantidade]" 
+                    value="${p.quantidade}" min="1"
+                    onchange="alterarQuantidade(${i}, this.value)"
+                    class="w-12 border rounded px-2 py-1 text-center" style="max-width: 4rem;"/>
+
+            </td>
+            <td class="px-3 py-2 border">R$ ${subtotal.toFixed(2)}
+                <input type="hidden" name="itens[${i}][subtotal]" value="${subtotal.toFixed(2)}">
+            </td>
+            <td class="px-3 py-2 border text-green-600">R$ ${subtotalComDesconto.toFixed(2)}
+                <input type="hidden" name="itens[${i}][subtotal_com_desconto]" value="${subtotalComDesconto.toFixed(2)}">
+                <input type="hidden" name="itens[${i}][preco_unitario_com_desconto]" value="${(subtotalComDesconto / p.quantidade).toFixed(2)}">
+            </td>
+            <td class="px-3 py-2 border text-center">
+                <button type="button" onclick="removerProduto(${i})"
+                        class="text-red-600 hover:text-red-800">🗑</button>
+            </td>
+        `;
+                wrapper.appendChild(row);
             });
 
             // Calcular total dos vidros
@@ -509,11 +504,8 @@
         }
 
         function atualizarValorFinal(total = null, totalComDesconto = null) {
-            console.log('Atualizando valor final...'); // Debug
-
-            // Se não veio parâmetros, calcular
+            // Se não veio parâmetros, calcular novamente
             if (total === null) {
-                // Total dos produtos
                 let totalProdutos = 0;
                 let totalProdutosComDesconto = 0;
 
@@ -524,7 +516,6 @@
                 if (descontoOrcamento > 30) descontoOrcamento = 30;
 
                 const descontoAplicado = Math.max(descontoCliente, descontoOrcamento);
-                console.log('Desconto aplicado:', descontoAplicado); // Debug
 
                 produtos.forEach(p => {
                     const subtotal = p.preco * p.quantidade;
@@ -533,33 +524,48 @@
                     totalProdutosComDesconto += subtotalComDesconto;
                 });
 
-                // Total dos vidros
                 const {
                     totalVidros,
                     totalVidrosComDesconto
                 } = calcularTotalVidros();
-                console.log('Total vidros:', totalVidros, 'Com desconto:', totalVidrosComDesconto); // Debug
 
                 total = totalProdutos + totalVidros;
                 totalComDesconto = totalProdutosComDesconto + totalVidrosComDesconto;
 
-                // Atualizar o campo valor_total
                 document.getElementById('valor_total').value = total.toFixed(2);
             }
 
             const frete = parseFloat(document.querySelector('[name="frete"]').value) || 0;
+            const descontoEspecificoInput = document.querySelector('[name="desconto_especifico"]');
 
-            // Valores finais
+            // Converte valor mascarado (ex: "1.234,56") para número
+            let descontoEspecifico = parseFloat(
+                descontoEspecificoInput.value.replace(/\./g, '').replace(',', '.')
+            ) || 0;
+
+            // Calcula valores finais
             const valorSemDescontoFinal = total + frete;
-            const valorFinalComDesconto = totalComDesconto + frete;
+            let valorFinalComDesconto = totalComDesconto + frete - descontoEspecifico;
 
-            console.log('Valor sem desconto final:', valorSemDescontoFinal); // Debug
-            console.log('Valor final com desconto:', valorFinalComDesconto); // Debug
+            // 🔹 Impede valor final negativo
+            if (valorFinalComDesconto < 0) valorFinalComDesconto = 0;
 
-            // Atualizar campos
-            document.getElementById('valor_sem_desconto_final').value = valorSemDescontoFinal.toFixed(2);
+            // 🔹 Impede desconto maior que o total
+            const maxDesconto = totalComDesconto + frete;
+            if (descontoEspecifico > maxDesconto) {
+                descontoEspecifico = maxDesconto;
+                // Atualiza campo mascarado
+                descontoEspecificoInput.value = maxDesconto.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+
+            // Atualiza valor final
             document.getElementById('valor_final').value = valorFinalComDesconto.toFixed(2);
         }
+
+
 
         // Event listeners
         document.addEventListener("DOMContentLoaded", () => {
@@ -583,6 +589,10 @@
 
             // Listener para frete
             document.querySelector('[name="frete"]').addEventListener("input", () => {
+                atualizarValorFinal();
+            });
+
+            document.querySelector('[name="desconto_especifico"]').addEventListener("input", () => {
                 atualizarValorFinal();
             });
 

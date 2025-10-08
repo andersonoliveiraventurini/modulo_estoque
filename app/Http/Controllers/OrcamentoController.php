@@ -11,6 +11,8 @@ use App\Models\Fornecedor;
 use App\Models\Orcamento;
 use App\Models\Produto;
 use App\Models\OrcamentoItem;
+use App\Models\User;
+use App\Models\Vendedor;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -60,7 +62,8 @@ class OrcamentoController extends Controller
         $produtos = Produto::all();
         $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
         $cores = Cor::orderBy('nome')->get();
-        return view('paginas.orcamentos.create_teste', compact('produtos', 'cliente', 'fornecedores', 'cores'));
+        $vendedores = Vendedor::all();
+        return view('paginas.orcamentos.create_teste', compact('produtos', 'cliente', 'fornecedores', 'cores', 'vendedores'));
     }
 
     public function criarOrcamentoRapido($cliente_id)
@@ -69,7 +72,8 @@ class OrcamentoController extends Controller
         $produtos = Produto::all();
         $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
         $cores = Cor::orderBy('nome')->get();
-        return view('paginas.orcamentos.create_rapido', compact('produtos', 'cliente', 'fornecedores', 'cores'));
+        $vendedores = Vendedor::all();
+        return view('paginas.orcamentos.create_rapido', compact('produtos', 'cliente', 'fornecedores', 'cores', 'vendedores'));
     }
 
     /**

@@ -30,14 +30,19 @@ return new class extends Migration
                   $table->string('obra')->nullable()
                         ->comment('Apelido do cliente para a obra ou projeto relacionado ao orçamento.');
 
-                  $table->decimal('frete', 15, 2)->nullable()
-                        ->comment('Valor do frete associado ao orçamento.');
+                  $table->string('frete')->nullable()
+                        ->comment('Frete será pago pela empresa ou cliente.');
+
+                  $table->decimal('guia_recolhimento', 15, 2)->nullable()
+                        ->comment('Valor da guia de recolhimento associada ao orçamento.');
 
                   $table->decimal('valor_total_itens', 15, 2)->nullable()
                         ->comment('Valor total dos itens do orçamento.');
 
                   $table->string('status', 20)->default('pendente')
                         ->comment('Status do orçamento, como pendente, aprovado, cancelado, etc.');
+                  $table->string('prazo_entrega', 100)->nullable()
+                        ->comment('Prazo de entrega do orçamento.');
                   $table->text('observacoes')->nullable()
                         ->comment('Observações adicionais sobre o orçamento.');
                   $table->string('pdf_path')->nullable();
