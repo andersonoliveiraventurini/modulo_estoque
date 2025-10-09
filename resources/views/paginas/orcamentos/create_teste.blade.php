@@ -15,7 +15,7 @@
                  <p> Vendedor interno: {{ $cliente->vendedor_interno ?? 'Não atribuído' }} </p>
                     <p> Vendedor externo: {{ $cliente->vendedor_externo ?? 'Não atribuído' }} </p>
                     <p> Desconto aprovado: {{ $cliente->desconto_aprovado ?? 'Não atribuído' }} </p>
-                    <input type="hidden" id="desconto_aprovado" value="{{ $cliente->desconto_aprovado ?? 0 }}" />
+                    <input type="hidden" name="desconto_aprovado" id="desconto_aprovado" value="{{ $cliente->desconto_aprovado ?? 0 }}" />
  
                 <!-- Pesquisa de Produtos -->
                 <div class="space-y-4">
@@ -47,7 +47,6 @@
                             </svg>
                             Produtos no Orçamento
                         </h3>
-
                         <div class="overflow-x-auto rounded-lg">
                             <table class="min-w-full text-sm text-left">
                                 <thead class="bg-gray-100">
@@ -57,17 +56,16 @@
                                         <th class="px-3 py-2 border">Part Number</th>
                                         <th class="px-3 py-2 border">Fornecedor</th>
                                         <th class="px-3 py-2 border">Cor</th>
-                                        <th class="px-3 py-2 border">Preço Unit. (R$)</th>
+                                        <th class="px-3 py-2 border">Preço Unit.</th>
                                         <th class="px-3 py-2 border w-16 text-center">Qtd.</th>
-                                        <th class="px-3 py-2 border">Subtotal (R$)</th>
-                                        <th class="px-3 py-2 border">c/ Desconto (R$)</th>
+                                        <th class="px-3 py-2 border">Subtotal</th>
+                                        <th class="px-3 py-2 border">com Desconto</th>
                                         <th class="px-3 py-2 border">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="produtos-selecionados" class="divide-y"></tbody>
                             </table>
                         </div>
-
                     </div>
 
                     <!-- Seção de Vidros Corrigida -->
@@ -91,7 +89,6 @@
                         </div>
                     </div>
 
-
                     <!-- Endereço de entrega -->
                     <div class="space-y-4">
                         <hr />
@@ -113,8 +110,13 @@
                             <x-select name="vendedor_id" label="Atendido por" required>
                             <option value="">Selecione...</option>
                                 @foreach($vendedores as $vendedor)
-                                    <option value="{{ $vendedor->id }}">{{ $vendedor->nome }}</option>
+                                    <option value="{{ $vendedor->id }}">{{ $vendedor->name }}</option>
                                 @endforeach
+                            </x-select>
+                            <x-select name="tipo_frete" label="Tipo de Frete">
+                                <option value="">Selecione...</option>
+                                <option value="cif">CIF</option>
+                                <option value="fob">FOB</option>
                             </x-select>
                             <x-input id="entrega_cep" name="entrega_cep" label="CEP" placeholder="00000-000"
                                 onblur="pesquisacepentrega(this.value);" onkeypress="mascara(this, '#####-###')"
@@ -141,19 +143,10 @@
                             </div>
                         </div>
                     </div>
-
-                    <br />
-                    <hr /><br />
-
+                    <hr />
                     <!-- Valores e descontos -->
                     <div class="overflow-x-auto">
                         <div class="flex gap-4 min-w-max">
-                            <div class="flex-1">
-                                <label class="block text-sm font-medium text-gray-700">Desconto do cliente %</label>
-                                <input type="text" name="desconto_aprovado"
-                                    value="{{ $cliente->desconto_aprovado ?? 0 }}" readonly
-                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" />
-                            </div>
 
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Desconto na vendedor %</label>
@@ -176,14 +169,6 @@
                                 <input type="text" step="0.01" name="guia_recolhimento" value="0" value="0.00"
                                     oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                            </div>
-
-                            <div class="flex-1">
-                                    <x-select name="tipo_frete" label="Tipo de Frete">
-                                        <option value="">Selecione...</option>
-                                        <option value="cif">CIF</option>
-                                        <option value="fob">FOB</option>
-                                    </x-select>
                             </div>
 
                             <div class="flex-1">
@@ -214,14 +199,11 @@
                             </svg>
                             Observações Gerais
                         </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-input type="textarea" name="observacoes" placeholder="Digite as observações"
-                                label="Observações" required />
-                        </div>
+                        <x-textarea name="observacoes" placeholder="Digite as observações"
+                            label="Observações" rows="4"> </x-textarea>                        
                     </div>
 
                     <!-- Ações -->
-                    <br />
                     <div class="flex gap-4">
                         <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
                             Salvar Orçamento
@@ -555,7 +537,7 @@
                 document.getElementById('valor_total').value = total.toFixed(2);
             }
 
-            //const frete = parseFloat(document.querySelector('[name="frete"]').value) || 0;
+            const guia_recolhimento = parseFloat(document.querySelector('[name="guia_recolhimento"]').value) || 0;
             const descontoEspecificoInput = document.querySelector('[name="desconto_especifico"]');
 
             // Converte valor mascarado (ex: "1.234,56") para número
@@ -564,14 +546,14 @@
             ) || 0;
 
             // Calcula valores finais
-            const valorSemDescontoFinal = total;// + frete;
-            let valorFinalComDesconto = totalComDesconto - descontoEspecifico;//frete
+            const valorSemDescontoFinal = total + guia_recolhimento;
+            let valorFinalComDesconto = totalComDesconto - descontoEspecifico + guia_recolhimento;
 
             // 🔹 Impede valor final negativo
             if (valorFinalComDesconto < 0) valorFinalComDesconto = 0;
 
             // 🔹 Impede desconto maior que o total
-            const maxDesconto = totalComDesconto; // + frete;
+            const maxDesconto = totalComDesconto + guia_recolhimento;
             if (descontoEspecifico > maxDesconto) {
                 descontoEspecifico = maxDesconto;
                 // Atualiza campo mascarado
@@ -607,10 +589,10 @@
                 renderProdutos();
             });
 
-            // Listener para frete
-           /* document.querySelector('[name="frete"]').addEventListener("input", () => {
+            // Listener para guia_recolhimento
+            document.querySelector('[name="guia_recolhimento"]').addEventListener("input", () => {
                 atualizarValorFinal();
-            });*/
+            });
 
             document.querySelector('[name="desconto_especifico"]').addEventListener("input", () => {
                 atualizarValorFinal();

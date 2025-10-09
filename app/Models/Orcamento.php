@@ -18,6 +18,7 @@ class Orcamento extends Model
         'obra',
         'frete',
         'valor_total_itens',
+        'guia_recolhimento',
         'status',
         'observacoes',
         'validade',

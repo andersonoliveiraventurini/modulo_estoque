@@ -62,7 +62,7 @@ class OrcamentoController extends Controller
         $produtos = Produto::all();
         $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
         $cores = Cor::orderBy('nome')->get();
-        $vendedores = Vendedor::all();
+        $vendedores = User::whereHas('vendedor')->get();
         return view('paginas.orcamentos.create_teste', compact('produtos', 'cliente', 'fornecedores', 'cores', 'vendedores'));
     }
 
@@ -72,7 +72,7 @@ class OrcamentoController extends Controller
         $produtos = Produto::all();
         $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
         $cores = Cor::orderBy('nome')->get();
-        $vendedores = Vendedor::all();
+        $vendedores = User::whereHas('vendedor')->get();
         return view('paginas.orcamentos.create_rapido', compact('produtos', 'cliente', 'fornecedores', 'cores', 'vendedores'));
     }
 
@@ -86,7 +86,7 @@ class OrcamentoController extends Controller
 
         $request->merge([
             'desconto_especifico' => str_replace(',', '.', str_replace('.', '', $request->desconto_especifico)),
-            'frete' => str_replace(',', '.', str_replace('.', '', $request->frete)),
+            'guia_recolhimento' => str_replace(',', '.', str_replace('.', '', $request->guia_recolhimento)),
             'desconto_aprovado' => str_replace(',', '.', str_replace('.', '', $request->desconto_aprovado)),
         ]);
 
@@ -113,7 +113,7 @@ class OrcamentoController extends Controller
             'obra'         => $request->nome_obra,
             'valor_total_itens'  => $request->valor_total,
             'status'       => 'pendente',
-            'frete'        => $request->frete ?? 0,
+            'guia_recolhimento'  => $request->guia_recolhimento ?? 0,
             'observacoes'  => $request->observacoes,
             'validade'     => Carbon::now()->addDays(2), // sempre +2 dias
         ]);
@@ -312,6 +312,7 @@ class OrcamentoController extends Controller
             'status'       => 'pendente',
             'observacoes'  => $orcamentoOriginal->observacoes,
             'frete'        => $orcamentoOriginal->frete,
+            'guia_recolhimento' => $orcamentoOriginal->guia_recolhimento,
             'validade'     => Carbon::now()->addDays(2),
         ]);
 

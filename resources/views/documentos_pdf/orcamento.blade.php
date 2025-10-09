@@ -209,7 +209,7 @@
         <tr>
             <td class="label">Cliente:</td>
             <td class="value">{{ $orcamento->cliente->nome ?? '---' }}</td>
-            <td class="label">Vendedor:</td>
+            <td class="label">Atendido por:</td>
             <td class="value">{{ $usuario->name }}</td>
         </tr>
         <tr>
@@ -232,6 +232,13 @@
             <td class="label">Endereço:</td>
             <td class="value" colspan="3">{{ $orcamento->cliente->endereco ?? '---' }}</td>
         </tr>
+        @if($orcamento->observacoes != null)
+            <tr>
+                <td class="label">Observações:</td>
+                <td class="value" colspan="3">{{ $orcamento->observacoes ?? '---' }}</td>
+            </tr>
+        @endif
+
     </table>
 
     <!-- ===========================
@@ -327,6 +334,18 @@
                 <td class="valor">R$ {{ number_format($totalVidros, 2, ',', '.') }}</td>
             </tr>
         @endif
+        @if($orcamento->guia_recolhimento > 0)
+            <tr>
+                <td>Guia de Recolhimento</td>
+                <td class="valor">R$ {{ number_format($orcamento->guia_recolhimento, 2, ',', '.') }}</td>
+            </tr>
+        @endif
+        @if($orcamento->frete > 0)
+            <tr>
+                <td>Frete</td>
+                <td class="valor">R$ {{ number_format($orcamento->frete, 2, ',', '.') }}</td>
+            </tr>
+        @endif
         @if ($percentualAplicado > 0)
             <tr>
                 <td>Desconto Percentual</td>
@@ -342,7 +361,7 @@
         @endforeach
         <tr>
             <td>Valor Final do Orçamento</td>
-            <td class="valor">R$ {{ number_format($valorFinal + $orcamento->frete, 2, ',', '.') }}</td>
+            <td class="valor">R$ {{ number_format($valorFinal + $orcamento->frete + $orcamento->guia_recolhimento, 2, ',', '.') }}</td>
         </tr>
     </table>
 
