@@ -209,20 +209,20 @@
         <tr>
             <td class="label">Cliente:</td>
             <td class="value">{{ $orcamento->cliente->nome ?? '---' }}</td>
-            <td class="label">Atendido por:</td>
-            <td class="value">{{ $usuario->name }}</td>
+            <td class="label">Telefone:</td>
+            <td class="value">{{ $orcamento->cliente->telefone ?? '---' }}</td>
         </tr>
         <tr>
             <td class="label"><strong>Data do Orçamento:</strong></td>
             <td class="value">{{ $orcamento->created_at->format('d/m/Y') }}</td>
-            <td class="label"><strong>Validade:</strong></td>
+            <td class="label"><strong>Validade Orçamento:</strong></td>
             <td class="value">{{ \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }}</td>
         </tr>
         <tr>
-            <td class="label">E-mail:</td>
-            <td class="value">{{ $orcamento->cliente->email ?? '---' }}</td>
-            <td class="label">Telefone:</td>
-            <td class="value">{{ $orcamento->cliente->telefone ?? '---' }}</td>
+            <td class="label">Atendido por:</td>
+            <td class="value">{{ $usuario->name }}</td>
+            <td class="label">Prazo de Entrega:</td>
+            <td class="value">{{ $orcamento->prazo_entrega ?? '---' }}</td>
         </tr> 
         <tr>
             <td class="label">Obra:</td>

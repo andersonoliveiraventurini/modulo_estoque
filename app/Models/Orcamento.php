@@ -23,6 +23,7 @@ class Orcamento extends Model
         'observacoes',
         'validade',
         'pdf_path',
+        'prazo_entrega',
         'token_acesso',
         'token_expira_em'
     ];
