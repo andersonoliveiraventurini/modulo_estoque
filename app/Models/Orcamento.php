@@ -57,4 +57,9 @@ class Orcamento extends Model
     {
         return $this->hasMany(Desconto::class);
     }
+    
+    public function transportes()
+    {
+        return $this->belongsToMany(TipoTransporte::class, 'orcamento_transportes');
+    }
 }

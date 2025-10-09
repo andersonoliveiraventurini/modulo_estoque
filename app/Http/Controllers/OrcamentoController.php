@@ -13,6 +13,7 @@ use App\Models\Produto;
 use App\Models\OrcamentoItem;
 use App\Models\User;
 use App\Models\Vendedor;
+use App\Models\TipoTransporte;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -55,7 +56,8 @@ class OrcamentoController extends Controller
         $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
         $cores = Cor::orderBy('nome')->get();
         $vendedores = User::whereHas('vendedor')->get();
-        return view('paginas.orcamentos.create', compact('produtos', 'cliente', 'fornecedores', 'cores', 'vendedores'));
+        $opcoesTransporte = TipoTransporte::all();
+        return view('paginas.orcamentos.create', compact('produtos', 'cliente', 'fornecedores', 'cores', 'vendedores', 'opcoesTransporte'));
     }
 
     /**
@@ -99,6 +101,11 @@ class OrcamentoController extends Controller
             'observacoes'  => $request->observacoes,
             'validade'     => Carbon::now()->addDays(2), // sempre +2 dias
         ]);
+
+
+        if ($request->tipos_transporte) {
+            $orcamento->transportes()->sync($request->tipos_transporte); 
+        }
 
         if ($request->has('itens')) {
             foreach ($request->itens as $item) {

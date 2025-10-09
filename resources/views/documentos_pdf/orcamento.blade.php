@@ -198,7 +198,7 @@
                 <img src="data:image/png;base64,{{ $qrCode }}" width="80" height="80">
             </td>
         </tr>
-    </table><h2 style="margin:0; font-size:20px; text-transform:uppercase;">ORÇAMENTO n° {{ $orcamento->id }} - transportadora/sedex</h2>
+    </table><h2 style="margin:0; font-size:20px; text-transform:uppercase;">ORÇAMENTO n° {{ $orcamento->id }} - {{ $orcamento->transportes->pluck('nome')->join(', ')}}</h2>
     <!-- ===========================
          DADOS DO CLIENTE
     =========================== -->

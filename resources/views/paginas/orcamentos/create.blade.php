@@ -143,6 +143,37 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Opções de Transporte -->
+                    <!-- Opções de Transporte -->
+                    <div class="space-y-4">
+                        <hr />
+                        <h3 class="text-lg font-medium flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 17v-2a4 4 0 014-4h4l3 3-3 3h-8zM3 7h13a2 2 0 012 2v2"></path>
+                            </svg>
+                            Opções de Transporte
+                        </h3>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                            @foreach($opcoesTransporte as $opcao)
+                                <label
+                                    class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 hover:bg-blue-50 cursor-pointer transition"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        name="tipos_transporte[]"
+                                        value="{{ $opcao->id }}"
+                                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <span class="text-sm text-gray-700">{{ $opcao->nome }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+
+                    </div>
+
+
                     <hr />
                     <!-- Valores e descontos -->
                     <div class="overflow-x-auto">
