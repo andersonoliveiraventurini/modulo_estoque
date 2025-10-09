@@ -59,7 +59,7 @@
                         <td class="px-4 py-2 text-sm">R$ {{ number_format($produto->preco_venda, 2, ',', '.') }}</td>
                         <td class="px-4 py-2 text-center">
                             <x-button variant="primary"
-                               onclick="adicionarProduto(
+                               onclick="selecionarProdutoComQuantidade(
                                         '{{ $produto->id }}',
                                         '{{ $produto->nome }}',
                                         '{{ $produto->preco_venda }}',

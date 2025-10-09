@@ -249,6 +249,18 @@
     </div>
     </div>
 
+    <!-- Modal Quantidade Produto -->
+    <div id="modal-quantidade" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white dark:bg-zinc-900 rounded-lg p-6 w-80 shadow-lg relative">
+            <button onclick="fecharModal()" class="absolute top-2 right-2 text-gray-500 hover:text-red-600">&times;</button>
+            <h3 class="text-lg font-semibold mb-4">Quantidade do Produto</h3>
+            <p id="produto-nome" class="mb-2 font-medium"></p>
+            <input id="quantidade-produto" type="number" min="1" value="1" class="w-full border rounded px-3 py-2 mb-4"/>
+            <button onclick="confirmarQuantidade()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full">
+                Adicionar
+            </button>
+        </div>
+    </div>
     <script src="{{ asset('js/valida.js') }}"></script>
     <script>
         let vidroIndex = 1;
@@ -438,7 +450,7 @@
 
         let produtos = [];
 
-        function adicionarProduto(id, nome, preco, fornecedor = '', cor = '') {
+        function adicionarProduto(id, nome, preco, fornecedor = '', cor = '', quantidade = 1) {
             if (produtos.find(p => p.id === id)) {
                 alert("Produto já adicionado!");
                 return;
@@ -448,13 +460,14 @@
                 id,
                 nome,
                 preco: parseFloat(preco),
-                quantidade: 1,
-                fornecedor, // ✅ agora salva fornecedor
-                cor // ✅ agora salva cor
+                quantidade: parseInt(quantidade) || 1, // ✅ agora recebe quantidade
+                fornecedor,
+                cor
             };
             produtos.push(produto);
             renderProdutos();
         }
+
 
         function alterarQuantidade(index, valor) {
             produtos[index].quantidade = parseInt(valor) || 1;
@@ -640,5 +653,38 @@
                 renderProdutos();
             });
         });
+
+        let produtoSelecionado = null; // variável global para armazenar o produto temporário
+
+        function selecionarProdutoComQuantidade(id, nome, preco, fornecedor = '', cor = '') {
+            produtoSelecionado = { id, nome, preco: parseFloat(preco), fornecedor, cor, quantidade: 1 };
+            document.getElementById('produto-nome').textContent = nome;
+            document.getElementById('quantidade-produto').value = 1;
+            document.getElementById('modal-quantidade').classList.remove('hidden');
+        }
+
+        function fecharModal() {
+            document.getElementById('modal-quantidade').classList.add('hidden');
+            produtoSelecionado = null;
+        }
+
+        function confirmarQuantidade() {
+            if (!produtoSelecionado) return;
+
+            const quantidade = parseInt(document.getElementById('quantidade-produto').value) || 1;
+            produtoSelecionado.quantidade = quantidade;
+
+            adicionarProduto(
+                produtoSelecionado.id,
+                produtoSelecionado.nome,
+                produtoSelecionado.preco,
+                produtoSelecionado.fornecedor,
+                produtoSelecionado.cor,
+                produtoSelecionado.quantidade // ✅ passa a quantidade correta
+            );
+
+            fecharModal();
+        }
     </script>
+
 </x-layouts.app>
