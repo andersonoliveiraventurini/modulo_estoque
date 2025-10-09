@@ -18,7 +18,7 @@
                     <!-- Informações básicas -->
                     <x-tab name="basico" label="Básico">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-show-field label="Código Interno (BRCom)" :value="$produto->codigo_brcom" />
+                            <x-show-field label="Código Interno (BRCom)" :value="$produto->id" />
                             <x-show-field label="SKU" :value="$produto->sku" />
                             <x-show-field label="Nome" :value="$produto->nome" />
                             <x-show-field label="Tipo Produto SPED" :value="$produto->tipo_produto_sped" />

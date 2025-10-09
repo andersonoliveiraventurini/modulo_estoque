@@ -52,7 +52,7 @@ class ListaProduto extends Component
 
                     $query->where(function ($q) use ($normalizedTerm) {
                         $q->where('produtos.nome', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('produtos.codigo_brcom', 'like', "%{$normalizedTerm}%")
+                            ->orWhere('produtos.id', 'like', "%{$normalizedTerm}%")
                             ->orWhere('produtos.sku', 'like', "%{$normalizedTerm}%")
                             ->orWhere('produtos.preco_venda', 'like', "%{$normalizedTerm}%")
                             ->orWhere('produtos.preco_custo', 'like', "%{$normalizedTerm}%")

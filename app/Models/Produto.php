@@ -17,7 +17,7 @@ class Produto extends Model
     }
 
     protected $fillable = [
-        'codigo_brcom',
+        'id',
         'sku',
         'nome',
         'tipo_produto_sped',

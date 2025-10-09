@@ -77,7 +77,7 @@ class ProdutoSeeder extends Seeder
                     DB::transaction(function () use ($data, $trimOrNull, $toFloat, $toInt, $digits) {
                         // Monta dados do produto
                         $produtoData = [
-                            'codigo_brcom'   => $trimOrNull($data['codigo'] ?? null),
+                            'id'             => $trimOrNull($data['codigo'] ?? null),
                             'sku'            => $trimOrNull($data['referencia'] ?? null),
                             'nome'           => $trimOrNull($data['descrição'] ?? null),
                             'ncm'            => $trimOrNull($data['ncm'] ?? null),

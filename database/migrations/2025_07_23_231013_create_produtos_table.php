@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('produtos', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo_brcom')->nullable()->comment('Código interno do produto - Identificador único utilizado internamente para gerenciar o produto.');
             $table->string('sku')->nullable()->comment('Stock Keeping Unit - Código único para identificar o produto em estoque.');
             $table->string('nome');
             $table->string('tipo_produto_sped')->nullable()->comment('Tipo do produto conforme a classificação do SPED - Indica a categoria do produto segundo as normas do Sistema Público de Escrituração Digital (SPED).');

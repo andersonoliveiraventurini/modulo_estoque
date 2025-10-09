@@ -34,7 +34,7 @@ class ListaProdutoFixoOrcamento extends Component
                     $normalizedTerm = str_replace(',', '.', $term);
                     $query->where(function ($q) use ($normalizedTerm) {
                         $q->where('nome', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('codigo_brcom', 'like', "%{$normalizedTerm}%")
+                            ->orWhere('id', 'like', "%{$normalizedTerm}%")
                             ->orWhere('sku', 'like', "%{$normalizedTerm}%")
                             ->orWhere('preco_venda', 'like', "%{$normalizedTerm}%")
                             ->orWhere('descricao', 'like', "%{$normalizedTerm}%")
