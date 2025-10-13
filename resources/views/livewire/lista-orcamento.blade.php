@@ -14,6 +14,12 @@
                 </label>
                 <x-input id="search" wire:model.live.debounce.300ms="search" placeholder="Buscar  ..." />
             </div>
+            <div class="flex flex-col flex-[2]">
+                <label for="cliente" class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                    Cliente
+                </label>
+                <x-input id="cliente" wire:model.live.debounce.300ms="cliente" placeholder="Buscar cliente  ..." />
+            </div>
 
             <!-- Itens por página (largura fixa) -->
             <div class="flex flex-col w-28">

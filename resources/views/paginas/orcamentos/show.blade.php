@@ -8,13 +8,14 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                Gerenciar Orçamento #{{ $orcamento->id }} - @if ($orcamento->pdf_path)
-                    <a href="{{ asset('storage/' . $orcamento->pdf_path) }}" target="_blank">
-                        <x-button size="sm" variant="primary">
-                            <x-heroicon-o-document-arrow-down class="w-4 h-4" />
-                            PDF
-                        </x-button>
-                    </a>
+                Gerenciar Orçamento #{{ $orcamento->id }} @if ($orcamento->status != 'Aprovar desconto')- @if ($orcamento->pdf_path)
+                        <a href="{{ asset('storage/' . $orcamento->pdf_path) }}" target="_blank">
+                            <x-button size="sm" variant="primary">
+                                <x-heroicon-o-document-arrow-down class="w-4 h-4" />
+                                PDF
+                            </x-button>
+                        </a>
+                    @endif
                 @endif
             </h2>
 
@@ -41,6 +42,22 @@
                         <span
                             class="inline-block bg-yellow-200 text-yellow-800 text-sm px-3 py-1 rounded-full font-medium mb-2">Aguardando
                             aprovação de desconto</span>
+                        <form id="form-aprovar-{{ $orcamento->id }}" class="inline-flex gap-2"
+                            data-id="{{ $orcamento->id }}"
+                            action="{{ route('orcamentos.aprovar-desconto', $orcamento->id) }}" method="POST">
+                            @csrf
+                            @method('PUT')
+
+                            <select name="acao" class="border border-gray-300 rounded px-2 py-1 text-sm">
+                                <option value="aprovar">Aprovar Desconto</option>
+                                <option value="reprovar">Reprovar Desconto</option>
+                            </select>
+
+                            <button type="submit"
+                                class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+                                Atualizar
+                            </button>
+                        </form>
                     @else
                         <p><strong>Status:</strong></p>
                         <form id="form-status-{{ $orcamento->id }}" class="inline-flex gap-2"
@@ -193,8 +210,12 @@
                 @endif
             </div>
             <div>
+                @if ($orcamento->itens->count() > 0)
                 <p><strong>Total Produtos:</strong> R$ {{ number_format($totalItens, 2, ',', '.') }}</p>
-                <p><strong>Total Vidros:</strong> R$ {{ number_format($totalVidros, 2, ',', '.') }}</p>
+                @endif
+                @if ($orcamento->vidros->count() > 0)
+                    <p><strong>Total Vidros:</strong> R$ {{ number_format($totalVidros, 2, ',', '.') }}</p>
+                @endif
                 <p class="text-lg font-semibold text-green-600 mt-2">
                     Valor Final: R$ {{ number_format($valorFinal, 2, ',', '.') }}
                 </p>

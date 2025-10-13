@@ -60,6 +60,87 @@ class OrcamentoController extends Controller
         return view('paginas.orcamentos.create', compact('produtos', 'cliente', 'fornecedores', 'cores', 'vendedores', 'opcoesTransporte'));
     }
 
+    public function aprovarDesconto(Request $request, $id)
+    {
+        $orcamento = Orcamento::findOrFail($id);
+        $acao = $request->input('acao');
+
+        if ($acao === 'reprovar') {
+            // Se for reprovado: muda status para cancelado e não gera PDF
+            $orcamento->update([
+                'status' => 'Cancelado',
+                'desconto_aprovado' => 0,
+            ]);
+
+            return redirect()
+                ->back()
+                ->with('error', 'Desconto reprovado. O orçamento foi cancelado e o PDF não será gerado.');
+        }
+
+        if ($acao === 'aprovar') {
+            // Aprova o desconto e muda status para Pendente
+            $orcamento->update([
+                'status' => 'Pendente',
+            ]);
+
+            // Gera token de acesso e QR Code
+            $token = Str::uuid();
+            $tokenExpiraEm = Carbon::now()->addDays(2);
+            $orcamento->update([
+                'token_acesso' => $token,
+                'token_expira_em' => $tokenExpiraEm,
+            ]);
+
+            $linkSeguro = route('orcamentos.view', ['token' => $token]);
+
+            $qrCodeBase64 = base64_encode(
+                QrCode::format('png')
+                    ->size(130)
+                    ->margin(1)
+                    ->generate($linkSeguro)
+            );
+
+            try {
+                // Gera PDF normalmente
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('documentos_pdf.orcamento', [
+                    'orcamento' => $orcamento,
+                    'percentualAplicado' => $orcamento->descontos->where('tipo', 'percentual')->max('porcentagem') ?? 0,
+                    'qrCode' => $qrCodeBase64,
+                ])->setPaper('a4');
+
+                $canvas = $pdf->getDomPDF()->getCanvas();
+                $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
+                    $text = "Página $pageNumber / $pageCount";
+                    $font = $fontMetrics->get_font("Helvetica", "normal");
+                    $canvas->text(270, 820, $text, $font, 10);
+                });
+
+                $path = "orcamentos/orcamento_{$orcamento->id}.pdf";
+                Storage::disk('public')->put($path, $pdf->output());
+
+                if (Storage::disk('public')->exists($path)) {
+                    $orcamento->update(['pdf_path' => $path]);
+                    return redirect()
+                        ->back()
+                        ->with('success', 'Desconto aprovado! Orçamento atualizado e PDF gerado com sucesso.');
+                } else {
+                    return redirect()
+                        ->back()
+                        ->with('error', 'Desconto aprovado, mas ocorreu um erro ao salvar o PDF.');
+                }
+            } catch (\Exception $e) {
+                Log::error("Erro ao gerar PDF de aprovação: " . $e->getMessage());
+                return redirect()
+                    ->back()
+                    ->with('error', 'Desconto aprovado, mas ocorreu um erro ao gerar o PDF.');
+            }
+        }
+
+        return redirect()->back()->with('error', 'Ação inválida.');
+    }
+
+
+
     /**
      * Store a newly created resource in storage.
      */
@@ -444,14 +525,6 @@ class OrcamentoController extends Controller
         return response()->json(['message' => 'Status atualizado com sucesso!']);
     }
 
-    public function aprovarDesconto(Request $request, $id)
-    {
-        $orcamento = Orcamento::findOrFail($id);
-        $orcamento->desconto_aprovado = $request->desconto_aprovado;
-        $orcamento->save();
-
-        return redirect()->back()->with('success', 'Desconto aprovado com sucesso!');
-    }
 
     /**
      * Show the form for editing the specified resource.
