@@ -12,11 +12,18 @@
                     </svg>
                     Criar Orçamento para Cliente {{ $cliente->id }} - {{ $cliente->nome ?? $cliente->nome_fantasia }}
                 </h2>
-                    @if($cliente->vendedor_interno != null)<p> Vendedor interno: {{ $cliente->vendedor_interno ?? 'Não atribuído' }} </p>@endif
-                    @if($cliente->vendedor_externo != null)<p> Vendedor externo: {{ $cliente->vendedor_externo ?? 'Não atribuído' }} </p>@endif
-                    @if($cliente->desconto_aprovado != null)<p> Desconto aprovado: {{ $cliente->desconto_aprovado ?? 'Não atribuído' }} </p>@endif
-                    <input type="hidden" name="desconto_aprovado" id="desconto_aprovado" value="{{ $cliente->desconto_aprovado ?? 0 }}" />
- 
+                @if ($cliente->vendedor_interno != null)
+                    <p> Vendedor interno: {{ $cliente->vendedor_interno ?? 'Não atribuído' }} </p>
+                @endif
+                @if ($cliente->vendedor_externo != null)
+                    <p> Vendedor externo: {{ $cliente->vendedor_externo ?? 'Não atribuído' }} </p>
+                @endif
+                @if ($cliente->desconto_aprovado != null)
+                    <p> Desconto aprovado: {{ $cliente->desconto_aprovado ?? 'Não atribuído' }} </p>
+                @endif
+                <input type="hidden" name="desconto_aprovado" id="desconto_aprovado"
+                    value="{{ $cliente->desconto_aprovado ?? 0 }}" />
+
                 <!-- Pesquisa de Produtos -->
                 <div class="space-y-4">
                     <hr />
@@ -105,11 +112,11 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <x-input type="text" name="nome_obra" placeholder="Digite o nome da obra"
                                 label="Nome da Obra" required />
-                                <x-input type="text" name="prazo_entrega" placeholder="Ex: 15 dias úteis"
+                            <x-input type="text" name="prazo_entrega" placeholder="Ex: 15 dias úteis"
                                 label="Prazo de Entrega" />
                             <x-select name="vendedor_id" label="Atendido por" required>
-                            <option value="">Selecione...</option>
-                                @foreach($vendedores as $vendedor)
+                                <option value="">Selecione...</option>
+                                @foreach ($vendedores as $vendedor)
                                     <option value="{{ $vendedor->id }}">{{ $vendedor->name }}</option>
                                 @endforeach
                             </x-select>
@@ -126,8 +133,8 @@
                         <!-- Wrapper que será ocultado até o CEP ser válido -->
                         <div id="endereco-entrega-wrapper">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                                <x-input id="entrega_cidade" name="entrega_cidade" label="Cidade" readonly="readonly"
-                                    placeholder="Cidade" value="{{ old('entrega_cidade') }}" />
+                                <x-input id="entrega_cidade" name="entrega_cidade" label="Cidade"
+                                    readonly="readonly" placeholder="Cidade" value="{{ old('entrega_cidade') }}" />
                                 <x-input id="entrega_estado" name="entrega_estado" label="Estado"
                                     placeholder="Estado" readonly="readonly" value="{{ old('entrega_estado') }}" />
                                 <x-input id="entrega_bairro" name="entrega_bairro" label="Bairro"
@@ -148,24 +155,21 @@
                     <div class="space-y-4">
                         <hr />
                         <h3 class="text-lg font-medium flex items-center gap-2">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 17v-2a4 4 0 014-4h4l3 3-3 3h-8zM3 7h13a2 2 0 012 2v2"></path>
                             </svg>
                             Opções de Transporte
                         </h3>
 
-                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                            @foreach($opcoesTransporte as $opcao)
+                        <div
+                            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                            @foreach ($opcoesTransporte as $opcao)
                                 <label
-                                    class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 hover:bg-blue-50 cursor-pointer transition"
-                                >
-                                    <input
-                                        type="checkbox"
-                                        name="tipos_transporte[]"
-                                        value="{{ $opcao->id }}"
-                                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                    />
+                                    class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 hover:bg-blue-50 cursor-pointer transition">
+                                    <input type="checkbox" name="tipos_transporte[]" value="{{ $opcao->id }}"
+                                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                                     <span class="text-sm text-gray-700">{{ $opcao->nome }}</span>
                                 </label>
                             @endforeach
@@ -181,8 +185,8 @@
 
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Desconto na vendedor %</label>
-                                <input type="text" name="desconto" min="0" max="30" value="0"
-                                    placeholder="Digite a porcentagem de desconto (0 a 30)"
+                                <input type="text" name="desconto" value="0" min="0" max="100"
+                                    placeholder="Digite a porcentagem de desconto (0 a 100)"
                                     oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                             </div>
@@ -190,15 +194,15 @@
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Desconto específico R$</label>
                                 <input type="text" name="desconto_especifico" value="0.00"
-                                    placeholder="Digite o valor do desconto específico" 
+                                    placeholder="Digite o valor do desconto específico"
                                     oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                             </div>
 
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Guia Recolhimento</label>
-                                <input type="text" step="0.01" name="guia_recolhimento" value="0" value="0.00"
-                                    oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"
+                                <input type="text" step="0.01" name="guia_recolhimento" value="0"
+                                    value="0.00" oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                             </div>
 
@@ -221,7 +225,8 @@
                     <div class="space-y-4">
                         <hr />
                         <h3 class="text-lg font-medium flex items-center gap-2">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
                                 </path>
@@ -230,8 +235,8 @@
                             </svg>
                             Observações Gerais
                         </h3>
-                        <x-textarea name="observacoes" placeholder="Digite as observações"
-                            label="Observações" rows="4"> </x-textarea>                        
+                        <x-textarea name="observacoes" placeholder="Digite as observações" label="Observações"
+                            rows="4"> </x-textarea>
                     </div>
 
                     <!-- Ações -->
@@ -250,13 +255,17 @@
     </div>
 
     <!-- Modal Quantidade Produto -->
-    <div id="modal-quantidade" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div id="modal-quantidade"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
         <div class="bg-white dark:bg-zinc-900 rounded-lg p-6 w-80 shadow-lg relative">
-            <button onclick="fecharModal()" class="absolute top-2 right-2 text-gray-500 hover:text-red-600">&times;</button>
+            <button onclick="fecharModal()"
+                class="absolute top-2 right-2 text-gray-500 hover:text-red-600">&times;</button>
             <h3 class="text-lg font-semibold mb-4">Quantidade do Produto</h3>
             <p id="produto-nome" class="mb-2 font-medium"></p>
-            <input id="quantidade-produto" type="number" min="1" value="1" class="w-full border rounded px-3 py-2 mb-4"/>
-            <button onclick="confirmarQuantidade()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full">
+            <input id="quantidade-produto" type="number" min="1" value="1"
+                class="w-full border rounded px-3 py-2 mb-4" />
+            <button onclick="confirmarQuantidade()"
+                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full">
                 Adicionar
             </button>
         </div>
@@ -338,7 +347,7 @@
             const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]').value) || 0;
             let descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]').value) || 0;
             if (descontoOrcamento < 0) descontoOrcamento = 0;
-            if (descontoOrcamento > 30) descontoOrcamento = 30;
+            if (descontoOrcamento > 100) descontoOrcamento = 100;
             const descontoAplicado = Math.max(descontoCliente, descontoOrcamento);
 
             let valorComDesconto = valor - (valor * (descontoAplicado / 100));
@@ -485,7 +494,7 @@
 
             const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]').value) || 0;
             let descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]').value) || 0;
-            descontoOrcamento = Math.min(Math.max(descontoOrcamento, 0), 30);
+            descontoOrcamento = Math.min(Math.max(descontoOrcamento, 0), 100);
 
             const descontoAplicado = Math.max(descontoCliente, descontoOrcamento);
 
@@ -559,7 +568,7 @@
                 let descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]').value) || 0;
 
                 if (descontoOrcamento < 0) descontoOrcamento = 0;
-                if (descontoOrcamento > 30) descontoOrcamento = 30;
+                if (descontoOrcamento > 100) descontoOrcamento = 100;
 
                 const descontoAplicado = Math.max(descontoCliente, descontoOrcamento);
 
@@ -620,7 +629,7 @@
                 let val = parseFloat(this.value) || 0;
 
                 if (val < 0) val = 0;
-                if (val > 30) val = 30;
+                if (val > 100) val = 100;
 
                 this.value = val;
 
@@ -657,7 +666,14 @@
         let produtoSelecionado = null; // variável global para armazenar o produto temporário
 
         function selecionarProdutoComQuantidade(id, nome, preco, fornecedor = '', cor = '') {
-            produtoSelecionado = { id, nome, preco: parseFloat(preco), fornecedor, cor, quantidade: 1 };
+            produtoSelecionado = {
+                id,
+                nome,
+                preco: parseFloat(preco),
+                fornecedor,
+                cor,
+                quantidade: 1
+            };
             document.getElementById('produto-nome').textContent = nome;
             document.getElementById('quantidade-produto').value = 1;
             document.getElementById('modal-quantidade').classList.remove('hidden');

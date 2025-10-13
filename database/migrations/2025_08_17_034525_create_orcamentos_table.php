@@ -39,13 +39,19 @@ return new class extends Migration
                   $table->decimal('valor_total_itens', 15, 2)->nullable()
                         ->comment('Valor total dos itens do orçamento.');
 
-                  $table->string('status', 20)->default('pendente')
+                  $table->enum('status', ['aprovar desconto', 'pendente', 'aprovado', 'cancelado', 'rejeitado', 'expirado'])
+                        ->default('pendente')
                         ->comment('Status do orçamento, como pendente, aprovado, cancelado, etc.');
+
                   $table->string('prazo_entrega', 100)->nullable()
                         ->comment('Prazo de entrega do orçamento.');
                   $table->text('observacoes')->nullable()
                         ->comment('Observações adicionais sobre o orçamento.');
                   $table->string('pdf_path')->nullable();
+                  
+                  $table->unsignedBigInteger('usuario_logado_id')->nullable()
+                        ->comment('Referência ao usuário que está logado e criando o orçamento.');
+                  $table->foreign('usuario_logado_id')->references('id')->on('users');
                   $table->timestamps();
                   $table->softDeletes();
             });

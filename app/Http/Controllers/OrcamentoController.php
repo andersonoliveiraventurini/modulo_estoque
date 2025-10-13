@@ -81,6 +81,9 @@ class OrcamentoController extends Controller
             );
         }
 
+
+
+
         // 2) Definir desconto específico em valor (reais)
         $descontoEspecifico = $request->filled('desconto_especifico')
             ? (float) $request->desconto_especifico
@@ -93,18 +96,17 @@ class OrcamentoController extends Controller
         // Criação do orçamento (sem endereço ainda)
         $orcamento = Orcamento::create([
             'cliente_id'   => $request->cliente_id,
-            'vendedor_id'  => Auth()->user()->id,
+            'vendedor_id'  => $request->has('vendedor_id') ? $request->vendedor_id : Auth()->user()->id,
+            'usuario_logado_id'  => Auth()->user()->id,
             'obra'         => $request->nome_obra,
             'valor_total_itens'  => $request->valor_total,
-            'status'       => 'pendente',
             'guia_recolhimento'  => $request->guia_recolhimento ?? 0,
             'observacoes'  => $request->observacoes,
             'validade'     => Carbon::now()->addDays(2), // sempre +2 dias
         ]);
 
-
         if ($request->tipos_transporte) {
-            $orcamento->transportes()->sync($request->tipos_transporte); 
+            $orcamento->transportes()->sync($request->tipos_transporte);
         }
 
         if ($request->has('itens')) {
@@ -197,64 +199,73 @@ class OrcamentoController extends Controller
             $orcamento->update(['endereco_id' => $endereco->id]);
         }
 
-        // Gera token e expiração de 2 dias
-        $token = Str::uuid();
-        $tokenExpiraEm = Carbon::now()->addDays(2);
+        // se o desconto for menor que o autorizado para o cliente e o para o vendedor não precisa ser aprovado
+        if ($descontoPercentual > $request->desconto_aprovado && Auth()->user()->vendedor->desconto < $descontoPercentual) {
+            $orcamento->status = 'aprovar desconto';
+            $orcamento->save();
 
-        // Atualiza modelo e mantém sincronizado
-        $orcamento->forceFill([
-            'token_acesso' => $token,
-            'token_expira_em' => $tokenExpiraEm,
-        ])->save();
-
-        // Gera link seguro
-        $linkSeguro = route('orcamentos.view', ['token' => $orcamento->token_acesso]);
-
-        // Gera QR Code em base64 (GD processa PNG sem Imagick)
-        $qrCodeBase64 = base64_encode(
-            QrCode::format('png')
-                ->size(130)
-                ->margin(1)
-                ->generate($linkSeguro)
-        );
-
-        try {
-            $pdf = Pdf::loadView('documentos_pdf.orcamento', [
-                'orcamento' => $orcamento,
-                'percentualAplicado' => $descontoPercentual,
-                'qrCode' => $qrCodeBase64,
-            ])->setPaper('a4');
-
-            // Numeração de páginas
-            $canvas = $pdf->getDomPDF()->getCanvas();
-            $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-                $text = "Página $pageNumber / $pageCount";
-                $font = $fontMetrics->get_font("Helvetica", "normal");
-                $canvas->text(270, 820, $text, $font, 10);
-            });
-
-            $path = "orcamentos/orcamento_{$orcamento->id}.pdf";
-            Storage::disk('public')->put($path, $pdf->output());
-
-            if (Storage::disk('public')->exists($path)) {
-                $orcamento->update(['pdf_path' => $path]);
-
-                return redirect()
-                    ->route('orcamentos.index')
-                    ->with('success', 'Orçamento criado com sucesso!');
-            } else {
-                return redirect()
-                    ->route('orcamentos.index')
-                    ->with('error', 'Orçamento criado, mas falha ao gerar o PDF.');
-            }
-
-        } catch (\Exception $e) {
-            Log::error("Erro ao gerar PDF: " . $e->getMessage());
             return redirect()
                 ->route('orcamentos.index')
-                ->with('error', 'Orçamento criado, mas falha ao gerar o PDF: ' . $e->getMessage());
-        }
+                ->with('error', 'Orçamento criado, mas é necessária a aprovação do desconto.');
+        } else {
 
+            // Gera token e expiração de 2 dias
+            $token = Str::uuid();
+            $tokenExpiraEm = Carbon::now()->addDays(2);
+
+            // Atualiza modelo e mantém sincronizado
+            $orcamento->forceFill([
+                'token_acesso' => $token,
+                'token_expira_em' => $tokenExpiraEm,
+            ])->save();
+
+            // Gera link seguro
+            $linkSeguro = route('orcamentos.view', ['token' => $orcamento->token_acesso]);
+
+            // Gera QR Code em base64 (GD processa PNG sem Imagick)
+            $qrCodeBase64 = base64_encode(
+                QrCode::format('png')
+                    ->size(130)
+                    ->margin(1)
+                    ->generate($linkSeguro)
+            );
+
+            try {
+                $pdf = Pdf::loadView('documentos_pdf.orcamento', [
+                    'orcamento' => $orcamento,
+                    'percentualAplicado' => $descontoPercentual,
+                    'qrCode' => $qrCodeBase64,
+                ])->setPaper('a4');
+
+                // Numeração de páginas
+                $canvas = $pdf->getDomPDF()->getCanvas();
+                $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
+                    $text = "Página $pageNumber / $pageCount";
+                    $font = $fontMetrics->get_font("Helvetica", "normal");
+                    $canvas->text(270, 820, $text, $font, 10);
+                });
+
+                $path = "orcamentos/orcamento_{$orcamento->id}.pdf";
+                Storage::disk('public')->put($path, $pdf->output());
+
+                if (Storage::disk('public')->exists($path)) {
+                    $orcamento->update(['pdf_path' => $path]);
+
+                    return redirect()
+                        ->route('orcamentos.index')
+                        ->with('success', 'Orçamento criado com sucesso!');
+                } else {
+                    return redirect()
+                        ->route('orcamentos.index')
+                        ->with('error', 'Orçamento criado, mas falha ao gerar o PDF.');
+                }
+            } catch (\Exception $e) {
+                Log::error("Erro ao gerar PDF: " . $e->getMessage());
+                return redirect()
+                    ->route('orcamentos.index')
+                    ->with('error', 'Orçamento criado, mas falha ao gerar o PDF: ' . $e->getMessage());
+            }
+        }
     }
 
     public function visualizarPublico($token)
@@ -298,7 +309,7 @@ class OrcamentoController extends Controller
             'vendedor_id'  => $orcamentoOriginal->vendedor_id,
             'obra'         => $novaObra,
             'valor_total_itens' => $orcamentoOriginal->valor_total_itens,
-            'status'       => 'pendente',
+            'status'       => $orcamentoOriginal->status,
             'observacoes'  => $orcamentoOriginal->observacoes,
             'frete'        => $orcamentoOriginal->frete,
             'guia_recolhimento' => $orcamentoOriginal->guia_recolhimento,
@@ -353,7 +364,7 @@ class OrcamentoController extends Controller
                 'cep'        => $orcamentoOriginal->endereco->cep,
                 'logradouro' => $orcamentoOriginal->endereco->logradouro,
                 'numero'     => $orcamentoOriginal->endereco->numero,
-                'complemento'=> $orcamentoOriginal->endereco->complemento,
+                'complemento' => $orcamentoOriginal->endereco->complemento,
                 'bairro'     => $orcamentoOriginal->endereco->bairro,
                 'cidade'     => $orcamentoOriginal->endereco->cidade,
                 'estado'     => $orcamentoOriginal->endereco->estado,
@@ -361,38 +372,44 @@ class OrcamentoController extends Controller
             $novoOrcamento->update(['endereco_id' => $novoEndereco->id]);
         }
 
-        // 5) Gerar token e expiração
-        $novoOrcamento->update([
-            'token_acesso' => Str::uuid(),
-            'token_expira_em' => Carbon::now()->addDays(2),
-        ]);
+        if ($novoOrcamento->status === 'aprovar desconto') {
+            return redirect()
+                ->route('orcamentos.index')
+                ->with('success', 'Orçamento duplicado com sucesso!');
+        } else {
+            // 5) Gerar token e expiração
+            $novoOrcamento->update([
+                'token_acesso' => Str::uuid(),
+                'token_expira_em' => Carbon::now()->addDays(2),
+            ]);
 
-        // 6) Gerar PDF com QR Code
-        $linkSeguro = route('orcamentos.view', ['token' => $novoOrcamento->token_acesso]);
-        $qrCodeBase64 = base64_encode(
-            QrCode::format('png')->size(130)->margin(1)->generate($linkSeguro)
-        );
+            // 6) Gerar PDF com QR Code
+            $linkSeguro = route('orcamentos.view', ['token' => $novoOrcamento->token_acesso]);
+            $qrCodeBase64 = base64_encode(
+                QrCode::format('png')->size(130)->margin(1)->generate($linkSeguro)
+            );
 
-        $pdf = Pdf::loadView('documentos_pdf.orcamento', [
-            'orcamento' => $novoOrcamento,
-            'percentualAplicado' => $novoOrcamento->descontos->where('tipo', 'percentual')->first()?->porcentagem ?? null,
-            'qrCode' => $qrCodeBase64,
-        ])->setPaper('a4');
+            $pdf = Pdf::loadView('documentos_pdf.orcamento', [
+                'orcamento' => $novoOrcamento,
+                'percentualAplicado' => $novoOrcamento->descontos->where('tipo', 'percentual')->first()?->porcentagem ?? null,
+                'qrCode' => $qrCodeBase64,
+            ])->setPaper('a4');
 
-        $canvas = $pdf->getDomPDF()->getCanvas();
-        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "Página $pageNumber / $pageCount";
-            $font = $fontMetrics->get_font("Helvetica", "normal");
-            $canvas->text(270, 820, $text, $font, 10);
-        });
+            $canvas = $pdf->getDomPDF()->getCanvas();
+            $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
+                $text = "Página $pageNumber / $pageCount";
+                $font = $fontMetrics->get_font("Helvetica", "normal");
+                $canvas->text(270, 820, $text, $font, 10);
+            });
 
-        $path = "orcamentos/orcamento_{$novoOrcamento->id}.pdf";
-        Storage::disk('public')->put($path, $pdf->output());
-        $novoOrcamento->update(['pdf_path' => $path]);
+            $path = "orcamentos/orcamento_{$novoOrcamento->id}.pdf";
+            Storage::disk('public')->put($path, $pdf->output());
+            $novoOrcamento->update(['pdf_path' => $path]);
 
-        return redirect()
-            ->route('orcamentos.index')
-            ->with('success', 'Orçamento duplicado com sucesso!');
+            return redirect()
+                ->route('orcamentos.index')
+                ->with('success', 'Orçamento duplicado com sucesso!');
+        }
     }
 
 

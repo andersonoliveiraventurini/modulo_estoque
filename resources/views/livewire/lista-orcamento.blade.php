@@ -48,27 +48,34 @@
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
+                        <button wire:click="sortBy('status')"
+                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Status
+                        </button>
+                    </th>
+                    <th class="px-6 py-3 text-left">
                         <button wire:click="sortBy('vendedor_id')"
                             class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Vendedor
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
-                        PDF 
+                        PDF
                     </th>
                     <th class="px-6 py-3 text-left">Ações</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                @forelse($orcamentos as $c)
+                @forelse($orcamentos as $o)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="{{ route('orcamentos.show', $c) }}">{{ $c->obra }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->cliente->nome }}</td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->vendedor->name }}</td>
+                                href="{{ route('orcamentos.show', $o) }}">{{ $o->obra }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->cliente->nome }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->status }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->vendedor->name }}</td>
                         <td class="px-6 py-4">
-                            @if($c->pdf_path)
-                                <a href="{{ asset('storage/'.$c->pdf_path) }}" target="_blank">
+                            @if ($o->pdf_path)
+                                <a href="{{ asset('storage/' . $o->pdf_path) }}" target="_blank">
                                     <x-button size="sm" variant="primary">
                                         <x-heroicon-o-document-arrow-down class="w-4 h-4" />
                                         PDF
@@ -77,13 +84,13 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 flex gap-2">
-                            <a href="{{ route('orcamentos.edit', $c->id) }}">
+                            <a href="{{ route('orcamentos.edit', $o->id) }}">
                                 <x-button size="sm" variant="secondary">
                                     <x-heroicon-o-pencil-square class="w-4 h-4" />
                                     Editar
                                 </x-button>
                             </a>
-                            <form action="{{ route('orcamentos.duplicar', $c->id) }}" method="POST"
+                            <form action="{{ route('orcamentos.duplicar', $o->id) }}" method="POST"
                                 onsubmit="return confirm('Deseja duplicar este orçamento?');">
                                 @csrf
                                 <x-button size="sm" variant="primary">
@@ -91,7 +98,7 @@
                                     Duplicar
                                 </x-button>
                             </form>
-                            <form action="{{ route('orcamentos.destroy', $c->id) }}" method="POST"
+                            <form action="{{ route('orcamentos.destroy', $o->id) }}" method="POST"
                                 onsubmit="return confirm('Deseja excluir este orçamento?');">
                                 @csrf
                                 @method('DELETE')

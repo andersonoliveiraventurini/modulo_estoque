@@ -15,10 +15,13 @@ return new class extends Migration
             $table->id();
             $table->string('motivo')
                 ->comment('Motivo do desconto, como "Desconto de Verão" ou "Promoção Especial".');
+
             $table->decimal('valor', 10, 2)
                 ->comment('Valor do desconto, que pode ser um valor fixo ou uma porcentagem.');
+            
             $table->decimal('porcentagem', 5, 2)->nullable()
                 ->comment('Porcentagem do desconto, se aplicável. Exemplo: 15.00 para 15%.');
+            
             $table->enum('tipo', ['fixo', 'percentual'])
                 ->comment('Tipo de desconto: "fixo" para um valor fixo ou "percentual" para uma porcentagem.');
 

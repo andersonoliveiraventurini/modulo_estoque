@@ -14,6 +14,7 @@ class Orcamento extends Model
     protected $fillable = [
         'cliente_id',
         'vendedor_id',
+        'usuario_logado_id',
         'endereco_id',
         'obra',
         'frete',
