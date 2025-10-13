@@ -14,12 +14,6 @@
                 </label>
                 <x-input id="search" wire:model.live.debounce.300ms="search" placeholder="Buscar  ..." />
             </div>
-            <div class="flex flex-col flex-[2]">
-                <label for="cliente" class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                    Cliente
-                </label>
-                <x-input id="cliente" wire:model.live.debounce.300ms="cliente" placeholder="Buscar cliente  ..." />
-            </div>
 
             <!-- Itens por página (largura fixa) -->
             <div class="flex flex-col w-28">
@@ -32,6 +26,61 @@
                     <option value="25">25</option>
                     <option value="50">50</option>
                 </x-select>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex items-end gap-4">
+        <div class="flex items-end gap-4 flex-wrap">
+
+            <!-- Cliente -->
+            <div class="flex flex-col flex-[2] min-w-[180px]">
+                <label for="cliente" class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                    Cliente
+                </label>
+                <x-input id="cliente" wire:model.live.debounce.300ms="cliente" placeholder="Nome do cliente..." />
+            </div>
+            
+            <!-- Cliente -->
+            <div class="flex flex-col flex-[2] min-w-[180px]">
+                <label for="cidade" class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                    Cidade
+                </label>
+                <x-input id="cidade" wire:model.live.debounce.300ms="cidade" placeholder="Nome da cidade..." />
+            </div>
+
+
+            <!-- Vendedor -->
+            <div class="flex flex-col flex-[2] min-w-[180px]">
+                <label for="vendedor" class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                    Vendedor
+                </label>
+                <x-input id="vendedor" wire:model.live.debounce.300ms="vendedor" placeholder="Nome do vendedor..." />
+            </div>
+
+            <!-- Data início -->
+            <div class="flex flex-col w-40">
+                <label for="dataInicio" class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                    Data início
+                </label>
+                <x-input type="date" id="dataInicio" wire:model.live="dataInicio" />
+            </div>
+
+            <!-- Data fim -->
+            <div class="flex flex-col w-40">
+                <label for="dataFim" class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                    Data fim
+                </label>
+                <x-input type="date" id="dataFim" wire:model.live="dataFim" />
+            </div>
+
+            <!-- Botão de limpar filtros -->
+            <div class="flex flex-col">
+                <label class="text-sm text-transparent select-none mb-1">.</label>
+                <x-button wire:click="limparFiltros" variant="secondary">
+                    <x-heroicon-o-x-mark class="w-2 h-2" />
+                    Limpar filtros
+                </x-button>
             </div>
         </div>
     </div>
