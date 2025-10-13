@@ -420,17 +420,28 @@ class OrcamentoController extends Controller
      */
     public function show($orcamento_id)
     {
-        $orcamento = Orcamento::with(['cliente', 'vendedor', 'endereco', 'itens.produto', 'vidros', 'descontos', 'transportes'])->findOrFail($orcamento_id);
+        $orcamento = Orcamento::with(['cliente', 'vendedor', 'endereco', 'itens.produto.fornecedor', 'vidros', 'descontos', 'transportes'])->findOrFail($orcamento_id);
         return view('paginas.orcamentos.show', compact('orcamento'));
     }
 
     public function atualizarStatus(Request $request, $id)
     {
         $orcamento = Orcamento::findOrFail($id);
-        $orcamento->status = $request->status;
+
+        // Pegando o status do JSON ou do POST
+        $status = $request->input('status');
+
+        // Validação rápida
+        $validStatus = ['Aprovar desconto', 'Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'];
+        if (!in_array($status, $validStatus)) {
+            return response()->json(['message' => 'Status inválido!'], 422);
+        }
+
+        $orcamento->status = $status;
+        $orcamento->usuario_logado_id = auth()->id(); // opcional: registra quem atualizou
         $orcamento->save();
 
-        return redirect()->back()->with('success', 'Status atualizado com sucesso!');
+        return response()->json(['message' => 'Status atualizado com sucesso!']);
     }
 
     public function aprovarDesconto(Request $request, $id)
