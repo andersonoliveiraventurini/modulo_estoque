@@ -418,9 +418,28 @@ class OrcamentoController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Orcamento $orcamento)
+    public function show($orcamento_id)
     {
-        //
+        $orcamento = Orcamento::with(['cliente', 'vendedor', 'endereco', 'itens.produto', 'vidros', 'descontos', 'transportes'])->findOrFail($orcamento_id);
+        return view('paginas.orcamentos.show', compact('orcamento'));
+    }
+
+    public function atualizarStatus(Request $request, $id)
+    {
+        $orcamento = Orcamento::findOrFail($id);
+        $orcamento->status = $request->status;
+        $orcamento->save();
+
+        return redirect()->back()->with('success', 'Status atualizado com sucesso!');
+    }
+
+    public function aprovarDesconto(Request $request, $id)
+    {
+        $orcamento = Orcamento::findOrFail($id);
+        $orcamento->desconto_aprovado = $request->desconto_aprovado;
+        $orcamento->save();
+
+        return redirect()->back()->with('success', 'Desconto aprovado com sucesso!');
     }
 
     /**

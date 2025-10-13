@@ -28,6 +28,7 @@ use App\Http\Controllers\SubCategoriaController;
 use App\Http\Controllers\UserController;
 use  App\Http\Controllers\CorController;
 use App\Http\Controllers\CategoriaController;
+use App\Livewire\OrcamentoShow;
 
 Volt::route('/', 'auth.login')
     ->name('home');
@@ -77,6 +78,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/orcamentos/{id}/duplicar', [OrcamentoController::class, 'duplicar'])
         ->name('orcamentos.duplicar');
 
+    Route::put('/orcamentos/{id}/status', [OrcamentoController::class, 'atualizarStatus'])->name('orcamentos.atualizar-status');
+    Route::put('/orcamentos/{id}/aprovar-desconto', [OrcamentoController::class, 'aprovarDesconto'])->name('orcamentos.aprovar-desconto');
+    Route::get('/orcamentos/{id}/gerenciar', OrcamentoShow::class)->name('orcamentos.gerenciar');
 
     Route::resource('notas', NotaFiscalController::class)->names('notas');
 
