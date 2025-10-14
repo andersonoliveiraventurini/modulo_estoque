@@ -26,7 +26,8 @@ class Orcamento extends Model
         'pdf_path',
         'prazo_entrega',
         'token_acesso',
-        'token_expira_em'
+        'token_expira_em',
+        'workflow_status',
     ];
 
     public function cliente()

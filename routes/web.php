@@ -29,6 +29,9 @@ use App\Http\Controllers\UserController;
 use  App\Http\Controllers\CorController;
 use App\Http\Controllers\CategoriaController;
 use App\Livewire\OrcamentoShow;
+use App\Http\Controllers\SeparacaoController;
+use App\Http\Controllers\ConferenciaController;
+use App\Livewire\Logistica\SeparacaoListaPage;
 
 Volt::route('/', 'auth.login')
     ->name('home');
@@ -37,7 +40,7 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-    // orçamento não precisa estar logado para acessar
+// orçamento não precisa estar logado para acessar
 Route::get('/orcamento/view/{token}', [OrcamentoController::class, 'visualizarPublico'])
     ->name('orcamentos.view');
 
@@ -73,14 +76,29 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('vendas', VendaController::class)->names('vendas');
     Route::resource('pedidos', PedidoController::class)->names('pedidos');
     Route::resource('orcamentos', OrcamentoController::class)->names('orcamentos');
-    Route::get('orcamento/cliente/{cliente_id}', [OrcamentoController::class, 'clienteOrcamento'])->name('orcamentos.cliente');  
-    Route::get('orcamento/criar/{cliente_id}', [OrcamentoController::class, 'criarOrcamento'])->name('orcamentos.criar');  
+    Route::get('orcamento/cliente/{cliente_id}', [OrcamentoController::class, 'clienteOrcamento'])->name('orcamentos.cliente');
+    Route::get('orcamento/criar/{cliente_id}', [OrcamentoController::class, 'criarOrcamento'])->name('orcamentos.criar');
     Route::post('/orcamentos/{id}/duplicar', [OrcamentoController::class, 'duplicar'])
         ->name('orcamentos.duplicar');
 
     Route::put('/orcamentos/{id}/status', [OrcamentoController::class, 'atualizarStatus'])->name('orcamentos.atualizar-status');
     Route::put('/orcamentos/{id}/aprovar-desconto', [OrcamentoController::class, 'aprovarDesconto'])->name('orcamentos.aprovar-desconto');
     Route::get('/orcamentos/{id}/gerenciar', OrcamentoShow::class)->name('orcamentos.gerenciar');
+
+    // rotas separação e conferência
+    Route::get('/logistica/separacao', SeparacaoListaPage::class)->name('logistica.separacao.lista');
+
+    Route::get('/orcamentos/{id}/separacao', [SeparacaoController::class, 'show'])->name('orcamentos.separacao.show');
+    Route::post('/orcamentos/{id}/separacao/iniciar', [SeparacaoController::class, 'iniciar'])->name('orcamentos.separacao.iniciar');
+    Route::patch('/picking/{batch}/item/{item}/separar', [SeparacaoController::class, 'separarItem'])->name('picking.item.separar');
+    Route::post('/picking/{batch}/concluir', [SeparacaoController::class, 'concluir'])->name('picking.concluir');
+
+    Route::get('/orcamentos/{id}/conferencia', [ConferenciaController::class, 'show'])->name('orcamentos.conferencia.show');
+    Route::post('/orcamentos/{id}/conferencia/iniciar', [ConferenciaController::class, 'iniciar'])->name('orcamentos.conferencia.iniciar');
+    Route::patch('/conferencia/{conf}/item/{item}/conferir', [ConferenciaController::class, 'conferirItem'])->name('conferencia.item.conferir');
+    Route::post('/conferencia/{conf}/concluir', [ConferenciaController::class, 'concluir'])->name('conferencia.concluir');
+    // fim rotas separação e conferência
+
 
     Route::resource('notas', NotaFiscalController::class)->names('notas');
 

@@ -507,22 +507,77 @@ class OrcamentoController extends Controller
 
     public function atualizarStatus(Request $request, $id)
     {
-        $orcamento = Orcamento::findOrFail($id);
+        $orcamento = Orcamento::with(['itens'])->findOrFail($id);
 
-        // Pegando o status do JSON ou do POST
         $status = $request->input('status');
-
-        // Validação rápida
         $validStatus = ['Aprovar desconto', 'Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'];
+
         if (!in_array($status, $validStatus)) {
             return response()->json(['message' => 'Status inválido!'], 422);
         }
 
+        // Atualiza status comercial
         $orcamento->status = $status;
-        $orcamento->usuario_logado_id = auth()->id(); // opcional: registra quem atualizou
+        if ($status == 'Aprovado') {
+            $orcamento->workflow_status = 'aguardando_separacao';
+        }
+        $orcamento->usuario_logado_id = auth()->id();
         $orcamento->save();
 
-        return response()->json(['message' => 'Status atualizado com sucesso!']);
+        // Se não foi aprovado, apenas responde
+        if ($status !== 'Aprovado') {
+            return response()->json(['message' => 'Status atualizado com sucesso!']);
+        }
+
+        // Se aprovado, aciona separação conforme política
+        if (!$orcamento->requer_separacao) {
+            // Só marca que está aguardando separação (sem criar lote ainda)
+            $orcamento->update(['workflow_status' => 'aguardando_separacao']);
+            return response()->json([
+                'message' => 'Orçamento aprovado! Fluxo marcado como Aguardando Separação.',
+                'redirect' => route('orcamentos.separacao.show', $orcamento->id)
+            ]);
+        }
+
+        // Criar lote de separação + itens + reservas imediatamente
+        // Usa transação para consistência
+        \DB::transaction(function () use ($orcamento) {
+            // Evita duplicar lote se já existir aberto/em_separacao
+            $existe = \App\Models\PickingBatch::where('orcamento_id', $orcamento->id)
+                ->whereIn('status', ['aberto', 'em_separacao'])
+                ->exists();
+
+            if (!$existe) {
+                $batch = \App\Models\PickingBatch::create([
+                    'orcamento_id' => $orcamento->id,
+                    'status' => 'em_separacao',
+                    'started_at' => now(),
+                    'criado_por_id' => auth()->id(),
+                ]);
+
+                foreach ($orcamento->itens as $oi) {
+                    \App\Models\PickingItem::create([
+                        'picking_batch_id' => $batch->id,
+                        'orcamento_item_id' => $oi->id,
+                        'produto_id' => $oi->produto_id,
+                        'qty_solicitada' => $oi->quantidade,
+                        'qty_separada' => 0,
+                        'status' => 'pendente',
+                    ]);
+                }
+
+                // Reservas de estoque
+                app(\App\Services\EstoqueService::class)->reservarParaOrcamento($orcamento);
+
+                // Seta workflow em separação
+                $orcamento->update(['workflow_status' => 'em_separacao']);
+            }
+        });
+
+        return response()->json([
+            'message' => 'Orçamento aprovado e Separação iniciada!',
+            'redirect' => route('orcamentos.separacao.show', $orcamento->id)
+        ]);
     }
 
 
