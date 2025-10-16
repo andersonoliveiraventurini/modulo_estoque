@@ -62,7 +62,8 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader || true
 
 # Instala dependências JS e compila os assets
-RUN npm install && npm run build
+# RUN npm install && npm run build
+RUN npm install
 
 # Ajusta permissões
 RUN chown -R www-data:www-data /var/www/html && chmod -R 775 storage bootstrap/cache
