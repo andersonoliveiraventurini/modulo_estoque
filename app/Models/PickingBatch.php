@@ -21,4 +21,13 @@ class PickingBatch extends Model
     public function orcamento() { return $this->belongsTo(Orcamento::class); }
     public function items() { return $this->hasMany(PickingItem::class, 'picking_batch_id'); }
     public function criador() { return $this->belongsTo(User::class, 'criado_por_id'); }
+
+    /**
+     * Relação para buscar o usuário que criou o lote.
+     * A chave estrangeira é 'criado_por_id'.
+     */
+    public function criadoPor()
+    {
+        return $this->belongsTo(User::class, 'criado_por_id');
+    }
 }

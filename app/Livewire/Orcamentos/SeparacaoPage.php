@@ -2,12 +2,13 @@
 
 namespace App\Livewire\Orcamentos;
 
-use App\Models\EstoqueReserva;
 use App\Models\Orcamento;
 use App\Models\PickingBatch;
 use App\Models\PickingItem;
 use App\Services\EstoqueService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -16,7 +17,7 @@ class SeparacaoPage extends Component
     public int $orcamentoId;
     public ?Orcamento $orcamento = null;
     public ?PickingBatch $batch = null;
-
+    public ?Collection $concludedBatches = null;
     public array $inputs = [];
 
     public function mount(int $id)
@@ -30,12 +31,31 @@ class SeparacaoPage extends Component
     {
         $this->orcamento = Orcamento::with(['cliente'])->findOrFail($this->orcamentoId);
 
-        $this->batch = PickingBatch::with(['items.produto'])
+        // 1. Tenta carregar o lote de separação ativo com as relações aninhadas CORRIGIDAS
+        $this->batch = PickingBatch::with([
+                'criadoPor', // Relação direta de PickingBatch
+                'items.produto', // Relação aninhada: items e, para cada item, seu produto
+                'items.separadoPor' // Relação aninhada: items e, para cada item, quem o separou
+            ])
             ->where('orcamento_id', $this->orcamentoId)
             ->whereIn('status', ['aberto', 'em_separacao'])
             ->latest('id')
             ->first();
 
+        // 2. Se não houver lote ativo, carrega os lotes concluídos (com a MESMA CORREÇÃO)
+        if (!$this->batch) {
+            $this->concludedBatches = PickingBatch::with([
+                    'criadoPor',
+                    'items.produto',
+                    'items.separadoPor'
+                ])
+                ->where('orcamento_id', $this->orcamentoId)
+                ->where('status', 'concluido')
+                ->orderBy('finished_at', 'desc')
+                ->get();
+        }
+
+        // 3. Preenche os inputs do formulário se houver um lote ativo
         if ($this->batch) {
             $this->inputs = [];
             foreach ($this->batch->items as $it) {
@@ -49,11 +69,24 @@ class SeparacaoPage extends Component
         }
     }
 
+    // ... O restante do seu arquivo PHP permanece exatamente igual ...
+    
     public function iniciarSeparacao(EstoqueService $estoque)
     {
+        // Impede a criação de um novo lote se já existir um ativo.
+        $existingBatch = PickingBatch::where('orcamento_id', $this->orcamentoId)
+            ->whereIn('status', ['aberto', 'em_separacao'])
+            ->exists();
+
+        if ($existingBatch) {
+            session()->flash('error', 'Já existe um lote de separação em andamento para este orçamento.');
+            $this->dispatch('refresh');
+            return;
+        }
+
         $orcamento = Orcamento::with(['itens.produto'])->findOrFail($this->orcamentoId);
 
-       if ($orcamento->itens->count() === 0) {
+        if ($orcamento->itens->count() === 0) {
             session()->flash('error', 'Este orçamento não possui itens para separar.');
             return;
         }
@@ -79,56 +112,42 @@ class SeparacaoPage extends Component
 
             $estoque->reservarParaOrcamento($orcamento);
             $orcamento->update(['workflow_status' => 'em_separacao']);
-            $orcamento->save();
         });
 
         $this->dispatch('refresh');
-        session()->flash('success', 'Separação iniciada.');
+        session()->flash('success', 'Separação iniciada com sucesso.');
     }
 
     public function salvarItem(int $itemId)
     {
-        // 1. Valida se o lote e o item existem para evitar erros.
         if (!$this->batch) {
             session()->flash('error', 'Lote de separação não encontrado.');
             return;
         }
 
-        // 2. Pega os dados do formulário para este item específico.
-        //    A propriedade $inputs contém os valores dos campos com wire:model.defer.
         $data = $this->inputs[$itemId] ?? null;
         if (!$data) {
             session()->flash('error', 'Dados do item não encontrados no formulário.');
             return;
         }
 
-        // 3. Carrega o item do banco de dados para garantir que estamos atualizando o registro correto.
         $item = PickingItem::find($itemId);
         if (!$item) {
             session()->flash('error', 'Item de separação não encontrado no banco de dados.');
             return;
         }
 
-        // 4. Valida e sanitiza a quantidade para evitar valores inválidos.
         $validatedQty = max(0, (float) ($data['qty'] ?? 0));
-        $validatedQty = min($validatedQty, (float) $item->qty_solicitada); // Garante que não exceda o solicitado.
+        $validatedQty = min($validatedQty, (float) $item->qty_solicitada);
 
-        // 5. Executa a atualização dentro de uma transação para segurança.
         DB::transaction(function () use ($item, $data, $validatedQty) {
             $item->qty_separada = $validatedQty;
             $item->separado_por_id = auth()->id();
             $item->separado_em = now();
 
-            // Salva o motivo apenas se a quantidade for zero.
             $motivo = trim((string) ($data['motivo'] ?? ''));
-            if ($validatedQty <= 0 && !empty($motivo)) {
-                $item->motivo_nao_separado = $motivo;
-            } elseif ($validatedQty > 0) {
-                // Limpa o motivo se o item foi separado.
-                $item->motivo_nao_separado = null;
-            }
+            $item->motivo_nao_separado = ($validatedQty <= 0 && !empty($motivo)) ? $motivo : null;
 
-            // Salva os dados de inconsistência.
             $inconsistencia = (bool) ($data['inconsistencia'] ?? false);
             $item->inconsistencia_reportada = $inconsistencia;
             if ($inconsistencia) {
@@ -139,7 +158,6 @@ class SeparacaoPage extends Component
                 $item->inconsistencia_obs = null;
             }
 
-            // Atualiza o status do item com base na quantidade separada.
             if ($item->qty_separada <= 0) {
                 $item->status = 'pendente';
             } elseif ($item->qty_separada < $item->qty_solicitada) {
@@ -148,11 +166,9 @@ class SeparacaoPage extends Component
                 $item->status = 'separado';
             }
 
-            // Salva todas as alterações no banco de dados.
             $item->save();
         });
 
-        // 6. Dispara um evento para recarregar os dados na tela e dá feedback ao usuário.
         $this->dispatch('refresh');
         session()->flash('success', 'Item #' . $item->id . ' atualizado com sucesso!');
     }
@@ -164,32 +180,24 @@ class SeparacaoPage extends Component
             return;
         }
 
-        // Recarrega os itens para garantir que temos os dados mais recentes
         $this->batch->load('items');
-        $itens = $this->batch->items;
 
-        // Validação: Verifica se algum item não separado está sem motivo
-        foreach ($itens as $i) {
-            // Considera tanto o que já está salvo no banco quanto o que está no formulário
-            $motivoNoForm = $this->inputs[$i->id]['motivo'] ?? '';
-            $motivoNoBanco = $i->motivo_nao_separado ?? '';
+        foreach ($this->batch->items as $item) {
+            $qtySeparada = $this->inputs[$item->id]['qty'] ?? $item->qty_separada;
+            $motivo = trim($this->inputs[$item->id]['motivo'] ?? $item->motivo_nao_separado ?? '');
 
-            if ($i->qty_separada <= 0 && empty($motivoNoForm) && empty($motivoNoBanco)) {
-                // Adiciona o erro e destaca o campo do item problemático
-                $this->addError("inputs.{$i->id}.motivo", 'Informe o motivo para não separar este item.');
-                // Adiciona um erro geral para ser exibido no topo
+            if ((float)$qtySeparada <= 0 && empty($motivo)) {
+                $this->addError("inputs.{$item->id}.motivo", 'Informe o motivo para não separar este item.');
                 $this->addError('batch', 'Existem itens pendentes sem justificativa.');
                 return;
             }
         }
 
-        // Se a validação passou, executa a conclusão
-        DB::transaction(function () use ($itens) {
-            // Garante que os últimos motivos digitados sejam salvos
-            foreach ($itens as $i) {
-                $formMotivo = $this->inputs[$i->id]['motivo'] ?? null;
-                if ($i->qty_separada <= 0 && !empty($formMotivo) && $i->motivo_nao_separado !== $formMotivo) {
-                    $i->update(['motivo_nao_separado' => $formMotivo]);
+        DB::transaction(function () {
+            foreach ($this->batch->items as $item) {
+                $formMotivo = $this->inputs[$item->id]['motivo'] ?? null;
+                if ((float)$item->qty_separada <= 0 && !empty($formMotivo) && $item->motivo_nao_separado !== $formMotivo) {
+                    $item->update(['motivo_nao_separado' => $formMotivo]);
                 }
             }
 
@@ -198,14 +206,12 @@ class SeparacaoPage extends Component
                 'finished_at' => now(),
             ]);
 
-            $this->batch->orcamento->update([
+            $this->batch->orcamento()->update([
                 'workflow_status' => 'aguardando_conferencia'
             ]);
         });
 
         session()->flash('success', 'Separação concluída! Redirecionando para a conferência...');
-
-        // Redireciona para a próxima etapa do fluxo
         return redirect()->route('orcamentos.conferencia.show', $this->orcamento->id);
     }
 

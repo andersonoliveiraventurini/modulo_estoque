@@ -30,7 +30,7 @@
         </div>
     </div>
 
-    <div class="flex items-end gap-4">
+    <div class="flex items-end gap-4" style="padding-bottom: 1rem; padding-top: 0.5rem; padding-left: 1.5rem; padding-right: 1.5rem;">
         <div class="flex items-end gap-4 flex-wrap">
 
             <!-- Cliente -->
