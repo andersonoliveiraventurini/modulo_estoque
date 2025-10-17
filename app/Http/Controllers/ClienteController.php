@@ -8,6 +8,7 @@ use App\Models\AnaliseCredito;
 use App\Models\Bloqueio;
 use App\Models\Cliente;
 use App\Models\Contato;
+use App\Models\User;
 use App\Models\Vendedor;
 use Illuminate\Support\Facades\DB;
 use PhpParser\Node\Stmt\Block;
@@ -28,8 +29,9 @@ class ClienteController extends Controller
      */
     public function create()
     {
-        $vendedores = Vendedor::all();
-        return view('paginas.clientes.create', compact('vendedores'));
+        $vendedores = User::whereHas('vendedor')->get();
+        $vendedores_externos = User::whereHas('vendedor')->get();
+        return view('paginas.clientes.create', compact('vendedores', 'vendedores_externos'));
     }
 
     /**
@@ -37,8 +39,9 @@ class ClienteController extends Controller
      */
     public function create_completo()
     {
-        $vendedores = Vendedor::all();
-        return view('paginas.clientes.create_completo', compact('vendedores'));
+        $vendedores = User::whereHas('vendedor')->get();
+        $vendedores_externos = User::whereHas('vendedor')->get();
+        return view('paginas.clientes.create_completo', compact('vendedores', 'vendedores_externos'));
     }
 
     /**

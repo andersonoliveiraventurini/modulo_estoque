@@ -85,13 +85,13 @@
                                 <x-select name="vendedor_id" label="Vendedor Responsável">
                                     <option value="">Selecione um vendedor</option>
                                     @foreach ($vendedores as $v)
-                                        <option value="{{ $v->id }}">{{ $v->id }}</option>
+                                        <option value="{{ $v->id }}">{{ $v->name }}</option>
                                     @endforeach
                                 </x-select>
                                 <x-select name="vendedor_externo_id" label="Vendedor Externo">
                                     <option value="">Selecione um vendedor externo</option>
-                                    @foreach ($vendedores as $v)
-                                        <option value="{{ $v->id }}">{{ $v->id }}</option>
+                                    @foreach ($vendedores_externos as $v)
+                                        <option value="{{ $v->id }}">{{ $v->name }}</option>
                                     @endforeach
                                 </x-select>
                                 <x-input name="desconto" label="Desconto (%)" type="number" step="0.01" />

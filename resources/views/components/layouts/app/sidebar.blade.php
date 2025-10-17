@@ -108,21 +108,21 @@
                 :current="request()->routeIs('subcategorias.create')" wire:navigate>{{ __('Criar subcategoria') }}
             </flux:navlist.item>
         </flux:navlist.group>
-
+        <!-- 
         <flux:navlist variant="outline">
-            <flux:navlist.group :heading="__('RD Station')" class="grid">
-                <flux:navlist.item icon="home" :href="route('rdstation.checar-token')"
-                    :current="request()->routeIs('rdstation.checar-token')" wire:navigate>{{ __('Checar token') }}
+            <flux:navlist.group : heading="__('RD Station')" class="grid">
+                <flux:navlist.item icon="home" : href="route('rdstation.checar-token')"
+                    : current="request()->routeIs('rdstation.checar-token')" wire:navigate>{ { __('Checar token') }}
                 </flux:navlist.item>
-                <flux:navlist.item icon="banknotes" :href="route('rdstation.listar-empresas')"
-                    :current="request()->routeIs('rdstation.listar-empresas')" wire:navigate>{{ __('Empresas') }}
+                <flux:navlist.item icon="banknotes" : href="route('rdstation.listar-empresas')"
+                    : current="request()->routeIs('rdstation.listar-empresas')" wire:navigate>{ { __('Empresas') }}
                 </flux:navlist.item>
-                <flux:navlist.item icon="shopping-cart" :href="route('rdstation.listar-negociacoes')"
-                    :current="request()->routeIs('rdstation.listar-negociacoes')" wire:navigate>
-                    {{ __('Negociações') }}
+                <flux:navlist.item icon="shopping-cart" : href="route('rdstation.listar-negociacoes')"
+                    : current="request()->routeIs('rdstation.listar-negociacoes')" wire:navigate>
+                    { { __('Negociações') }}
                 </flux:navlist.item>
             </flux:navlist.group>
-        </flux:navlist>
+        </flux:navlist>-->
 
         <flux:spacer />
 
