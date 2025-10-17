@@ -59,34 +59,35 @@
 
                             <button type="submit"
                                 class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
-                                Atualizar
-                            </button>
-                        </form>
-                    @else
-                        <p><strong>Status:</strong></p>
-                        <form id="form-status-{{ $orcamento->id }}" class="inline-flex flex-wrap gap-2"
-                            data-id="{{ $orcamento->id }}"
-                            data-url="{{ route('orcamentos.atualizar-status', $orcamento->id) }}">
-                            @csrf
-                            @method('PUT')
-                            <select name="status"
-                                class="border border-gray-300 rounded px-2 py-1 text-sm status-select"
-                                data-id="{{ $orcamento->id }}">
-                                @foreach (['Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'] as $s)
-                                    <option value="{{ $s }}" @selected($orcamento->status === $s)>
-                                        {{ $s }}
-                                    </option>
-                                @endforeach
-                            </select>
-
-                            <button type="button"
-                                class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 atualizar-status"
-                                data-id="{{ $orcamento->id }}">
-                                Atualizar
+                                Salvar
                             </button>
                         </form>
                     @endif
+                    <br/>
+                    <span
+                        class="inline-block bg-yellow-200 text-yellow-800 text-sm px-3 py-1 rounded-full font-medium mb-2">
+                        Status
+                    </span>
+                    <form id="form-status-{{ $orcamento->id }}" class="inline-flex flex-wrap gap-2"
+                        data-id="{{ $orcamento->id }}"
+                        data-url="{{ route('orcamentos.atualizar-status', $orcamento->id) }}">
+                        @csrf
+                        @method('PUT')
+                        <select name="status" class="border border-gray-300 rounded px-2 py-1 text-sm status-select"
+                            data-id="{{ $orcamento->id }}">
+                            @foreach (['Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'] as $s)
+                                <option value="{{ $s }}" @selected($orcamento->status === $s)>
+                                    {{ $s }}
+                                </option>
+                            @endforeach
+                        </select>
 
+                        <button type="button"
+                            class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 atualizar-status"
+                            data-id="{{ $orcamento->id }}">
+                            Atualizar
+                        </button>
+                    </form>
                     {{-- Workflow Operacional (separação/conferência) --}}
                     <div class="mt-4">
                         @php
