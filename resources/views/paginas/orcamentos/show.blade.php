@@ -193,7 +193,7 @@
                 ->whereIn('status', ['aberto', 'em_separacao'])
                 ->exists();
         @endphp
-        @if ($orcamento->status === 'Aprovado' && !$temBatchAtivo)
+        @if ($orcamento->status === 'Aprovado' && $temBatchAtivo)
             <div
                 class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
                 <div class="flex items-center justify-between">
@@ -203,7 +203,7 @@
                     </div>
                     <a href="{{ route('orcamentos.separacao.show', $orcamento->id) }}"
                         class="inline-flex items-center px-3 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-sm">
-                        Iniciar Separação
+                        Ir para Separação
                     </a>
                 </div>
             </div>

@@ -14,7 +14,7 @@ class PickingItem extends Model
         'picking_batch_id','orcamento_item_id','produto_id',
         'qty_solicitada','qty_separada','status','localizacao',
         'separado_por_id','separado_em','motivo_nao_separado',
-        'inconsistencia_reportada','inconsistencia_por_id','inconsistencia_obs'
+        'inconsistencia_reportada','inconsistencia_por_id','inconsistencia_obs', 'status'
     ];
 
     protected $casts = [

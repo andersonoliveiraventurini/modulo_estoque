@@ -18,7 +18,8 @@ return new class extends Migration
                 'aguardando_conferencia',
                 'em_conferencia',
                 'conferido',
-                'finalizado'
+                'finalizado',
+                'cancelado'
             ])->nullable()->after('status')->comment('Fluxo operacional do pedido/orçamento');
         });
     }

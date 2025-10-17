@@ -30,7 +30,8 @@
         </div>
     </div>
 
-    <div class="flex items-end gap-4" style="padding-bottom: 1rem; padding-top: 0.5rem; padding-left: 1.5rem; padding-right: 1.5rem;">
+    <div class="flex items-end gap-4"
+        style="padding-bottom: 1rem; padding-top: 0.5rem; padding-left: 1.5rem; padding-right: 1.5rem;">
         <div class="flex items-end gap-4 flex-wrap">
 
             <!-- Cliente -->
@@ -40,7 +41,7 @@
                 </label>
                 <x-input id="cliente" wire:model.live.debounce.300ms="cliente" placeholder="Nome do cliente..." />
             </div>
-            
+
             <!-- Cliente -->
             <div class="flex flex-col flex-[2] min-w-[180px]">
                 <label for="cidade" class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
@@ -139,12 +140,14 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 flex gap-2">
-                            <a href="{{ route('orcamentos.edit', $o->id) }}">
-                                <x-button size="sm" variant="secondary">
-                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
-                                    Editar
-                                </x-button>
-                            </a>
+                            @if ($o->status == 'Pendente')
+                                <a href="{{ route('orcamentos.edit', $o->id) }}">
+                                    <x-button size="sm" variant="secondary">
+                                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                        Editar
+                                    </x-button>
+                                </a>
+                            @endif
                             <form action="{{ route('orcamentos.duplicar', $o->id) }}" method="POST"
                                 onsubmit="return confirm('Deseja duplicar este orçamento?');">
                                 @csrf

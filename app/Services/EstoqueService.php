@@ -89,4 +89,13 @@ final class EstoqueService
 
         return $disponivelAposReserva >= $min;
     }
+
+     public function liberarReservaDoOrcamento(Orcamento $orcamento): void
+    {
+        // Reutilizamos a lógica do método liberarReservas, informando que
+        // o consumo de todos os produtos foi zero.
+        // Ao passar um array de consumos vazio, a lógica interna do liberarReservas
+        // irá automaticamente marcar todas as reservas como 'cancelada'.
+        $this->liberarReservas($orcamento, []);
+    }
 }

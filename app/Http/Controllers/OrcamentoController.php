@@ -20,6 +20,8 @@ use Carbon\Carbon;
 use DragonCode\Contracts\Cashier\Auth\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use App\Models\PickingBatch;
+use App\Models\PickingItem;
 
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -390,7 +392,7 @@ class OrcamentoController extends Controller
             'vendedor_id'  => $orcamentoOriginal->vendedor_id,
             'obra'         => $novaObra,
             'valor_total_itens' => $orcamentoOriginal->valor_total_itens,
-            'status'       => $orcamentoOriginal->status,
+            'status'       => 'Pendente',
             'observacoes'  => $orcamentoOriginal->observacoes,
             'frete'        => $orcamentoOriginal->frete,
             'guia_recolhimento' => $orcamentoOriginal->guia_recolhimento,
@@ -525,59 +527,62 @@ class OrcamentoController extends Controller
         $orcamento->save();
 
         // Se não foi aprovado, apenas responde
-        if ($status !== 'Aprovado') {
-            return response()->json(['message' => 'Status atualizado com sucesso!']);
+        if ($status !== 'Aprovado' && $status !== 'Pendente') {
+            // 2. Chame o novo método
+            $loteCancelado = $orcamento->cancelarLoteDeSeparacaoAtivo();
+
+            if ($loteCancelado) {
+                return response()->json([
+                    'message' => 'Status atualizado com sucesso!',
+                    'redirect' => route('orcamentos.index')
+                ]);
+            } else {
+                return response()->json(['message' => 'Nenhum lote de separação ativo foi encontrado para este orçamento.']);
+            }
         }
 
         // Se aprovado, aciona separação conforme política
         if (!$orcamento->requer_separacao) {
             // Só marca que está aguardando separação (sem criar lote ainda)
-            $orcamento->update(['workflow_status' => 'aguardando_separacao']);
+            // Criar lote de separação + itens + reservas imediatamente
+            // Usa transação para consistência
+            \DB::transaction(function () use ($orcamento) {
+                // Evita duplicar lote se já existir aberto/em_separacao
+                $existe = \App\Models\PickingBatch::where('orcamento_id', $orcamento->id)
+                    ->whereIn('status', ['aberto', 'em_separacao'])
+                    ->exists();
+
+                if (!$existe) {
+                    $batch = \App\Models\PickingBatch::create([
+                        'orcamento_id' => $orcamento->id,
+                        'status' => 'em_separacao',
+                        'started_at' => now(),
+                        'criado_por_id' => auth()->id(),
+                    ]);
+
+                    foreach ($orcamento->itens as $oi) {
+                        \App\Models\PickingItem::create([
+                            'picking_batch_id' => $batch->id,
+                            'orcamento_item_id' => $oi->id,
+                            'produto_id' => $oi->produto_id,
+                            'qty_solicitada' => $oi->quantidade,
+                            'qty_separada' => 0,
+                            'status' => 'pendente',
+                        ]);
+                    }
+
+                    // Reservas de estoque
+                    app(\App\Services\EstoqueService::class)->reservarParaOrcamento($orcamento);
+
+                    // Seta workflow em separação
+                    $orcamento->update(['workflow_status' => 'em_separacao']);
+                }
+            });
             return response()->json([
-                'message' => 'Orçamento aprovado! Fluxo marcado como Aguardando Separação.',
+                'message' => 'Orçamento aprovado e Separação iniciada!',
                 'redirect' => route('orcamentos.separacao.show', $orcamento->id)
             ]);
         }
-
-        // Criar lote de separação + itens + reservas imediatamente
-        // Usa transação para consistência
-        \DB::transaction(function () use ($orcamento) {
-            // Evita duplicar lote se já existir aberto/em_separacao
-            $existe = \App\Models\PickingBatch::where('orcamento_id', $orcamento->id)
-                ->whereIn('status', ['aberto', 'em_separacao'])
-                ->exists();
-
-            if (!$existe) {
-                $batch = \App\Models\PickingBatch::create([
-                    'orcamento_id' => $orcamento->id,
-                    'status' => 'em_separacao',
-                    'started_at' => now(),
-                    'criado_por_id' => auth()->id(),
-                ]);
-
-                foreach ($orcamento->itens as $oi) {
-                    \App\Models\PickingItem::create([
-                        'picking_batch_id' => $batch->id,
-                        'orcamento_item_id' => $oi->id,
-                        'produto_id' => $oi->produto_id,
-                        'qty_solicitada' => $oi->quantidade,
-                        'qty_separada' => 0,
-                        'status' => 'pendente',
-                    ]);
-                }
-
-                // Reservas de estoque
-                app(\App\Services\EstoqueService::class)->reservarParaOrcamento($orcamento);
-
-                // Seta workflow em separação
-                $orcamento->update(['workflow_status' => 'em_separacao']);
-            }
-        });
-
-        return response()->json([
-            'message' => 'Orçamento aprovado e Separação iniciada!',
-            'redirect' => route('orcamentos.separacao.show', $orcamento->id)
-        ]);
     }
 
 
@@ -603,6 +608,8 @@ class OrcamentoController extends Controller
     public function destroy($orcamento_id)
     {
         $orcamento = Orcamento::findOrFail($orcamento_id);
+        // cancela os lotes de separação ativos antes de excluir o orçamento
+        $orcamento->cancelarLoteDeSeparacaoAtivo();
         $orcamento->delete();
 
         return redirect()->route('orcamentos.index')

@@ -54,20 +54,41 @@
                             </svg>
                             Produtos no Orçamento
                         </h3>
-                        <div class="overflow-x-auto rounded-lg">
-                            <table class="min-w-full text-sm text-left">
-                                <thead class="bg-gray-100">
+                        <div
+                            class="ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10 rounded-lg overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                        <th class="px-3 py-2 border">Código</th>
-                                        <th class="px-3 py-2 border">Produto</th>
-                                        <th class="px-3 py-2 border">Part Number</th>
-                                        <th class="px-3 py-2 border">Fornecedor</th>
-                                        <th class="px-3 py-2 border">Cor</th>
-                                        <th class="px-3 py-2 border">Preço Unit.</th>
-                                        <th class="px-3 py-2 border w-16 text-center">Qtd.</th>
-                                        <th class="px-3 py-2 border">Subtotal</th>
-                                        <th class="px-3 py-2 border">com Desconto</th>
-                                        <th class="px-3 py-2 border">Ações</th>
+                                        <th scope="col"
+                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                            Código</th>
+                                        <th scope="col"
+                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                            Produto</th>
+                                        <th scope="col"
+                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                            Part Number</th>
+                                        <th scope="col"
+                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                            Fornecedor</th>
+                                        <th scope="col"
+                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                            Cor</th>
+                                        <th scope="col"
+                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                            Preço Unit.</th>
+                                        <th scope="col"
+                                            class="w-20 px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                            Qtd.</th>
+                                        <th scope="col"
+                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                            Subtotal</th>
+                                        <th scope="col"
+                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                            c/ Desconto</th>
+                                        <th scope="col"
+                                            class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                            Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="produtos-selecionados" class="divide-y"></tbody>
