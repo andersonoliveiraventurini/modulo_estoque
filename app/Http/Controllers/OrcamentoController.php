@@ -683,9 +683,27 @@ class OrcamentoController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Orcamento $orcamento)
+    public function edit($id)
     {
-        //
+        $orcamento = Orcamento::with(['cliente', 'itens.produto', 'vidros'])->findOrFail($id);
+
+        // Você também precisa passar as outras variáveis que a view usa
+        $cliente = Cliente::find($orcamento->cliente_id);
+        $produtos = Produto::all();
+        $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
+        $cores = Cor::orderBy('nome')->get();
+        $vendedores = User::whereHas('vendedor')->get();
+        $opcoesTransporte = TipoTransporte::all();
+
+        return view('paginas.orcamentos.edit', compact(
+            'orcamento',
+            'vendedores',
+            'opcoesTransporte',
+            'cores',
+            'fornecedores',
+            'produtos',
+            'cliente'
+        ));
     }
 
     /**

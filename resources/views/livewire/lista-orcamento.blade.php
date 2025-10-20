@@ -140,7 +140,7 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 flex gap-2">
-                            @if ($o->status == 'Pendente')
+                            @if ($o->status == 'Pendente' || $o->status == 'Aprovar desconto')
                                 <a href="{{ route('orcamentos.edit', $o->id) }}">
                                     <x-button size="sm" variant="secondary">
                                         <x-heroicon-o-pencil-square class="w-4 h-4" />

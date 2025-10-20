@@ -68,12 +68,14 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 flex gap-2">
+                            @if ($c->status == 'Pendente' || $c->status == 'Aprovar desconto')
                             <a href="{{ route('orcamentos.edit', $c->id) }}">
                                 <x-button size="sm" variant="secondary">
                                     <x-heroicon-o-pencil-square class="w-4 h-4" />
                                     Editar
                                 </x-button>
                             </a>
+                            @endif
 
                             <form action="{{ route('orcamentos.duplicar', $c->id) }}" method="POST"
                                 onsubmit="return confirm('Deseja duplicar este orçamento?');">

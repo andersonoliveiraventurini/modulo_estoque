@@ -20,6 +20,15 @@
                         </a>
                     @endif
                 @endif
+
+                @if ($orcamento->status == 'Aprovar desconto' || $orcamento->status == 'Pendente')
+                    <a href="{{ route('orcamentos.edit', $orcamento->id) }}">
+                        <x-button size="sm" variant="secondary">
+                            <x-heroicon-o-pencil-square class="w-4 h-4" />
+                            Editar
+                        </x-button>
+                    </a>
+                @endif
             </h2>
 
             <div class="flex flex-wrap justify-between items-start gap-4">
