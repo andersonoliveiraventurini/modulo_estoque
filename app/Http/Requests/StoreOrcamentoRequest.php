@@ -29,7 +29,7 @@ class StoreOrcamentoRequest extends FormRequest
             'desconto' => 'nullable|numeric|min:0|max:100',
             'desconto_aprovado' => 'nullable|numeric|min:0|max:100',
             'desconto_especifico' => 'nullable|string',
-            'guia_recolhimento' => 'nullable|string',
+            'guia_recolhimento' => 'nullable|numeric',
             'vendedor_id' => 'nullable|exists:users,id',
             'itens' => 'nullable|array',
             'itens.*.id' => 'required_with:itens|exists:produtos,id',

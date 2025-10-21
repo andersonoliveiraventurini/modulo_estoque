@@ -152,9 +152,14 @@ class OrcamentoController extends Controller
         // 1) Definir desconto percentual (cliente x vendedor)
         $descontoPercentual = null;
 
+        if($request->guia_recolhimento != null){
+            $request->merge([
+                'guia_recolhimento' => str_replace(',', '.', str_replace('.', '', $request->guia_recolhimento)),
+            ]);
+        }
+
         $request->merge([
             'desconto_especifico' => str_replace(',', '.', str_replace('.', '', $request->desconto_especifico)),
-            'guia_recolhimento' => str_replace(',', '.', str_replace('.', '', $request->guia_recolhimento)),
             'desconto_aprovado' => str_replace(',', '.', str_replace('.', '', $request->desconto_aprovado)),
         ]);
 
@@ -181,7 +186,7 @@ class OrcamentoController extends Controller
             'usuario_logado_id'  => Auth()->user()->id,
             'obra'         => $request->nome_obra,
             'valor_total_itens'  => $request->valor_total,
-            'guia_recolhimento'  => $request->guia_recolhimento ?? 0,
+            'guia_recolhimento'  => $request->guia_recolhimento,
             'observacoes'  => $request->observacoes,
             'validade'     => Carbon::now()->addDays(2), // sempre +2 dias
         ]);
