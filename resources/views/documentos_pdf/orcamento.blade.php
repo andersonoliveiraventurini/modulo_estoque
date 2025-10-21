@@ -201,8 +201,16 @@
             </td>
         </tr>
     </table>
-    <h2 style="margin:0; font-size:20px; text-transform:uppercase;">ORÇAMENTO n° {{ $orcamento->id }} -
-        {{ $orcamento->transportes->pluck('nome')->join(', ') }}</h2>
+    <h2 style="margin:0; font-size:20px; text-transform:uppercase;">ORÇAMENTO n° {{ $orcamento->id }}
+        @if ($orcamento->versao > 1)
+            - Revisão:
+            {{ $orcamento->versao }}
+        @endif
+        @if ($orcamento->transportes->count() > 0)
+            <br/>Transporte:
+            {{ $orcamento->transportes->pluck('nome')->join(', ') }}
+        @endif
+    </h2>
     <!-- ===========================
          DADOS DO CLIENTE
     =========================== -->
@@ -313,7 +321,7 @@
                         <td class="valor">R$ {{ number_format($vidro->preco_metro_quadrado, 2, ',', '.') }}</td>
                         @if ($percentualAplicado > 0)
                             <td class="valor">R$
-                                {{ number_format($vidro->preco_metro_quadrado - ($vidro->preco_metro_quadrado * ($percentualAplicado / 100)), 2, ',', '.') }}
+                                {{ number_format($vidro->preco_metro_quadrado - $vidro->preco_metro_quadrado * ($percentualAplicado / 100), 2, ',', '.') }}
                             </td>
                         @endif
                         <td class="valor">R$ {{ number_format($vidro->valor_com_desconto, 2, ',', '.') }}</td>

@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Models\PickingBatch;
 use App\Models\PickingItem;
+use Illuminate\Support\Facades\DB;
 
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -163,9 +164,6 @@ class OrcamentoController extends Controller
                 (float) $request->desconto ?? 0
             );
         }
-
-
-
 
         // 2) Definir desconto específico em valor (reais)
         $descontoEspecifico = $request->filled('desconto_especifico')
@@ -336,14 +334,13 @@ class OrcamentoController extends Controller
 
     private function gerarPdf(Orcamento $orcamento): bool
     {
-        
+        try {
             // 1. GERAÇÃO DE TOKEN E LINK SEGURO
             $token = Str::uuid();
             $tokenExpiraEm = Carbon::now()->addDays(2);
             $linkSeguro = route('orcamentos.view', ['token' => $token]);
 
             // 2. GERAÇÃO DO QR CODE
-            // O QR Code é gerado em formato PNG e depois codificado em base64 para ser embutido diretamente no HTML do PDF.
             $qrCodeBase64 = base64_encode(
                 QrCode::format('png')
                     ->size(130)
@@ -351,50 +348,41 @@ class OrcamentoController extends Controller
                     ->generate($linkSeguro)
             );
 
-            // 3. GERAÇÃO DO PDF
-            // Carregamos a view do Blade, passando o orçamento e o QR Code.
+            // 3. GERAÇÃO DO PDF (passando a versão)
             $pdf = Pdf::loadView('documentos_pdf.orcamento', [
                 'orcamento' => $orcamento,
                 'qrCode' => $qrCodeBase64,
-                // Passamos o link seguro também, caso queira exibi-lo como texto no PDF.
                 'linkSeguro' => $linkSeguro,
+                'versao' => $orcamento->versao ?? 1, // IMPORTANTE: Passar versão para o PDF
             ])->setPaper('a4');
 
             // 4. NUMERAÇÃO DE PÁGINAS
-            // Este script é executado pelo DomPDF para cada página durante a renderização.
             $canvas = $pdf->getDomPDF()->getCanvas();
             $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
                 $text = "Página $pageNumber / $pageCount";
                 $font = $fontMetrics->get_font("Helvetica", "normal");
-                // Ajuste as coordenadas (x, y) conforme necessário para o seu layout.
                 $canvas->text(270, 820, $text, $font, 10);
             });
 
             // 5. SALVAMENTO DO ARQUIVO
             $path = "orcamentos/orcamento_{$orcamento->id}.pdf";
-            // Usamos o facade Storage para salvar o PDF no disco 'public'.
             Storage::disk('public')->put($path, $pdf->output());
 
-            // 6. VERIFICAÇÃO E ATUALIZAÇÃO FINAL DO ORÇAMENTO
+            // 6. VERIFICAÇÃO E ATUALIZAÇÃO FINAL
             if (Storage::disk('public')->exists($path)) {
-                // Se o PDF foi salvo com sucesso, atualizamos o orçamento com todas as novas informações.
                 $orcamento->update([
                     'token_acesso' => $token,
                     'token_expira_em' => $tokenExpiraEm,
                     'pdf_path' => $path,
                 ]);
-                return true; // Sucesso!
+                return true;
             } else {
-                // Se o arquivo não foi encontrado após a tentativa de salvar, registramos um erro.
                 Log::error("Falha ao salvar o PDF no caminho: " . $path);
-                return false; // Falha!
+                return false;
             }
-            try {
-                
         } catch (\Exception $e) {
-            // Captura qualquer exceção durante o processo (geração do PDF, QR Code, etc.)
             Log::error("Erro fatal ao gerar PDF para o orçamento #{$orcamento->id}: " . $e->getMessage());
-            return false; // Falha!
+            return false;
         }
     }
 
@@ -697,6 +685,9 @@ class OrcamentoController extends Controller
         $vendedores = User::whereHas('vendedor')->get();
         $opcoesTransporte = TipoTransporte::all();
 
+        $desconto_percentual = $orcamento->descontos->where('tipo', 'percentual')->max('porcentagem') ?? 0;
+        $desconto_especifico = $orcamento->descontos->where('tipo', 'fixo')->max('valor') ?? 0;
+
         return view('paginas.orcamentos.edit', compact(
             'orcamento',
             'vendedores',
@@ -704,7 +695,9 @@ class OrcamentoController extends Controller
             'cores',
             'fornecedores',
             'produtos',
-            'cliente'
+            'cliente',
+            'desconto_percentual',
+            'desconto_especifico'
         ));
     }
 
@@ -713,7 +706,254 @@ class OrcamentoController extends Controller
      */
     public function update(UpdateOrcamentoRequest $request, Orcamento $orcamento)
     {
-        //
+
+        DB::beginTransaction();
+
+        try {
+            // 1) Calcular desconto percentual
+            $descontoPercentual = null;
+            if ($request->filled('desconto_aprovado') || $request->filled('desconto')) {
+                $descontoPercentual = max(
+                    (float) ($request->desconto_aprovado ?? 0),
+                    (float) ($request->desconto ?? 0)
+                );
+            }
+
+            // 2) Desconto específico em reais
+            $descontoEspecifico = $request->filled('desconto_especifico')
+                ? (float) $request->desconto_especifico
+                : null;
+
+            // 3) Normalizar guia de recolhimento
+            $guiaRecolhimento = $request->filled('guia_recolhimento')
+                ? (float) $request->guia_recolhimento
+                : 0;
+
+            // 3) Incrementar versão/revisão
+            $versaoAtual = $orcamento->versao ?? 0;
+            $novaVersao = $versaoAtual + 1;
+
+            // 4) Atualizar dados básicos
+            $orcamento->update([
+                'obra' => $request->obra,
+                'prazo_entrega' => $request->prazo_entrega,
+                'vendedor_id' => $request->vendedor_id ?? $orcamento->vendedor_id,
+                'frete' => $request->frete ?? 0,
+                'valor_total_itens' => $request->valor_total ?? $orcamento->valor_total_itens,
+                'guia_recolhimento' => $guiaRecolhimento,
+                'observacoes' => $request->observacoes,
+                'versao' => $novaVersao,
+                'validade' => Carbon::now()->addDays(2),
+            ]);
+
+            // 5) Atualizar ou criar endereço
+            if ($request->filled('entrega_cep')) {
+                if ($orcamento->endereco) {
+                    $orcamento->endereco->update([
+                        'cep' => $request->entrega_cep,
+                        'cidade' => $request->entrega_cidade,
+                        'estado' => $request->entrega_estado,
+                        'bairro' => $request->entrega_bairro,
+                        'logradouro' => $request->entrega_logradouro,
+                        'numero' => $request->entrega_numero,
+                        'complemento' => $request->entrega_compl,
+                    ]);
+                } else {
+                    $endereco = Endereco::create([
+                        'tipo' => 'entrega',
+                        'cliente_id' => $orcamento->cliente_id,
+                        'cep' => $request->entrega_cep,
+                        'cidade' => $request->entrega_cidade,
+                        'estado' => $request->entrega_estado,
+                        'bairro' => $request->entrega_bairro,
+                        'logradouro' => $request->entrega_logradouro,
+                        'numero' => $request->entrega_numero,
+                        'complemento' => $request->entrega_compl,
+                    ]);
+                    $orcamento->update(['endereco_id' => $endereco->id]);
+                }
+            }
+
+            // 6) Atualizar transportes
+            if ($request->has('tipos_transporte')) {
+                $orcamento->transportes()->sync($request->tipos_transporte);
+            }
+
+            // 7) PRODUTOS EXISTENTES
+            if ($request->has('produtos')) {
+                foreach ($request->produtos as $produtoData) {
+                    // Remover item marcado
+                    if (isset($produtoData['_remove']) && $produtoData['_remove']) {
+                        $item = $orcamento->itens()->where('produto_id', $produtoData['produto_id'])->first();
+                        if ($item) {
+                            $item->delete();
+                        }
+                        continue;
+                    }
+
+                    // Calcular valores
+                    $valorUnitario = (float) ($produtoData['valor_unitario'] ?? 0);
+                    $quantidade = (float) ($produtoData['quantidade'] ?? 0);
+                    $subtotal = $valorUnitario * $quantidade;
+
+                    $valorComDesconto = $subtotal;
+                    if ($descontoPercentual) {
+                        $valorComDesconto = $subtotal - ($subtotal * ($descontoPercentual / 100));
+                    }
+
+                    $orcamento->itens()->updateOrCreate(
+                        ['produto_id' => $produtoData['produto_id']],
+                        [
+                            'quantidade' => $quantidade,
+                            'valor_unitario' => $valorUnitario,
+                            'valor_unitario_com_desconto' => $produtoData['preco_unitario_com_desconto'] ?? null,
+                            'desconto' => $descontoPercentual ?? 0,
+                            'valor_com_desconto' => $valorComDesconto,
+                            'user_id' => $request->user()->id ?? null,
+                        ]
+                    );
+                }
+            }
+
+            // 8) NOVOS PRODUTOS
+            if ($request->has('itens')) {
+                foreach ($request->itens as $item) {
+                    $valorUnitario = (float) ($item['preco_unitario'] ?? 0);
+                    $quantidade = (float) ($item['quantidade'] ?? 0);
+                    $subtotal = $valorUnitario * $quantidade;
+
+                    $valorComDesconto = $subtotal;
+                    if ($descontoPercentual) {
+                        $valorComDesconto = $subtotal - ($subtotal * ($descontoPercentual / 100));
+                    }
+
+                    $orcamento->itens()->create([
+                        'produto_id' => $item['id'],
+                        'quantidade' => $quantidade,
+                        'valor_unitario' => $valorUnitario,
+                        'valor_unitario_com_desconto' => $item['preco_unitario_com_desconto'] ?? null,
+                        'desconto' => $descontoPercentual ?? 0,
+                        'valor_com_desconto' => $valorComDesconto,
+                        'user_id' => $request->user()->id ?? null,
+                    ]);
+                }
+            }
+
+            // 9) VIDROS REMOVIDOS
+            if ($request->has('vidros_removidos')) {
+                foreach ($request->vidros_removidos as $vidroId) {
+                    $vidro = $orcamento->vidros()->find($vidroId);
+                    if ($vidro) {
+                        $vidro->delete();
+                    }
+                }
+            }
+
+            // 10) VIDROS EXISTENTES
+            if ($request->has('vidros_existentes')) {
+                foreach ($request->vidros_existentes as $vidroData) {
+                    if (isset($vidroData['id'])) {
+                        $vidro = $orcamento->vidros()->find($vidroData['id']);
+                        if ($vidro) {
+                            $vidro->update([
+                                'descricao' => $vidroData['descricao'] ?? '',
+                                'quantidade' => $vidroData['quantidade'] ?? 1,
+                                'altura' => $vidroData['altura'] ?? 0,
+                                'largura' => $vidroData['largura'] ?? 0,
+                                'preco_metro_quadrado' => $vidroData['preco_m2'] ?? 0,
+                                'desconto' => $descontoPercentual ?? 0,
+                                'valor_total' => $vidroData['valor_total'] ?? 0,
+                                'valor_com_desconto' => $vidroData['valor_com_desconto'] ?? 0,
+                                'user_id' => $request->user()->id ?? null,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            // 11) NOVOS VIDROS
+            if ($request->has('vidros')) {
+                foreach ($request->vidros as $vidroData) {
+                    if (isset($vidroData['preco_m2'], $vidroData['quantidade'], $vidroData['altura'], $vidroData['largura'])) {
+                        $orcamento->vidros()->create([
+                            'descricao' => $vidroData['descricao'] ?? null,
+                            'quantidade' => $vidroData['quantidade'] ?? 0,
+                            'altura' => $vidroData['altura'] ?? 0,
+                            'largura' => $vidroData['largura'] ?? 0,
+                            'preco_metro_quadrado' => $vidroData['preco_m2'] ?? 0,
+                            'desconto' => $descontoPercentual ?? 0,
+                            'valor_total' => $vidroData['valor_total'] ?? 0,
+                            'valor_com_desconto' => $vidroData['valor_com_desconto'] ?? 0,
+                            'user_id' => $request->user()->id ?? null,
+                        ]);
+                    }
+                }
+            }
+
+            // 12) ATUALIZAR DESCONTOS
+            $orcamento->descontos()->delete();
+
+            if ($descontoPercentual) {
+                $orcamento->descontos()->create([
+                    'motivo' => 'Desconto percentual aplicado (cliente ou vendedor)',
+                    'valor' => 0,
+                    'porcentagem' => $descontoPercentual,
+                    'tipo' => 'percentual',
+                    'cliente_id' => $orcamento->cliente_id,
+                    'user_id' => Auth()->id(),
+                ]);
+            }
+
+            if ($descontoEspecifico) {
+                $orcamento->descontos()->create([
+                    'motivo' => 'Desconto específico em reais',
+                    'valor' => $descontoEspecifico,
+                    'porcentagem' => null,
+                    'tipo' => 'fixo',
+                    'cliente_id' => $orcamento->cliente_id,
+                    'user_id' => Auth()->id(),
+                ]);
+            }
+
+            DB::commit();
+
+            // 13) VERIFICAR APROVAÇÃO DE DESCONTO
+            if (
+                $descontoPercentual > ($request->desconto_aprovado ?? 0) &&
+                Auth()->user()->vendedor &&
+                Auth()->user()->vendedor->desconto < $descontoPercentual
+            ) {
+
+                $orcamento->status = 'aprovar desconto';
+                $orcamento->save();
+
+                return redirect()
+                    ->route('orcamentos.show', $orcamento->id)
+                    ->with('warning', 'Orçamento atualizado, mas é necessária a aprovação do desconto.');
+            }
+
+            // 14) GERAR PDF
+            $pdfGeradoComSucesso = $this->gerarPdf($orcamento);
+
+            if ($pdfGeradoComSucesso) {
+                return redirect()
+                    ->route('orcamentos.show', $orcamento->id)
+                    ->with('success', "Orçamento atualizado (Revisão {$novaVersao}) e PDF gerado com sucesso!");
+            } else {
+                return redirect()
+                    ->route('orcamentos.show', $orcamento->id)
+                    ->with('warning', 'Orçamento atualizado, mas houve falha ao gerar o PDF. Contate o suporte.');
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Erro ao atualizar orçamento #{$orcamento->id}: " . $e->getMessage());
+            Log::error("Stack trace: " . $e->getTraceAsString());
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Erro ao atualizar orçamento: ' . $e->getMessage());
+        }
     }
 
     /**

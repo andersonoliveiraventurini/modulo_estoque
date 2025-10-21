@@ -42,7 +42,6 @@
                     @csrf
                     @method('PUT')
                     <input type="hidden" name="cliente_id" value="{{ $cliente->id }}" />
-                    <!-- Token CSRF seria aqui -->
 
                     <!-- Produtos no Orçamento -->
                     <div class="space-y-4"><br />
@@ -98,11 +97,8 @@
                                                 value="{{ $item->produto->id }}">
                                             <input type="hidden" name="produtos[{{ $loop->index }}][valor_unitario]"
                                                 class="valor-unitario-hidden" value="{{ $item->valor_unitario }}">
-
-                                            <!-- 🔹 ADICIONAR ESTE CAMPO -->
                                             <input type="hidden" name="produtos[{{ $loop->index }}][part_number]"
                                                 value="{{ $item->produto->part_number ?? '' }}">
-
                                             <input type="hidden" name="produtos[{{ $loop->index }}][quantidade]"
                                                 value="{{ $item->quantidade }}">
                                             <input type="hidden" name="produtos[{{ $loop->index }}][subtotal]"
@@ -117,22 +113,9 @@
                                             <td class="px-3 py-2 border">{{ $item->produto->id }}</td>
                                             <td class="px-3 py-2 border">{{ $item->produto->nome }}</td>
                                             <td class="px-3 py-2 border">{{ $item->produto->part_number ?? '' }}</td>
-                                            <td class="px-3 py-2 border">
-                                                {{ $item->produto->fornecedor?->nome_fantasia ?? 'Sem fornecedor' }}
+                                            <td class="px-3 py-2 border">{{ $item->produto->fornecedor->nome ?? '' }}
                                             </td>
-                                            </td>
-                                            <td class="px-3 py-2 border">
-                                                @if ($item->produto->cor)
-                                                    <span class="inline-flex items-center gap-2">
-                                                        <span
-                                                            class="w-5 h-5 border border-zinc-300 dark:border-zinc-600 rounded"
-                                                            style="background-color: {{ $item->produto->cor->codigo_hex }}"></span>
-                                                        {{ $item->produto->cor->nome }}
-                                                    </span>
-                                                @else
-                                                    Sem cor
-                                                @endif
-                                            </td>
+                                            <td class="px-3 py-2 border">{{ $item->produto->cor ?? '' }}</td>
                                             <td class="px-3 py-2 border">R$
                                                 {{ number_format($item->valor_unitario, 2, ',', '.') }}</td>
                                             <td class="px-3 py-2 border">
@@ -163,7 +146,7 @@
                         </div>
                     </div>
 
-                    <!-- Seção de Vidros Corrigida -->
+                    <!-- Seção de Vidros -->
                     <div class="space-y-4">
                         <br />
                         <h3 class="text-lg font-medium flex items-center gap-2">
@@ -180,12 +163,66 @@
                                 + Adicionar Vidro/Esteira
                             </button>
                         </h3>
-                        <!-- Wrapper dos vidros (só aparece quando aberto) -->
-                        <div x-transition id="vidros-wrapper" class="space-y-4">
+                        
+                        <!-- Wrapper dos vidros -->
+                        <div id="vidros-wrapper" class="space-y-4">
+                            @foreach($orcamento->vidros ?? [] as $vidro)
+                                <div class="space-y-2 relative border border-neutral-200 dark:border-neutral-700 rounded-lg p-4" data-vidro-id="{{ $vidro->id }}">
+                                    <input type="hidden" name="vidros_existentes[{{ $loop->index }}][id]" value="{{ $vidro->id }}" />
+                                    <button type="button" onclick="removeVidroExistente(this)" class="absolute top-2 right-2 text-red-600 hover:text-red-800">Remover</button>
+                                    <br/>
+                                    <div class="overflow-x-auto">
+                                        <div class="flex gap-4 min-w-max">
+                                            <div class="flex-1">
+                                                <label class="block text-sm font-medium text-gray-700">Descrição</label>
+                                                <input type="text" name="vidros_existentes[{{ $loop->index }}][descricao]" 
+                                                    value="{{ $vidro->descricao }}"
+                                                    placeholder="Ex: Vidro incolor 8mm" 
+                                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                            </div>
+                                            <div class="flex-1">
+                                                <label class="block text-sm font-medium text-gray-700">Quantidade</label>
+                                                <input type="number" name="vidros_existentes[{{ $loop->index }}][quantidade]" 
+                                                    value="{{ $vidro->quantidade }}"
+                                                    oninput="calcularVidroExistente(this)" 
+                                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                            </div>
+                                            <div class="flex-1">
+                                                <label class="block text-sm font-medium text-gray-700">Preço m²</label>
+                                                <input type="number" step="0.01" name="vidros_existentes[{{ $loop->index }}][preco_m2]" 
+                                                    value="{{ $vidro->preco_metro_quadrado }}"
+                                                    oninput="calcularVidroExistente(this)" 
+                                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                            </div>
+                                            <div class="flex-1">
+                                                <label class="block text-sm font-medium text-gray-700">Altura (mm)</label>
+                                                <input type="number" name="vidros_existentes[{{ $loop->index }}][altura]" 
+                                                    value="{{ $vidro->altura }}"
+                                                    oninput="calcularVidroExistente(this)" 
+                                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                            </div>
+                                            <div class="flex-1">
+                                                <label class="block text-sm font-medium text-gray-700">Largura (mm)</label>
+                                                <input type="number" name="vidros_existentes[{{ $loop->index }}][largura]" 
+                                                    value="{{ $vidro->largura }}"
+                                                    oninput="calcularVidroExistente(this)" 
+                                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="vidros_existentes[{{ $loop->index }}][area]" class="area-hidden" value="{{ number_format(($vidro->altura / 1000) * ($vidro->largura / 1000), 2, '.', '') }}" />
+                                    <input type="hidden" name="vidros_existentes[{{ $loop->index }}][valor_total]" class="valor-hidden" value="{{ $vidro->valor_total }}" />
+                                    <input type="hidden" name="vidros_existentes[{{ $loop->index }}][valor_com_desconto]" class="valor-desconto-hidden" value="{{ $vidro->valor_com_desconto }}" />
+                                    <div class="mt-2 text-sm">
+                                        <strong>Área:</strong> <span class="area">{{ number_format(($vidro->altura / 1000) * ($vidro->largura / 1000), 2, ',', '.') }}</span> m² | 
+                                        <strong>Valor:</strong> R$ <span class="valor">{{ number_format($vidro->valor_total, 2, ',', '.') }}</span> | 
+                                        <strong>c/ desc:</strong> R$ <span class="valor-desconto">{{ number_format($vidro->valor_com_desconto, 2, ',', '.') }}</span>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
 
-                    <!-- Endereço de entrega -->
                     <!-- Endereço de entrega -->
                     <div class="space-y-4">
                         <hr />
@@ -273,7 +310,7 @@
 
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Desconto na vendedor %</label>
-                                <input type="text" name="desconto" value="0" min="0" max="100"
+                                <input type="text" name="desconto" value="{{ $desconto_percentual ?? old('desconto') }}" min="0" max="100"
                                     placeholder="Digite a porcentagem de desconto (0 a 100)"
                                     oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
@@ -281,7 +318,7 @@
 
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Desconto específico R$</label>
-                                <input type="text" name="desconto_especifico" value="0.00"
+                                <input type="text" name="desconto_especifico" value="{{ $desconto_especifico ?? old('desconto_especifico') }}"
                                     placeholder="Digite o valor do desconto específico"
                                     oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
@@ -289,8 +326,9 @@
 
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Guia Recolhimento</label>
-                                <input type="text" step="0.01" name="guia_recolhimento" value="0"
-                                    value="0.00" oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"
+                                <input type="text" step="0.01" name="guia_recolhimento" 
+                                    value="{{ $orcamento->guia_recolhimento ?? 0 }}"
+                                    oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                             </div>
 
@@ -325,7 +363,7 @@
                             Observações Gerais
                         </h3>
                         <x-textarea name="observacoes" placeholder="Digite as observações" label="Observações"
-                            rows="4"> {{ old('observacoes', $orcamento->observacoes) }} </x-textarea>
+                            rows="4">{{ old('observacoes', $orcamento->observacoes) }}</x-textarea>
                     </div>
 
                     <!-- Ações -->
@@ -340,7 +378,6 @@
                 </form>
             </div>
         </div>
-    </div>
     </div>
 
     <!-- Modal Quantidade Produto -->
@@ -367,7 +404,7 @@
     console.log('Script carregando...');
 
     // ==================== VARIÁVEIS GLOBAIS ====================
-    window.vidroIndex = 1;
+    window.vidroIndex = {{ count($orcamento->vidros ?? []) }};
     window.produtos = [];
     window.produtoSelecionado = null;
 
@@ -428,8 +465,8 @@
             var rowsOriginais = produtosOriginais.querySelectorAll('tr');
             for (var i = 0; i < rowsOriginais.length; i++) {
                 var row = rowsOriginais[i];
-                if (row.style.display === 'none') continue; // Ignorar produtos removidos
-
+                if (row.style.display === 'none') continue;
+                
                 var produtoIdInput = row.querySelector('input[name*="[produto_id]"]');
                 if (produtoIdInput && produtoIdInput.value == id) {
                     alert("Este produto já está no orçamento!");
@@ -437,7 +474,7 @@
                 }
             }
         }
-
+        
         // Verificar se produto já existe nos produtos novos
         for (var i = 0; i < window.produtos.length; i++) {
             if (window.produtos[i].id == id) {
@@ -530,7 +567,6 @@
 
         var quantidade = parseInt(novaQuantidade) || 1;
 
-        // Atualizar campo de quantidade
         var quantidadeInput = row.querySelector('input[name="produtos[' + index + '][quantidade]"]');
         if (quantidadeInput) {
             quantidadeInput.value = quantidade;
@@ -549,7 +585,6 @@
         if (row) {
             row.style.display = 'none';
 
-            // Marcar para remoção
             var removeInput = document.createElement('input');
             removeInput.type = 'hidden';
             removeInput.name = 'produtos[' + index + '][_remove]';
@@ -571,10 +606,9 @@
         var subtotalComDesconto = subtotal - (subtotal * (desconto / 100));
         var precoUnitarioComDesconto = subtotalComDesconto / quantidade;
 
-        // Atualizar campos hidden
         var subtotalInput = row.querySelector('input[name="produtos[' + index + '][subtotal]"]');
         var subtotalComDescontoInput = row.querySelector('input[name="produtos[' + index +
-            '][subtotal_com_desconto]"]');
+        '][subtotal_com_desconto]"]');
         var precoComDescontoInput = row.querySelector('input[name="produtos[' + index +
             '][preco_unitario_com_desconto]"]');
 
@@ -582,7 +616,6 @@
         if (subtotalComDescontoInput) subtotalComDescontoInput.value = subtotalComDesconto.toFixed(2);
         if (precoComDescontoInput) precoComDescontoInput.value = precoUnitarioComDesconto.toFixed(2);
 
-        // Atualizar visualização
         var cells = row.querySelectorAll('td');
         if (cells[7]) cells[7].innerHTML = 'R$ ' + formatarMoeda(subtotal);
         if (cells[8]) cells[8].innerHTML = 'R$ ' + formatarMoeda(subtotalComDesconto);
@@ -649,6 +682,24 @@
         recalcularTotais();
     };
 
+    // Função para remover vidros existentes
+    window.removeVidroExistente = function(button) {
+        var container = button.closest('div.space-y-2');
+        var vidroId = container.getAttribute('data-vidro-id');
+        
+        if (vidroId) {
+            // Adicionar campo hidden para marcar para exclusão
+            var removeInput = document.createElement('input');
+            removeInput.type = 'hidden';
+            removeInput.name = 'vidros_removidos[]';
+            removeInput.value = vidroId;
+            container.appendChild(removeInput);
+        }
+        
+        container.style.display = 'none';
+        recalcularTotais();
+    };
+
     window.calcularVidro = function(element) {
         var container = element.closest('div.space-y-2');
         if (!container) return;
@@ -674,6 +725,11 @@
         setTimeout(recalcularTotais, 10);
     };
 
+    // Função específica para recalcular vidros existentes
+    window.calcularVidroExistente = function(element) {
+        calcularVidro(element);
+    };
+
     function calcularTotalVidros() {
         var totalVidros = 0;
         var totalVidrosComDesconto = 0;
@@ -682,6 +738,9 @@
         if (wrapper) {
             var containers = wrapper.querySelectorAll('.space-y-2');
             for (var i = 0; i < containers.length; i++) {
+                // Ignorar vidros removidos
+                if (containers[i].style.display === 'none') continue;
+                
                 var valorEl = containers[i].querySelector('.valor-hidden');
                 var valorDescEl = containers[i].querySelector('.valor-desconto-hidden');
                 if (valorEl && valorDescEl) {
@@ -703,6 +762,9 @@
 
         var containers = wrapper.querySelectorAll('.space-y-2');
         for (var i = 0; i < containers.length; i++) {
+            // Ignorar vidros removidos
+            if (containers[i].style.display === 'none') continue;
+            
             var firstInput = containers[i].querySelector('input[type="number"]');
             if (firstInput) {
                 calcularVidro(firstInput);
@@ -763,33 +825,27 @@
     }
 
     function recalcularTotais() {
-        // Recalcular produtos originais
         recalcularTodosProdutosOriginais();
 
-        // Calcular totais de cada seção
         var totaisOriginais = calcularTotalProdutosOriginais();
         var totaisNovos = calcularTotalProdutosNovos();
         var totaisVidros = calcularTotalVidros();
 
-        // Total geral
         var totalGeral = totaisOriginais.total + totaisNovos.total + totaisVidros.totalVidros;
         var totalGeralComDesconto = totaisOriginais.totalComDesconto + totaisNovos.totalComDesconto + totaisVidros
             .totalVidrosComDesconto;
 
-        // Atualizar campo valor total
         var valorTotalInput = document.getElementById('valor_total');
         if (valorTotalInput) {
             valorTotalInput.value = totalGeral.toFixed(2);
         }
 
-        // Calcular valor final
         var guia = parseFloat(document.querySelector('[name="guia_recolhimento"]')?.value) || 0;
         var descontoEspecifico = parseFloat(document.querySelector('[name="desconto_especifico"]')?.value) || 0;
 
         var valorFinal = totalGeralComDesconto - descontoEspecifico + guia;
         if (valorFinal < 0) valorFinal = 0;
 
-        // Validar desconto específico
         var maxDesconto = totalGeralComDesconto + guia;
         if (descontoEspecifico > maxDesconto) {
             descontoEspecifico = maxDesconto;
@@ -799,7 +855,6 @@
             }
         }
 
-        // Atualizar valor final
         var valorFinalInput = document.getElementById('valor_final');
         if (valorFinalInput) {
             valorFinalInput.value = valorFinal.toFixed(2);
@@ -824,10 +879,12 @@
     function inicializar() {
         console.log('Inicializando sistema de orçamento...');
 
+        // Recalcular vidros existentes na inicialização
+        recalcularTodosVidros();
+        
         // Recalcular tudo na inicialização
         recalcularTotais();
 
-        // Adicionar listeners para recalcular quando descontos mudarem
         var camposDesconto = [
             '[name="desconto"]',
             '[name="desconto_especifico"]',
@@ -847,7 +904,6 @@
         console.log('Sistema inicializado com sucesso!');
     }
 
-    // Executar inicialização
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', inicializar);
     } else {

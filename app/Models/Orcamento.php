@@ -13,6 +13,7 @@ class Orcamento extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'versao',
         'cliente_id',
         'vendedor_id',
         'usuario_logado_id',
