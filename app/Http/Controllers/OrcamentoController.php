@@ -336,7 +336,7 @@ class OrcamentoController extends Controller
 
     private function gerarPdf(Orcamento $orcamento): bool
     {
-        try {
+        
             // 1. GERAÇÃO DE TOKEN E LINK SEGURO
             $token = Str::uuid();
             $tokenExpiraEm = Carbon::now()->addDays(2);
@@ -389,6 +389,8 @@ class OrcamentoController extends Controller
                 Log::error("Falha ao salvar o PDF no caminho: " . $path);
                 return false; // Falha!
             }
+            try {
+                
         } catch (\Exception $e) {
             // Captura qualquer exceção durante o processo (geração do PDF, QR Code, etc.)
             Log::error("Erro fatal ao gerar PDF para o orçamento #{$orcamento->id}: " . $e->getMessage());

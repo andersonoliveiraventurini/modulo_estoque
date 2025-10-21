@@ -247,6 +247,7 @@
 
     @php
         $percentualAplicado = $orcamento->descontos()->where('tipo', 'percentual')->first();
+        $percentualAplicado = $percentualAplicado ? $percentualAplicado->porcentagem : 0;
     @endphp
 
     <!-- ===========================
@@ -260,7 +261,9 @@
                     <th>Qtd</th>
                     <th>Produto</th>
                     <th>Unitário</th>
-                    <th>Unitário com desconto</th>
+                    @if ($percentualAplicado > 0)
+                        <th>Unitário com desconto</th>
+                    @endif
                     <th>Valor final</th>
                 </tr>
             </thead>
@@ -270,7 +273,10 @@
                         <td align="center">{{ $item->quantidade }}</td>
                         <td>{{ $item->produto->nome ?? '---' }}</td>
                         <td class="valor">R$ {{ number_format($item->valor_unitario, 2, ',', '.') }}</td>
-                        <td class="valor">R$ {{ number_format($item->valor_unitario_com_desconto, 2, ',', '.') }}</td>
+                        @if ($percentualAplicado > 0)
+                            <td class="valor">R$ {{ number_format($item->valor_unitario_com_desconto, 2, ',', '.') }}
+                            </td>
+                        @endif
                         <td class="valor">R$ {{ number_format($item->valor_com_desconto, 2, ',', '.') }}</td>
                     </tr>
                 @endforeach
@@ -291,7 +297,9 @@
                     <th style="width: 3rem">Altura (mm)</th>
                     <th style="width: 3rem">Largura (mm)</th>
                     <th style="width: 5rem">Preço m²</th>
-                    <th style="width: 5rem">Desc.</th>
+                    @if ($percentualAplicado > 0)
+                        <th style="width: 5rem">Unitário com desconto</th>
+                    @endif
                     <th style="width: 5rem">Valor final</th>
                 </tr>
             </thead>
@@ -303,9 +311,11 @@
                         <td class="valor">{{ $vidro->altura }}</td>
                         <td class="valor">{{ $vidro->largura }}</td>
                         <td class="valor">R$ {{ number_format($vidro->preco_metro_quadrado, 2, ',', '.') }}</td>
-                        <td class="valor">R$
-                            {{ number_format($vidro->preco_metro_quadrado * ($percentualAplicado / 100), 2, ',', '.') }}
-                        </td>
+                        @if ($percentualAplicado > 0)
+                            <td class="valor">R$
+                                {{ number_format($vidro->preco_metro_quadrado - ($vidro->preco_metro_quadrado * ($percentualAplicado / 100)), 2, ',', '.') }}
+                            </td>
+                        @endif
                         <td class="valor">R$ {{ number_format($vidro->valor_com_desconto, 2, ',', '.') }}</td>
                     </tr>
                 @endforeach
