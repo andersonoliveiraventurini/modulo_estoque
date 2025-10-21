@@ -409,7 +409,9 @@
                 totalVidrosComDesconto
             };
         }
+</script>
 
+<script>
         let itemIndex = 1;
 
         const cores = @json($cores);

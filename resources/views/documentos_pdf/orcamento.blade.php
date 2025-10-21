@@ -177,20 +177,22 @@
          CABEÇALHO
     =========================== -->
 
-    <table style="width:100%; font-family: Arial, sans-serif; font-size:12px; color:#333; border-collapse:collapse; margin-bottom:15px;">
+    <table
+        style="width:100%; font-family: Arial, sans-serif; font-size:12px; color:#333; border-collapse:collapse; margin-bottom:15px;">
         <tr>
             <td style="width:4rem;">
                 <img src="{{ public_path('images/logo.png') }}" alt="Logo" style="max-width: 70px;">
             </td>
             <td style="padding:5px; border:1px solid #ccc; background-color:#f9f9f9;">
-                <div style="text-align:center; margin-bottom:15px;">                    
-                   <!-- <p style="margin:0; font-size:12px;">
+                <div style="text-align:center; margin-bottom:15px;">
+                    <!-- <p style="margin:0; font-size:12px;">
                         Data: { { $orcamento->created_at->format('d/m/Y') }} - Validade: { { \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }} | Vendedor: { { $usuario->name }}
                     </p>-->
-                    <p style="margin:2px 0;"><strong>ACAV</strong> - Comércio de Acessórios LTDA<br/><br/>
+                    <p style="margin:2px 0;"><strong>ACAV</strong> - Comércio de Acessórios LTDA<br /><br />
                         R. São Luís do Paraitinga, 1338 - Jardim do Trevo - Campinas - SP - CEP: 13030-105
-                        <br/>  (19) 3273-3783 (19) 3274-1717
-                        <a href="mailto:contato@acavacessorios.com.br">contato@acavacessorios.com.br</a> - <a href="http://www.acavacessorios.com.br" target="_blank">www.acavacessorios.com.br</a>
+                        <br /> (19) 3273-3783 (19) 3274-1717
+                        <a href="mailto:contato@acavacessorios.com.br">contato@acavacessorios.com.br</a> - <a
+                            href="http://www.acavacessorios.com.br" target="_blank">www.acavacessorios.com.br</a>
                     </p>
                 </div>
             </td>
@@ -198,7 +200,9 @@
                 <img src="data:image/png;base64,{{ $qrCode }}" width="80" height="80">
             </td>
         </tr>
-    </table><h2 style="margin:0; font-size:20px; text-transform:uppercase;">ORÇAMENTO n° {{ $orcamento->id }} - {{ $orcamento->transportes->pluck('nome')->join(', ')}}</h2>
+    </table>
+    <h2 style="margin:0; font-size:20px; text-transform:uppercase;">ORÇAMENTO n° {{ $orcamento->id }} -
+        {{ $orcamento->transportes->pluck('nome')->join(', ') }}</h2>
     <!-- ===========================
          DADOS DO CLIENTE
     =========================== -->
@@ -223,7 +227,7 @@
             <td class="value">{{ $usuario->name }}</td>
             <td class="label">Prazo de Entrega:</td>
             <td class="value">{{ $orcamento->prazo_entrega ?? '---' }}</td>
-        </tr> 
+        </tr>
         <tr>
             <td class="label">Obra:</td>
             <td class="value" colspan="3">{{ $orcamento->obra }}</td>
@@ -232,7 +236,7 @@
             <td class="label">Endereço:</td>
             <td class="value" colspan="3">{{ $orcamento->cliente->endereco ?? '---' }}</td>
         </tr>
-        @if($orcamento->observacoes != null)
+        @if ($orcamento->observacoes != null)
             <tr>
                 <td class="label">Observações:</td>
                 <td class="value" colspan="3">{{ $orcamento->observacoes ?? '---' }}</td>
@@ -240,6 +244,10 @@
         @endif
 
     </table>
+
+    @php
+        $percentualAplicado = $orcamento->descontos()->where('tipo', 'percentual')->first();
+    @endphp
 
     <!-- ===========================
          ITENS DO ORÇAMENTO
@@ -334,13 +342,13 @@
                 <td class="valor">R$ {{ number_format($totalVidros, 2, ',', '.') }}</td>
             </tr>
         @endif
-        @if($orcamento->guia_recolhimento > 0)
+        @if ($orcamento->guia_recolhimento > 0)
             <tr>
                 <td>Guia de Recolhimento</td>
                 <td class="valor">R$ {{ number_format($orcamento->guia_recolhimento, 2, ',', '.') }}</td>
             </tr>
         @endif
-        @if($orcamento->frete > 0)
+        @if ($orcamento->frete > 0)
             <tr>
                 <td>Frete</td>
                 <td class="valor">R$ {{ number_format($orcamento->frete, 2, ',', '.') }}</td>
@@ -361,7 +369,8 @@
         @endforeach
         <tr>
             <td>Valor Final do Orçamento</td>
-            <td class="valor">R$ {{ number_format($valorFinal + $orcamento->frete + $orcamento->guia_recolhimento, 2, ',', '.') }}</td>
+            <td class="valor">R$
+                {{ number_format($valorFinal + $orcamento->frete + $orcamento->guia_recolhimento, 2, ',', '.') }}</td>
         </tr>
     </table>
 
