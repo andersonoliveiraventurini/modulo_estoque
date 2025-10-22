@@ -27,6 +27,7 @@ return new class extends Migration
             $table->boolean('liberar_desconto')->default(false)->comment('Indica se o desconto pode ser aplicado ao produto.');
             $table->decimal('porcentagem_desconto', 5, 2)->nullable()->comment('Porcentagem de desconto a ser aplicada ao produto.');
             $table->decimal('valor_desconto', 15, 2)->nullable()->comment('Valor do desconto a ser aplicado ao produto.');
+            $table->decimal('estoque_web', 15, 2)->nullable()->comment('Quantidade separada para venda site.');
             $table->decimal('estoque_minimo', 15, 2)->nullable()->comment('Estoque mínimo - Quantidade mínima que deve ser mantida em estoque para evitar falta.');
             $table->decimal('estoque_atual', 15, 2)->nullable()->comment('Estoque atual - Quantidade atual disponível em estoque.');
             $table->string('unidade_medida', 20)->nullable()->comment('Unidade de medida - Unidade utilizada para quantificar o produto, como kg, g, L, etc.');
