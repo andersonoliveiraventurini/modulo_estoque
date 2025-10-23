@@ -80,35 +80,47 @@
         </flux:navlist.group>
 
         <flux:navlist.group heading="Administração" expandable :expanded="false">
-            <flux:navlist.item icon="home" :href="route('usuarios.index')"
-                :current="request()->routeIs('usuarios.index')" wire:navigate>{{ __('Listar usuários') }}
-            </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('vendedores.index')"
-                :current="request()->routeIs('vendedores.index')" wire:navigate>{{ __('Listar vendedores') }}
-            </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('vendedores.create')"
-                :current="request()->routeIs('vendedores.create')" wire:navigate>{{ __('Criar vendedor') }}
-            </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('cores.index')"
-                :current="request()->routeIs('cores.index')" wire:navigate>{{ __('Cores produtos') }}
-            </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('cores.create')"
-                :current="request()->routeIs('cores.create')" wire:navigate>{{ __('Criar cor') }}
-            </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('categorias.index')"
-                :current="request()->routeIs('categorias.index')" wire:navigate>{{ __('Listar categorias') }}
-            </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('categorias.create')"
-                :current="request()->routeIs('categorias.create')" wire:navigate>{{ __('Criar categoria') }}
-            </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('subcategorias.index')"
-                :current="request()->routeIs('subcategorias.index')" wire:navigate>{{ __('Listar subcategorias') }}
-            </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('subcategorias.create')"
-                :current="request()->routeIs('subcategorias.create')" wire:navigate>{{ __('Criar subcategoria') }}
-            </flux:navlist.item>
+
+            <flux:navlist.group heading="Usuário e perfis" expandable :expanded="false">
+                <flux:navlist.item icon="home" :href="route('usuarios.index')"
+                    :current="request()->routeIs('usuarios.index')" wire:navigate>{{ __('Listar usuários') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="home" :href="route('vendedores.index')"
+                    :current="request()->routeIs('vendedores.index')" wire:navigate>{{ __('Listar vendedores') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="home" :href="route('vendedores.create')"
+                    :current="request()->routeIs('vendedores.create')" wire:navigate>{{ __('Criar vendedor') }}
+                </flux:navlist.item>
+            </flux:navlist.group>
+            <flux:navlist.group heading="Cores" expandable :expanded="false">
+                <flux:navlist.item icon="home" :href="route('cores.index')"
+                    :current="request()->routeIs('cores.index')" wire:navigate>{{ __('Cores produtos') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="home" :href="route('cores.create')"
+                    :current="request()->routeIs('cores.create')" wire:navigate>{{ __('Criar cor') }}
+                </flux:navlist.item>
+            </flux:navlist.group>
+
+            <flux:navlist.group heading="Categorias" expandable :expanded="false">
+                <flux:navlist.item icon="home" :href="route('categorias.index')"
+                    :current="request()->routeIs('categorias.index')" wire:navigate>{{ __('Listar categorias') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="home" :href="route('categorias.create')"
+                    :current="request()->routeIs('categorias.create')" wire:navigate>{{ __('Criar categoria') }}
+                </flux:navlist.item>
+            </flux:navlist.group>
+            <flux:navlist.group heading="Subcategorias" expandable :expanded="false">
+                <flux:navlist.item icon="home" :href="route('subcategorias.index')"
+                    :current="request()->routeIs('subcategorias.index')" wire:navigate>
+                    {{ __('Listar subcategorias') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="home" :href="route('subcategorias.create')"
+                    :current="request()->routeIs('subcategorias.create')" wire:navigate>{{ __('Criar subcategoria') }}
+                </flux:navlist.item>
+
+            </flux:navlist.group>
         </flux:navlist.group>
-        <!-- 
+        <!--
         <flux:navlist variant="outline">
             <flux:navlist.group : heading="__('RD Station')" class="grid">
                 <flux:navlist.item icon="home" : href="route('rdstation.checar-token')"
@@ -218,7 +230,8 @@
 
                 <form method="POST" action="{{ route('logout') }}" class="w-full">
                     @csrf
-                    <flux:menu.item as="button" type="submit" icon="arrow-right-start-on-rectangle" class="w-full">
+                    <flux:menu.item as="button" type="submit" icon="arrow-right-start-on-rectangle"
+                        class="w-full">
                         {{ __('Sair') }}
                     </flux:menu.item>
                 </form>
