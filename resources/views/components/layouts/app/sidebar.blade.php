@@ -32,8 +32,11 @@
         </flux:navlist.group>
 
         <flux:navlist.group heading="Logística" expandable :expanded="false">
-            <flux:navlist.item icon="home" :href="route('logistica.separacao.lista')"
-                :current="request()->routeIs('logistica.separacao.lista')" wire:navigate>{{ __('Separação') }}
+            <flux:navlist.item icon="home" :href="route('separacao.index')"
+                :current="request()->routeIs('separacao.index')" wire:navigate>{{ __('Separação') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="home" :href="route('conferencia.index')"
+                :current="request()->routeIs('conferencia.index')" wire:navigate>{{ __('Conferência') }}
             </flux:navlist.item>
         </flux:navlist.group>
 

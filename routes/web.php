@@ -31,6 +31,8 @@ use App\Http\Controllers\CategoriaController;
 use App\Livewire\OrcamentoShow;
 use App\Http\Controllers\SeparacaoController;
 use App\Http\Controllers\ConferenciaController;
+use App\Livewire\ListaConferencia;
+use App\Livewire\ListaSeparacao;
 use App\Livewire\Logistica\SeparacaoListaPage;
 
 Volt::route('/', 'auth.login')
@@ -87,6 +89,9 @@ Route::middleware(['auth'])->group(function () {
 
     // rotas separação e conferência
     Route::get('/logistica/separacao', SeparacaoListaPage::class)->name('logistica.separacao.lista');
+
+    Route::get('/separacao', ListaSeparacao::class)->name('separacao.index');
+    Route::get('/conferencia', ListaConferencia::class)->name('conferencia.index');
 
     Route::get('/orcamentos/{id}/separacao', [SeparacaoController::class, 'show'])->name('orcamentos.separacao.show');
     Route::post('/orcamentos/{id}/separacao/iniciar', [SeparacaoController::class, 'iniciar'])->name('orcamentos.separacao.iniciar');
