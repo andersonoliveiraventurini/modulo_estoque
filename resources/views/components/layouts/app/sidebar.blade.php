@@ -120,7 +120,16 @@
                 <flux:navlist.item icon="home" :href="route('subcategorias.create')"
                     :current="request()->routeIs('subcategorias.create')" wire:navigate>{{ __('Criar subcategoria') }}
                 </flux:navlist.item>
-
+            </flux:navlist.group>
+            
+            <flux:navlist.group heading="NCM" expandable :expanded="false">
+                <flux:navlist.item icon="home" :href="route('ncm.index')"
+                    :current="request()->routeIs('ncm.index')" wire:navigate>
+                    {{ __('Listar NCMs') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="home" :href="route('ncm.create')"
+                    :current="request()->routeIs('ncm.create')" wire:navigate>{{ __('Criar NCM') }}
+                </flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist.group>
         <!--

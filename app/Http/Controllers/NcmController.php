@@ -13,7 +13,7 @@ class NcmController extends Controller
      */
     public function index()
     {
-        //
+        return view('paginas.adm.ncm.index');
     }
 
     /**
@@ -21,7 +21,7 @@ class NcmController extends Controller
      */
     public function create()
     {
-        //
+        return view('paginas.adm.ncm.create');
     }
 
     /**
@@ -29,7 +29,10 @@ class NcmController extends Controller
      */
     public function store(StoreNcmRequest $request)
     {
-        //
+        Ncm::create($request->validated());
+
+        return redirect()->route('ncm.index')
+            ->with('success', 'NCM cadastrado com sucesso!');
     }
 
     /**
@@ -45,7 +48,7 @@ class NcmController extends Controller
      */
     public function edit(Ncm $ncm)
     {
-        //
+        return view('paginas.adm.ncm.edit', compact('ncm'));
     }
 
     /**
@@ -53,7 +56,10 @@ class NcmController extends Controller
      */
     public function update(UpdateNcmRequest $request, Ncm $ncm)
     {
-        //
+        $ncm->update($request->validated());
+
+        return redirect()->route('ncm.index')
+            ->with('success', 'NCM atualizado com sucesso!');
     }
 
     /**
@@ -61,6 +67,9 @@ class NcmController extends Controller
      */
     public function destroy(Ncm $ncm)
     {
-        //
+        $ncm->delete();
+
+        return redirect()->route('ncm.index')
+            ->with('success', 'NCM excluído com sucesso!');
     }
 }

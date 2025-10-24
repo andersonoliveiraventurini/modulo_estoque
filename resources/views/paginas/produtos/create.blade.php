@@ -21,7 +21,7 @@
                                 class="col-span-2" />
                             <x-input name="codigo_barras" label="Código de Barras" placeholder="7891234567890" />
                             <x-input name="sku" label="SKU/Código" placeholder="PRD123456" />
-                            <x-select name="fornecedor_id" label="Fornecedor">
+                            <x-select name="fornecedor_id" label="Fornecedores ativos">
                                 <option value="">Selecione...</option>
                                 @foreach ($fornecedores as $fornecedor)
                                     <option value="{{ $fornecedor->id }}">{{ $fornecedor->nome_fantasia }}</option>

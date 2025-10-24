@@ -11,7 +11,7 @@ class UpdateNcmRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,13 @@ class UpdateNcmRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'codigo' => 'required|string|max:255',
+            'numero' => 'nullable|string|max:255',
+            'ano' => 'nullable|integer',
+            'ato_legal' => 'nullable|string|max:255',
+            'data_inicio' => 'nullable|date',
+            'data_fim' => 'nullable|date',
+            'descricao' => 'nullable|string|max:1000',
         ];
     }
 }

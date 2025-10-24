@@ -29,7 +29,7 @@ class ProdutoController extends Controller
      */
     public function create()
     {
-        $fornecedores = Fornecedor::all();
+        $fornecedores = Fornecedor::where('status', 'ativo')->get();
         $categorias = Categoria::all();
         $subcategorias = SubCategoria::all();
         $cores = Cor::orderBy('nome')->get();

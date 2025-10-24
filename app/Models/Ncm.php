@@ -17,8 +17,8 @@ class Ncm extends Model
         'data_inicio',
         'data_fim',
         'ato_legal',
-        'inicio',
         'numero',
         'ano'
     ];
+    
 }
