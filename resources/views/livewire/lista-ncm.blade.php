@@ -35,45 +35,69 @@
         <table class="w-full text-sm">
             <thead class="bg-zinc-50 dark:bg-zinc-800">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-600 dark:text-zinc-300">Código</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-600 dark:text-zinc-300">Descrição</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-600 dark:text-zinc-300">Ato Legal</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-600 dark:text-zinc-300">Vigência</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-600 dark:text-zinc-300">Ações</th>
+                    <th
+                        class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-600 dark:text-zinc-300">
+                        Código</th>
+                    <th
+                        class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-600 dark:text-zinc-300">
+                        Descrição</th>
+                    <th
+                        class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-600 dark:text-zinc-300">
+                        Ato Legal</th>
+                    <th
+                        class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-600 dark:text-zinc-300">
+                        Vigência</th>
+                    <th
+                        class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-600 dark:text-zinc-300">
+                        Ações</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse($ncms as $ncm)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200 font-mono">
-                            {{ $ncm->codigo }}
+                            <a href="{{ route('ncm.show', $ncm->id) }}" class="hover:underline">
+                                {{ $ncm->codigo }}
+                            </a>
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             <div class="max-w-md truncate" title="{{ $ncm->descricao }}">
-                                {{ $ncm->descricao }}
+                                <a href="{{ route('ncm.show', $ncm->id) }}" class="hover:underline">
+                                    {{ $ncm->descricao }}
+                                </a>
                             </div>
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            @if($ncm->ato_legal || $ncm->numero || $ncm->ano)
-                                <span class="text-xs">
-                                    {{ $ncm->ato_legal }} 
-                                    @if($ncm->numero) Nº {{ $ncm->numero }} @endif
-                                    @if($ncm->ano) / {{ $ncm->ano }} @endif
-                                </span>
+                            @if ($ncm->ato_legal || $ncm->numero || $ncm->ano)
+                                <a href="{{ route('ncm.show', $ncm->id) }}" class="hover:underline">
+                                    <span class="text-xs">
+                                        {{ $ncm->ato_legal }}
+                                        @if ($ncm->numero)
+                                            Nº {{ $ncm->numero }}
+                                        @endif
+                                        @if ($ncm->ano)
+                                            / {{ $ncm->ano }}
+                                        @endif
+                                    </span>
+                                </a>
                             @else
                                 <span class="text-zinc-400 dark:text-zinc-500">-</span>
                             @endif
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            @if($ncm->data_inicio || $ncm->data_fim)
+                            @if ($ncm->data_inicio || $ncm->data_fim)
                                 <div class="text-xs space-y-1">
-                                    @if($ncm->data_inicio)
-                                        <div>Início: {{ \Carbon\Carbon::parse($ncm->data_inicio)->format('d/m/Y') }}</div>
-                                    @endif
-                                    @if($ncm->data_fim)
-                                        <div>Fim: {{ \Carbon\Carbon::parse($ncm->data_fim)->format('d/m/Y') }}</div>
-                                    @endif
+                                    <a href="{{ route('ncm.show', $ncm->id) }}" class="hover:underline">
+                                        @if ($ncm->data_inicio)
+                                            <div>Início:
+                                                {{ \Carbon\Carbon::parse($ncm->data_inicio)->format('d/m/Y') }}</div>
+                                        @endif
+                                        @if ($ncm->data_fim)
+                                            <div>Fim: {{ \Carbon\Carbon::parse($ncm->data_fim)->format('d/m/Y') }}
+                                            </div>
+                                        @endif
                                 </div>
+                                </a>
                             @else
                                 <span class="text-zinc-400 dark:text-zinc-500">-</span>
                             @endif
@@ -87,7 +111,7 @@
                             </a>
 
                             <form action="{{ route('ncm.destroy', $ncm->id) }}" method="POST"
-                                  onsubmit="return confirm('Tem certeza que deseja excluir este NCM?');">
+                                onsubmit="return confirm('Tem certeza que deseja excluir este NCM?');">
                                 @csrf
                                 @method('DELETE')
                                 <x-button size="sm" variant="danger">
@@ -110,7 +134,8 @@
 
     <!-- Paginação -->
     @if ($ncms->hasPages())
-        <div class="p-6 border-t border-zinc-200 dark:border-zinc-700 flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-300">
+        <div
+            class="p-6 border-t border-zinc-200 dark:border-zinc-700 flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-300">
             {{ $ncms->links() }}
         </div>
     @endif

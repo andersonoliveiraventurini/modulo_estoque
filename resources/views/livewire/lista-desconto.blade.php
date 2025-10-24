@@ -105,7 +105,7 @@
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             @if($d->cliente)
-                                <a href="/clientes/{{ $d->cliente->id }}" class="text-secondary-600 hover:underline">
+                                <a href="/clientes/{{ $d->cliente->id }}" class="text-secondary-600 " class="hover:underline">
                                     {{ $d->cliente->nome_fantasia ?? $d->cliente->nome }}
                                 </a>
                             @else
@@ -114,7 +114,7 @@
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             @if($d->orcamento_id)
-                                <a href="/orcamentos/{{ $d->orcamento_id }}" class="text-secondary-600 hover:underline">
+                                <a href="/orcamentos/{{ $d->orcamento_id }}" class="text-secondary-600 " class="hover:underline">
                                     #{{ $d->orcamento_id }}
                                 </a>
                             @else
@@ -123,7 +123,7 @@
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             @if($d->pedido_id)
-                                <a href="/pedidos/{{ $d->pedido_id }}" class="text-secondary-600 hover:underline">
+                                <a href="/pedidos/{{ $d->pedido_id }}" class="text-secondary-600 "  class="hover:underline">
                                     #{{ $d->pedido_id }}
                                 </a>
                             @else

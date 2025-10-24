@@ -88,21 +88,21 @@
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             <a href="{{ route('orcamentos.criar', $c->id ?? null) }}"
-                            class="text-secondary-600 hover:underline text-sm font-medium">
+                            class="text-secondary-600 text-sm font-medium" class="hover:underline">>
                             Criar Orçamento
                         </a>
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            <a href="/clientes/{{ $c->id }}">{{ $c->nome }}</a>
+                            <a href="/clientes/{{ $c->id }}" class="hover:underline">{{ $c->nome }}</a>
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="/clientes/{{ $c->id }}">{{ $c->nome_fantasia }}</a></td>
+                                href="/clientes/{{ $c->id }}" class="hover:underline">{{ $c->nome_fantasia }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="/clientes/{{ $c->id }}">{{ $c->razao_social }}</a></td>
+                                href="/clientes/{{ $c->id }}" class="hover:underline">{{ $c->razao_social }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="/clientes/{{ $c->id }}">{{ $c->tratamento ?? '-' }}</a></td>
+                                href="/clientes/{{ $c->id }}" class="hover:underline">{{ $c->tratamento ?? '-' }}</a></td>
                         <td class="px-6 py-4 font-mono text-zinc-800 dark:text-zinc-200"><a
-                                href="/clientes/{{ $c->id }}">{{ $c->cnpj_formatado }}</a></td>
+                                href="/clientes/{{ $c->id }}" class="hover:underline">{{ $c->cnpj_formatado }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->limite ?? '-' }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->desconto ?? '-' }}</td>
                         <td class="px-6 py-4 flex gap-2">

@@ -40,7 +40,7 @@ class NcmController extends Controller
      */
     public function show(Ncm $ncm)
     {
-        //
+        return view('paginas.adm.ncm.show', compact('ncm'));
     }
 
     /**

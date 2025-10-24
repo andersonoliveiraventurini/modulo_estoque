@@ -20,5 +20,30 @@ class Ncm extends Model
         'numero',
         'ano'
     ];
+
+    protected $casts = [
+        'data_inicio' => 'date',
+        'data_fim' => 'date',
+        // outros campos date se houver
+    ];
+
+    // E um accessor para formatação
+    public function getDataInicioFormatadaAttribute()
+    {
+        if ($this->data_inicio === null) {
+            return null;
+        } else {
+            return $this->data_inicio->format('d/m/Y');
+        }
+    }
+
+    public function getDataFimFormatadaAttribute()
+    {
+        if ($this->data_fim === null) {
+            return null;
+        } else {
+            return $this->data_fim->format('d/m/Y');
+        }
+    }
     
 }

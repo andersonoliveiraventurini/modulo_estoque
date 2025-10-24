@@ -62,7 +62,7 @@
                    <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-200">
                         <td class="px-6 py-4">
                             <a href="/produtos/{{ $c->id }}" 
-                            class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition">
+                            class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition" class="hover:underline">
                                 {{ $c->id }}
                             </a>
                         </td>
@@ -78,20 +78,20 @@
                             @endif
                         </td>
                         <td class="px-6 py-4">
-                            <a href="/produtos/{{ $c->id }}" 
+                            <a href="/produtos/{{ $c->id }}" class="hover:underline"
                             class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition">
                                 {{ $c->nome }}
                             </a>
                         </td>
                         <td class="px-6 py-4">
-                            <a href="/produtos/{{ $c->id }}" 
+                            <a href="/produtos/{{ $c->id }}" class="hover:underline"
                             class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition">
                                 {{ $c->descricao }}
                             </a>
                         </td>
                         <td class="px-6 py-4">
                             @if ($c->fornecedor)
-                                <a href="/fornecedores/{{ $c->fornecedor->id }}" 
+                                <a href="/fornecedores/{{ $c->fornecedor->id }}"  class="hover:underline"
                                 class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition">
                                     {{ $c->fornecedor->nome_fantasia }}
                                 </a>
@@ -100,33 +100,33 @@
                             @endif
                         </td>
                         <td class="px-6 py-4">
-                            <a href="/produtos/{{ $c->id }}" 
+                            <a href="/produtos/{{ $c->id }}"  class="hover:underline"
                             class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition">
                                 {{ $c->ncm }}
                             </a>
                         </td>
                         <!-- Preço venda -->
                         <td class="px-6 py-4">
-                            <a href="/produtos/{{ $c->id }}" 
+                            <a href="/produtos/{{ $c->id }}"  class="hover:underline"
                             class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition">
                                 R$ {{ number_format($c->preco_venda, 2, ',', '.') }}
                             </a>
                         </td>
                         <!-- Preço custo -->
                         <td class="px-6 py-4">
-                            <a href="/produtos/{{ $c->id }}" 
+                            <a href="/produtos/{{ $c->id }}"  class="hover:underline"
                             class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition">
                                 R$ {{ number_format($c->preco_custo, 2, ',', '.') }}
                             </a>
                         </td>
                         <td class="px-6 py-4">
-                            <a href="/produtos/{{ $c->id }}" 
+                            <a href="/produtos/{{ $c->id }}"  class="hover:underline"
                             class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition">
                                 {{ $c->estoque_atual }}
                             </a>
                         </td>
                         <td class="px-6 py-4">
-                            <a href="/produtos/{{ $c->id }}" 
+                            <a href="/produtos/{{ $c->id }}"  class="hover:underline"
                             class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition">
                                 {{ $c->estoque_minimo }}
                             </a>

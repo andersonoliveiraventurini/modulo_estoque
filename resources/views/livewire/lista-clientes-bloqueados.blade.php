@@ -47,7 +47,7 @@
                 @forelse($clientes as $c)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                         <td class="px-6 py-4">
-                            <a href="/clientes/{{ $c->id }}" class="text-zinc-800 dark:text-zinc-200">
+                            <a href="/clientes/{{ $c->id }}" class="text-zinc-800 dark:text-zinc-200" class="hover:underline">
                                 {{ $c->nome_fantasia ?? '-' }}
                             </a>
                         </td>

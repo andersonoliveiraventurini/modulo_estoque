@@ -52,7 +52,7 @@
                 @forelse($orcamentos as $c)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            <a href="{{ route('orcamentos.show', $c) }}">{{ $c->obra }}</a>
+                            <a href="{{ route('orcamentos.show', $c) }}"  class="hover:underline">{{ $c->obra }}</a>
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             {{ $c->cliente->nome }}

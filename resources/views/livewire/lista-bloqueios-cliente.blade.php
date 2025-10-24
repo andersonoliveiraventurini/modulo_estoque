@@ -61,7 +61,7 @@
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             {{ $b->motivo }}
                         </td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/users/{{ $b->user_id }}">{{ $b->user_id }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/users/{{ $b->user_id }}" class="hover:underline">>{{ $b->user_id }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             {{ $b->created_at->format('d/m/Y H:i') }}
                         </td>

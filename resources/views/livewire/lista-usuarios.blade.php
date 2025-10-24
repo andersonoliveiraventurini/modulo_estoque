@@ -59,10 +59,10 @@
                 @forelse($usuarios as $u)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            <a href="/usuarios/{{ $u->id }}">{{ $u->name }}</a>
+                            <a href="/usuarios/{{ $u->id }}" class="hover:underline">{{ $u->name }}</a>
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="/usuarios/{{ $u->id }}">{{ $u->email }}</a></td>
+                                href="/usuarios/{{ $u->id }}" class="hover:underline">{{ $u->email }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             <a href="{{ route('usuarios.editPassword', $u) }}" class="text-blue-600 hover:underline">Alterar Senha</a>
 

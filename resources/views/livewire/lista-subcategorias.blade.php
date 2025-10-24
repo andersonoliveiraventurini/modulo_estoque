@@ -74,7 +74,7 @@
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $sub->descricao }}
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            <a href="/categorias/{{ $sub->categoria?->id }}">
+                            <a href="/categorias/{{ $sub->categoria?->id }}" class="hover:underline">
                                 {{ $sub->categoria?->nome ?? '—' }}
                             </a>
                         </td>
