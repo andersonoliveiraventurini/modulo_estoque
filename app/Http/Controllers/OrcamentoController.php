@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreOrcamentoRequest;
 use App\Http\Requests\UpdateOrcamentoRequest;
 use App\Models\Cliente;
+use App\Models\ConsultaPreco;
 use App\Models\Cor;
 use App\Models\Endereco;
 use App\Models\Fornecedor;
@@ -152,7 +153,7 @@ class OrcamentoController extends Controller
         // 1) Definir desconto percentual (cliente x vendedor)
         $descontoPercentual = null;
 
-        if($request->guia_recolhimento != null){
+        if ($request->guia_recolhimento != null) {
             $request->merge([
                 'guia_recolhimento' => str_replace(',', '.', str_replace('.', '', $request->guia_recolhimento)),
             ]);
@@ -680,7 +681,7 @@ class OrcamentoController extends Controller
      */
     public function edit($id)
     {
-        $orcamento = Orcamento::with(['cliente', 'itens.produto', 'vidros'])->findOrFail($id);
+        $orcamento = Orcamento::with(['cliente', 'itens.produto', 'vidros', 'consultaPrecos'])->findOrFail($id);
 
         // Você também precisa passar as outras variáveis que a view usa
         $cliente = Cliente::find($orcamento->cliente_id);
@@ -692,6 +693,18 @@ class OrcamentoController extends Controller
 
         $desconto_percentual = $orcamento->descontos->where('tipo', 'percentual')->max('porcentagem') ?? 0;
         $desconto_especifico = $orcamento->descontos->where('tipo', 'fixo')->max('valor') ?? 0;
+
+        // Prepara os itens para JavaScript
+        $itensParaJs = old('itens') ?? $orcamento->consultaPrecos->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'nome' => $item->descricao,
+                'quantidade' => $item->quantidade,
+                'cor' => $item->cor,
+                'fornecedor_id' => $item->fornecedor_id,
+                'observacoes' => $item->observacao
+            ];
+        })->toArray();
 
         return view('paginas.orcamentos.edit', compact(
             'orcamento',
@@ -711,10 +724,9 @@ class OrcamentoController extends Controller
      */
     public function update(UpdateOrcamentoRequest $request, Orcamento $orcamento)
     {
-        dd($request->all());
         DB::beginTransaction();
 
-        try {
+    
             // 1) Calcular desconto percentual
             $descontoPercentual = null;
             if ($request->filled('desconto_aprovado') || $request->filled('desconto')) {
@@ -820,30 +832,63 @@ class OrcamentoController extends Controller
                 }
             }
 
-            // 8) NOVOS PRODUTOS
+            // itens para cotação 
             if ($request->has('itens')) {
-                foreach ($request->itens as $item) {
-                    $valorUnitario = (float) ($item['preco_unitario'] ?? 0);
-                    $quantidade = (float) ($item['quantidade'] ?? 0);
-                    $subtotal = $valorUnitario * $quantidade;
+                $itens = $request->input('itens');
 
-                    $valorComDesconto = $subtotal;
-                    if ($descontoPercentual) {
-                        $valorComDesconto = $subtotal - ($subtotal * ($descontoPercentual / 100));
+                // IDs dos itens que vieram no request (para controle de exclusão)
+                $idsRecebidos = [];
+
+                foreach ($itens as $item) {
+                    // Validação básica - ignora itens vazios
+                    if (empty($item['nome']) && empty($item['quantidade'])) {
+                        continue;
                     }
 
-                    $orcamento->itens()->create([
-                        'produto_id' => $item['id'],
-                        'quantidade' => $quantidade,
-                        'valor_unitario' => $valorUnitario,
-                        'valor_unitario_com_desconto' => $item['preco_unitario_com_desconto'] ?? null,
-                        'desconto' => $descontoPercentual ?? 0,
-                        'valor_com_desconto' => $valorComDesconto,
-                        'user_id' => $request->user()->id ?? null,
-                    ]);
+                    // Prepara os dados para salvar/atualizar
+                    $dadosItem = [
+                        'descricao' => $item['nome'] ?? null,
+                        'quantidade' => $item['quantidade'] ?? null,
+                        'cor' => $item['cor'] ?? null,
+                        'fornecedor_id' => $item['fornecedor_id'] ?? null,
+                        'observacao' => $item['observacoes'] ?? null,
+                        'orcamento_id' => $orcamento->id,
+                        'usuario_id' => auth()->id(),
+                        'comprador_id' => auth()->id(),
+                        'status' => 'Pendente',
+                    ];
+
+                    // Se o item tem ID, atualiza. Se não, cria novo
+                    if (isset($item['id']) && !empty($item['id'])) {
+                        // Atualiza item existente
+                        $consultaPreco = ConsultaPreco::where('id', $item['id'])
+                            ->where('orcamento_id', $orcamento->id)
+                            ->first();
+
+                        if ($consultaPreco) {
+                            $consultaPreco->update($dadosItem);
+                            $idsRecebidos[] = $consultaPreco->id;
+                        }
+                    } else {
+                        // Cria novo item
+                        $novoItem = ConsultaPreco::create($dadosItem);
+                        $idsRecebidos[] = $novoItem->id;
+                    }
+                }
+
+                // Remove itens que não vieram no request (foram deletados pelo usuário)
+                if (!empty($idsRecebidos)) {
+                    ConsultaPreco::where('orcamento_id', $orcamento->id)
+                        ->whereNotIn('id', $idsRecebidos)
+                        ->delete();
+                } else {
+                    // Se não há itens recebidos, remove todos
+                    ConsultaPreco::where('orcamento_id', $orcamento->id)->delete();
                 }
             }
 
+            
+    try {
             // 9) VIDROS REMOVIDOS
             if ($request->has('vidros_removidos')) {
                 foreach ($request->vidros_removidos as $vidroId) {

@@ -265,55 +265,85 @@
 
                         <!-- Wrapper que só aparece quando aberto -->
                         <div x-show="aberto" x-transition id="itens-wrapper" class="space-y-4">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                                <div class="col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700">Descrição do item</label>
-                                    <input type="text" name="itens[0][nome]" placeholder="Digite a descrição"
-                                        value="{{ old('itens.0.nome') }}"
-                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+
+                            @php
+                                $itensExistentes = old('itens', $orcamento->consultaPrecos ?? []);
+                            @endphp
+
+                            @forelse($itensExistentes as $index => $item)
+                                <div class="space-y-2 relative border border-neutral-200 rounded-lg p-4">
+                                    @if ($index > 0)
+                                        <button type="button" onclick="removeItem(this)"
+                                            class="absolute right-2 text-red-600 hover:text-red-800">
+                                            Remover
+                                        </button>
+                                    @endif
+
+                                    {{-- Campo hidden com ID do item (se existir) --}}
+                                    @if (isset($item['id']) || (is_object($item) && isset($item->id)))
+                                        <input type="hidden" name="itens[{{ $index }}][id]"
+                                            value="{{ is_object($item) ? $item->id : $item['id'] }}" />
+                                    @endif
+
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                                        <div class="col-span-2">
+                                            <label class="block text-sm font-medium text-gray-700">Descrição do
+                                                item</label>
+                                            <input type="text" name="itens[{{ $index }}][nome]"
+                                                placeholder="Digite a descrição"
+                                                value="{{ old('itens.' . $index . '.nome', is_object($item) ? $item->descricao : $item['nome'] ?? '') }}"
+                                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Quantidade</label>
+                                            <input type="number" name="itens[{{ $index }}][quantidade]"
+                                                placeholder="Digite a quantidade"
+                                                value="{{ old('itens.' . $index . '.quantidade', is_object($item) ? $item->quantidade : $item['quantidade'] ?? '') }}"
+                                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Cor</label>
+                                            <select name="itens[{{ $index }}][cor]"
+                                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                                                <option value="">Selecione...</option>
+                                                @foreach ($cores as $cor)
+                                                    <option value="{{ $cor->nome }}"
+                                                        {{ old('itens.' . $index . '.cor', is_object($item) ? $item->cor : $item['cor'] ?? '') == $cor->nome ? 'selected' : '' }}>
+                                                        {{ $cor->nome }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-span-2">
+                                            <label class="block text-sm font-medium text-gray-700">Fornecedor</label>
+                                            <select name="itens[{{ $index }}][fornecedor_id]"
+                                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                                                <option value="">Selecione...</option>
+                                                @foreach ($fornecedores as $fornecedor)
+                                                    <option value="{{ $fornecedor->id }}"
+                                                        {{ old('itens.' . $index . '.fornecedor_id', is_object($item) ? $item->fornecedor_id : $item['fornecedor_id'] ?? '') == $fornecedor->id ? 'selected' : '' }}>
+                                                        {{ $fornecedor->nome_fantasia }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Observações</label>
+                                            <textarea name="itens[{{ $index }}][observacoes]" placeholder="Digite os detalhes adicionais..."
+                                                rows="2" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">{{ old('itens.' . $index . '.observacoes', is_object($item) ? $item->observacao : $item['observacoes'] ?? '') }}</textarea>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Quantidade</label>
-                                    <input type="number" name="itens[0][quantidade]"
-                                        placeholder="Digite a quantidade" value="{{ old('itens.0.quantidade') }}"
-                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                            @empty
+                                {{-- Item padrão se não houver itens --}}
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                                    {{-- Seu código HTML original aqui --}}
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Cor</label>
-                                    <select name="itens[0][cor]"
-                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
-                                        <option value="">Selecione...</option>
-                                        @foreach ($cores as $cor)
-                                            <option value="{{ $cor->nome }}"
-                                                {{ old('itens.0.cor') == $cor->nome ? 'selected' : '' }}>
-                                                {{ $cor->nome }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700">Fornecedor</label>
-                                    <select name="itens[0][fornecedor_id]"
-                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
-                                        <option value="">Selecione...</option>
-                                        @foreach ($fornecedores as $fornecedor)
-                                            <option value="{{ $fornecedor->id }}"
-                                                {{ old('itens.0.fornecedor_id') == $fornecedor->id ? 'selected' : '' }}>
-                                                {{ $fornecedor->nome_fantasia }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Observações</label>
-                                    <textarea name="itens[0][observacoes]" placeholder="Digite os detalhes adicionais..." rows="2"
-                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">{{ old('itens.0.observacoes') }}</textarea>
-                                </div>
-                            </div>
+                            @endforelse
                             <button type="button" onclick="addItem()"
                                 class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
                                 + Adicionar cotação de item
-                            </button><br />
+                            </button>
                         </div>
                     </div>
                     <!-- Endereço de entrega -->
@@ -455,7 +485,7 @@
                             </svg>
                             Observações Gerais
                         </h3>
-                        <x-textarea name="observacoes" placeholder="Digite as observações" 
+                        <x-textarea name="observacoes" placeholder="Digite as observações"
                             rows="4">{{ old('observacoes', $orcamento->observacoes) }}</x-textarea>
                     </div>
 
@@ -494,13 +524,17 @@
 <script src="{{ asset('js/valida.js') }}"></script>
 
 <script>
-    let itemIndex = 1;
-
     // Dados passados do Laravel para JavaScript
     const cores = @json($cores);
     const fornecedores = @json($fornecedores);
-    const oldItens = @json(old('itens', []));
+    const oldItens = @json($itensParaJs ?? []);
 
+    // Inicializa o índice baseado na quantidade de itens existentes
+    let itemIndex = oldItens.length;
+
+    /**
+     * Adiciona um novo item ao formulário
+     */
     function addItem() {
         const wrapper = document.getElementById('itens-wrapper');
         const itemDiv = document.createElement('div');
@@ -523,50 +557,73 @@
             fornecedoresOptions += `<option value="${f.id}" ${selected}>${f.nome_fantasia}</option>`;
         });
 
-        itemDiv.innerHTML = `<button type="button" onclick="removeItem(this)" class="absolute right-2 text-red-600 hover:text-red-800"'+
-            'style="padding-top: -1rem;">
-             Remover
-        </button>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-            <div class="col-span-2">
-                <label class="block text-sm font-medium text-gray-700">Descrição do item</label>
-                <input type="text" name="itens[${itemIndex}][nome]" placeholder="Digite a descrição" 
-                       value="${oldData.nome || ''}"
-                       class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" /></div>
-            <div><label class="block text-sm font-medium text-gray-700">Quantidade</label>
-                <input type="number" name="itens[${itemIndex}][quantidade]" placeholder="Digite a quantidade"
-                       value="${oldData.quantidade || ''}"
-                       class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" /></div>
-            <div><label class="block text-sm font-medium text-gray-700">Cor</label>
-                <select name="itens[${itemIndex}][cor]" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
-                    ${coresOptions}
-                </select></div>
-            <div class="col-span-2">
-                <label class="block text-sm font-medium text-gray-700">Fornecedor</label>
-                <select name="itens[${itemIndex}][fornecedor_id]" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
-                    ${fornecedoresOptions}
-                </select>
+        // Campo hidden para ID (se existir no oldData - necessário para UPDATE)
+        const idField = oldData.id ? `<input type="hidden" name="itens[${itemIndex}][id]" value="${oldData.id}" />` :
+            '';
+
+        itemDiv.innerHTML = `
+            <button type="button" onclick="removeItem(this)" 
+                class="absolute right-2 top-2 text-red-600 hover:text-red-800 text-lg px-2"
+                title="Remover item">
+                Remover
+            </button>
+            ${idField}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Descrição do item</label>
+                    <input type="text" name="itens[${itemIndex}][nome]" placeholder="Digite a descrição" 
+                           value="${oldData.nome || ''}"
+                           class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Quantidade</label>
+                    <input type="number" name="itens[${itemIndex}][quantidade]" placeholder="Digite a quantidade"
+                           value="${oldData.quantidade || ''}"
+                           class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Cor</label>
+                    <select name="itens[${itemIndex}][cor]" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                        ${coresOptions}
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Fornecedor</label>
+                    <select name="itens[${itemIndex}][fornecedor_id]" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                        ${fornecedoresOptions}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Observações</label>
+                    <textarea name="itens[${itemIndex}][observacoes]" placeholder="Digite os detalhes adicionais..." rows="2"
+                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">${oldData.observacoes || ''}</textarea>
+                </div>
             </div>
-            <div><label class="block text-sm font-medium text-gray-700">Observações</label>
-                <textarea name="itens[${itemIndex}][observacoes]" placeholder="Digite os detalhes adicionais..." rows="2"
-                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">${oldData.observacoes || ''}</textarea></div>
-        </div>`;
+        `;
 
         wrapper.appendChild(itemDiv);
         itemIndex++;
     }
 
-    // Ao carregar a página, adiciona os itens old() que foram submetidos anteriormente
+    /**
+     * Remove um item do formulário
+     */
+    function removeItem(button) {
+        const itemDiv = button.closest('.space-y-2');
+        if (itemDiv) {
+            itemDiv.remove();
+        }
+    }
+
+    /**
+     * Ao carregar a página, adiciona os itens que já existem (edição) ou old() (validação)
+     */
     document.addEventListener('DOMContentLoaded', function() {
-        // Começa do índice 1 porque o item 0 já existe no HTML
+        // Se houver itens existentes além do primeiro (índice 0 já existe no HTML)
         for (let i = 1; i < oldItens.length; i++) {
             addItem();
         }
     });
-
-    function removeItem(button) {
-        button.closest('div.space-y-2').remove();
-    }
 </script>
 
 <script>
@@ -840,7 +897,7 @@
             '<div class="mt-2 text-sm"><strong>Área:</strong> <span class="area">0.00</span> m² | ' +
             '<strong>Valor:</strong> R$ <span class="valor">0.00</span> | ' +
             '<strong>c/ desc:</strong> R$ <span class="valor-desconto">0.00</span>' +
-            '<button type="button" onclick="removeVidro(this)" class="absolute right-2 text-red-600 hover:text-red-800"'+
+            '<button type="button" onclick="removeVidro(this)" class="absolute right-2 text-red-600 hover:text-red-800"' +
             'style="padding-top: -1rem;">Remover</button> </div>';
 
         wrapper.appendChild(vidroDiv);

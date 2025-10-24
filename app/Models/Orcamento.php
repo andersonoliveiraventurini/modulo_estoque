@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\DB; 
+use Illuminate\Support\Facades\DB;
 
 class Orcamento extends Model
 {
@@ -31,6 +31,12 @@ class Orcamento extends Model
         'token_expira_em',
         'workflow_status',
     ];
+
+    // Model Orcamento
+    public function consultaPrecos()
+    {
+        return $this->hasMany(ConsultaPreco::class, 'orcamento_id');
+    }
 
     public function cliente()
     {
