@@ -726,7 +726,7 @@ class OrcamentoController extends Controller
     {
         DB::beginTransaction();
 
-    
+        try {
             // 1) Calcular desconto percentual
             $descontoPercentual = null;
             if ($request->filled('desconto_aprovado') || $request->filled('desconto')) {
@@ -850,7 +850,7 @@ class OrcamentoController extends Controller
                         'descricao' => $item['nome'] ?? null,
                         'quantidade' => $item['quantidade'] ?? null,
                         'cor' => $item['cor'] ?? null,
-                        'fornecedor_id' => $item['fornecedor_id'] ?? null,
+                        'fornecedor_id' => !empty($item['fornecedor_id']) ? $item['fornecedor_id'] : null,
                         'observacao' => $item['observacoes'] ?? null,
                         'orcamento_id' => $orcamento->id,
                         'usuario_id' => auth()->id(),
@@ -877,18 +877,15 @@ class OrcamentoController extends Controller
                 }
 
                 // Remove itens que não vieram no request (foram deletados pelo usuário)
+                // Só remove se houver IDs recebidos válidos
                 if (!empty($idsRecebidos)) {
                     ConsultaPreco::where('orcamento_id', $orcamento->id)
                         ->whereNotIn('id', $idsRecebidos)
                         ->delete();
-                } else {
-                    // Se não há itens recebidos, remove todos
-                    ConsultaPreco::where('orcamento_id', $orcamento->id)->delete();
                 }
             }
 
-            
-    try {
+
             // 9) VIDROS REMOVIDOS
             if ($request->has('vidros_removidos')) {
                 foreach ($request->vidros_removidos as $vidroId) {
