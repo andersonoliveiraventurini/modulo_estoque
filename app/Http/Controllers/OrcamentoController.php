@@ -711,7 +711,7 @@ class OrcamentoController extends Controller
      */
     public function update(UpdateOrcamentoRequest $request, Orcamento $orcamento)
     {
-
+        dd($request->all());
         DB::beginTransaction();
 
         try {

@@ -54,9 +54,7 @@ class UpdateOrcamentoRequest extends FormRequest
             
             // Novos itens
             'itens' => 'nullable|array',
-            'itens.*.id' => 'required_with:itens|exists:produtos,id',
             'itens.*.quantidade' => 'required_with:itens|numeric|min:0',
-            'itens.*.preco_unitario' => 'required_with:itens|numeric|min:0',
             
             // Vidros
             'vidros_removidos' => 'nullable|array',

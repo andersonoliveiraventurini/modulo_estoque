@@ -301,9 +301,6 @@
             const vidroDiv = document.createElement('div');
             vidroDiv.className = "space-y-2 relative border border-neutral-200 dark:border-neutral-700 rounded-lg p-4";
             vidroDiv.innerHTML = `
-                <button type="button" onclick="removeVidro(this)" class="absolute top-2 right-2 text-red-600 hover:text-red-800">
-                    Remover
-                </button><br/>
                 <div class="overflow-x-auto">
                     <div class="flex gap-4 min-w-max">
                         <div class="flex-1">
@@ -343,8 +340,9 @@
                     <strong>Área (m²):</strong> <span class="area">0.00</span> |
                     <strong>Valor Total:</strong> R$ <span class="valor">0.00</span> |
                     <strong>c/ desconto:</strong> R$ <span class="valor-desconto">0.00</span>
-                </div>
                 
+            <button type="button" onclick="removeVidro(this)" class="absolute right-2 text-red-600 hover:text-red-800"'+
+            'style="padding-top: -1rem;">Remover</button> </div>
             `;
             wrapper.appendChild(vidroDiv);
             vidroIndex++;

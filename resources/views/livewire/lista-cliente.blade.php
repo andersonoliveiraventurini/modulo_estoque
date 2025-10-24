@@ -88,7 +88,7 @@
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             <a href="{{ route('orcamentos.criar', $c->id ?? null) }}"
-                            class="text-secondary-600 text-sm font-medium" class="hover:underline">>
+                            class="text-secondary-600 text-sm font-medium" class="hover:underline">
                             Criar Orçamento
                         </a>
                         </td>
