@@ -414,16 +414,21 @@
 
         {{-- Ações --}}
         <div class="flex justify-between">
-            <a href="{{ route('orcamentos.index') }}"
-                class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Voltar</a>
+            <a href="{{ route('orcamentos.index') }}">
+                <x-button size="sm" variant="primary">
+                    <x-heroicon-o-arrow-uturn-left class="w-4 h-4" />
+                    Orçamentos
+                </x-button>
+            </a>
 
             <form action="{{ route('orcamentos.destroy', $orcamento->id) }}" method="POST"
                 onsubmit="return confirm('Tem certeza que deseja excluir este orçamento?');">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                <x-button type="submit" size="sm" variant="danger">                    
+                    <x-heroicon-o-trash class="w-4 h-4" />
                     Excluir Orçamento
-                </button>
+                </x-button>
             </form>
         </div>
     </div>

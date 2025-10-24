@@ -118,13 +118,17 @@
 
                 <!-- Botões -->
                 <div class="flex gap-4 mt-6">
-                    <a href="{{ route('fornecedores.edit', $fornecedor->id) }}"
-                        class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
-                        Editar
+                    <a href="{{ route('fornecedores.edit', $fornecedor->id) }}">
+                        <x-button size="sm" variant="secondary">
+                            <x-heroicon-o-pencil-square class="w-4 h-4" />
+                            Editar
+                        </x-button>
                     </a>
-                    <a href="{{ route('fornecedores.index') }}"
-                        class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
-                        Voltar
+                    <a href="{{ route('fornecedores.index') }}">
+                        <x-button size="sm" variant="primary">
+                            <x-heroicon-o-arrow-uturn-left class="w-4 h-4" />
+                            Voltar para a lista
+                        </x-button>
                     </a>
                 </div>
             </div>

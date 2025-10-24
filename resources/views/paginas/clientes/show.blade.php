@@ -149,9 +149,17 @@
 
                 <!-- Botões -->
                 <div class="flex gap-4 mt-6">
-                    <a href="{{ route('clientes.edit', $cliente) }}"
-                        class="px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700">
-                        Editar
+                    <a href="{{ route('clientes.edit', $cliente) }}">
+                        <x-button size="sm" variant="secondary">
+                            <x-heroicon-o-pencil-square class="w-4 h-4" />
+                            Editar
+                        </x-button>
+                    </a>
+                    <a href="{{ route('clientes.index') }}">
+                        <x-button size="sm" variant="primary">
+                            <x-heroicon-o-arrow-uturn-left class="w-4 h-4" />
+                            Voltar para a lista
+                        </x-button>
                     </a>
                 </div>
             </div>

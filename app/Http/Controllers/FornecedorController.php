@@ -102,7 +102,7 @@ class FornecedorController extends Controller
             }
         }
 
-        return redirect()->route('fornecedores.show', $fornecedor);
+        return redirect()->route('fornecedores.show', $fornecedor)->with('success', 'Fornecedor criado com sucesso!');
     }
 
 
