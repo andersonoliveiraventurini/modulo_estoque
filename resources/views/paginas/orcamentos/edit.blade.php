@@ -245,8 +245,15 @@
                             @endforeach
                         </div>
                     </div>
+                    @php
+                        $itensExistentes = old(
+                            'itens',
+                            isset($orcamento) && $orcamento->consultaPrecos ? $orcamento->consultaPrecos : [],
+                        );
+                        $temItens = count($itensExistentes) > 0;
+                    @endphp
 
-                    <div x-data="{ aberto: false }" class="space-y-4">
+                    <div x-data="{ aberto: {{ $temItens ? 'true' : 'false' }} }" class="space-y-4">
                         <hr />
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
