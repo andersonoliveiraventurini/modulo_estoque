@@ -74,14 +74,20 @@
                     </x-tab>
                 </x-tabs>
 
-                <!-- Botões -->
+                <!-- Botões -->                    
                 <div class="flex gap-4 mt-6">
-                    <x-button href="{{ route('consulta_preco.edit', $consultaPreco) }}">
-                        Editar
-                    </x-button>
-                    <x-button href="{{ route('consulta_preco.index') }}">
-                        Voltar
-                    </x-button>
+                    <a href="{{ route('consulta_preco.edit', $consultaPreco) }}">
+                        <x-button size="sm" variant="secondary">
+                            <x-heroicon-o-pencil-square class="w-4 h-4" />
+                            Editar
+                        </x-button>
+                    </a>
+                    <a href="{{ route('consulta_preco.index') }}">
+                        <x-button size="sm" variant="primary">
+                            <x-heroicon-o-arrow-uturn-left class="w-4 h-4" />
+                            Voltar para a lista
+                        </x-button>
+                    </a>
                 </div>
             </div>
         </div>

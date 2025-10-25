@@ -42,7 +42,7 @@ return new class extends Migration
                 ->comment('Referência ao fornecedor - para recebimento.');
             $table->foreign('fornecedor_id')->references('id')->on('fornecedores')->onDelete('cascade');
 
-            // cliente
+            // pessoa da área de compras
             $table->unsignedBigInteger('comprador_id')->nullable()
                 ->comment('Usuário que fez o cadastro do preço.');
             $table->foreign('comprador_id')->references('id')->on('users');

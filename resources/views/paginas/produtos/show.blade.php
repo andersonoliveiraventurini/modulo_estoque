@@ -127,10 +127,19 @@
 
                 </x-tabs>
 
-                <!-- Botões -->
+                <!-- Botões -->                                  
                 <div class="flex gap-4 mt-6">
                     <a href="{{ route('produtos.edit', $produto) }}">
-                        Editar
+                        <x-button size="sm" variant="secondary">
+                            <x-heroicon-o-pencil-square class="w-4 h-4" />
+                            Editar
+                        </x-button>
+                    </a>
+                    <a href="{{ route('produtos.index') }}">
+                        <x-button size="sm" variant="primary">
+                            <x-heroicon-o-arrow-uturn-left class="w-4 h-4" />
+                            Voltar para a lista
+                        </x-button>
                     </a>
                 </div>
             </div>

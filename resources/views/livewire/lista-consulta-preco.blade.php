@@ -96,14 +96,14 @@
                                 href="/users/{{ $p->responsavel_id }}">{{ $p->responsavel_id }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $p->observacao }}</td>
                         <td class="px-6 py-4 flex gap-2">
-                            <a href="{{ route('consulta_precos.edit', $p->id) }}">
+                            <a href="{{ route('consulta_preco.edit', $p->id) }}">
                                 <x-button size="sm" variant="secondary">
                                     <x-heroicon-o-pencil-square class="w-4 h-4" />
                                     Editar
                                 </x-button>
                             </a>
 
-                            <form action="{{ route('consulta_precos.destroy', $p->id) }}" method="POST"
+                            <form action="{{ route('consulta_preco.destroy', $p->id) }}" method="POST"
                                 onsubmit="return confirm('Deseja excluir esta consulta de preço?');">
                                 @csrf
                                 @method('DELETE')

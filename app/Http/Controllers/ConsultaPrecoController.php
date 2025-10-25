@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateConsultaPrecoRequest;
 use App\Models\ConsultaPreco;
 use App\Models\Cor;
 use App\Models\Fornecedor;
+use App\Models\Orcamento;
 
 class ConsultaPrecoController extends Controller
 {
@@ -26,7 +27,8 @@ class ConsultaPrecoController extends Controller
     {
         $fornecedores = Fornecedor::all();
         $cores = Cor::orderBy('nome')->get();
-        return view('paginas.produtos.consulta_precos.create', compact('fornecedores', 'cores'));
+        $orcamentos = Orcamento::where('status', '<>', 'Aprovado')->where('status', '<>', 'Cancelado')->get();
+        return view('paginas.produtos.consulta_precos.create', compact('fornecedores', 'cores', 'orcamentos'));
     }
 
     /**
@@ -34,7 +36,9 @@ class ConsultaPrecoController extends Controller
      */
     public function store(StoreConsultaPrecoRequest $request)
     {
-        //
+        $request->merge(['usuario_id' => auth()->id()]);
+        $consultaPreco = ConsultaPreco::create($request->except('_token'));
+        return redirect()->route('consulta_preco.show', $consultaPreco)->with('success', 'Consulta de Preço criada com sucesso.');
     }
 
     /**
@@ -48,9 +52,14 @@ class ConsultaPrecoController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(ConsultaPreco $consultaPreco)
+    public function edit($consult_id)
     {
-        //
+        $consulta = ConsultaPreco::findOrFail($consult_id);
+
+        $fornecedores = Fornecedor::all();
+        $cores = Cor::orderBy('nome')->get();
+        $orcamentos = Orcamento::where('status', '<>', 'Aprovado')->where('status', '<>', 'Cancelado')->get();
+        return view('paginas.produtos.consulta_precos.edit', compact('consulta', 'fornecedores', 'cores', 'orcamentos'));
     }
 
     /**
