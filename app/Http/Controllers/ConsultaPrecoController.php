@@ -65,16 +65,20 @@ class ConsultaPrecoController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateConsultaPrecoRequest $request, ConsultaPreco $consultaPreco)
+    public function update(UpdateConsultaPrecoRequest $request, $consulta_id)
     {
-        //
+        $consultaPreco = ConsultaPreco::findOrFail($consulta_id);
+        $consultaPreco->update($request->except('_token', '_method'));
+        return redirect()->route('consulta_preco.show', $consultaPreco)->with('success', 'Consulta de Preço atualizada com sucesso.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ConsultaPreco $consultaPreco)
+    public function destroy($consulta_id)
     {
-        //
+        $consultaPreco = ConsultaPreco::findOrFail($consulta_id);
+        $consultaPreco->delete();
+        return redirect()->route('consulta_preco.index')->with('success', 'Consulta de Preço excluída com sucesso.');
     }
 }
