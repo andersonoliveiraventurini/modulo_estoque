@@ -17,7 +17,6 @@ class TipoTransporteSeeder extends Seeder
             'Tavares',
             'Transportadora',
             'Sedex',
-            'Complemento',
             'Balcão',
             'Retira WhatsApp',
             'Rota',

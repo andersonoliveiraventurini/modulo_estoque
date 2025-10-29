@@ -14,6 +14,8 @@ return new class extends Migration
             Schema::create('orcamentos', function (Blueprint $table) {
                   $table->id();
                   $table->integer('versao')->default(1);
+                  $table->enum('complemento', ['Não', 'Sim'])->default('Não')
+                        ->comment('Complemento para outro orçamento relacionado.');
                   $table->date('validade')
                         ->nullable()
                         ->comment('Data de validade do orçamento, geralmente 2 dias após a emissão.');

@@ -206,6 +206,9 @@
             - Revisão:
             {{ $orcamento->versao }}
         @endif
+        @if ($orcamento->complemento > 'Sim')
+            <br/> Complemento
+        @endif
         @if ($orcamento->transportes->count() > 0)
             <br/>Transporte:
             {{ $orcamento->transportes->pluck('nome')->join(', ') }}

@@ -183,7 +183,7 @@ class OrcamentoController extends Controller
         // Criação do orçamento (sem endereço ainda)
         $orcamento = Orcamento::create([
             'cliente_id'   => $request->cliente_id,
-            'vendedor_id'  => $request->has('vendedor_id') ? $request->vendedor_id : Auth()->user()->id,
+            'vendedor_id'  =>  Auth()->user()->id,
             'usuario_logado_id'  => Auth()->user()->id,
             'obra'         => $request->nome_obra,
             'valor_total_itens'  => $request->valor_total,
@@ -453,7 +453,8 @@ class OrcamentoController extends Controller
         // Criar novo orçamento
         $novoOrcamento = Orcamento::create([
             'cliente_id'   => $orcamentoOriginal->cliente_id,
-            'vendedor_id'  => $orcamentoOriginal->vendedor_id,
+            // quem está duplicando o orçamento fica com o atendimento
+            'vendedor_id'  => Auth()->user()->id,
             'obra'         => $novaObra,
             'valor_total_itens' => $orcamentoOriginal->valor_total_itens,
             'status'       => 'Pendente',

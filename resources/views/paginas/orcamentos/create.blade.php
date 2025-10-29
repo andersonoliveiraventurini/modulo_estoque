@@ -1,5 +1,5 @@
 <x-layouts.app :title="__('Criar Orçamento')">
-    
+
     <div class="flex w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
             <div
@@ -14,13 +14,13 @@
                     Criar Orçamento para Cliente {{ $cliente->id }} - {{ $cliente->nome ?? $cliente->nome_fantasia }}
                 </h2>
                 @if ($cliente->vendedor_interno != null)
-                    <p> Vendedor interno: {{ $cliente->vendedor_interno ?? 'Não atribuído' }} </p>
+                <p> Vendedor interno: {{ $cliente->vendedor_interno ?? 'Não atribuído' }} </p>
                 @endif
                 @if ($cliente->vendedor_externo != null)
-                    <p> Vendedor externo: {{ $cliente->vendedor_externo ?? 'Não atribuído' }} </p>
+                <p> Vendedor externo: {{ $cliente->vendedor_externo ?? 'Não atribuído' }} </p>
                 @endif
                 @if ($cliente->desconto_aprovado != null)
-                    <p> Desconto aprovado: {{ $cliente->desconto_aprovado ?? 'Não atribuído' }} </p>
+                <p> Desconto aprovado: {{ $cliente->desconto_aprovado ?? 'Não atribuído' }} </p>
                 @endif
                 <input type="hidden" name="desconto_aprovado" id="desconto_aprovado"
                     value="{{ $cliente->desconto_aprovado ?? 0 }}" />
@@ -134,14 +134,12 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <x-input type="text" name="nome_obra" placeholder="Digite o nome da obra"
                                 label="Nome da Obra" required />
-                            <x-input type="text" name="prazo_entrega" placeholder="Ex: 15 dias úteis"
-                                label="Prazo de Entrega" />
-                            <x-select name="vendedor_id" label="Atendido por" required>
-                                <option value="">Selecione...</option>
-                                @foreach ($vendedores as $vendedor)
-                                    <option value="{{ $vendedor->id }}">{{ $vendedor->name }}</option>
-                                @endforeach
+                            <x-select name="complemento" label="Complemento de outro orçamento?" required>
+                                <option value="Não">Não</option>
+                                <option value="Sim">Sim</option>
                             </x-select>
+                            <x-input type="text" name="prazo_entrega" placeholder="Ex: 15 dias úteis"
+                                label="Prazo de Entrega" />                            
                             <x-select name="tipo_frete" label="Tipo de Frete">
                                 <option value="">Selecione...</option>
                                 <option value="cif">CIF</option>
@@ -188,12 +186,12 @@
                         <div
                             class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                             @foreach ($opcoesTransporte as $opcao)
-                                <label
-                                    class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 hover:bg-blue-50 cursor-pointer transition">
-                                    <input type="checkbox" name="tipos_transporte[]" value="{{ $opcao->id }}"
-                                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                                    <span class="text-sm text-gray-700">{{ $opcao->nome }}</span>
-                                </label>
+                            <label
+                                class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 hover:bg-blue-50 cursor-pointer transition">
+                                <input type="checkbox" name="tipos_transporte[]" value="{{ $opcao->id }}"
+                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                <span class="text-sm text-gray-700">{{ $opcao->nome }}</span>
+                            </label>
                             @endforeach
                         </div>
 
@@ -408,9 +406,9 @@
                 totalVidrosComDesconto
             };
         }
-</script>
+    </script>
 
-<script>
+    <script>
         let itemIndex = 1;
 
         const cores = @json($cores);

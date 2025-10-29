@@ -26,7 +26,6 @@ class UpdateOrcamentoRequest extends FormRequest
             'obra' => 'required|string|max:255', // CORRIGIDO: era 'nome_obra'
             'observacoes' => 'nullable|string',
             'prazo_entrega' => 'nullable|date',
-            'vendedor_id' => 'nullable|exists:users,id',
             
             // Valores monetários
             'valor_total' => 'nullable|string',

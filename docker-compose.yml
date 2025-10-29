@@ -8,11 +8,15 @@ services:
       - "8087:80"
     volumes:
       - .:/var/www/html
+      - /var/www/html/vendor
       - /var/www/html/node_modules
-      - ./storage:/var/www/html/storage:delegated
-      - ./bootstrap/cache:/var/www/html/bootstrap/cache:delegated
     depends_on:
       - mysql
+    environment:
+      - APACHE_RUN_USER=www-data
+      - APACHE_RUN_GROUP=www-data
+    networks:
+      - laravel-network
 
   mysql:
     image: mysql:8.0
@@ -26,6 +30,12 @@ services:
       MYSQL_PASSWORD: teste37
     volumes:
       - db_data:/var/lib/mysql
+    networks:
+      - laravel-network
 
 volumes:
   db_data:
+
+networks:
+  laravel-network:
+    driver: bridge

@@ -13,14 +13,14 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libicu-dev \
-    libmagickwand-dev \    
+    libmagickwand-dev \
     npm \
     nodejs \
     tzdata \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install sockets pdo pdo_mysql mbstring zip exif pcntl bcmath gd intl \
-    && pecl install imagick \           
-    && docker-php-ext-enable imagick \  
+    && pecl install imagick \
+    && docker-php-ext-enable imagick \
     && docker-php-ext-enable sockets bcmath zip intl \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
@@ -31,7 +31,6 @@ RUN { \
     echo "upload_max_filesize=64M"; \
     echo "post_max_size=64M"; \
 } > /usr/local/etc/php/conf.d/custom-php.ini
-
 
 # Ajusta o fuso horário para o Brasil
 RUN ln -snf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime && echo "America/Sao_Paulo" > /etc/timezone
@@ -54,19 +53,22 @@ WORKDIR /var/www/html
 # Copia os arquivos do projeto
 COPY . .
 
-# Ajusta propietario e permissões antes da instalação para evitar problemas
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
-
 # Instala dependências PHP do Laravel
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader || true
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# Instala dependências JS e compila os assets
-# RUN npm install && npm run build
+# Instala dependências JS
 RUN npm install
 
-# Ajusta permissões
-RUN chown -R www-data:www-data /var/www/html && chmod -R 775 storage bootstrap/cache
+# Cria diretórios necessários e ajusta permissões
+RUN mkdir -p storage/framework/sessions \
+    && mkdir -p storage/framework/views \
+    && mkdir -p storage/framework/cache \
+    && mkdir -p storage/logs \
+    && mkdir -p bootstrap/cache \
+    && chown -R www-data:www-data /var/www/html/storage \
+    && chown -R www-data:www-data /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage \
+    && chmod -R 775 /var/www/html/bootstrap/cache
 
 # Expõe a porta padrão do Apache
 EXPOSE 80
