@@ -30,6 +30,7 @@ class Orcamento extends Model
         'token_acesso',
         'token_expira_em',
         'workflow_status',
+        'condicao_id',
     ];
 
     // Model Orcamento

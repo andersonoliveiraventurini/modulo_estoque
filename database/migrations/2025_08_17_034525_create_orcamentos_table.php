@@ -19,6 +19,11 @@ return new class extends Migration
                   $table->date('validade')
                         ->nullable()
                         ->comment('Data de validade do orçamento, geralmente 2 dias após a emissão.');
+
+                  $table->unsignedBigInteger('condicao_id')->nullable()
+                        ->comment('Referência à condição de pagamento associada a este orçamento.');
+                  $table->foreign('condicao_id')->references('id')->on('condicoes_pagamento');
+
                   $table->unsignedBigInteger('cliente_id')->nullable()
                         ->comment('Referência ao cliente associado a este orçamento.');
                   $table->foreign('cliente_id')->references('id')->on('clientes');

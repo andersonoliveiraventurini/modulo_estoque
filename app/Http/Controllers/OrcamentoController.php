@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreOrcamentoRequest;
 use App\Http\Requests\UpdateOrcamentoRequest;
 use App\Models\Cliente;
+use App\Models\CondicoesPagamento;
 use App\Models\ConsultaPreco;
 use App\Models\Cor;
 use App\Models\Endereco;
@@ -61,7 +62,8 @@ class OrcamentoController extends Controller
         $cores = Cor::orderBy('nome')->get();
         $vendedores = User::whereHas('vendedor')->get();
         $opcoesTransporte = TipoTransporte::all();
-        return view('paginas.orcamentos.create', compact('produtos', 'cliente', 'fornecedores', 'cores', 'vendedores', 'opcoesTransporte'));
+        $condicao = CondicoesPagamento::all();
+        return view('paginas.orcamentos.create', compact('produtos', 'cliente', 'fornecedores', 'cores', 'vendedores', 'opcoesTransporte', 'condicao'));
     }
 
     public function aprovarDesconto(Request $request, $id)
@@ -690,7 +692,8 @@ class OrcamentoController extends Controller
         $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
         $cores = Cor::orderBy('nome')->get();
         $vendedores = User::whereHas('vendedor')->get();
-        $opcoesTransporte = TipoTransporte::all();
+        $opcoesTransporte = TipoTransporte::all();        
+        $condicao = CondicoesPagamento::all();
 
         $desconto_percentual = $orcamento->descontos->where('tipo', 'percentual')->max('porcentagem') ?? 0;
         $desconto_especifico = $orcamento->descontos->where('tipo', 'fixo')->max('valor') ?? 0;
@@ -716,7 +719,9 @@ class OrcamentoController extends Controller
             'produtos',
             'cliente',
             'desconto_percentual',
-            'desconto_especifico'
+            'desconto_especifico',
+            'condicao',
+            'itensParaJs'
         ));
     }
 

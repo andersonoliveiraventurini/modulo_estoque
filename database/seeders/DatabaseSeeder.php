@@ -37,6 +37,5 @@ class DatabaseSeeder extends Seeder
         $this->call(CorSeeder::class);
         $this->call(TipoTransporteSeeder::class);
         $this->call(CondicoesPagamentoSeeder::class);
-        $this->call(FormaPagamentoSeeder::class);
     }
 }

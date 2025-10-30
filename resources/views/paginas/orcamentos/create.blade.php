@@ -14,13 +14,13 @@
                     Criar Orçamento para Cliente {{ $cliente->id }} - {{ $cliente->nome ?? $cliente->nome_fantasia }}
                 </h2>
                 @if ($cliente->vendedor_interno != null)
-                <p> Vendedor interno: {{ $cliente->vendedor_interno ?? 'Não atribuído' }} </p>
+                    <p> Vendedor interno: {{ $cliente->vendedor_interno ?? 'Não atribuído' }} </p>
                 @endif
                 @if ($cliente->vendedor_externo != null)
-                <p> Vendedor externo: {{ $cliente->vendedor_externo ?? 'Não atribuído' }} </p>
+                    <p> Vendedor externo: {{ $cliente->vendedor_externo ?? 'Não atribuído' }} </p>
                 @endif
                 @if ($cliente->desconto_aprovado != null)
-                <p> Desconto aprovado: {{ $cliente->desconto_aprovado ?? 'Não atribuído' }} </p>
+                    <p> Desconto aprovado: {{ $cliente->desconto_aprovado ?? 'Não atribuído' }} </p>
                 @endif
                 <input type="hidden" name="desconto_aprovado" id="desconto_aprovado"
                     value="{{ $cliente->desconto_aprovado ?? 0 }}" />
@@ -139,7 +139,7 @@
                                 <option value="Sim">Sim</option>
                             </x-select>
                             <x-input type="text" name="prazo_entrega" placeholder="Ex: 15 dias úteis"
-                                label="Prazo de Entrega" />                            
+                                label="Prazo de Entrega" />
                             <x-select name="tipo_frete" label="Tipo de Frete">
                                 <option value="">Selecione...</option>
                                 <option value="cif">CIF</option>
@@ -186,12 +186,12 @@
                         <div
                             class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                             @foreach ($opcoesTransporte as $opcao)
-                            <label
-                                class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 hover:bg-blue-50 cursor-pointer transition">
-                                <input type="checkbox" name="tipos_transporte[]" value="{{ $opcao->id }}"
-                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                                <span class="text-sm text-gray-700">{{ $opcao->nome }}</span>
-                            </label>
+                                <label
+                                    class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 hover:bg-blue-50 cursor-pointer transition">
+                                    <input type="checkbox" name="tipos_transporte[]" value="{{ $opcao->id }}"
+                                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                    <span class="text-sm text-gray-700">{{ $opcao->nome }}</span>
+                                </label>
                             @endforeach
                         </div>
 
@@ -202,28 +202,32 @@
                     <!-- Valores e descontos -->
                     <div class="overflow-x-auto">
                         <div class="flex gap-4 min-w-max">
-
                             <div class="flex-1">
-                                <label class="block text-sm font-medium text-gray-700">Desconto na vendedor %</label>
-                                <input type="text" name="desconto" value="0" min="0" max="100"
-                                    placeholder="Digite a porcentagem de desconto (0 a 100)"
-                                    oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"
-                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                <label class="block text-sm font-medium text-gray-700">Condição de pagamento</label>
+                                <x-select name="condicao_pagamento"
+                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                                    <option value="">Selecione...</option>
+                                    @foreach ($condicao as $c)
+                                        <option value="{{ $c->id }}">{{ $c->nome }}</option>
+                                    @endforeach
+                                </x-select>
+                            </div>
+                            <div class="flex-1">
+                                <x-input type="text" name="desconto" value="0" min="0"
+                                    max="100" placeholder="Digite a porcentagem de desconto (0 a 100)"
+                                    label="Desconto na vendedor %"
+                                    oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
                             </div>
 
                             <div class="flex-1">
-                                <label class="block text-sm font-medium text-gray-700">Desconto específico R$</label>
-                                <input type="text" name="desconto_especifico" value="0.00"
-                                    placeholder="Digite o valor do desconto específico"
-                                    oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"
-                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                <x-input type="text" name="desconto_especifico" value="0.00"
+                                    placeholder="Digite o valor do desconto específico" label="Desconto específico R$"
+                                    oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"/>
                             </div>
 
                             <div class="flex-1">
-                                <label class="block text-sm font-medium text-gray-700">Guia Recolhimento</label>
-                                <input type="text" step="0.01" name="guia_recolhimento" value="0"
-                                    value="0.00" oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"
-                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                <x-input type="text" step="0.01" name="guia_recolhimento" value="0"
+                                    label="Guia Recolhimento R$" oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
                             </div>
 
                             <div class="flex-1">
@@ -256,7 +260,7 @@
                             Observações Gerais
                         </h3>
                         <x-textarea name="observacoes" placeholder="Digite as observações" label="Observações"
-                            rows="4"> {{old('observacoes')}}</x-textarea>
+                            rows="4"> {{ old('observacoes') }}</x-textarea>
                     </div>
 
                     <!-- Ações -->
