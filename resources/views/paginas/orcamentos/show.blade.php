@@ -71,8 +71,9 @@
                                 Salvar
                             </button>
                         </form>
+                        <br />
                     @endif
-                    <br />
+
                     <span
                         class="inline-block bg-yellow-200 text-yellow-800 text-sm px-3 py-1 rounded-full font-medium mb-2">
                         Status
@@ -93,10 +94,11 @@
 
                         <button type="button"
                             class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 atualizar-status"
-                            data-id="{{ $orcamento->id }}">
+                            data-id="{{ $orcamento->id }}" data-prev-text="Atualizar">
                             Atualizar
                         </button>
                     </form>
+
                     {{-- Workflow Operacional (separação/conferência) --}}
                     <div class="mt-4">
                         @php
@@ -425,7 +427,7 @@
                 onsubmit="return confirm('Tem certeza que deseja excluir este orçamento?');">
                 @csrf
                 @method('DELETE')
-                <x-button type="submit" size="sm" variant="danger">                    
+                <x-button type="submit" size="sm" variant="danger">
                     <x-heroicon-o-trash class="w-4 h-4" />
                     Excluir Orçamento
                 </x-button>
@@ -435,223 +437,231 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         (function() {
-                'use strict';
+            'use strict';
 
-                function qs(sel, ctx) {
-                    if (!ctx) {
-                        ctx = document;
-                    }
-                    return ctx.querySelector(sel);
+            function qs(sel, ctx) {
+                if (!ctx) {
+                    ctx = document;
                 }
+                return ctx.querySelector(sel);
+            }
 
-                function qsa(sel, ctx) {
-                    if (!ctx) {
-                        ctx = document;
-                    }
-                    return Array.prototype.slice.call(ctx.querySelectorAll(sel));
+            function qsa(sel, ctx) {
+                if (!ctx) {
+                    ctx = document;
                 }
+                return Array.prototype.slice.call(ctx.querySelectorAll(sel));
+            }
 
-                function findAncestorWithClass(el, className) {
-                    while (el && el !== document) {
-                        if (el.classList && el.classList.contains(className)) {
-                            return el;
-                        }
-                        el = el.parentNode;
+            function findAncestorWithClass(el, className) {
+                while (el && el !== document) {
+                    if (el.classList && el.classList.contains(className)) {
+                        return el;
                     }
-                    return null;
+                    el = el.parentNode;
                 }
+                return null;
+            }
 
-                function setLoading(el, isLoading) {
-                    if (!el) {
-                        return;
+            function setLoading(el, isLoading) {
+                if (!el) {
+                    return;
+                }
+                if (isLoading) {
+                    if (!el.hasAttribute('data-prev-text')) {
+                        el.setAttribute('data-prev-text', el.textContent);
                     }
-                    if (isLoading) {
-                        el.textContent = 'Processando...';
-                        el.disabled = true;
-                        el.className += ' opacity-60 cursor-not-allowed';
-                    } else {
-                        var prev = el.getAttribute('data-prev-text');
-                        if (prev) {
-                            el.textContent = prev;
-                        }
-                        el.disabled = false;
-                        el.className = el.className.replace(/\bopacity-60\b/g, '').replace(/\bcursor-not-allowed\b/g, '')
-                            .replace(/\s{2,}/g, ' ').trim();
+                    el.textContent = 'Processando...';
+                    el.disabled = true;
+                    el.className += ' opacity-60 cursor-not-allowed';
+                } else {
+                    var prev = el.getAttribute('data-prev-text');
+                    if (prev) {
+                        el.textContent = prev;
+                    }
+                    el.disabled = false;
+                    el.className = el.className.replace(/\bopacity-60\b/g, '').replace(/\bcursor-not-allowed\b/g, '')
+                        .replace(/\s{2,}/g, ' ').trim();
+                }
+            }
+
+            function formFetch(url, formEl, extra) {
+                if (!extra) {
+                    extra = {};
+                }
+                var fd = new FormData(formEl);
+                for (var k in extra) {
+                    if (Object.prototype.hasOwnProperty.call(extra, k)) {
+                        fd.set(k, extra[k]);
                     }
                 }
-
-                function formFetch(url, formEl, extra) {
-                    if (!extra) {
-                        extra = {};
+                return fetch(url, {
+                    method: 'POST',
+                    body: fd,
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
-                    var fd = new FormData(formEl);
-                    for (var k in extra) {
-                        if (Object.prototype.hasOwnProperty.call(extra, k)) {
-                            fd.set(k, extra[k]);
-                        }
-                    }
-                    return fetch(url, {
-                        method: 'POST',
-                        body: fd,
-                        credentials: 'same-origin'
-                    }).then(function(resp) {
-                        if (!resp.ok) {
-                            return resp.json().then(function(j) {
-                                var msg = (j && j.message) ? j.message : 'Erro na requisicao';
-                                var e = new Error(msg);
-                                e.status = resp.status;
-                                throw e;
-                            })["catch"](function() {
-                                return resp.text().then(function(t) {
-                                    e2.status = resp.status;
-                                    throw e2;
-                                });
+                }).then(function(resp) {
+                    if (!resp.ok) {
+                        return resp.json().then(function(j) {
+                            var msg = (j && j.message) ? j.message : 'Erro na requisição';
+                            var e = new Error(msg);
+                            e.status = resp.status;
+                            throw e;
+                        })["catch"](function() {
+                            return resp.text().then(function(t) {
+                                var e2 = new Error('Erro: ' + resp.status);
+                                e2.status = resp.status;
+                                throw e2;
                             });
-                        }
-                        return resp.json()["catch"](function() {
-                            return {};
                         });
-                    });
-                }
-
-                // Clique no botão Atualizar Status (delegação global)
-                document.addEventListener('click', function(ev) {
-                    var btn = findAncestorWithClass(ev.target, 'atualizar-status');
-                    if (!btn) {
-                        return;
                     }
-
-                    var id = btn.getAttribute('data-id');
-                    var form = qs('#form-status-' + id);
-                    if (!form) {
-                        return;
-                    }
-
-                    var url = form.getAttribute('data-url');
-                    var select = form.querySelector('.status-select');
-                    var novoStatus = select ? select.value : '';
-
-
-                    Swal.fire({
-                        title: 'Confirmacao',
-                        text: 'Deseja realmente alterar o status para "' + novoStatus + '"?',
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonText: 'Sim, atualizar',
-                        cancelButtonText: 'Cancelar'
-                    }).then(function(res) {
-                        if (!res.isConfirmed) {
-                            return;
-                        }
-
-                        setLoading(btn, true);
-
-                        var hasMethod = !!form.querySelector('input[name="_method"]');
-                        var extra = {
-                            status: novoStatus
-                        };
-                        if (!hasMethod) {
-                            extra._method = 'PUT';
-                        }
-
-                        formFetch(url, form, extra).then(function(data) {
-                            var msg = (data && data.message) ? data.message :
-                                'Status atualizado com sucesso!';
-                            Swal.fire({
-                                title: 'Sucesso',
-                                text: msg,
-                                icon: 'success',
-                                timer: 1500,
-                                showConfirmButton: false
-                            });
-                            if (data && data.redirect) {
-                                setTimeout(function() {
-                                    window.location.href = data.redirect;
-                                }, 800);
-                            } else {
-                                setTimeout(function() {
-                                    window.location.reload();
-                                }, 800);
-                            }
-                        }, function(err) {
-                            var emsg = (err && err.message) ? err.message :
-                                'Nao foi possivel atualizar o status.';
-                            Swal.fire({
-                                title: 'Erro',
-                                text: emsg,
-                                icon: 'error'
-                            });
-                        }).then(function() {
-                            setLoading(btn, false);
-                        });
+                    return resp.json()["catch"](function() {
+                        return {};
                     });
                 });
+            }
 
-                (function() {
-                    'use strict';
+            // Clique no botão Atualizar Status (delegação global)
+            document.addEventListener('click', function(ev) {
+                var btn = ev.target;
 
-                    // Submit do form Aprovar Desconto (delegação global)
-                    document.addEventListener('submit', function(ev) {
-                        // 1. Identifique o formulário que foi enviado a partir do evento.
-                        // ev.target é o elemento que disparou o evento, que neste caso é o <form>.
-                        var form = ev.target;
+                // Verifica se o elemento clicado ou seu ancestral tem a classe 'atualizar-status'
+                if (!btn.classList.contains('atualizar-status')) {
+                    btn = findAncestorWithClass(ev.target, 'atualizar-status');
+                }
 
-                        // 2. Verifique se este é o formulário que queremos interceptar.
-                        // Isso evita que este código seja executado para *todos* os formulários da página.
-                        // Usamos o ID que começa com "form-aprovar-" como um seletor.
-                        if (!form.matches('[id^="form-aprovar-"]')) {
-                            return; // Se não for o formulário de aprovação, não faça nada.
-                        }
+                if (!btn) {
+                    return;
+                }
 
-                        // Se o código chegou até aqui, sabemos que é o formulário correto.
-                        // Agora o resto do seu código funcionará, pois a variável 'form' está definida.
+                var id = btn.getAttribute('data-id');
+                var form = qs('#form-status-' + id);
 
-                        ev.preventDefault(); // Previne o envio padrão do formulário.
+                if (!form) {
+                    console.error('Formulário não encontrado: #form-status-' + id);
+                    return;
+                }
 
-                        var action = form.getAttribute('action');
-                        var submitBtn = form.querySelector('button[type="submit"]');
-                        var selectAcao = form.querySelector('select[name="acao"]');
-                        var acao = selectAcao ? selectAcao.value : '';
+                var url = form.getAttribute('data-url');
+                var select = form.querySelector('.status-select');
+                var novoStatus = select ? select.value : '';
 
-                        // A função setLoading provavelmente não está definida neste escopo,
-                        // certifique-se de que ela exista ou remova a chamada se não for necessária.
-                        // setLoading(submitBtn, true);
+                if (!url) {
+                    console.error('URL não encontrada no formulário');
+                    return;
+                }
 
-                        // A função formFetch também é customizada, garantindo que ela exista.
-                        formFetch(action, form, {
-                            acao: acao
-                        }).then(function(data) {
-                            var msg = (data && data.message) ? data.message :
-                                'Ação executada com sucesso!';
-                            Swal.fire({
-                                title: 'Sucesso',
-                                text: msg,
-                                icon: 'success',
-                                timer: 1500,
-                                showConfirmButton: false
-                            });
-                            if (data && data.redirect) {
-                                setTimeout(function() {
-                                    window.location.href = data.redirect;
-                                }, 800);
-                            } else {
-                                setTimeout(function() {
-                                    window.location.reload();
-                                }, 800);
-                            }
-                        }, function(err) {
-                            var emsg = (err && err.message) ? err.message :
-                                'Não foi possível concluir a operação.';
-                            Swal.fire({
-                                title: 'Erro',
-                                text: emsg,
-                                icon: 'error'
-                            });
-                        }).then(function() {
-                            // setLoading(submitBtn, false);
+                Swal.fire({
+                    title: 'Confirmação',
+                    text: 'Deseja realmente alterar o status para "' + novoStatus + '"?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sim, atualizar',
+                    cancelButtonText: 'Cancelar'
+                }).then(function(res) {
+                    if (!res.isConfirmed) {
+                        return;
+                    }
+
+                    setLoading(btn, true);
+
+                    var hasMethod = !!form.querySelector('input[name="_method"]');
+                    var extra = {
+                        status: novoStatus
+                    };
+                    if (!hasMethod) {
+                        extra._method = 'PUT';
+                    }
+
+                    formFetch(url, form, extra).then(function(data) {
+                        var msg = (data && data.message) ? data.message :
+                            'Status atualizado com sucesso!';
+                        Swal.fire({
+                            title: 'Sucesso',
+                            text: msg,
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
                         });
+                        if (data && data.redirect) {
+                            setTimeout(function() {
+                                window.location.href = data.redirect;
+                            }, 1600);
+                        } else {
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 1600);
+                        }
+                    }, function(err) {
+                        var emsg = (err && err.message) ? err.message :
+                            'Não foi possível atualizar o status.';
+                        Swal.fire({
+                            title: 'Erro',
+                            text: emsg,
+                            icon: 'error'
+                        });
+                        setLoading(btn, false);
                     });
+                });
+            });
 
-                })();
+            // Submit do form Aprovar Desconto (delegação global)
+            document.addEventListener('submit', function(ev) {
+                var form = ev.target;
+
+                if (!form.matches('[id^="form-aprovar-"]')) {
+                    return;
+                }
+
+                ev.preventDefault();
+
+                var action = form.getAttribute('action');
+                var submitBtn = form.querySelector('button[type="submit"]');
+                var selectAcao = form.querySelector('select[name="acao"]');
+                var acao = selectAcao ? selectAcao.value : '';
+
+                if (!action) {
+                    console.error('Action não encontrada no formulário');
+                    return;
+                }
+
+                setLoading(submitBtn, true);
+
+                formFetch(action, form, {
+                    acao: acao
+                }).then(function(data) {
+                    var msg = (data && data.message) ? data.message :
+                        'Ação executada com sucesso!';
+                    Swal.fire({
+                        title: 'Sucesso',
+                        text: msg,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    if (data && data.redirect) {
+                        setTimeout(function() {
+                            window.location.href = data.redirect;
+                        }, 1600);
+                    } else {
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1600);
+                    }
+                }, function(err) {
+                    var emsg = (err && err.message) ? err.message :
+                        'Não foi possível concluir a operação.';
+                    Swal.fire({
+                        title: 'Erro',
+                        text: emsg,
+                        icon: 'error'
+                    });
+                    setLoading(submitBtn, false);
+                });
+            });
+
+        })();
     </script>
 </x-layouts.app>

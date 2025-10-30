@@ -201,6 +201,7 @@ class OrcamentoController extends Controller
             'valor_total_itens'  => $request->valor_total,
             'guia_recolhimento'  => $request->guia_recolhimento,
             'observacoes'  => $request->observacoes,
+            'condicao_id' => $request->condicao_id,
             'validade'     => Carbon::now()->addDays(2), // sempre +2 dias
         ]);
 
