@@ -47,7 +47,7 @@ return new class extends Migration
                   $table->decimal('valor_total_itens', 15, 2)->nullable()
                         ->comment('Valor total dos itens do orçamento.');
 
-                  $table->enum('status', ['Aprovar desconto', 'Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'])
+                  $table->enum('status', ['Aprovar desconto', 'Pendente', 'Aprovado', 'Finalizado', 'Cancelado', 'Rejeitado', 'Expirado'])
                         ->default('Pendente')
                         ->comment('Status do orçamento, como pendente, aprovado, cancelado, etc.');
 

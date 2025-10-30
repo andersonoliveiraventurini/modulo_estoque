@@ -305,7 +305,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 17v-2a4 4 0 014-4h4l3 3-3 3h-8zM3 7h13a2 2 0 012 2v2"></path>
                             </svg>
-                            Opções de Transporte
+                            Tipo de venda
                         </h3>
 
                         <div

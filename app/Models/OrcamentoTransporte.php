@@ -10,4 +10,9 @@ class OrcamentoTransporte extends Model
 {
     /** @use HasFactory<\Database\Factories\OrcamentoTransporteFactory> */
     use HasFactory, softDeletes;
+
+    protected $fillable = [
+        'orcamento_id',
+        'tipo_transporte_id',
+    ];
 }

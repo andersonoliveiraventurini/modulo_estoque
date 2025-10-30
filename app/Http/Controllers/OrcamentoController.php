@@ -39,6 +39,16 @@ class OrcamentoController extends Controller
         return view('paginas.orcamentos.index');
     }
 
+    public function balcao()
+    {
+        return view('paginas.orcamentos.index_balcao');
+    }
+
+    public function balcao_concluidos()
+    {
+        return view('paginas.orcamentos.index_balcao_concluidos');
+    }
+
     /**
      * Show the form for creating a new resource.
      */
@@ -692,7 +702,7 @@ class OrcamentoController extends Controller
         $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
         $cores = Cor::orderBy('nome')->get();
         $vendedores = User::whereHas('vendedor')->get();
-        $opcoesTransporte = TipoTransporte::all();        
+        $opcoesTransporte = TipoTransporte::all();
         $condicao = CondicoesPagamento::all();
 
         $desconto_percentual = $orcamento->descontos->where('tipo', 'percentual')->max('porcentagem') ?? 0;

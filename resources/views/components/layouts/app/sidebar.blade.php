@@ -12,7 +12,14 @@
         <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
             <x-app-logo />
         </a>
-
+        <flux:navlist.group heading="Balcão" expandable :expanded="false">
+            <flux:navlist.item icon="home" :href="route('orcamentos.balcao')"
+                :current="request()->routeIs('orcamentos.balcao')" wire:navigate>{{ __('Pedidos pendentes') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="home" :href="route('orcamentos.balcao_concluidos')"
+                :current="request()->routeIs('orcamentos.balcao_concluidos')" wire:navigate>
+                {{ __('Pedidos Finalizados') }}</flux:navlist.item>
+        </flux:navlist.group>
         <flux:navlist.group heading="Clientes" expandable :expanded="false">
             <flux:navlist.item icon="home" :href="route('clientes.create')"
                 :current="request()->routeIs('clientes.create')" wire:navigate>{{ __('Pré-cadastro cliente') }}
@@ -121,7 +128,7 @@
                     :current="request()->routeIs('subcategorias.create')" wire:navigate>{{ __('Criar subcategoria') }}
                 </flux:navlist.item>
             </flux:navlist.group>
-            
+
             <flux:navlist.group heading="NCM" expandable :expanded="false">
                 <flux:navlist.item icon="home" :href="route('ncm.index')"
                     :current="request()->routeIs('ncm.index')" wire:navigate>

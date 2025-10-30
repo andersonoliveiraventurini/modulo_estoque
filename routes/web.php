@@ -87,6 +87,8 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/orcamentos/{id}/aprovar-desconto', [OrcamentoController::class, 'aprovarDesconto'])->name('orcamentos.aprovar-desconto');
     Route::get('/orcamentos/{id}/gerenciar', OrcamentoShow::class)->name('orcamentos.gerenciar');
 
+    Route::get('balcao', [OrcamentoController::class, 'balcao'])->name('orcamentos.balcao');
+    Route::get('balcao_concluidos', [OrcamentoController::class, 'balcao_concluidos'])->name('orcamentos.balcao_concluidos');
     // rotas separação e conferência
     Route::get('/logistica/separacao', SeparacaoListaPage::class)->name('logistica.separacao.lista');
 
