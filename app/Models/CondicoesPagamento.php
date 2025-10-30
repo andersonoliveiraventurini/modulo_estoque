@@ -10,6 +10,8 @@ class CondicoesPagamento extends Model
 {
     /** @use HasFactory<\Database\Factories\CondicoesPagamentoFactory> */
     use HasFactory, SoftDeletes;
+
+    protected $table = 'condicoes_pagamento'; 
     
     protected $fillable = [
         'nome',
