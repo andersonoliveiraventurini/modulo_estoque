@@ -13,13 +13,13 @@
                     Editar Orçamento para Cliente {{ $cliente->id }} - {{ $cliente->nome ?? $cliente->nome_fantasia }}
                 </h2>
                 @if ($cliente->vendedor_interno != null)
-                <p> Vendedor interno: {{ $cliente->vendedor_interno ?? 'Não atribuído' }} </p>
+                    <p> Vendedor interno: {{ $cliente->vendedor_interno ?? 'Não atribuído' }} </p>
                 @endif
                 @if ($cliente->vendedor_externo != null)
-                <p> Vendedor externo: {{ $cliente->vendedor_externo ?? 'Não atribuído' }} </p>
+                    <p> Vendedor externo: {{ $cliente->vendedor_externo ?? 'Não atribuído' }} </p>
                 @endif
                 @if ($cliente->desconto_aprovado != null)
-                <p> Desconto aprovado: {{ $cliente->desconto_aprovado ?? 'Não atribuído' }} </p>
+                    <p> Desconto aprovado: {{ $cliente->desconto_aprovado ?? 'Não atribuído' }} </p>
                 @endif
                 <input type="hidden" name="desconto_aprovado" id="desconto_aprovado"
                     value="{{ $cliente->desconto_aprovado ?? 0 }}" />
@@ -92,52 +92,52 @@
                                 </thead>
                                 <tbody id="produtos-originais" class="divide-y">
                                     @foreach ($orcamento->itens as $item)
-                                    <tr>
-                                        <input type="hidden" name="produtos[{{ $loop->index }}][produto_id]"
-                                            value="{{ $item->produto->id }}">
-                                        <input type="hidden" name="produtos[{{ $loop->index }}][valor_unitario]"
-                                            class="valor-unitario-hidden" value="{{ $item->valor_unitario }}">
-                                        <input type="hidden" name="produtos[{{ $loop->index }}][part_number]"
-                                            value="{{ $item->produto->part_number ?? '' }}">
-                                        <input type="hidden" name="produtos[{{ $loop->index }}][quantidade]"
-                                            value="{{ $item->quantidade }}">
-                                        <input type="hidden" name="produtos[{{ $loop->index }}][subtotal]"
-                                            value="{{ number_format($item->valor_unitario * $item->quantidade, 2, '.', '') }}">
-                                        <input type="hidden"
-                                            name="produtos[{{ $loop->index }}][subtotal_com_desconto]"
-                                            value="{{ number_format($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0), 2, '.', '') }}">
-                                        <input type="hidden"
-                                            name="produtos[{{ $loop->index }}][preco_unitario_com_desconto]"
-                                            value="{{ number_format(($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0)) / $item->quantidade, 2, '.', '') }}">
+                                        <tr>
+                                            <input type="hidden" name="produtos[{{ $loop->index }}][produto_id]"
+                                                value="{{ $item->produto->id }}">
+                                            <input type="hidden" name="produtos[{{ $loop->index }}][valor_unitario]"
+                                                class="valor-unitario-hidden" value="{{ $item->valor_unitario }}">
+                                            <input type="hidden" name="produtos[{{ $loop->index }}][part_number]"
+                                                value="{{ $item->produto->part_number ?? '' }}">
+                                            <input type="hidden" name="produtos[{{ $loop->index }}][quantidade]"
+                                                value="{{ $item->quantidade }}">
+                                            <input type="hidden" name="produtos[{{ $loop->index }}][subtotal]"
+                                                value="{{ number_format($item->valor_unitario * $item->quantidade, 2, '.', '') }}">
+                                            <input type="hidden"
+                                                name="produtos[{{ $loop->index }}][subtotal_com_desconto]"
+                                                value="{{ number_format($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0), 2, '.', '') }}">
+                                            <input type="hidden"
+                                                name="produtos[{{ $loop->index }}][preco_unitario_com_desconto]"
+                                                value="{{ number_format(($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0)) / $item->quantidade, 2, '.', '') }}">
 
-                                        <td class="px-3 py-2 border">{{ $item->produto->id }}</td>
-                                        <td class="px-3 py-2 border">{{ $item->produto->nome }}</td>
-                                        <td class="px-3 py-2 border">{{ $item->produto->part_number ?? '' }}</td>
-                                        <td class="px-3 py-2 border">{{ $item->produto->fornecedor->nome ?? '' }}
-                                        </td>
-                                        <td class="px-3 py-2 border">{{ $item->produto->cor ?? '' }}</td>
-                                        <td class="px-3 py-2 border">R$
-                                            {{ number_format($item->valor_unitario, 2, ',', '.') }}
-                                        </td>
-                                        <td class="px-3 py-2 border">
-                                            <input type="number" name="produtos[{{ $loop->index }}][quantidade]"
-                                                value="{{ $item->quantidade }}" min="1"
-                                                onchange="alterarQuantidadeOriginal({{ $loop->index }}, this.value)"
-                                                class="w-12 border rounded px-2 py-1 text-center"
-                                                style="max-width: 4rem;" />
-                                        </td>
-                                        <td class="px-3 py-2 border">R$
-                                            {{ number_format($item->valor_unitario * $item->quantidade, 2, ',', '.') }}
-                                        </td>
-                                        <td class="px-3 py-2 border text-green-600">R$
-                                            {{ number_format($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0), 2, ',', '.') }}
-                                        </td>
-                                        <td class="px-3 py-2 border text-center">
-                                            <button type="button"
-                                                onclick="removerProdutoOriginal({{ $loop->index }})"
-                                                class="text-red-600 hover:text-red-800">🗑</button>
-                                        </td>
-                                    </tr>
+                                            <td class="px-3 py-2 border">{{ $item->produto->id }}</td>
+                                            <td class="px-3 py-2 border">{{ $item->produto->nome }}</td>
+                                            <td class="px-3 py-2 border">{{ $item->produto->part_number ?? '' }}</td>
+                                            <td class="px-3 py-2 border">{{ $item->produto->fornecedor->nome ?? '' }}
+                                            </td>
+                                            <td class="px-3 py-2 border">{{ $item->produto->cor ?? '' }}</td>
+                                            <td class="px-3 py-2 border">R$
+                                                {{ number_format($item->valor_unitario, 2, ',', '.') }}
+                                            </td>
+                                            <td class="px-3 py-2 border">
+                                                <input type="number" name="produtos[{{ $loop->index }}][quantidade]"
+                                                    value="{{ $item->quantidade }}" min="1"
+                                                    onchange="alterarQuantidadeOriginal({{ $loop->index }}, this.value)"
+                                                    class="w-12 border rounded px-2 py-1 text-center"
+                                                    style="max-width: 4rem;" />
+                                            </td>
+                                            <td class="px-3 py-2 border">R$
+                                                {{ number_format($item->valor_unitario * $item->quantidade, 2, ',', '.') }}
+                                            </td>
+                                            <td class="px-3 py-2 border text-green-600">R$
+                                                {{ number_format($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0), 2, ',', '.') }}
+                                            </td>
+                                            <td class="px-3 py-2 border text-center">
+                                                <button type="button"
+                                                    onclick="removerProdutoOriginal({{ $loop->index }})"
+                                                    class="text-red-600 hover:text-red-800">🗑</button>
+                                            </td>
+                                        </tr>
                                     @endforeach
                                 </tbody>
                                 <tbody id="produtos-selecionados" class="divide-y">
@@ -168,81 +168,81 @@
                         <!-- Wrapper dos vidros -->
                         <div id="vidros-wrapper" class="space-y-4">
                             @foreach ($orcamento->vidros ?? [] as $vidro)
-                            <div class="space-y-2 relative border border-neutral-200 dark:border-neutral-700 rounded-lg p-4"
-                                data-vidro-id="{{ $vidro->id }}">
-                                <input type="hidden" name="vidros_existentes[{{ $loop->index }}][id]"
-                                    value="{{ $vidro->id }}" />
-                                <div class="overflow-x-auto">
-                                    <div class="flex gap-4 min-w-max">
-                                        <div class="flex-1">
-                                            <label
-                                                class="block text-sm font-medium text-gray-700">Descrição</label>
-                                            <input type="text"
-                                                name="vidros_existentes[{{ $loop->index }}][descricao]"
-                                                value="{{ $vidro->descricao }}"
-                                                placeholder="Ex: Vidro incolor 8mm"
-                                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                        </div>
-                                        <div class="flex-1">
-                                            <label
-                                                class="block text-sm font-medium text-gray-700">Quantidade</label>
-                                            <input type="number"
-                                                name="vidros_existentes[{{ $loop->index }}][quantidade]"
-                                                value="{{ $vidro->quantidade }}"
-                                                oninput="calcularVidroExistente(this)"
-                                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                        </div>
-                                        <div class="flex-1">
-                                            <label class="block text-sm font-medium text-gray-700">Preço m²</label>
-                                            <input type="number" step="0.01"
-                                                name="vidros_existentes[{{ $loop->index }}][preco_m2]"
-                                                value="{{ $vidro->preco_metro_quadrado }}"
-                                                oninput="calcularVidroExistente(this)"
-                                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                        </div>
-                                        <div class="flex-1">
-                                            <label class="block text-sm font-medium text-gray-700">Altura
-                                                (mm)
-                                            </label>
-                                            <input type="number"
-                                                name="vidros_existentes[{{ $loop->index }}][altura]"
-                                                value="{{ $vidro->altura }}"
-                                                oninput="calcularVidroExistente(this)"
-                                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                        </div>
-                                        <div class="flex-1">
-                                            <label class="block text-sm font-medium text-gray-700">Largura
-                                                (mm)</label>
-                                            <input type="number"
-                                                name="vidros_existentes[{{ $loop->index }}][largura]"
-                                                value="{{ $vidro->largura }}"
-                                                oninput="calcularVidroExistente(this)"
-                                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                <div class="space-y-2 relative border border-neutral-200 dark:border-neutral-700 rounded-lg p-4"
+                                    data-vidro-id="{{ $vidro->id }}">
+                                    <input type="hidden" name="vidros_existentes[{{ $loop->index }}][id]"
+                                        value="{{ $vidro->id }}" />
+                                    <div class="overflow-x-auto">
+                                        <div class="flex gap-4 min-w-max">
+                                            <div class="flex-1">
+                                                <label
+                                                    class="block text-sm font-medium text-gray-700">Descrição</label>
+                                                <input type="text"
+                                                    name="vidros_existentes[{{ $loop->index }}][descricao]"
+                                                    value="{{ $vidro->descricao }}"
+                                                    placeholder="Ex: Vidro incolor 8mm"
+                                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                            </div>
+                                            <div class="flex-1">
+                                                <label
+                                                    class="block text-sm font-medium text-gray-700">Quantidade</label>
+                                                <input type="number"
+                                                    name="vidros_existentes[{{ $loop->index }}][quantidade]"
+                                                    value="{{ $vidro->quantidade }}"
+                                                    oninput="calcularVidroExistente(this)"
+                                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                            </div>
+                                            <div class="flex-1">
+                                                <label class="block text-sm font-medium text-gray-700">Preço m²</label>
+                                                <input type="number" step="0.01"
+                                                    name="vidros_existentes[{{ $loop->index }}][preco_m2]"
+                                                    value="{{ $vidro->preco_metro_quadrado }}"
+                                                    oninput="calcularVidroExistente(this)"
+                                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                            </div>
+                                            <div class="flex-1">
+                                                <label class="block text-sm font-medium text-gray-700">Altura
+                                                    (mm)
+                                                </label>
+                                                <input type="number"
+                                                    name="vidros_existentes[{{ $loop->index }}][altura]"
+                                                    value="{{ $vidro->altura }}"
+                                                    oninput="calcularVidroExistente(this)"
+                                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                            </div>
+                                            <div class="flex-1">
+                                                <label class="block text-sm font-medium text-gray-700">Largura
+                                                    (mm)</label>
+                                                <input type="number"
+                                                    name="vidros_existentes[{{ $loop->index }}][largura]"
+                                                    value="{{ $vidro->largura }}"
+                                                    oninput="calcularVidroExistente(this)"
+                                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                            </div>
                                         </div>
                                     </div>
+                                    <input type="hidden" name="vidros_existentes[{{ $loop->index }}][area]"
+                                        class="area-hidden"
+                                        value="{{ number_format(($vidro->altura / 1000) * ($vidro->largura / 1000), 2, '.', '') }}" />
+                                    <input type="hidden" name="vidros_existentes[{{ $loop->index }}][valor_total]"
+                                        class="valor-hidden" value="{{ $vidro->valor_total }}" />
+                                    <input type="hidden"
+                                        name="vidros_existentes[{{ $loop->index }}][valor_com_desconto]"
+                                        class="valor-desconto-hidden" value="{{ $vidro->valor_com_desconto }}" />
+                                    <div class="mt-2 text-sm">
+                                        <strong>Área:</strong> <span
+                                            class="area">{{ number_format(($vidro->altura / 1000) * ($vidro->largura / 1000), 2, ',', '.') }}</span>
+                                        m² |
+                                        <strong>Valor:</strong> R$ <span
+                                            class="valor">{{ number_format($vidro->valor_total, 2, ',', '.') }}</span>
+                                        |
+                                        <strong>c/ desc:</strong> R$ <span
+                                            class="valor-desconto">{{ number_format($vidro->valor_com_desconto, 2, ',', '.') }}</span>
+                                        <button type="button" onclick="removeVidroExistente(this)"
+                                            class="absolute right-2 text-red-600 hover:text-red-800"
+                                            style="padding-top: -1rem;">Remover</button>
+                                    </div>
                                 </div>
-                                <input type="hidden" name="vidros_existentes[{{ $loop->index }}][area]"
-                                    class="area-hidden"
-                                    value="{{ number_format(($vidro->altura / 1000) * ($vidro->largura / 1000), 2, '.', '') }}" />
-                                <input type="hidden" name="vidros_existentes[{{ $loop->index }}][valor_total]"
-                                    class="valor-hidden" value="{{ $vidro->valor_total }}" />
-                                <input type="hidden"
-                                    name="vidros_existentes[{{ $loop->index }}][valor_com_desconto]"
-                                    class="valor-desconto-hidden" value="{{ $vidro->valor_com_desconto }}" />
-                                <div class="mt-2 text-sm">
-                                    <strong>Área:</strong> <span
-                                        class="area">{{ number_format(($vidro->altura / 1000) * ($vidro->largura / 1000), 2, ',', '.') }}</span>
-                                    m² |
-                                    <strong>Valor:</strong> R$ <span
-                                        class="valor">{{ number_format($vidro->valor_total, 2, ',', '.') }}</span>
-                                    |
-                                    <strong>c/ desc:</strong> R$ <span
-                                        class="valor-desconto">{{ number_format($vidro->valor_com_desconto, 2, ',', '.') }}</span>
-                                    <button type="button" onclick="removeVidroExistente(this)"
-                                        class="absolute right-2 text-red-600 hover:text-red-800"
-                                        style="padding-top: -1rem;">Remover</button>
-                                </div>
-                            </div>
                             @endforeach
                         </div>
                     </div>
@@ -269,7 +269,7 @@
                                 <option value="Sim">Sim</option>
                             </x-select>
                             <x-input type="text" name="prazo_entrega" placeholder="Ex: 15 dias úteis"
-                                label="Prazo de Entrega" :value="$orcamento->prazo_entrega" />                           
+                                label="Prazo de Entrega" :value="$orcamento->prazo_entrega" />
                             <x-select name="frete" label="Tipo de Frete">
                                 <option value="">Selecione...</option>
                                 <option value="cif" @selected($orcamento->frete == 'cif')>CIF</option>
@@ -307,20 +307,19 @@
                             </svg>
                             Tipo de venda
                         </h3>
-
                         <div
                             class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                             @foreach ($opcoesTransporte as $opcao)
-                            <label
-                                class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 hover:bg-blue-50 cursor-pointer transition">
-                                <input type="checkbox" name="tipos_transporte[]" value="{{ $opcao->id }}"
-                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                    @if ($orcamento->transportes->contains($opcao->id)) checked @endif />
-                                <span class="text-sm text-gray-700">{{ $opcao->nome }}</span>
-                            </label>
+                                <label
+                                    class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 hover:bg-blue-50 cursor-pointer transition">
+
+                                    <input type="radio" name="tipo_transporte" value="{{ $opcao->id }}"
+                                        class="rounded-full border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        @if ($orcamento->transportes->contains($opcao->id)) checked @endif /> <span
+                                        class="text-sm text-gray-700">{{ $opcao->nome }}</span>
+                                </label>
                             @endforeach
                         </div>
-
                     </div>
 
                     <hr />

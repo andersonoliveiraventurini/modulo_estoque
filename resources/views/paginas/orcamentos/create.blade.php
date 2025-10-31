@@ -188,9 +188,10 @@
                             @foreach ($opcoesTransporte as $opcao)
                                 <label
                                     class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 hover:bg-blue-50 cursor-pointer transition">
-                                    <input type="checkbox" name="tipos_transporte[]" value="{{ $opcao->id }}"
-                                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                                    <span class="text-sm text-gray-700">{{ $opcao->nome }}</span>
+
+                                    <input type="radio" name="tipo_transporte" value="{{ $opcao->id }}"
+                                        class="rounded-full border-gray-300 text-blue-600 focus:ring-blue-500" /> <span
+                                        class="text-sm text-gray-700">{{ $opcao->nome }}</span>
                                 </label>
                             @endforeach
                         </div>
@@ -222,12 +223,13 @@
                             <div class="flex-1">
                                 <x-input type="text" name="desconto_especifico" value="0.00"
                                     placeholder="Digite o valor do desconto específico" label="Desconto específico R$"
-                                    oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');"/>
+                                    oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
                             </div>
 
                             <div class="flex-1">
                                 <x-input type="text" step="0.01" name="guia_recolhimento" value="0"
-                                    label="Guia Recolhimento R$" oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
+                                    label="Guia Recolhimento R$"
+                                    oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
                             </div>
 
                             <div class="flex-1">
