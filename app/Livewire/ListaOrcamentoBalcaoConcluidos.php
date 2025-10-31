@@ -139,7 +139,7 @@ class ListaOrcamentoBalcaoConcluidos extends Component
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate($this->perPage);
 
-        return view('livewire.lista-orcamento-balcao', [
+        return view('livewire.lista-orcamento-balcao-concluidos', [
             'orcamentos' => $orcamentos,
         ]);
     }
