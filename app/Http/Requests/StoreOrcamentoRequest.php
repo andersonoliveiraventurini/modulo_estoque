@@ -39,6 +39,7 @@ class StoreOrcamentoRequest extends FormRequest
             'endereco_logradouro' => 'nullable|string|max:255',
             'endereco_numero' => 'nullable|string|max:20',
             'tipos_transporte' => 'nullable|exists:tipos_transportes,id',
+            'condicao_pagamento' => 'required|exists:condicoes_pagamento,id',
         ];
     }
 
@@ -48,35 +49,37 @@ class StoreOrcamentoRequest extends FormRequest
             'cliente_id.required' => 'O cliente é obrigatório.',
             'nome_obra.required' => 'O nome da obra é obrigatório.',
             'cliente_id.exists' => 'Cliente selecionado não existe.',
+            'condicao_pagamento.required' => 'Por favor, selecione uma condição de pagamento.',
+            'condicao_pagamento.exists' => 'A condição de pagamento selecionada é inválida.',
         ];
     }
 
     protected function prepareForValidation()
     {
         // Função helper para normalizar valores brasileiros
-        $normalizarValor = function($valor) {
+        $normalizarValor = function ($valor) {
             if (empty($valor) || $valor === '0') {
                 return null;
             }
-            
+
             $valor = trim($valor);
-            
+
             // Se não tem vírgula nem ponto, é um valor inteiro
             if (!str_contains($valor, ',') && !str_contains($valor, '.')) {
                 return $valor;
             }
-            
+
             // Se tem vírgula, é formato brasileiro (1.234,56)
             if (str_contains($valor, ',')) {
                 return str_replace(',', '.', str_replace('.', '', $valor));
             }
-            
+
             // Se tem apenas ponto, verifica se é milhares ou decimal
             $partes = explode('.', $valor);
             if (count($partes) == 2 && strlen($partes[1]) == 3) {
                 return str_replace('.', '', $valor);
             }
-            
+
             return $valor;
         };
 
