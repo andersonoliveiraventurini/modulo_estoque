@@ -122,9 +122,10 @@ class Cliente extends Model
     {
         return $this->documentos()->where('tipo', 'certidao_negativa');
     }
-    
+
     public function descontos()
     {
         return $this->hasMany(Desconto::class);
     }
+
 }

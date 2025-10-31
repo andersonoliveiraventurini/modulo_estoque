@@ -72,7 +72,7 @@ class OrcamentoController extends Controller
 
     public function criarOrcamento($cliente_id)
     {
-        $cliente = Cliente::find($cliente_id);
+        $cliente = Cliente::with('enderecos')->findOrFail($cliente_id);
         $produtos = Produto::all();
         $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
         $cores = Cor::orderBy('nome')->get();

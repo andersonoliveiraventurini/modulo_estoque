@@ -31,11 +31,11 @@
                         <a href="{{ route('orcamentos.cliente', $cliente->id ?? null) }}"
                             class="text-secondary-600 hover:underline text-sm font-medium">
                             Orçamentos
-                        </a>  
+                        </a>
                         <a href="{{ route('orcamentos.criar', $cliente->id ?? null) }}"
                             class="text-secondary-600 hover:underline text-sm font-medium">
                             Criar Orçamento
-                        </a>  
+                        </a>
                     </div>
                 </div>
 
@@ -121,28 +121,28 @@
                             @endforelse
                         </div>
                     </x-tab>
-                    <x-tab name="endereco" label="Endereço">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-show-field label="CEP" :value="$cliente->enderecoComercial?->cep" />
-                            <x-show-field label="Cidade" :value="$cliente->enderecoComercial?->cidade" />
-                            <x-show-field label="Estado" :value="$cliente->enderecoComercial?->estado" />
-                            <x-show-field label="Bairro" :value="$cliente->enderecoComercial?->bairro" />
-                            <x-show-field label="Número" :value="$cliente->enderecoComercial?->numero" />
-                            <x-show-field label="Complemento" :value="$cliente->enderecoComercial?->complemento" />
-                            <x-show-field label="Logradouro" :value="$cliente->enderecoComercial?->logradouro" class="md:col-span-3" />
-                        </div>
-                    </x-tab>
 
-                    <x-tab name="entrega" label="Endereço de entrega">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-show-field label="CEP" :value="$cliente->enderecoEntrega?->cep" />
-                            <x-show-field label="Cidade" :value="$cliente->enderecoEntrega?->cidade" />
-                            <x-show-field label="Estado" :value="$cliente->enderecoEntrega?->estado" />
-                            <x-show-field label="Bairro" :value="$cliente->enderecoEntrega?->bairro" />
-                            <x-show-field label="Número" :value="$cliente->enderecoEntrega?->numero" />
-                            <x-show-field label="Complemento" :value="$cliente->enderecoEntrega?->complemento" />
-                            <x-show-field label="Logradouro" :value="$cliente->enderecoEntrega?->logradouro" class="md:col-span-3" />
-                        </div>
+                    <x-tab name="entrega" label="Endereços">
+                        @forelse($cliente->enderecos as $endereco)
+                            <h4 class="text-sm font-semibold text-gray-700 mb-3"> Endereço
+                                {{ $endereco->tipo === 'comercial' ? 'Comercial' : 'de Entrega' }}
+                                @if ($cliente->enderecos->where('tipo', $endereco->tipo)->count() > 1)
+                                    {{ $loop->iteration }}
+                                @endif
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <x-show-field label="CEP" :value="$endereco->cep" />
+                                <x-show-field label="Cidade" :value="$endereco->cidade" />
+                                <x-show-field label="Estado" :value="$endereco->estado" />
+                                <x-show-field label="Bairro" :value="$endereco->bairro" />
+                                <x-show-field label="Número" :value="$endereco->numero" />
+                                <x-show-field label="Complemento" :value="$endereco->complemento" />
+                                <x-show-field label="Logradouro" :value="$endereco->logradouro" class="md:col-span-3" />
+                            </div>
+                            <br/>
+                        @empty
+                            <p class="text-gray-500 text-sm">Nenhum endereço cadastrado.</p>
+                        @endforelse
                     </x-tab>
 
                 </x-tabs>
