@@ -49,7 +49,7 @@ class OrcamentoController extends Controller
         return view('paginas.orcamentos.index_balcao_concluidos');
     }
 
-    
+
     public function kanban_orcamentos()
     {
         return view('paginas.orcamentos.index_kanban_orcamentos');
@@ -783,6 +783,7 @@ class OrcamentoController extends Controller
                 'guia_recolhimento' => $guiaRecolhimento,
                 'observacoes' => $request->observacoes,
                 'versao' => $novaVersao,
+                'condicao_id' => $request->condicao_pagamento,
                 'validade' => Carbon::now()->addDays(2),
             ]);
 
@@ -815,7 +816,7 @@ class OrcamentoController extends Controller
             }
 
             // 6) Atualizar transportes
-            if ($request->has('tipos_transporte')) {
+            if ($request->tipos_transporte) {
                 $orcamento->transportes()->sync($request->tipos_transporte);
             }
 
