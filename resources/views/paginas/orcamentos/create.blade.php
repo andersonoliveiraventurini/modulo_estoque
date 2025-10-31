@@ -189,7 +189,7 @@
                                 <label
                                     class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 hover:bg-blue-50 cursor-pointer transition">
 
-                                    <input type="radio" name="tipo_transporte" value="{{ $opcao->id }}"
+                                    <input type="radio" name="tipos_transporte" value="{{ $opcao->id }}"
                                         class="rounded-full border-gray-300 text-blue-600 focus:ring-blue-500" /> <span
                                         class="text-sm text-gray-700">{{ $opcao->nome }}</span>
                                 </label>

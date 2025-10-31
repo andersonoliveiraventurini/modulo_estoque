@@ -38,6 +38,7 @@ class StoreOrcamentoRequest extends FormRequest
             'endereco_cep' => 'nullable|string|max:9',
             'endereco_logradouro' => 'nullable|string|max:255',
             'endereco_numero' => 'nullable|string|max:20',
+            'tipos_transporte' => 'nullable|exists:tipos_transportes,id',
         ];
     }
 
