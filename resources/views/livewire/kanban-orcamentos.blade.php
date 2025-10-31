@@ -6,11 +6,11 @@
                 {{-- Logo/Brand --}}
                 <div class="flex items-center">
                     <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">
-                        Workflow de Orçamentos
+                        Status dos Orçamentos
                     </h1>
                     <span
                         class="ml-3 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full">
-                        Kanban
+                        Painel
                     </span>
                 </div>
 
