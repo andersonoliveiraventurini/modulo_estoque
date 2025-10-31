@@ -49,6 +49,12 @@ class OrcamentoController extends Controller
         return view('paginas.orcamentos.index_balcao_concluidos');
     }
 
+    
+    public function kanban_orcamentos()
+    {
+        return view('paginas.orcamentos.index_kanban_orcamentos');
+    }
+
     /**
      * Show the form for creating a new resource.
      */

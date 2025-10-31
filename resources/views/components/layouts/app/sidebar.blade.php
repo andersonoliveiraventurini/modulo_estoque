@@ -12,6 +12,9 @@
         <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
             <x-app-logo />
         </a>
+        <flux:navlist.item icon="home" :href="route('orcamentos.status_orcamentos')"
+            :current="request()->routeIs('orcamentos.status_orcamentos')" wire:navigate>{{ __('Status orçamentos') }}
+        </flux:navlist.item>
         <flux:navlist.group heading="Balcão" expandable :expanded="false">
             <flux:navlist.item icon="home" :href="route('orcamentos.balcao')"
                 :current="request()->routeIs('orcamentos.balcao')" wire:navigate>{{ __('Pedidos pendentes') }}
