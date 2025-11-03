@@ -94,6 +94,14 @@ class OrcamentoController extends Controller
                 'desconto_aprovado' => 0,
             ]);
 
+            // Se for requisição AJAX, retorna JSON
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Desconto reprovado. O orçamento foi cancelado e o PDF não será gerado.'
+                ]);
+            }
+
             return redirect()
                 ->back()
                 ->with('error', 'Desconto reprovado. O orçamento foi cancelado e o PDF não será gerado.');
@@ -142,20 +150,54 @@ class OrcamentoController extends Controller
 
                 if (Storage::disk('public')->exists($path)) {
                     $orcamento->update(['pdf_path' => $path]);
+
+                    // Se for requisição AJAX, retorna JSON
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Desconto aprovado! Orçamento atualizado e PDF gerado com sucesso.'
+                        ]);
+                    }
+
                     return redirect()
                         ->back()
                         ->with('success', 'Desconto aprovado! Orçamento atualizado e PDF gerado com sucesso.');
                 } else {
+                    // Se for requisição AJAX, retorna JSON
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Desconto aprovado, mas ocorreu um erro ao salvar o PDF.'
+                        ], 500);
+                    }
+
                     return redirect()
                         ->back()
                         ->with('error', 'Desconto aprovado, mas ocorreu um erro ao salvar o PDF.');
                 }
             } catch (\Exception $e) {
                 Log::error("Erro ao gerar PDF de aprovação: " . $e->getMessage());
+
+                // Se for requisição AJAX, retorna JSON
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Desconto aprovado, mas ocorreu um erro ao gerar o PDF: ' . $e->getMessage()
+                    ], 500);
+                }
+
                 return redirect()
                     ->back()
                     ->with('error', 'Desconto aprovado, mas ocorreu um erro ao gerar o PDF.');
             }
+        }
+
+        // Se for requisição AJAX, retorna JSON
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ação inválida.'
+            ], 400);
         }
 
         return redirect()->back()->with('error', 'Ação inválida.');

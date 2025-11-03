@@ -61,7 +61,8 @@
                             @csrf
                             @method('PUT')
 
-                            <select name="acao" class="border border-gray-300 rounded px-2 py-1 text-sm">
+                            <select name="acao" class="border border-gray-300 rounded px-2 py-1 text-sm" required>
+                                <option value="">Selecione uma ação</option>
                                 <option value="aprovar">Aprovar Desconto</option>
                                 <option value="reprovar">Reprovar Desconto</option>
                             </select>
@@ -463,25 +464,16 @@
                 return null;
             }
 
-            function setLoading(el, isLoading) {
-                if (!el) {
-                    return;
-                }
+            function setLoading(btn, isLoading) {
+                if (!btn) return;
+
                 if (isLoading) {
-                    if (!el.hasAttribute('data-prev-text')) {
-                        el.setAttribute('data-prev-text', el.textContent);
-                    }
-                    el.textContent = 'Processando...';
-                    el.disabled = true;
-                    el.className += ' opacity-60 cursor-not-allowed';
+                    btn.disabled = true;
+                    btn.dataset.originalText = btn.textContent;
+                    btn.textContent = 'Processando...';
                 } else {
-                    var prev = el.getAttribute('data-prev-text');
-                    if (prev) {
-                        el.textContent = prev;
-                    }
-                    el.disabled = false;
-                    el.className = el.className.replace(/\bopacity-60\b/g, '').replace(/\bcursor-not-allowed\b/g, '')
-                        .replace(/\s{2,}/g, ' ').trim();
+                    btn.disabled = false;
+                    btn.textContent = btn.dataset.originalText || 'Salvar';
                 }
             }
 
@@ -490,34 +482,42 @@
                     extra = {};
                 }
                 var fd = new FormData(formEl);
+
                 for (var k in extra) {
                     if (Object.prototype.hasOwnProperty.call(extra, k)) {
                         fd.set(k, extra[k]);
                     }
                 }
+
                 return fetch(url, {
                     method: 'POST',
                     body: fd,
                     credentials: 'same-origin',
                     headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
                     }
                 }).then(function(resp) {
+                    var respClone = resp.clone();
+
                     if (!resp.ok) {
-                        return resp.json().then(function(j) {
-                            var msg = (j && j.message) ? j.message : 'Erro na requisição';
-                            var e = new Error(msg);
-                            e.status = resp.status;
-                            throw e;
-                        })["catch"](function() {
-                            return resp.text().then(function(t) {
-                                var e2 = new Error('Erro: ' + resp.status);
-                                e2.status = resp.status;
-                                throw e2;
+                        return respClone.json()
+                            .then(function(j) {
+                                var msg = (j && j.message) ? j.message : 'Erro na requisição';
+                                var e = new Error(msg);
+                                e.status = resp.status;
+                                throw e;
+                            })
+                            .catch(function() {
+                                return resp.text().then(function(t) {
+                                    var e2 = new Error('Erro: ' + resp.status);
+                                    e2.status = resp.status;
+                                    throw e2;
+                                });
                             });
-                        });
                     }
-                    return resp.json()["catch"](function() {
+
+                    return resp.json().catch(function() {
                         return {};
                     });
                 });
@@ -622,8 +622,20 @@
                 var selectAcao = form.querySelector('select[name="acao"]');
                 var acao = selectAcao ? selectAcao.value : '';
 
+                console.log('Action URL:', action);
+                console.log('Ação selecionada:', acao);
+
                 if (!action) {
                     console.error('Action não encontrada no formulário');
+                    return;
+                }
+
+                if (!acao) {
+                    Swal.fire({
+                        title: 'Atenção',
+                        text: 'Por favor, selecione uma ação.',
+                        icon: 'warning'
+                    });
                     return;
                 }
 
@@ -650,7 +662,8 @@
                             window.location.reload();
                         }, 1600);
                     }
-                }, function(err) {
+                }).catch(function(err) {
+                    console.error('Erro capturado:', err);
                     var emsg = (err && err.message) ? err.message :
                         'Não foi possível concluir a operação.';
                     Swal.fire({
