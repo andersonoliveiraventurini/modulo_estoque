@@ -301,8 +301,10 @@ class OrcamentoController extends Controller
                 ])
             );
 
-            // vincula o endereço ao orçamento
-            $orcamento->update(['endereco_id' => $endereco->id]);
+            // vincula o endereço ao orçamento;
+        }elseif($request->enderecos_cadastrados != ""){ 
+            // caso tenha selecioando um endereço existente
+            $orcamento->update(['endereco_id' => $request->enderecos_cadastrados]);
         }
 
         // se o desconto for menor que o autorizado para o cliente e o para o vendedor não precisa ser aprovado

@@ -120,7 +120,7 @@
 
                     <!-- Endereço de entrega -->
                     <div class="space-y-4">
-                        
+
                         <hr />
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,12 +143,40 @@
                                 label="Prazo de Entrega" />
                             <x-select name="tipo_frete" label="Tipo de Frete">
                                 <option value="">Selecione...</option>
-                                <option value="cif">CIF</option>
-                                <option value="fob">FOB</option>
+                                <option value="cif">CIF - entrega por conta do fornecedor
+                                </option>
+                                <option value="fob">FOB - entrega por conta do cliente</option>
+                            </x-select> 
+                            <x-select name="enderecos_cadastrados" label="Endereços de cadastrados do cliente">
+                                <option value="">Selecione...</option>
+                                @foreach ($cliente->enderecos as $endereco)
+                                <option value="{{ $endereco->id }}"> 
+                                        @if ($endereco->logradouro != null)
+                                            {{ $endereco->logradouro . ' - ' }}
+                                        @endif
+                                        @if ($endereco->numero != null)
+                                            {{ $endereco->numero . ' - ' }}
+                                        @endif
+                                        @if ($endereco->complemento != null)
+                                            {{ $endereco->complemento . ' - ' }}
+                                        @endif
+                                        @if ($endereco->bairro != null)
+                                            {{ $endereco->bairro . ' - ' }}
+                                        @endif
+                                        @if ($endereco->cidade != null)
+                                            {{ $endereco->cidade . ' - ' }}
+                                        @endif
+                                        @if ($endereco->estado != null)
+                                            {{ $endereco->estado . ' - ' }}
+                                        @endif
+                                </option>
+                                @endforeach
                             </x-select>
-                            <x-input id="entrega_cep" name="entrega_cep" label="CEP" placeholder="00000-000"
+                            <x-input id="entrega_cep" name="entrega_cep" label="CEP - Para adicionar um novo endereço" placeholder="00000-000"
                                 onblur="pesquisacepentrega(this.value);" onkeypress="mascara(this, '#####-###')"
                                 size="10" maxlength="9" value="{{ old('entrega_cep') }}" />
+
+
                         </div>
 
                         <!-- Wrapper que será ocultado até o CEP ser válido -->
