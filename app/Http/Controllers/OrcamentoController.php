@@ -302,7 +302,7 @@ class OrcamentoController extends Controller
             );
 
             // vincula o endereço ao orçamento;
-        }elseif($request->enderecos_cadastrados != ""){ 
+        } elseif ($request->enderecos_cadastrados != "") {
             // caso tenha selecioando um endereço existente
             $orcamento->update(['endereco_id' => $request->enderecos_cadastrados]);
         }
@@ -790,31 +790,38 @@ class OrcamentoController extends Controller
             ]);
 
             // 5) Atualizar ou criar endereço
-            if ($request->filled('entrega_cep')) {
+            if ($request->filled('endereco_cep')) {
+                // Se preencheu dados de endereço novo/editado
                 if ($orcamento->endereco) {
-                    $orcamento->endereco->update([
-                        'cep' => $request->entrega_cep,
-                        'cidade' => $request->entrega_cidade,
-                        'estado' => $request->entrega_estado,
-                        'bairro' => $request->entrega_bairro,
-                        'logradouro' => $request->entrega_logradouro,
-                        'numero' => $request->entrega_numero,
-                        'complemento' => $request->entrega_compl,
-                    ]);
+                    // Atualiza o endereço existente vinculado
+                    $orcamento->endereco->update(array_filter([
+                        'cep' => $request->endereco_cep,
+                        'cidade' => $request->endereco_cidade,
+                        'estado' => $request->endereco_estado,
+                        'bairro' => $request->endereco_bairro,
+                        'logradouro' => $request->endereco_logradouro,
+                        'numero' => $request->endereco_numero,
+                        'complemento' => $request->endereco_compl,
+                        'tipo' => 'entrega',
+                    ]));
                 } else {
-                    $endereco = Endereco::create([
+                    // Cria novo endereço
+                    $endereco = Endereco::create(array_filter([
                         'tipo' => 'entrega',
                         'cliente_id' => $orcamento->cliente_id,
-                        'cep' => $request->entrega_cep,
-                        'cidade' => $request->entrega_cidade,
-                        'estado' => $request->entrega_estado,
-                        'bairro' => $request->entrega_bairro,
-                        'logradouro' => $request->entrega_logradouro,
-                        'numero' => $request->entrega_numero,
-                        'complemento' => $request->entrega_compl,
-                    ]);
+                        'cep' => $request->endereco_cep,
+                        'cidade' => $request->endereco_cidade,
+                        'estado' => $request->endereco_estado,
+                        'bairro' => $request->endereco_bairro,
+                        'logradouro' => $request->endereco_logradouro,
+                        'numero' => $request->endereco_numero,
+                        'complemento' => $request->endereco_compl,
+                    ]));
                     $orcamento->update(['endereco_id' => $endereco->id]);
                 }
+            } elseif ($request->filled('enderecos_cadastrados') && $request->enderecos_cadastrados != "") {
+                // Caso tenha selecionado um endereço existente
+                $orcamento->update(['endereco_id' => $request->enderecos_cadastrados]);
             }
 
             // 6) Atualizar transportes
