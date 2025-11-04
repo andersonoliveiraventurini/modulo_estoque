@@ -106,7 +106,13 @@
                     <th class="px-6 py-3 text-left">
                         <button wire:click="sortBy('status')"
                             class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Status
+                            Status Pedido
+                        </button>
+                    </th>                    
+                    <th class="px-6 py-3 text-left">
+                        <button wire:click="sortBy('workflow_status')"
+                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Status separação
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
@@ -128,6 +134,7 @@
                                 href="{{ route('orcamentos.show', $o) }}"  class="hover:underline">{{ $o->obra }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->cliente->nome }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->status }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->workflow_status }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->vendedor->name }}</td>
                         <td class="px-6 py-4">
                             @if ($o->pdf_path)
@@ -140,31 +147,7 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 flex gap-2">
-                            @if ($o->status == 'Pendente' || $o->status == 'Aprovar desconto')
-                                <a href="{{ route('orcamentos.edit', $o->id) }}">
-                                    <x-button size="sm" variant="secondary">
-                                        <x-heroicon-o-pencil-square class="w-4 h-4" />
-                                        Editar
-                                    </x-button>
-                                </a>
-                            @endif
-                            <form action="{{ route('orcamentos.duplicar', $o->id) }}" method="POST"
-                                onsubmit="return confirm('Deseja duplicar este orçamento?');">
-                                @csrf
-                                <x-button size="sm" variant="primary">
-                                    <x-heroicon-o-document-duplicate class="w-4 h-4" />
-                                    Duplicar
-                                </x-button>
-                            </form>
-                            <form action="{{ route('orcamentos.destroy', $o->id) }}" method="POST"
-                                onsubmit="return confirm('Deseja excluir este orçamento?');">
-                                @csrf
-                                @method('DELETE')
-                                <x-button size="sm" variant="danger">
-                                    <x-heroicon-o-trash class="w-4 h-4" />
-                                    Excluir
-                                </x-button>
-                            </form>
+                            Ver pagamento
                         </td>
 
                     </tr>

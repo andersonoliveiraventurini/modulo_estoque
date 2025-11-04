@@ -64,9 +64,62 @@ class Orcamento extends Model
         return $this->hasMany(OrcamentoVidro::class);
     }
 
+    /**
+     * Relacionamento com Pagamentos
+     */
+    public function pagamentos()
+    {
+        return $this->hasMany(Pagamento::class);
+    }
+
+    /**
+     * Relacionamento com Descontos
+     */
     public function descontos()
     {
         return $this->hasMany(Desconto::class);
+    }
+
+    /**
+     * Relacionamento com Condição de Pagamento
+     */
+    public function condicaoPagamento()
+    {
+        return $this->belongsTo(CondicoesPagamento::class, 'condicao_id');
+    }
+
+    /**
+     * Scope para orçamentos prontos para entrega
+     */
+    public function scopeProntosParaEntrega($query)
+    {
+        return $query->where('status', 'Aprovado');
+    }
+
+    /**
+     * Verificar se o orçamento tem desconto
+     */
+    public function temDesconto()
+    {
+        return $this->descontos()->exists();
+    }
+
+    /**
+     * Calcular total com descontos
+     */
+    public function valorComDescontos()
+    {
+        $totalDescontos = $this->descontos()->sum('valor');
+        return $this->valor_total_itens - $totalDescontos;
+    }
+
+    /**
+     * Verificar se o pagamento foi finalizado
+     */
+    public function pagamentoFinalizado()
+    {
+        $totalPago = $this->pagamentos()->sum('valor');
+        return $totalPago >= $this->valorComDescontos();
     }
 
     public function transportes()

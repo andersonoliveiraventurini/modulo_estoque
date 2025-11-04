@@ -108,7 +108,7 @@
                             class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Status Pedido
                         </button>
-                    </th>                    
+                    </th>
                     <th class="px-6 py-3 text-left">
                         <button wire:click="sortBy('workflow_status')"
                             class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
@@ -131,7 +131,8 @@
                 @forelse($orcamentos as $o)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="{{ route('orcamentos.show', $o) }}"  class="hover:underline">{{ $o->obra }}</a></td>
+                                href="{{ route('orcamentos.show', $o) }}"
+                                class="hover:underline">{{ $o->obra }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->cliente->nome }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->status }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->workflow_status }}</td>
@@ -147,14 +148,8 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 flex gap-2">
-                            <form action="{{ route('orcamentos.duplicar', $o->id) }}" method="POST"
-                                onsubmit="return confirm('Deseja duplicar este orçamento?');">
-                                @csrf
-                                <x-button size="sm" variant="primary">
-                                    <x-heroicon-o-document-duplicate class="w-4 h-4" />
-                                    Realizar pagamento
-                                </x-button>
-                            </form>
+                            @livewire('modal-pagamento-balcao', ['orcamentoId' => $o->id]))
+
                         </td>
 
                     </tr>
