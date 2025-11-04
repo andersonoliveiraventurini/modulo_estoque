@@ -48,113 +48,119 @@
                     </div>
                 </div>
 
-                {{-- Status Comercial + Atualização --}}
-                <div class="text-right min-w-[280px]">
-                    @if ($orcamento->status === 'Aprovar desconto')
-                        <span
-                            class="inline-block bg-yellow-200 text-yellow-800 text-sm px-3 py-1 rounded-full font-medium mb-2">
-                            Aguardando aprovação de desconto
-                        </span>
-                        <form id="form-aprovar-{{ $orcamento->id }}" class="inline-flex flex-wrap gap-2"
-                            data-id="{{ $orcamento->id }}"
-                            action="{{ route('orcamentos.aprovar-desconto', $orcamento->id) }}" method="POST">
-                            @csrf
-                            @method('PUT')
-
-                            <select name="acao" class="border border-gray-300 rounded px-2 py-1 text-sm" required>
-                                <option value="">Selecione uma ação</option>
-                                <option value="aprovar">Aprovar Desconto</option>
-                                <option value="reprovar">Reprovar Desconto</option>
-                            </select>
-
-                            <button type="submit"
-                                class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
-                                Salvar
-                            </button>
-                        </form>
-                        <br />
-                    @endif
-
-                    <span
-                        class="inline-block bg-yellow-200 text-yellow-800 text-sm px-3 py-1 rounded-full font-medium mb-2">
-                        Status
-                    </span>
-                    <form id="form-status-{{ $orcamento->id }}" class="inline-flex flex-wrap gap-2"
-                        data-id="{{ $orcamento->id }}"
-                        data-url="{{ route('orcamentos.atualizar-status', $orcamento->id) }}">
-                        @csrf
-                        @method('PUT')
-                        <select name="status" class="border border-gray-300 rounded px-2 py-1 text-sm status-select"
-                            data-id="{{ $orcamento->id }}">
-                            @foreach (['Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'] as $s)
-                                <option value="{{ $s }}" @selected($orcamento->status === $s)>
-                                    {{ $s }}
-                                </option>
-                            @endforeach
-                        </select>
-
-                        <button type="button"
-                            class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 atualizar-status"
-                            data-id="{{ $orcamento->id }}" data-prev-text="Atualizar">
-                            Atualizar
-                        </button>
-                    </form>
-
-                    {{-- Workflow Operacional (separação/conferência) --}}
-                    <div class="mt-4">
-                        @php
-                            $wf = $orcamento->workflow_status;
-                            $map = [
-                                'aguardando_separacao' => [
-                                    'label' => 'Aguardando Separação',
-                                    'class' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
-                                ],
-                                'em_separacao' => [
-                                    'label' => 'Em Separação',
-                                    'class' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
-                                ],
-                                'aguardando_conferencia' => [
-                                    'label' => 'Aguardando Conferência',
-                                    'class' =>
-                                        'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
-                                ],
-                                'em_conferencia' => [
-                                    'label' => 'Em Conferência',
-                                    'class' => 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200',
-                                ],
-                                'conferido' => [
-                                    'label' => 'Conferido',
-                                    'class' =>
-                                        'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
-                                ],
-                                'finalizado' => [
-                                    'label' => 'Conferido e Finalizado',
-                                    'class' =>
-                                        'bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-100',
-                                ],
-                            ];
-                            $badge = $map[$wf] ?? null;
-                        @endphp
-
-                        @if ($badge)
+                @if ($orcamento->validade >= now() ||
+                        in_array($orcamento->status, ['Aprovado']))
+                    {{-- Status Comercial + Atualização --}}
+                    <div class="text-right min-w-[280px]">
+                        @if ($orcamento->status === 'Aprovar desconto')
                             <span
-                                class="inline-block px-3 py-1 rounded-full text-xs font-medium {{ $badge['class'] }}">
-                                {{ $badge['label'] }}
+                                class="inline-block bg-yellow-200 text-yellow-800 text-sm px-3 py-1 rounded-full font-medium mb-2">
+                                Aguardando aprovação de desconto
                             </span>
+                            <form id="form-aprovar-{{ $orcamento->id }}" class="inline-flex flex-wrap gap-2"
+                                data-id="{{ $orcamento->id }}"
+                                action="{{ route('orcamentos.aprovar-desconto', $orcamento->id) }}" method="POST">
+                                @csrf
+                                @method('PUT')
+
+                                <select name="acao" class="border border-gray-300 rounded px-2 py-1 text-sm"
+                                    required>
+                                    <option value="">Selecione uma ação</option>
+                                    <option value="aprovar">Aprovar Desconto</option>
+                                    <option value="reprovar">Reprovar Desconto</option>
+                                </select>
+
+                                <button type="submit"
+                                    class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+                                    Salvar
+                                </button>
+                            </form>
+                            <br />
                         @endif
 
-                        <div class="mt-2 flex flex-wrap gap-2 justify-end">
-                            <a href="{{ route('orcamentos.separacao.show', $orcamento->id) }}"
-                                class="inline-flex items-center px-3 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-sm">
-                                Separação
-                            </a>
-                            <a href="{{ route('orcamentos.conferencia.show', $orcamento->id) }}"
-                                class="inline-flex items-center px-3 py-2 rounded bg-sky-600 hover:bg-sky-700 text-white text-sm">
-                                Conferência
-                            </a>
+                        <span
+                            class="inline-block bg-yellow-200 text-yellow-800 text-sm px-3 py-1 rounded-full font-medium mb-2">
+                            Status
+                        </span>
+                        <form id="form-status-{{ $orcamento->id }}" class="inline-flex flex-wrap gap-2"
+                            data-id="{{ $orcamento->id }}"
+                            data-url="{{ route('orcamentos.atualizar-status', $orcamento->id) }}">
+                            @csrf
+                            @method('PUT')
+                            <select name="status"
+                                class="border border-gray-300 rounded px-2 py-1 text-sm status-select"
+                                data-id="{{ $orcamento->id }}">
+                                @foreach (['Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'] as $s)
+                                    <option value="{{ $s }}" @selected($orcamento->status === $s)>
+                                        {{ $s }}
+                                    </option>
+                                @endforeach
+                            </select>
+
+                            <button type="button"
+                                class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 atualizar-status"
+                                data-id="{{ $orcamento->id }}" data-prev-text="Atualizar">
+                                Atualizar
+                            </button>
+                        </form>
+
+                        {{-- Workflow Operacional (separação/conferência) --}}
+                        <div class="mt-4">
+                            @php
+                                $wf = $orcamento->workflow_status;
+                                $map = [
+                                    'aguardando_separacao' => [
+                                        'label' => 'Aguardando Separação',
+                                        'class' =>
+                                            'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
+                                    ],
+                                    'em_separacao' => [
+                                        'label' => 'Em Separação',
+                                        'class' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
+                                    ],
+                                    'aguardando_conferencia' => [
+                                        'label' => 'Aguardando Conferência',
+                                        'class' =>
+                                            'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
+                                    ],
+                                    'em_conferencia' => [
+                                        'label' => 'Em Conferência',
+                                        'class' => 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200',
+                                    ],
+                                    'conferido' => [
+                                        'label' => 'Conferido',
+                                        'class' =>
+                                            'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
+                                    ],
+                                    'finalizado' => [
+                                        'label' => 'Conferido e Finalizado',
+                                        'class' =>
+                                            'bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-100',
+                                    ],
+                                ];
+                                $badge = $map[$wf] ?? null;
+                            @endphp
+
+                            @if ($badge)
+                                <span
+                                    class="inline-block px-3 py-1 rounded-full text-xs font-medium {{ $badge['class'] }}">
+                                    {{ $badge['label'] }}
+                                </span>
+                            @endif
+
+                            <div class="mt-2 flex flex-wrap gap-2 justify-end">
+                                <a href="{{ route('orcamentos.separacao.show', $orcamento->id) }}"
+                                    class="inline-flex items-center px-3 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-sm">
+                                    Separação
+                                </a>
+                                <a href="{{ route('orcamentos.conferencia.show', $orcamento->id) }}"
+                                    class="inline-flex items-center px-3 py-2 rounded bg-sky-600 hover:bg-sky-700 text-white text-sm">
+                                    Conferência
+                                </a>
+                            </div>
                         </div>
                     </div>
-                </div>
+                @endif
             </div>
         </div>
 
