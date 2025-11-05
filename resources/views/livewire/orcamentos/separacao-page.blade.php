@@ -179,7 +179,7 @@
                 Clique no botão abaixo para criar um novo lote e iniciar o processo de separação dos itens deste
                 orçamento.
             </p>
-            @if ($orcamento->validade >= now() || in_array($orcamento->status, ['Aprovado']))
+            @if (in_array($orcamento->status, ['Aprovado']))
                 <button wire:click="iniciarSeparacao" wire:loading.attr="disabled"
                     class="inline-flex items-center px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition-colors disabled:opacity-50">
                     <span wire:loading.remove wire:target="iniciarSeparacao">Iniciar Nova Separação</span>

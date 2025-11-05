@@ -20,7 +20,7 @@
             <p class="text-gray-700 dark:text-gray-200 mb-4">
                 Nenhuma conferência em andamento.
             </p>
-            @if ($orcamento->validade >= now() || in_array($orcamento->status, ['Aprovado']))
+            @if (in_array($orcamento->status, ['Aprovado']))
                 <button wire:click="iniciarConferencia"
                     class="inline-flex items-center px-3 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white">
                     Iniciar Conferência
