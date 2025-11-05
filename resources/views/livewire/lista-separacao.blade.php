@@ -181,14 +181,14 @@
                             </a>
 
                             @if ($o->workflow_status === 'aguardando_separacao')
-                                <a href="{{ route('orcamentos.separacao', $o->id) }}">
+                                <a href="{{ route('orcamentos.separacao.show', $o->id) }}">
                                     <x-button size="sm" variant="primary">
                                         <x-heroicon-o-play class="w-4 h-4" />
                                         Iniciar Separação
                                     </x-button>
                                 </a>
                             @elseif($o->workflow_status === 'em_separacao')
-                                <a href="{{ route('orcamentos.separacao', $o->id) }}">
+                                <a href="{{ route('orcamentos.separacao.show', $o->id) }}">
                                     <x-button size="sm" variant="primary">
                                         <x-heroicon-o-play class="w-4 h-4" />
                                         Acompanhar Separação

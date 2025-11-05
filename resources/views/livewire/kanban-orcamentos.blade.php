@@ -113,7 +113,7 @@
                                 wire:key="column-{{ $column['id'] }}">
                                 @forelse ($column['orcamentos'] as $orcamento)
                                     <div class="bg-white dark:bg-zinc-800 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-700 hover:shadow-md transition cursor-move group"
-                                        wire:key="orcamento-{{ $orcamento->id }}" draggable="true"
+                                        wire:key="orcamento-{{ $orcamento->id }}" {{--draggable="true"--}}
                                         data-orcamento-id="{{ $orcamento->id }}">
 
                                         {{-- Card Header --}}
@@ -265,7 +265,7 @@
                                                 {{-- Quick Actions (visible on hover) --}}
                                                 <div
                                                     class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button
+                                                    {{--<button
                                                         class="p-1 text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400"
                                                         title="Ver detalhes">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor"
@@ -287,7 +287,7 @@
                                                                 stroke-width="2"
                                                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                         </svg>
-                                                    </button>
+                                                    </button>--}}
                                                 </div>
                                             </div>
                                         </div>
