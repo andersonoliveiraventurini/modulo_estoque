@@ -83,7 +83,7 @@ class ListaOrcamentoBalcaoConcluidos extends Component
             ->whereIn('workflow_status', ['conferido', 'finalizado'])
             ->whereIn('status', ['Finalizado'])
             ->whereHas('transportes', function ($query) {
-                $query->whereIn('tipo_transporte_id', [5, 6]);
+                $query->whereIn('tipo_transporte_id', [4, 5]);
             })
             // fim - pontos obrigatórios do Balcão
 

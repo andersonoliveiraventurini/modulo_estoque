@@ -31,6 +31,7 @@ use App\Http\Controllers\CategoriaController;
 use App\Livewire\OrcamentoShow;
 use App\Http\Controllers\SeparacaoController;
 use App\Http\Controllers\ConferenciaController;
+use App\Http\Controllers\PagamentoController;
 use App\Livewire\ListaConferencia;
 use App\Livewire\ListaSeparacao;
 use App\Livewire\Logistica\SeparacaoListaPage;
@@ -111,6 +112,9 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/orcamentos/{id}/aprovar-desconto', [OrcamentoController::class, 'processarAprovacaoDesconto'])
         ->name('orcamentos.aprovar-desconto');
     // fim rotas separação e conferência
+
+    Route::resource('pagamentos', PagamentoController::class)->names('pagamentos');
+    Route::get('realizar_pagamento/{orcamento_id}', [PagamentoController::class, 'realizar_pagamento'])->name('realizar_pagamento');
 
 
     Route::resource('notas', NotaFiscalController::class)->names('notas');

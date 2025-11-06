@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePagamentoRequest;
 use App\Http\Requests\UpdatePagamentoRequest;
+use App\Models\CondicoesPagamento;
+use App\Models\Orcamento;
 use App\Models\Pagamento;
 
 class PagamentoController extends Controller
@@ -16,12 +18,16 @@ class PagamentoController extends Controller
         //
     }
 
+    public function create() {}
+
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function realizar_pagamento($orcamento_id)
     {
-        //
+        $orcamento = Orcamento::findOrFail($orcamento_id);
+        $condicoesPagamento = CondicoesPagamento::all();
+        return view('paginas.pagamentos.create', compact('orcamento', 'condicoesPagamento'));
     }
 
     /**

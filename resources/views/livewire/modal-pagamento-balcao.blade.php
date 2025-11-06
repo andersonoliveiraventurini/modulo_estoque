@@ -93,7 +93,7 @@
                             @endforelse
 
                             <!-- Alertas sobre desconto -->
-                            @if($verificarRemocaoDesconto())
+                            {{--@if($verificarRemocaoDesconto())--}}
                             <div class="alert alert-warning mt-3">
                                 <i class="fas fa-exclamation-triangle"></i>
                                 <strong>Atenção!</strong> A condição original era PIX/Dinheiro com desconto. 
@@ -102,7 +102,7 @@
                                     Remover Desconto Original
                                 </button>
                             </div>
-                            @endif
+                           {{--  @endif--}}
                         </div>
                     </div>
 

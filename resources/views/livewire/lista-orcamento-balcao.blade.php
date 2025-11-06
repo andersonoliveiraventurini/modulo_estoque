@@ -148,8 +148,14 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 flex gap-2">
-                            @livewire('modal-pagamento-balcao', ['orcamentoId' => $o->id]))
+                            <a href="{{ route('realizar_pagamento', $o->id) }}">
 
+                                <x-button size="sm" variant="primary">
+                                    <x-heroicon-o-document-duplicate class="w-4 h-4" />
+                                    Realizar pagamento
+                                </x-button>
+                            </a>
+                            </form>
                         </td>
 
                     </tr>
