@@ -264,7 +264,7 @@
                                     </div>
                                 </div>
 
-                                <label class="flex items-center gap-3 cursor-pointer">
+                                {{--<label class="flex items-center gap-3 cursor-pointer">
                                     <input type="checkbox" wire:model.live="notaOutroCnpjCpf"
                                            class="w-4 h-4 text-blue-600 bg-white dark:bg-zinc-800 border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500"
                                            id="notaOutroCnpjCpf-{{ $orcamentoId }}">
@@ -285,7 +285,7 @@
                                             <p class="text-xs text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
                                         @enderror
                                     </div>
-                                @endif
+                                @endif--}}
                             </div>
                         @else
                             <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
