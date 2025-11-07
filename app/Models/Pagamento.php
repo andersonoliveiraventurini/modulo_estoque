@@ -15,7 +15,11 @@ class Pagamento extends Model
         'orcamento_id',
         'pedido_id',
         'condicao_pagamento_id',
-        'valor',
+        'desconto_aplicado',
+        'desconto_balcao',
+        'valor_final',
+        'valor_pago',
+        'troco',
         'data_pagamento',
         'tipo_documento',
         'numero_documento',
@@ -26,7 +30,11 @@ class Pagamento extends Model
 
     protected $casts = [
         'data_pagamento' => 'datetime',
-        'valor' => 'decimal:2',
+        'desconto_balcao' => 'decimal:2',
+        'desconto_aplicado' => 'decimal:2',
+        'valor_final' => 'decimal:2',
+        'valor_pago' => 'decimal:2',
+        'troco' => 'decimal:2',
     ];
 
     /**

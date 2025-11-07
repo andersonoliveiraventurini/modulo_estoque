@@ -25,8 +25,11 @@ return new class extends Migration
                 ->comment('Referência à condição de pagamento utilizada.');
             $table->foreign('condicao_pagamento_id')->references('id')->on('condicoes_pagamento');
 
-            $table->decimal('valor', 15, 2)
-                ->comment('Valor pago nesta forma de pagamento.');
+            $table->decimal('desconto_balcao', 10, 2)->nullable();
+            $table->decimal('desconto_aplicado', 10, 2)->nullable();
+            $table->decimal('valor_final', 10, 2)->nullable();
+            $table->decimal('valor_pago', 10, 2)->nullable();
+            $table->decimal('troco', 10, 2)->nullable();
 
             $table->datetime('data_pagamento')
                 ->comment('Data e hora em que o pagamento foi realizado.');
