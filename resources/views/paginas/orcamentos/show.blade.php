@@ -9,6 +9,7 @@
                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 Gerenciar Orçamento #{{ $orcamento->id }}
+                            <a href="/descontos/orcamento/{{ $orcamento->id }}"><x-button size="sm" variant="primary">Validar desconto</x-button></a>
                 @if ($orcamento->status != 'Aprovar desconto')
                     -
                     @if ($orcamento->pdf_path)
@@ -29,6 +30,7 @@
                         </x-button>
                     </a>
                 @endif
+
             </h2>
 
             <div class="flex flex-wrap justify-between items-start gap-4">
@@ -48,8 +50,7 @@
                     </div>
                 </div>
 
-                @if ($orcamento->validade >= now() ||
-                        in_array($orcamento->status, ['Aprovado']))
+                @if ($orcamento->validade >= now() || in_array($orcamento->status, ['Aprovado']))
                     {{-- Status Comercial + Atualização --}}
                     <div class="text-right min-w-[280px]">
                         @if ($orcamento->status === 'Aprovar desconto')
@@ -57,25 +58,7 @@
                                 class="inline-block bg-yellow-200 text-yellow-800 text-sm px-3 py-1 rounded-full font-medium mb-2">
                                 Aguardando aprovação de desconto
                             </span>
-                            <form id="form-aprovar-{{ $orcamento->id }}" class="inline-flex flex-wrap gap-2"
-                                data-id="{{ $orcamento->id }}"
-                                action="{{ route('orcamentos.aprovar-desconto', $orcamento->id) }}" method="POST">
-                                @csrf
-                                @method('PUT')
-
-                                <select name="acao" class="border border-gray-300 rounded px-2 py-1 text-sm"
-                                    required>
-                                    <option value="">Selecione uma ação</option>
-                                    <option value="aprovar">Aprovar Desconto</option>
-                                    <option value="reprovar">Reprovar Desconto</option>
-                                </select>
-
-                                <button type="submit"
-                                    class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
-                                    Salvar
-                                </button>
-                            </form>
-                            <br />
+                            <a href="/descontos/orcamento/{{ $orcamento->id }}">Validar desconto antes de aprovar o orçamento.</a>
                         @endif
 
                         <span

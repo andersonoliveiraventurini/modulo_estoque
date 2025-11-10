@@ -18,10 +18,10 @@ return new class extends Migration
 
             $table->decimal('valor', 10, 2)
                 ->comment('Valor do desconto, que pode ser um valor fixo ou uma porcentagem.');
-            
+
             $table->decimal('porcentagem', 5, 2)->nullable()
                 ->comment('Porcentagem do desconto, se aplicável. Exemplo: 15.00 para 15%.');
-            
+
             $table->enum('tipo', ['fixo', 'percentual'])
                 ->comment('Tipo de desconto: "fixo" para um valor fixo ou "percentual" para uma porcentagem.');
 
@@ -44,6 +44,32 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->nullable()
                 ->comment('Referência ao usuário que aplicou o desconto, se houver.');
             $table->foreign('user_id')->references('id')->on('users');
+
+            // Campos de aprovação
+            $table->timestamp('aprovado_em')->nullable()
+                ->comment('Data e hora em que o desconto foi aprovado.');
+
+            $table->unsignedBigInteger('aprovado_por')->nullable()
+                ->comment('ID do usuário que aprovou o desconto.');
+            $table->foreign('aprovado_por')->references('id')->on('users');
+
+            $table->text('justificativa_aprovacao')->nullable()
+                ->comment('Justificativa para a aprovação do desconto.');
+
+            // Campos de rejeição
+            $table->timestamp('rejeitado_em')->nullable()
+                ->comment('Data e hora em que o desconto foi rejeitado.');
+
+            $table->unsignedBigInteger('rejeitado_por')->nullable()
+                ->comment('ID do usuário que rejeitou o desconto.');
+            $table->foreign('rejeitado_por')->references('id')->on('users');
+
+            $table->text('justificativa_rejeicao')->nullable()
+                ->comment('Justificativa para a rejeição do desconto.');
+
+            // Campo adicional para observações gerais
+            $table->text('observacao')->nullable()
+                ->comment('Observações adicionais sobre o desconto.');
 
             $table->timestamps();
             $table->softDeletes();

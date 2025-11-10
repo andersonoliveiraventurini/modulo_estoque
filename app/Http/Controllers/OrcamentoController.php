@@ -203,12 +203,224 @@ class OrcamentoController extends Controller
         return redirect()->back()->with('error', 'Ação inválida.');
     }
 
-
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreOrcamentoRequest $request)
+    {
+        /**
+         * 🔹 Função para converter valores monetários no formato brasileiro para decimal
+         * Aceita formatos como: "10,00", "1.234,56", "10"
+         */
+        $brToDecimal = function ($valor) {
+            if ($valor === null || $valor === '') {
+                return null;
+            }
+
+            // Mantém sinal negativo
+            $negativo = false;
+            $valor = trim($valor);
+            if (strpos($valor, '-') !== false) {
+                $negativo = true;
+                // remove apenas o sinal (mantemos resto)
+                $valor = str_replace('-', '', $valor);
+            }
+
+            // remove espaços
+            $valor = str_replace(' ', '', $valor);
+
+            // Caso tenha ambos '.' e ',' -> assumimos '.' como milhares e ',' como decimal
+            if (strpos($valor, '.') !== false && strpos($valor, ',') !== false) {
+                $valor = str_replace('.', '', $valor); // remove separadores de milhar
+                $valor = str_replace(',', '.', $valor); // vírgula -> ponto decimal
+            }
+            // Se tem só vírgula -> vírgula é decimal
+            elseif (strpos($valor, ',') !== false) {
+                $valor = str_replace(',', '.', $valor);
+            }
+            // Se só tem ponto -> ponto é decimal (mantemos)
+            else {
+                // removemos qualquer caractere que não seja dígito ou ponto
+                $valor = preg_replace('/[^\d\.]/', '', $valor);
+            }
+
+            // Se por acaso houver mais de um ponto, mantemos o último como separador decimal
+            if (substr_count($valor, '.') > 1) {
+                $parts = explode('.', $valor);
+                $decimal = array_pop($parts);
+                $valor = implode('', $parts) . '.' . $decimal;
+            }
+
+            $float = (float) $valor;
+            return $negativo ? -$float : $float;
+        };
+
+
+        // 🔹 Converte campos monetários e numéricos
+        $request->merge([
+            'guia_recolhimento'   => $brToDecimal($request->guia_recolhimento),
+            'desconto_especifico' => $brToDecimal($request->desconto_especifico),
+            'desconto_aprovado'   => $brToDecimal($request->desconto_aprovado),
+            'valor_total'         => $brToDecimal($request->valor_total),
+        ]);
+
+
+        // 1️⃣ Definir desconto percentual (cliente x vendedor)
+        $descontoPercentual = 0;
+        if ($request->filled('desconto_aprovado') || $request->filled('desconto')) {
+            $descontoPercentual = max(
+                (float) ($request->desconto_aprovado ?? 0),
+                (float) ($request->desconto ?? 0)
+            );
+        }
+
+        // 2️⃣ Definir desconto específico em valor (reais)
+        $descontoEspecifico = $request->filled('desconto_especifico')
+            ? (float) $request->desconto_especifico
+            : null;
+
+        // Corrige valor total zerado
+        if ($request->valor_total == "0,00" || $request->valor_total == 0) {
+            $request->merge(['valor_total' => 0]);
+        }
+
+        // 3️⃣ Criação do orçamento
+        $orcamento = Orcamento::create([
+            'cliente_id'          => $request->cliente_id,
+            'vendedor_id'         => Auth()->user()->id,
+            'usuario_logado_id'   => Auth()->user()->id,
+            'obra'                => $request->nome_obra,
+            'valor_total_itens'   => $request->valor_total,
+            'guia_recolhimento'   => $request->guia_recolhimento,
+            'observacoes'         => $request->observacoes,
+            'condicao_id'         => $request->condicao_pagamento,
+            'validade'            => Carbon::now()->addDays(2), // +2 dias
+        ]);
+
+        // 4️⃣ Transporte
+        if ($request->tipos_transporte) {
+            $orcamento->transportes()->sync($request->tipos_transporte);
+        }
+
+        // 5️⃣ Itens do orçamento
+        if ($request->has('itens')) {
+            foreach ($request->itens as $item) {
+                $valorUnitario = (float) ($item['preco_unitario'] ?? 0);
+                $quantidade    = (float) ($item['quantidade'] ?? 0);
+                $subtotal      = $valorUnitario * $quantidade;
+                $valorUnitarioComDesconto = (float) ($item['preco_unitario_com_desconto'] ?? null);
+
+                // Aplica desconto percentual no item
+                $valorComDesconto = $subtotal;
+                if ($descontoPercentual > 0) {
+                    $valorComDesconto = $subtotal - ($subtotal * ($descontoPercentual / 100));
+                }
+
+                $orcamento->itens()->create([
+                    'produto_id'                  => $item['id'],
+                    'quantidade'                  => $quantidade,
+                    'valor_unitario'              => $valorUnitario,
+                    'valor_unitario_com_desconto' => $valorUnitarioComDesconto,
+                    'desconto'                    => $descontoPercentual ?? 0,
+                    'valor_com_desconto'          => $valorComDesconto,
+                    'user_id'                     => $request->user()->id ?? null,
+                ]);
+            }
+        }
+
+        // 6️⃣ Vidros
+        if ($request->has('vidros')) {
+            foreach ($request->vidros as $vidro) {
+                if (!empty($vidro['preco_m2']) && !empty($vidro['quantidade']) && !empty($vidro['altura']) && !empty($vidro['largura'])) {
+                    $orcamento->vidros()->create([
+                        'descricao'            => $vidro['descricao'] ?? null,
+                        'quantidade'           => (float) $vidro['quantidade'] ?? 0,
+                        'altura'               => (float) $vidro['altura'] ?? 0,
+                        'largura'              => (float) $vidro['largura'] ?? 0,
+                        'preco_metro_quadrado' => $brToDecimal($vidro['preco_m2']) ?? 0,
+                        'desconto'             => $descontoPercentual ?? 0,
+                        'valor_total'          => $brToDecimal($vidro['valor_total']) ?? 0,
+                        'valor_com_desconto'   => $brToDecimal($vidro['valor_com_desconto']) ?? 0,
+                        'user_id'              => $request->user()->id ?? null,
+                    ]);
+                }
+            }
+        }
+
+        // 7️⃣ Descontos
+        if ($descontoPercentual > 0) {
+            $orcamento->descontos()->create([
+                'motivo'      => 'Desconto percentual aplicado (cliente ou vendedor)',
+                'valor'       => 0,
+                'porcentagem' => $descontoPercentual,
+                'tipo'        => 'percentual',
+                'cliente_id'  => $request->cliente_id,
+                'user_id'     => Auth()->id(),
+            ]);
+        }
+
+        if ($descontoEspecifico) {
+            $orcamento->descontos()->create([
+                'motivo'      => 'Desconto específico em reais',
+                'valor'       => $descontoEspecifico,
+                'porcentagem' => null,
+                'tipo'        => 'fixo',
+                'cliente_id'  => $request->cliente_id,
+                'user_id'     => Auth()->id(),
+            ]);
+        }
+
+        // 8️⃣ Endereço de entrega
+        if ($request->filled('endereco_cep')) {
+            $endereco = Endereco::updateOrCreate(
+                [
+                    'tipo'       => 'entrega',
+                    'cliente_id' => $request->cliente_id,
+                ],
+                array_filter([
+                    'cep'        => $request->endereco_cep,
+                    'logradouro' => $request->endereco_logradouro,
+                    'numero'     => $request->endereco_numero,
+                    'complemento' => $request->endereco_compl,
+                    'bairro'     => $request->endereco_bairro,
+                    'cidade'     => $request->endereco_cidade,
+                    'estado'     => $request->endereco_estado,
+                    'tipo'       => 'entrega',
+                ])
+            );
+        } elseif ($request->enderecos_cadastrados != "") {
+            $orcamento->update(['endereco_id' => $request->enderecos_cadastrados]);
+        }
+
+        // 9️⃣ Aprovação de desconto
+        if (
+            $descontoPercentual > $request->desconto_aprovado &&
+            Auth()->user()->vendedor->desconto < $descontoPercentual
+        ) {
+            $orcamento->status = 'aprovar desconto';
+            $orcamento->save();
+
+            return redirect()
+                ->route('orcamentos.index')
+                ->with('error', 'Orçamento criado, mas é necessária a aprovação do desconto.');
+        }
+
+        // 🔟 Geração do PDF
+        $pdfGeradoComSucesso = $this->gerarPdf($orcamento);
+
+        if ($pdfGeradoComSucesso) {
+            return redirect()
+                ->route('orcamentos.show', $orcamento->id)
+                ->with('success', 'Orçamento criado e PDF gerado com sucesso!');
+        }
+
+        return redirect()
+            ->route('orcamentos.show', $orcamento->id)
+            ->with('error', 'Orçamento criado com sucesso, mas ocorreu uma falha ao gerar o PDF. Por favor, contate o suporte.');
+    }
+
+
+    /*
+     * Store a newly created resource in storage.
+     * 
+         public function store(StoreOrcamentoRequest $request)
     {
         // 1) Definir desconto percentual (cliente x vendedor)
         $descontoPercentual = null;
@@ -374,7 +586,7 @@ class OrcamentoController extends Controller
                     ->with('error', 'Orçamento criado com sucesso, mas ocorreu uma falha ao gerar o PDF. Por favor, contate o suporte.');
             }
         }
-    }
+    }*/
 
     public function visualizarPublico($token)
     {

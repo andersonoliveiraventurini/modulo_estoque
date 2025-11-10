@@ -17,6 +17,11 @@ class DescontoController extends Controller
         return view('paginas.descontos.index', compact('descontos'));
     }
 
+    public function desconto_orcamento($orcamento_id)
+    {        
+        return view('paginas.descontos.create', compact('orcamento_id'));
+    }
+
     /**
      * Show the form for creating a new resource.
      */

@@ -47,6 +47,12 @@ return new class extends Migration
                   $table->decimal('valor_total_itens', 15, 2)->nullable()
                         ->comment('Valor total dos itens do orçamento.');
 
+                  $table->decimal('desconto_total', 10, 2)->default(0)
+                        ->comment('Total de descontos aprovados aplicados ao orçamento.');
+
+                  $table->decimal('valor_com_desconto', 10, 2)->default(0)
+                        ->comment('Valor final do orçamento após aplicação dos descontos aprovados.');
+
                   $table->enum('status', ['Aprovar desconto', 'Pendente', 'Aprovado', 'Finalizado', 'Cancelado', 'Rejeitado', 'Expirado'])
                         ->default('Pendente')
                         ->comment('Status do orçamento, como pendente, aprovado, cancelado, etc.');
@@ -56,7 +62,7 @@ return new class extends Migration
                   $table->text('observacoes')->nullable()
                         ->comment('Observações adicionais sobre o orçamento.');
                   $table->string('pdf_path')->nullable();
-                  
+
                   $table->unsignedBigInteger('usuario_logado_id')->nullable()
                         ->comment('Referência ao usuário que está logado e criando o orçamento.');
                   $table->foreign('usuario_logado_id')->references('id')->on('users');
