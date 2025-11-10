@@ -391,7 +391,7 @@ class OrcamentoController extends Controller
 
         // 9️⃣ Aprovação de desconto
         if (
-            $descontoPercentual > $request->desconto_aprovado &&
+            $descontoPercentual > $request->desconto_aprovado ||
             Auth()->user()->vendedor->desconto < $descontoPercentual
         ) {
             $orcamento->status = 'aprovar desconto';
