@@ -25,6 +25,20 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('12345'),
             'email_verified_at' => Carbon::now()
         ]);
+
+        User::create([
+            'name' => 'Cezar',
+            'email' => 'cezar@acav.com',
+            'password' => Hash::make('12345'),
+            'email_verified_at' => Carbon::now()
+        ]);
+
+        User::create([
+            'name' => 'Thiago',
+            'email' => 'thiago@acav.com',
+            'password' => Hash::make('12345'),
+            'email_verified_at' => Carbon::now()
+        ]);
         //$this->call(FornecedorSeeder::class);
 
         $this->call(NcmSeeder::class);
