@@ -50,7 +50,12 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')
                 ->comment('Referência ao usuário que registrou o pagamento.');
             $table->foreign('user_id')->references('id')->on('users');
-
+            
+            $table->boolean('estornado')->default(false)->after('observacoes');
+            $table->datetime('data_estorno')->nullable()->after('estornado');
+            $table->text('motivo_estorno')->nullable()->after('data_estorno');
+            $table->foreignId('usuario_estorno_id')->nullable()->after('motivo_estorno')
+                ->constrained('users');
             $table->timestamps();
             $table->softDeletes();
         });
