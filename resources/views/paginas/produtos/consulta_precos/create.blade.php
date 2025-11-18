@@ -6,10 +6,11 @@
                 class="bg-white p-6 shadow rounded-2xl border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
                 <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
                     <x-heroicon-o-currency-dollar class="w-5 h-5 text-primary-600" />
-                    Fazer cotação
+                    Fazer cotação para o cliente: {{ $cliente->nome_fantasia }}
                 </h2>
                 <form action="{{ route('consulta_preco.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
                     @csrf
+                    <input type="hidden" name="cliente_id" value="{{ $cliente->id }}">
                     <!-- Dados Básicos -->
                     <div class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">

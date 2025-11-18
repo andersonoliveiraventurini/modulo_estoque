@@ -84,7 +84,7 @@
                 @forelse($precos as $p)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="/users/{{ $p->usuario_id }}">{{ $p->usuario_id }}</a></td>
+                                href="/users/{{ $p->usuario_id }}">{{ $p->usuario?->name }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
                                 href="/consulta_preco/{{ $p->id }}">{{ $p->descricao }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $p->cor }}</td>
@@ -93,7 +93,7 @@
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">R$
                             {{ number_format($p->preco_custo, 2, ',', '.') }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="/users/{{ $p->responsavel_id }}">{{ $p->responsavel_id }}</a></td>
+                                href="/users/{{ $p->comprador_id }}">{{ $p->comprador?->name }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $p->observacao }}</td>
                         <td class="px-6 py-4 flex gap-2">
                             <a href="{{ route('consulta_preco.edit', $p->id) }}">

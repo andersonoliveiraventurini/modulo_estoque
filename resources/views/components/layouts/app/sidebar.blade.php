@@ -80,9 +80,6 @@
             <flux:navlist.item icon="home" :href="route('consulta_preco.index')"
                 :current="request()->routeIs('consulta_preco.index')" wire:navigate>{{ __('Cotações feitas') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('consulta_preco.create')"
-                :current="request()->routeIs('consulta_preco.create')" wire:navigate>{{ __('Fazer cotação') }}
-            </flux:navlist.item>
         </flux:navlist.group>
 
         <flux:navlist.group heading="Financeiro" expandable :expanded="false">

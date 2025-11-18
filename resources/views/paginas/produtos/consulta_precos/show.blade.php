@@ -11,7 +11,15 @@
                     <div class="col-span-12 md:col-span-8">
                         <h2 class="text-xl font-semibold flex items-center gap-2">
                             <x-heroicon-o-currency-dollar class="w-5 h-5 text-primary-600" />
-                            Dados da Consulta de Preço
+                            Dados da Consulta de Preço #{{ $consultaPreco->id }} @if ($consultaPreco->pdf_path)
+                                <a href="{{ asset('storage/' . $consultaPreco->pdf_path) }}" target="_blank"
+                                    rel="noopener">
+                                    <x-button size="sm" variant="primary">
+                                        <x-heroicon-o-document-arrow-down class="w-4 h-4" />
+                                        PDF
+                                    </x-button>
+                                </a>
+                            @endif
                         </h2>
                         <p class="text-sm text-neutral-500 dark:text-neutral-400">
                             Informações detalhadas da consulta de preço selecionada.
@@ -54,13 +62,15 @@
 
                     <x-tab name="usuarios" label="Usuários">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-show-field label="Solicitante" :value="$consultaPreco->usuario?->name" />
+                            <x-show-field label="Cliente" :value="$consultaPreco->cliente_id . ' - ' . $consultaPreco->cliente?->nome" />
+                            <x-show-field label="Vendedor" :value="$consultaPreco->usuario?->name" />
                             <x-show-field label="Comprador (Cadastro)" :value="$consultaPreco->comprador?->name" />
                         </div>
                     </x-tab>
 
                     <x-tab name="fornecedor" label="Fornecedor">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">                            
+                            <x-show-field label="Prazo entrega" :value="$consultaPreco->prazo_entrega" />
                             <x-show-field label="Fornecedor" :value="$consultaPreco->fornecedor?->nome_fantasia" />
                         </div>
                     </x-tab>
@@ -74,7 +84,7 @@
                     </x-tab>
                 </x-tabs>
 
-                <!-- Botões -->                    
+                <!-- Botões -->
                 <div class="flex gap-4 mt-6">
                     <a href="{{ route('consulta_preco.edit', $consultaPreco) }}">
                         <x-button size="sm" variant="secondary">

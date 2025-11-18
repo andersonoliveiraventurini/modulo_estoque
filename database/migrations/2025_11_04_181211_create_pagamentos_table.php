@@ -51,10 +51,10 @@ return new class extends Migration
                 ->comment('Referência ao usuário que registrou o pagamento.');
             $table->foreign('user_id')->references('id')->on('users');
             
-            $table->boolean('estornado')->default(false)->after('observacoes');
-            $table->datetime('data_estorno')->nullable()->after('estornado');
-            $table->text('motivo_estorno')->nullable()->after('data_estorno');
-            $table->foreignId('usuario_estorno_id')->nullable()->after('motivo_estorno')
+            $table->boolean('estornado')->default(false);
+            $table->datetime('data_estorno')->nullable();
+            $table->text('motivo_estorno')->nullable();
+            $table->foreignId('usuario_estorno_id')->nullable()
                 ->constrained('users');
             $table->timestamps();
             $table->softDeletes();

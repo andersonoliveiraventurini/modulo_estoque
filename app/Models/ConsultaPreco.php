@@ -18,23 +18,39 @@ class ConsultaPreco extends Model
         'cor',
         'quantidade',
         'usuario_id',
+        'cliente_id',
         'preco_compra',
         'preco_venda',
         'observacao',
         'fornecedor_id',
         'comprador_id',
+        'prazo_entrega',
+        'pdf_path'
     ];
 
     public function usuario()
     {
         return $this->belongsTo(User::class, 'usuario_id');
     }
-
     
+    public function cliente()
+    {
+        return $this->belongsTo(Cliente::class, 'cliente_id');
+    }
+
     public function comprador()
     {
         return $this->belongsTo(User::class, 'comprador_id');
     }
+
+    public function setPrecoCompraAttribute($value)
+    {
+        $this->attributes['preco_compra'] = str_replace(',', '.', $value);
+    }
+
+    public function setPrecoVendaAttribute($value)
+    { {
+            $this->attributes['preco_venda'] = str_replace(',', '.', $value);
+        }
+    }
 }
-
-

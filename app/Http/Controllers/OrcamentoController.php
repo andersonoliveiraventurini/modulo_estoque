@@ -403,7 +403,7 @@ class OrcamentoController extends Controller
         }
 
         // 🔟 Geração do PDF
-        $pdfGeradoComSucesso = $this->gerarPdf($orcamento);
+        $pdfGeradoComSucesso = $this->gerarOrcamentoPdf($orcamento);
 
         if ($pdfGeradoComSucesso) {
             return redirect()
@@ -571,7 +571,7 @@ class OrcamentoController extends Controller
                 ->with('error', 'Orçamento criado, mas é necessária a aprovação do desconto.');
         } else {
             // Chama a nova função para gerar o PDF e verifica o resultado
-            $pdfGeradoComSucesso = $this->gerarPdf($orcamento);
+            $pdfGeradoComSucesso = $this->gerarOrcamentoPdf($orcamento);
 
             if ($pdfGeradoComSucesso) {
                 // SUCESSO: Redireciona para a página de visualização do orçamento com uma mensagem de sucesso.
@@ -613,7 +613,7 @@ class OrcamentoController extends Controller
         );
     }
 
-    private function gerarPdf(Orcamento $orcamento): bool
+    private function gerarOrcamentoPdf(Orcamento $orcamento): bool
     {
         try {
             // 1. GERAÇÃO DE TOKEN E LINK SEGURO
@@ -687,7 +687,7 @@ class OrcamentoController extends Controller
             ]);
 
             // Chama a função para gerar o PDF e verifica o resultado
-            $pdfGeradoComSucesso = $this->gerarPdf($orcamento);
+            $pdfGeradoComSucesso = $this->gerarOrcamentoPdf($orcamento);
 
             if ($pdfGeradoComSucesso) {
                 // SUCESSO: Redireciona para a página de visualização do orçamento com uma mensagem de sucesso.
@@ -1267,7 +1267,7 @@ class OrcamentoController extends Controller
             }
 
             // 14) GERAR PDF
-            $pdfGeradoComSucesso = $this->gerarPdf($orcamento);
+            $pdfGeradoComSucesso = $this->gerarOrcamentoPdf($orcamento);
 
             if ($pdfGeradoComSucesso) {
                 return redirect()

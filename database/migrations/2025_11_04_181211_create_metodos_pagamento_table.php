@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-         Schema::create('metodos_pagamento', function (Blueprint $table) {
+        Schema::create('metodos_pagamento', function (Blueprint $table) {
             $table->id();
             $table->string('nome')->comment('Nome do método de pagamento');
             $table->string('codigo')->unique()->comment('Código único do método');
@@ -19,7 +19,7 @@ return new class extends Migration
                 ->comment('Tipo do método de pagamento');
             $table->boolean('permite_parcelamento')->default(false)
                 ->comment('Se permite parcelamento');
-            $table->integer('max_parcelas')->nullable()
+            $table->integer('max_parcelas')->nullable()->default(null)
                 ->comment('Número máximo de parcelas permitidas');
             $table->boolean('ativo')->default(true)->comment('Se o método está ativo');
             $table->integer('ordem')->default(0)->comment('Ordem de exibição');
@@ -35,8 +35,10 @@ return new class extends Migration
                 'codigo' => 'dinheiro',
                 'tipo' => 'dinheiro',
                 'permite_parcelamento' => false,
+                'max_parcelas' => null,
                 'ativo' => true,
                 'ordem' => 1,
+                'observacoes' => null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -45,8 +47,10 @@ return new class extends Migration
                 'codigo' => 'pix',
                 'tipo' => 'pix',
                 'permite_parcelamento' => false,
+                'max_parcelas' => null,
                 'ativo' => true,
                 'ordem' => 2,
+                'observacoes' => null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -55,8 +59,10 @@ return new class extends Migration
                 'codigo' => 'cartao_debito',
                 'tipo' => 'cartao_debito',
                 'permite_parcelamento' => false,
+                'max_parcelas' => null,
                 'ativo' => true,
                 'ordem' => 3,
+                'observacoes' => null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -68,6 +74,7 @@ return new class extends Migration
                 'max_parcelas' => 12,
                 'ativo' => true,
                 'ordem' => 4,
+                'observacoes' => null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -76,8 +83,10 @@ return new class extends Migration
                 'codigo' => 'credito_cliente',
                 'tipo' => 'credito_cliente',
                 'permite_parcelamento' => false,
+                'max_parcelas' => null,
                 'ativo' => true,
                 'ordem' => 5,
+                'observacoes' => null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
