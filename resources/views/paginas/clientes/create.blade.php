@@ -42,9 +42,7 @@
                             <x-input type="date" name="data_nascimento" label="Data de Nascimento" />
                         </div>
                     </div>
-                    <br />
                     <hr />
-                    <br />
                     <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
                         <x-heroicon-o-user class="w-5 h-5 text-primary-600" />
                         Vendedor
@@ -66,7 +64,7 @@
                         </div>
                     </div>
                     <!-- Contatos da Empresa -->
-                    <div class="space-y-4"><br />
+                    <div class="space-y-4">
                         <hr />
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
@@ -85,7 +83,7 @@
                         </x-button>
                     </div>
                     <!-- Endereço -->
-                    <div class="space-y-4"><br />
+                    <div class="space-y-4">
                         <hr />
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
@@ -125,7 +123,7 @@
 
                     </div>
                     <!-- Endereço de entrega -->
-                    <div class="space-y-4"><br />
+                    <div class="space-y-4">
                         <hr />
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
@@ -157,7 +155,6 @@
                             </div>
                         </div>
                     </div>
-                    <br />
                     <!-- Ações -->
                     <div class="flex gap-4">
                         <x-button type="submit">Cadastrar Cliente</x-button>

@@ -27,9 +27,6 @@ return new class extends Migration
                 ->comment('Usuário que solicitou a cotação.');
             $table->foreign('usuario_id')->references('id')->on('users')->onDelete('cascade');
 
-            $table->unsignedBigInteger('orcamento_id')->nullable()
-                ->comment('orçamento a que está vinculado.');
-
             $table->double('preco_compra')->nullable()
                 ->comment('Preço cotado pelo fornecedor.');
             $table->double('preco_venda')->nullable()

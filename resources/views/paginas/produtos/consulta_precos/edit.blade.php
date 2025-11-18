@@ -36,16 +36,6 @@
                                     </option>
                                     @endforeach
                                 </x-select>
-
-                                <x-select name="orcamento_id" label="Orçamento">
-                                    <option value="">Selecione...</option>
-                                    @foreach ($orcamentos as $orcamento)
-                                    <option value="{{ $orcamento->id }}"
-                                        {{ old('orcamento_id', $consulta->orcamento_id ?? '') == $orcamento->id ? 'selected' : '' }}>
-                                        {{ $orcamento->id }} - {{ $orcamento->obra }}
-                                    </option>
-                                    @endforeach
-                                </x-select>
                             </div>
                             <x-textarea name="observacoes" label="Observações" placeholder="Digite os detalhes adicionais..." rows="4" value="{{ old('observacoes') ?? $consulta->observacoes }}"></x-textarea>
                             <!-- Ações -->

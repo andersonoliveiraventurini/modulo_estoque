@@ -18,13 +18,23 @@ class ConsultaPreco extends Model
         'cor',
         'quantidade',
         'usuario_id',
-        'orcamento_id',
         'preco_compra',
         'preco_venda',
         'observacao',
         'fornecedor_id',
         'comprador_id',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(User::class, 'usuario_id');
+    }
+
+    
+    public function comprador()
+    {
+        return $this->belongsTo(User::class, 'comprador_id');
+    }
 }
 
 
