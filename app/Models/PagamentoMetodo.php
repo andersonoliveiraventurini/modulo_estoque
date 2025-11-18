@@ -42,7 +42,7 @@ class PagamentoMetodo extends Model
      */
     public function metodoPagamento()
     {
-        return $this->belongsTo(metodoPagamento::class, 'metodo_pagamento_id');
+        return $this->belongsTo(MetodoPagamento::class, 'metodo_pagamento_id');
     }
 
     /**

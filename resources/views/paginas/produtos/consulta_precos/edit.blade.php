@@ -60,9 +60,9 @@
                             <x-input name="prazo_entrega" label="Prazo de entrega" placeholder="Digite o prazo de entrega"
                                 value="{{ old('prazo_entrega') ?? $consulta->prazo_entrega }}" required />
                         </div>
-                        <x-textarea name="observacoes" label="Observações"
+                        <x-textarea name="observacao" label="Observações"
                             placeholder="Digite os detalhes adicionais..." rows="4"
-                            value="{{ old('observacoes') ?? $consulta->observacoes }}"></x-textarea>
+                            >{{ old('observacao') ?? $consulta->observacao }}</x-textarea>
                         <!-- Ações -->
                         <div class="flex gap-4">
                             <x-button type="submit">Salvar informações</x-button>

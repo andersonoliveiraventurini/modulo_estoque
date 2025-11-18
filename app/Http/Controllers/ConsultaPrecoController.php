@@ -85,7 +85,7 @@ class ConsultaPrecoController extends Controller
         $consultaPreco->update($request->except('_token', '_method'));
 
         $pdfGeradoComSucesso = $this->gerarCotacaoPdf($consultaPreco);
-
+        
         if ($pdfGeradoComSucesso) {
             return redirect()
                 ->route('consulta_preco.show', $consultaPreco->id)
@@ -99,13 +99,16 @@ class ConsultaPrecoController extends Controller
 
     private function gerarCotacaoPdf(ConsultaPreco $cotacao): bool
     {
-        try {
-            // 1. GERAÇÃO DE TOKEN E LINK SEGURO
+    
+            // 1. CARREGAR RELACIONAMENTOS NECESSÁRIOS
+            //$cotacao->load(['cliente', 'usuario', 'fornecedor', 'comprador']);
+
+            // 2. GERAÇÃO DE TOKEN E LINK SEGURO
             $token = Str::uuid();
             $tokenExpiraEm = Carbon::now()->addDays(2);
             $linkSeguro = route('cotacoes.view', ['token' => $token]);
 
-            // 2. GERAÇÃO DO QR CODE
+            // 3. GERAÇÃO DO QR CODE
             $qrCodeBase64 = base64_encode(
                 QrCode::format('png')
                     ->size(130)
@@ -113,15 +116,19 @@ class ConsultaPrecoController extends Controller
                     ->generate($linkSeguro)
             );
 
-            // 3. GERAÇÃO DO PDF (passando a versão)
-            $pdf = Pdf::loadView('documentos_pdf.cotacao', [
+            // 4. PREPARAR DADOS PARA O PDF
+            $dadosPdf = [
                 'cotacao' => $cotacao,
                 'qrCode' => $qrCodeBase64,
                 'linkSeguro' => $linkSeguro,
-                'versao' => $cotacao->versao ?? 1, // IMPORTANTE: Passar versão para o PDF
-            ])->setPaper('a4');
+                'versao' => $cotacao->versao ?? 1,
+            ];
 
-            // 4. NUMERAÇÃO DE PÁGINAS
+            // 5. GERAÇÃO DO PDF
+            $pdf = Pdf::loadView('documentos_pdf.cotacao', $dadosPdf)
+                ->setPaper('a4');
+
+            // 6. NUMERAÇÃO DE PÁGINAS
             $canvas = $pdf->getDomPDF()->getCanvas();
             $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
                 $text = "Página $pageNumber / $pageCount";
@@ -129,25 +136,74 @@ class ConsultaPrecoController extends Controller
                 $canvas->text(270, 820, $text, $font, 10);
             });
 
-            // 5. SALVAMENTO DO ARQUIVO
-            $path = "cotacoes/cotacao_{$cotacao->id}.pdf";
+            // 7. SALVAMENTO DO ARQUIVO
+            $nomeArquivo = "cotacao_{$cotacao->id}_v{$cotacao->versao}.pdf";
+            $path = "cotacoes/{$nomeArquivo}";
+
+            // Garantir que o diretório existe
+            Storage::disk('public')->makeDirectory('cotacoes');
+
+            // Salvar o PDF
             Storage::disk('public')->put($path, $pdf->output());
 
-            // 6. VERIFICAÇÃO E ATUALIZAÇÃO FINAL
+            // 8. VERIFICAÇÃO E ATUALIZAÇÃO FINAL
             if (Storage::disk('public')->exists($path)) {
                 $cotacao->update([
                     'token_acesso' => $token,
                     'token_expira_em' => $tokenExpiraEm,
                     'pdf_path' => $path,
                 ]);
+
+                Log::info("PDF gerado com sucesso para cotação #{$cotacao->id}", [
+                    'path' => $path,
+                    'versao' => $cotacao->versao
+                ]);
+
                 return true;
             } else {
-                Log::error("Falha ao salvar o PDF no caminho: " . $path);
+                Log::error("Falha ao salvar o PDF no caminho: {$path}");
                 return false;
             }
+try{
+
         } catch (\Exception $e) {
-            Log::error("Erro fatal ao gerar PDF para a cotação #{$cotacao->id}: " . $e->getMessage());
+            Log::error("Erro fatal ao gerar PDF para cotação #{$cotacao->id}", [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return false;
+        }
+    }
+
+    /**
+     * Método auxiliar para visualizar a cotação via token
+     */
+    public function visualizarCotacao($token)
+    {
+        try {
+            $cotacao = ConsultaPreco::where('token_acesso', $token)
+                ->where('token_expira_em', '>', Carbon::now())
+                ->firstOrFail();
+
+            if (!$cotacao->pdf_path || !Storage::disk('public')->exists($cotacao->pdf_path)) {
+                // Regenerar PDF se não existir
+                if (!$this->gerarCotacaoPdf($cotacao)) {
+                    abort(500, 'Erro ao gerar PDF da cotação');
+                }
+            }
+
+            $pdfPath = Storage::disk('public')->path($cotacao->pdf_path);
+
+            return response()->file($pdfPath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="cotacao_' . $cotacao->id . '.pdf"'
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Erro ao visualizar cotação", [
+                'token' => $token,
+                'error' => $e->getMessage()
+            ]);
+            abort(404, 'Cotação não encontrada ou token expirado');
         }
     }
 

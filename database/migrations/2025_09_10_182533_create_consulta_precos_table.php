@@ -58,8 +58,8 @@ return new class extends Migration
             $table->string('prazo_entrega', 100)->nullable()
                 ->comment('Prazo de entrega do orçamento.');
             $table->string('pdf_path')->nullable();
-            $table->uuid('token_acesso')->unique()->nullable()->after('status');
-            $table->timestamp('token_expira_em')->nullable()->after('token_acesso');
+            $table->uuid('token_acesso')->unique()->nullable();
+            $table->timestamp('token_expira_em')->nullable();
 
             $table->timestamps();
             $table->softDeletes();

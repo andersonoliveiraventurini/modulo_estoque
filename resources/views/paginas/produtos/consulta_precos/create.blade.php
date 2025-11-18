@@ -31,8 +31,8 @@
                                 @endforeach
                             </x-select>
                         </div>
-                        <x-textarea name="observacoes" label="Observações"
-                            placeholder="Digite os detalhes adicionais..." rows="4" value="{{ old('observacoes') }}"></x-textarea>
+                        <x-textarea name="observacao" label="Observações"
+                            placeholder="Digite os detalhes adicionais..." rows="4" value="{{ old('observacao') }}"></x-textarea>
                         <!-- Ações -->
                         <div class="flex gap-4">
                             <x-button type="submit">Solicitar Cotação do Produto</x-button>

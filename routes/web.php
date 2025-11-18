@@ -70,6 +70,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('movimentacao', MovimentacaoController::class)->names('movimentacao');
     Route::resource('consulta_preco', ConsultaPrecoController::class)->names('consulta_preco');
     Route::get('criar_cotacao/{cliente_id}', [ConsultaPrecoController::class, 'criar_cotacao'])->name('consulta_preco.criar_cotacao');
+    Route::get('/cotacoes/view/{token}', [CotacaoController::class, 'visualizarCotacao'])
+    ->name('cotacoes.view');
     Route::resource('ncm', NcmController::class)->names('ncm');
 
     Route::resource('blocok/descartes', BlocokDescartesController::class)->names('blocok.descartes');

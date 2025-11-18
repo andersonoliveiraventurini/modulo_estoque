@@ -20,9 +20,7 @@
             font-weight: 600;
         }
 
-        /* ===========================
-           CABEÇALHO
-        =========================== */
+        /* CABEÇALHO */
         .header {
             width: 100%;
             border-bottom: 1.5px solid #000;
@@ -44,9 +42,7 @@
             line-height: 1.2;
         }
 
-        /* ===========================
-           DADOS DO CLIENTE
-        =========================== */
+        /* DADOS DO CLIENTE */
         .cliente-info {
             width: 100%;
             border: 1px solid #aaa;
@@ -64,7 +60,7 @@
         .cliente-info .label {
             font-weight: bold;
             color: #000;
-            width: 10%;
+            width: 15%;
             white-space: nowrap;
         }
 
@@ -77,9 +73,7 @@
             background-color: #f9f9f9;
         }
 
-        /* ===========================
-           TABELAS DE ITENS E VIDROS
-        =========================== */
+        /* TABELAS */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -103,29 +97,7 @@
             text-align: right;
         }
 
-        table th:nth-child(1) {
-            width: 6%;
-        }
-
-        table th:nth-child(2) {
-            width: 40%;
-        }
-
-        table th:nth-child(3) {
-            width: 14%;
-        }
-
-        table th:nth-child(4) {
-            width: 10%;
-        }
-
-        table th:nth-child(5) {
-            width: 15%;
-        }
-
-        /* ===========================
-           TOTAIS
-        =========================== */
+        /* TOTAIS */
         .totais {
             width: 45%;
             float: right;
@@ -148,9 +120,7 @@
             font-weight: bold;
         }
 
-        /* ===========================
-           RODAPÉ
-        =========================== */
+        /* RODAPÉ */
         .footer {
             font-size: 9px;
             text-align: center;
@@ -159,11 +129,13 @@
             padding-top: 5px;
             color: #666;
             line-height: 1.3;
+            position: fixed;
+            bottom: 10px;
+            left: 0;
+            right: 0;
         }
 
-        /* ===========================
-           EVITAR QUEBRAS DE PÁGINA
-        =========================== */
+        /* EVITAR QUEBRAS DE PÁGINA */
         table,
         tr,
         td {
@@ -173,10 +145,7 @@
 </head>
 
 <body>
-    <!-- ===========================
-         CABEÇALHO
-    =========================== -->
-
+    <!-- CABEÇALHO -->
     <table
         style="width:100%; font-family: Arial, sans-serif; font-size:12px; color:#333; border-collapse:collapse; margin-bottom:15px;">
         <tr>
@@ -185,14 +154,12 @@
             </td>
             <td style="padding:5px; border:1px solid #ccc; background-color:#f9f9f9;">
                 <div style="text-align:center; margin-bottom:15px;">
-                    <!-- <p style="margin:0; font-size:12px;">
-                        Data: { { $orcamento->created_at->format('d/m/Y') }} - Validade: { { \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }} | Vendedor: { { $usuario->name }}
-                    </p>-->
-                    <p style="margin:2px 0;"><strong>ACAV</strong> - Comércio de Acessórios LTDA<br /><br />
+                    <p style="margin:2px 0;">
+                        <strong>ACAV</strong> - Comércio de Acessórios LTDA<br /><br />
                         R. São Luís do Paraitinga, 1338 - Jardim do Trevo - Campinas - SP - CEP: 13030-105
                         <br /> (19) 3273-3783 (19) 3274-1717
-                        <a href="mailto:contato@acavacessorios.com.br">contato@acavacessorios.com.br</a> - <a
-                            href="http://www.acavacessorios.com.br" target="_blank">www.acavacessorios.com.br</a>
+                        <a href="mailto:contato@acavacessorios.com.br">contato@acavacessorios.com.br</a> -
+                        <a href="http://www.acavacessorios.com.br" target="_blank">www.acavacessorios.com.br</a>
                     </p>
                 </div>
             </td>
@@ -201,22 +168,15 @@
             </td>
         </tr>
     </table>
-    <h2 style="margin:0; font-size:20px; text-transform:uppercase;">COTAÇÃO n° {{ $cotacao->id }}
+
+    <h2 style="margin:0; font-size:20px; text-transform:uppercase;">
+        COTAÇÃO Nº {{ $cotacao->id }}
         @if ($cotacao->versao > 1)
-            - Revisão:
-            {{ $cotacao->versao }}
-        @endif
-        @if ($cotacao->transportes->count() > 0)
-            <br />Transporte:
-            {{ $cotacao->transportes->pluck('nome')->join(', ') }}
+            - Revisão: {{ $cotacao->versao }}
         @endif
     </h2>
-    <!-- ===========================
-         DADOS DO CLIENTE
-    =========================== -->
-    @php
-        $usuario = \App\Models\User::find($orcamento->vendedor_id);
-    @endphp
+
+    <!-- DADOS DA COTAÇÃO -->
     <table class="cliente-info">
         <tr>
             <td class="label">Cliente:</td>
@@ -225,108 +185,102 @@
             <td class="value">{{ $cotacao->cliente->telefone ?? '---' }}</td>
         </tr>
         <tr>
-            <td class="label"><strong>Data do Orçamento:</strong></td>
+            <td class="label">Data da Cotação:</td>
             <td class="value">{{ $cotacao->created_at->format('d/m/Y') }}</td>
-            <td class="label"><strong>Validade Orçamento:</strong></td>
-            <td class="value">{{ \Carbon\Carbon::parse($cotacao->validade)->format('d/m/Y') }}</td>
+            <td class="label">Validade:</td>
+            <td class="value">
+                {{ $cotacao->validade ? \Carbon\Carbon::parse($cotacao->validade)->format('d/m/Y') : '---' }}</td>
         </tr>
         <tr>
-            <td class="label">Atendido por:</td>
-            <td class="value">{{ $usuario->usuario?->name }}</td>
+            <td class="label">Solicitado por:</td>
+            <td class="value">{{ $cotacao->usuario->name ?? '---' }}</td>
             <td class="label">Prazo de Entrega:</td>
             <td class="value">{{ $cotacao->prazo_entrega ?? '---' }}</td>
         </tr>
         <tr>
-            <td class="label">Endereço:</td>
-            <td class="value" colspan="3">{{ $cotacao->cliente->endereco ?? '---' }}</td>
+            <td class="label">Fornecedor:</td>
+            <td class="value">{{ $cotacao->fornecedor->nome ?? '---' }}</td>
+            <td class="label">Status:</td>
+            <td class="value">{{ $cotacao->status }}</td>
         </tr>
-        @if ($cotacao->observacoes != null)
+        @if ($cotacao->cliente && $cotacao->cliente->endereco)
             <tr>
-                <td class="label">Observações:</td>
-                <td class="value" colspan="3">{{ $cotacao->observacoes ?? '---' }}</td>
+                <td class="label">Endereço:</td>
+                <td class="value" colspan="3">{{ $cotacao->cliente->endereco }}</td>
             </tr>
         @endif
-
+        @if ($cotacao->observacao)
+            <tr>
+                <td class="label">Observações:</td>
+                <td class="value" colspan="3">{{ $cotacao->observacao }}</td>
+            </tr>
+        @endif
     </table>
 
-
-    <h3>Itens do Orçamento</h3>
+    <!-- INFORMAÇÕES DA COTAÇÃO -->
+    <h3>Detalhes da Cotação</h3>
     <table>
         <thead>
             <tr>
-                <th>Quantidade</th>
-                <th>Produto</th>
-                <th>Unitário</th>
-                <th>Valor final</th>
+                <th style="width: 20%;">Item</th>
+                <th style="width: 50%;">Descrição</th>
+                <th style="width: 15%;">Quantidade</th>
+                <th style="width: 15%;">Cor/Classificação</th>
             </tr>
         </thead>
         <tbody>
-                <tr>
-                    <td align="center">{{ $item->quantidade }}</td>
-                    <td>{{ $item->produto->nome ?? '---' }}</td>
-                    <td class="valor">R$ {{ number_format($item->valor_unitario, 2, ',', '.') }}</td>
-                    @if ($percentualAplicado > 0)
-                        <td class="valor">R$ {{ number_format($item->valor_unitario_com_desconto, 2, ',', '.') }}
-                        </td>
+            <tr>
+                <td align="center">Cotação #{{ $cotacao->id }}</td>
+                <td>{{ $cotacao->descricao ?? 'Consulta de preço' }}</td>
+                <td class="valor">{{ $cotacao->quantidade ?? '---' }}</td>
+                <td align="center">
+                    @if ($cotacao->cor)
+                        <span
+                            style="display:inline-block; width:15px; height:15px; background-color:{{ $cotacao->cor }}; border:1px solid #000; vertical-align:middle;"></span>
+                        {{ $cotacao->cor }}
+                    @else
+                        ---
                     @endif
-                    <td class="valor">R$ {{ number_format($item->valor_com_desconto, 2, ',', '.') }}</td>
-                </tr>
+                </td>
+            </tr>
         </tbody>
     </table>
 
-    <h3>Totais e Descontos</h3>
-    <table class="totais">
-        @if ($orcamento->itens->count() > 0)
+    <!-- VALORES -->
+    <h3>Valores</h3>
+    <table class="totais" style="width: 100%; float: none;">
+        {{--@if ($cotacao->preco_compra)
             <tr>
-                <td>Valor Total em Produtos</td>
-                <td class="valor">R$ {{ number_format($totalItensComDesconto, 2, ',', '.') }}</td>
+                <td>Preço de Compra (Fornecedor)</td>
+                <td class="valor">R$ {{ number_format($cotacao->preco_compra, 2, ',', '.') }}</td>
             </tr>
-        @endif
-        @if ($orcamento->vidros->count() > 0)
+        @endif--}}
+
+        @if ($cotacao->preco_venda)
             <tr>
-                <td>Valor Total em Vidros</td>
-                <td class="valor">R$ {{ number_format($totalVidros, 2, ',', '.') }}</td>
-            </tr>
-        @endif
-        @if ($orcamento->guia_recolhimento > 0)
-            <tr>
-                <td>Guia de Recolhimento</td>
-                <td class="valor">R$ {{ number_format($orcamento->guia_recolhimento, 2, ',', '.') }}</td>
-            </tr>
-        @endif
-        @if ($orcamento->frete > 0)
-            <tr>
-                <td>Frete</td>
-                <td class="valor">R$ {{ number_format($orcamento->frete, 2, ',', '.') }}</td>
-            </tr>
-        @endif
-        @if ($percentualAplicado > 0)
-            <tr>
-                <td>Desconto Percentual</td>
-                <td class="valor">{{ number_format($percentualAplicado, 2, ',', '.') }}%</td>
+                <td><strong>Preço de Venda</strong></td>
+                <td class="valor"><strong>R$ {{ number_format($cotacao->preco_venda, 2, ',', '.') }}</strong></td>
             </tr>
         @endif
 
-        @foreach ($descontosFixos as $desc)
+        {{--@if ($cotacao->preco_compra && $cotacao->preco_venda)
+            @php
+                $margem = (($cotacao->preco_venda - $cotacao->preco_compra) / $cotacao->preco_compra) * 100;
+            @endphp
             <tr>
-                <td>{{ $desc->motivo }}</td>
-                <td class="valor">- R$ {{ number_format($desc->valor, 2, ',', '.') }}</td>
+                <td>Margem de Lucro</td>
+                <td class="valor">{{ number_format($margem, 2, ',', '.') }}%</td>
             </tr>
-        @endforeach
-        <tr>
-            <td>Valor Final da cotação</td>
-            <td class="valor">R$
-                {{ number_format($valorFinal + $orcamento->frete + $orcamento->guia_recolhimento, 2, ',', '.') }}</td>
-        </tr>
+        @endif--}}
     </table>
 
-    <!-- ===========================
-         RODAPÉ
-    =========================== -->
-    <div class="footer"
-        style="position: fixed; bottom: 10px;left: 0; right: 0; text-align: center;font-size: 11px;color: #666;">
-        <p>Esta cotação é válida até {{ \Carbon\Carbon::parse($cotacao->validade)->format('d/m/Y') }}. ©
-            {{ date('Y') }} {{ config('app.name') }} - Todos os direitos reservados.</p>
+    <!-- RODAPÉ -->
+    <div class="footer">
+        <p>
+            Esta cotação é válida até
+            {{ $cotacao->validade ? \Carbon\Carbon::parse($cotacao->validade)->format('d/m/Y') : '---' }}.
+            © {{ date('Y') }} {{ config('app.name') }} - Todos os direitos reservados.
+        </p>
     </div>
 
 </body>
