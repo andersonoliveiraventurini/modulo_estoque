@@ -6,8 +6,6 @@ services:
     container_name: laravel-app
     ports:
       - "8087:80"
-    volumes:
-      - .:/var/www/html
     depends_on:
       - mysql
     environment:
