@@ -6,7 +6,6 @@ services:
     container_name: laravel-app
     ports:
       - "8087:80"
-    user: "${UID:-1000}:${GID:-1000}" 
     volumes:
       - .:/var/www/html
     depends_on:
