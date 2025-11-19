@@ -9,8 +9,6 @@ services:
     user: "${UID:-1000}:${GID:-1000}" 
     volumes:
       - .:/var/www/html
-      - /var/www/html/vendor
-      - /var/www/html/node_modules
     depends_on:
       - mysql
     environment:
