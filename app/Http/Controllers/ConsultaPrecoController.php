@@ -54,9 +54,9 @@ class ConsultaPrecoController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(ConsultaPreco $consultaPreco)
+    public function show(ConsultaPreco $consulta)
     {
-        return view('paginas.produtos.consulta_precos.show', compact('consultaPreco'));
+        return view('paginas.produtos.consulta_precos.show', compact('consulta'));
     }
 
     /**
