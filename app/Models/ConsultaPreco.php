@@ -15,7 +15,7 @@ class ConsultaPreco extends Model
     protected $fillable = [
         'status',
         'descricao',
-        'cor',
+        'cor_id',
         'quantidade',
         'usuario_id',
         'cliente_id',
@@ -53,4 +53,11 @@ class ConsultaPreco extends Model
             $this->attributes['preco_venda'] = str_replace(',', '.', $value);
         }
     }
+    
+  public function cor()
+{
+    return $this->belongsTo(Cor::class, 'cor_id');
+}
+
+
 }

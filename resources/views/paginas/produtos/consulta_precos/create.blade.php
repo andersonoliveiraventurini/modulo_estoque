@@ -18,7 +18,7 @@
                                 class="col-span-2" value="{{ old('descricao') }}" />
                             <x-input name="quantidade" label="Quantidade" placeholder="Digite a quantidade" required
                                 class="col-span-2" value="{{ old('quantidade') }}" />
-                            <x-select name="cor" label="Cor">
+                            <x-select name="cor_id" label="Cor">
                                 <option value="">Selecione...</option>
                                 @foreach ($cores as $cor)
                                 <option value="{{ $cor->id }}">{{ $cor->nome }}</option>

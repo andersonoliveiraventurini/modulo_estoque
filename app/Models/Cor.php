@@ -16,4 +16,9 @@ class Cor extends Model
     ];
 
     protected $table = 'cores';
+
+    public function consultaPrecos()
+    {
+        return $this->hasMany(ConsultaPreco::class, 'cor_id');
+    }
 }

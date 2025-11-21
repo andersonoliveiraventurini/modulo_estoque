@@ -225,7 +225,7 @@
                 <th style="width: 20%;">Item</th>
                 <th style="width: 50%;">Descrição</th>
                 <th style="width: 15%;">Quantidade</th>
-                <th style="width: 15%;">Cor/Classificação</th>
+                <th style="width: 15%;">Cor</th>
             </tr>
         </thead>
         <tbody>
@@ -236,8 +236,8 @@
                 <td align="center">
                     @if ($cotacao->cor)
                         <span
-                            style="display:inline-block; width:15px; height:15px; background-color:{{ $cotacao->cor }}; border:1px solid #000; vertical-align:middle;"></span>
-                        {{ $cotacao->cor }}
+                            style="display:inline-block; width:15px; height:15px; background-color:{{ $cotacao->cor->codigo_hex }}; border:1px solid #000; vertical-align:middle;"></span>
+                        {{ $cotacao->cor->nome }}
                     @else
                         ---
                     @endif

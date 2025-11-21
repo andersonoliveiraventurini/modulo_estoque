@@ -39,11 +39,11 @@
                                         .replace(/(?=(\d{3})+(\D))\B/g, '.');
                                     e.target.value = value;
                                 })" />
-                            <x-select name="cor" label="Cor">
+                            <x-select name="cor_id" label="Cor">
                                 <option value="">Selecione...</option>
                                 @foreach ($cores as $cor)
                                     <option value="{{ $cor->id }}"
-                                        {{ old('cor', $consulta->cor ?? '') == $cor->id ? 'selected' : '' }}>
+                                        {{ old('cor_id', $consulta->cor_id ?? '') == $cor->id ? 'selected' : '' }}>
                                         {{ $cor->nome }}
                                     </option>
                                 @endforeach
