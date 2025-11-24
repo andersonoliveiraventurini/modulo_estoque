@@ -175,16 +175,21 @@
         <div
             class="rounded-lg border-2 border-dashed p-8 text-center border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
             <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Nenhum lote de separação em andamento</h3>
-            <p class="text-gray-500 dark:text-gray-400 mt-2 mb-4">
-                Clique no botão abaixo para criar um novo lote e iniciar o processo de separação dos itens deste
-                orçamento.
-            </p>
             @if (in_array($orcamento->status, ['Aprovado']))
+                <p class="text-gray-500 dark:text-gray-400 mt-2 mb-4">
+                    Clique no botão abaixo para criar um novo lote e iniciar o processo de separação dos itens deste
+                    orçamento.
+                </p>
                 <button wire:click="iniciarSeparacao" wire:loading.attr="disabled"
                     class="inline-flex items-center px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition-colors disabled:opacity-50">
                     <span wire:loading.remove wire:target="iniciarSeparacao">Iniciar Nova Separação</span>
                     <span wire:loading wire:target="iniciarSeparacao">Iniciando...</span>
                 </button>
+            @else
+                <div class="text-sm text-gray-500 dark:text-gray-400">
+                    A separação só pode ser iniciada quando o orçamento estiver com status
+                    <span class="font-semibold">Aprovado</span>.
+                </div>
             @endif
         </div>
 
