@@ -186,7 +186,7 @@
                     <span wire:loading wire:target="iniciarSeparacao">Iniciando...</span>
                 </button>
             @else
-                <div class="text-sm text-gray-500 dark:text-gray-400">
+                <div class="text-sm text-gray-500 dark:text-gray-400"><br/>
                     A separação só pode ser iniciada quando o orçamento estiver com status
                     <span class="font-semibold">Aprovado</span>.
                 </div>
