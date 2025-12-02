@@ -37,6 +37,7 @@
                 <tr>
                     @foreach ([
                         'id' => 'Código',
+                        'status' => 'Status',
                         'cor' => 'Cor',
                         'nome' => 'Nome',
                         'descricao' => 'Descrição',
@@ -64,6 +65,12 @@
                             <a href="/produtos/{{ $c->id }}" 
                             class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition" class="hover:underline">
                                 {{ $c->id }}
+                            </a>
+                        </td>
+                        <td class="px-6 py-4">
+                            <a href="/produtos/{{ $c->id }}" 
+                            class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition" class="hover:underline">
+                                {{ $c->status }}
                             </a>
                         </td>
                         <td class="px-6 py-4">
