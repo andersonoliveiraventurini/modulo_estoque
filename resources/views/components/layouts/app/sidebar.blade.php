@@ -24,19 +24,19 @@
         </flux:navlist.group>
         <flux:navlist.group heading="Clientes" expandable :expanded="false">
             <flux:navlist.item icon="home" :href="route('clientes.create')"
-                :current="request()->routeIs('clientes.create')" wire:navigate>{{ __('Pré-cadastro cliente') }}
+                :current="request()->routeIs('clientes.create')" wire:navigate>{{ __('Pré-cadastro') }}
             </flux:navlist.item>
             <flux:navlist.item icon="home" :href="route('clientes.create_completo')"
                 :current="request()->routeIs('clientes.create-completo')" wire:navigate>
                 {{ __('Cadastrar cliente') }}</flux:navlist.item>
             <flux:navlist.item icon="home" :href="route('clientes.index')"
-                :current="request()->routeIs('clientes.index')" wire:navigate>{{ __('Listar clientes') }}
+                :current="request()->routeIs('clientes.index')" wire:navigate>{{ __('Clientes') }}
             </flux:navlist.item>
             <flux:navlist.item icon="home" :href="route('orcamentos.index')"
-                :current="request()->routeIs('orcamentos.index')" wire:navigate>{{ __('Listar orçamentos') }}
+                :current="request()->routeIs('orcamentos.index')" wire:navigate>{{ __('Orçamentos') }}
             </flux:navlist.item>
             <flux:navlist.item icon="home" :href="route('bloqueios.index')"
-                :current="request()->routeIs('bloqueios.index')" wire:navigate>{{ __('Clientes bloqueados') }}
+                :current="request()->routeIs('bloqueios.index')" wire:navigate>{{ __('Bloqueados') }}
             </flux:navlist.item>
         </flux:navlist.group>
 
@@ -92,13 +92,13 @@
 
             <flux:navlist.group heading="Usuário e perfis" expandable :expanded="false">
                 <flux:navlist.item icon="home" :href="route('usuarios.index')"
-                    :current="request()->routeIs('usuarios.index')" wire:navigate>{{ __('Listar usuários') }}
+                    :current="request()->routeIs('usuarios.index')" wire:navigate>{{ __('Usuários') }}
                 </flux:navlist.item>
                 <flux:navlist.item icon="home" :href="route('usuarios.create')"
                     :current="request()->routeIs('usuarios.create')" wire:navigate>{{ __('Criar usuário') }}
                 </flux:navlist.item>
                 <flux:navlist.item icon="home" :href="route('vendedores.index')"
-                    :current="request()->routeIs('vendedores.index')" wire:navigate>{{ __('Listar vendedores') }}
+                    :current="request()->routeIs('vendedores.index')" wire:navigate>{{ __('Vendedores') }}
                 </flux:navlist.item>
                 <flux:navlist.item icon="home" :href="route('vendedores.create')"
                     :current="request()->routeIs('vendedores.create')" wire:navigate>{{ __('Criar vendedor') }}
