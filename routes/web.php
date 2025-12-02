@@ -55,6 +55,7 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('settings/appearance', 'settings.appearance')->name('settings.appearance');
 
     Route::resource('produtos', ProdutoController::class)->names('produtos');
+
     Route::get('/categorias/{id}/subcategorias', [SubCategoriaController::class, 'subcategorias']);
 
     Route::patch('produtos/{produto}/imagens/{imagem}/principal', [ProdutoController::class, 'definirPrincipal'])
@@ -62,7 +63,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::delete('produtos/{produto}/imagens/{imagem}', [ProdutoController::class, 'destroyImagem'])
         ->name('produtos.imagens.destroy');
-
+    
+    Route::get('ativar_produto/{produto_id}', [ProdutoController::class, 'ativar'])->name('produto.ativar');
+    Route::get('inativar_produto/{produto_id}', [ProdutoController::class, 'inativar'])->name('produto.inativar');
+    
     Route::resource('cores', CorController::class)->names('cores');
     Route::resource('categorias', CategoriaController::class)->names('categorias');
     Route::resource('subcategorias', SubCategoriaController::class)->names('subcategorias');

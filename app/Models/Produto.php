@@ -20,6 +20,7 @@ class Produto extends Model
         'id',
         'sku',
         'nome',
+        'status',
         'tipo_produto_sped',
         'ncm',
         'codigo_barras',

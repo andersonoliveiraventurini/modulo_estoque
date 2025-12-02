@@ -28,6 +28,7 @@ class ListaProdutoFixoOrcamento extends Component
     {
         $produtos = Produto::query()
             ->with('fornecedor')
+            ->where('status', 'ativo')
             ->when($this->search, function ($query) {
                 $terms = preg_split('/\s+/', trim($this->search));
                 foreach ($terms as $term) {

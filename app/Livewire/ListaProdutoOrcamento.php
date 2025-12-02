@@ -52,6 +52,7 @@ class ListaProdutoOrcamento extends Component
     {
        $produtos = Produto::query()
     ->with('fornecedor') // já carrega o fornecedor
+    ->where('status', 'ativo')
     ->when($this->search, function ($query) {
         $terms = preg_split('/\s+/', trim($this->search));
 

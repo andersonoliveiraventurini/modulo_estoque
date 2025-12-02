@@ -8,6 +8,21 @@
                 <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
                     <x-heroicon-o-archive-box class="w-5 h-5 text-primary-600" />
                     Detalhes do Produto
+                    @if ($produto->status === 'ativo')
+                        <a href="{{ route('produto.inativar', $produto->id) }}">
+                            <x-button size="sm" variant="danger">
+                                <x-heroicon-o-x-circle class="w-4 h-4" />
+                                Desativar
+                            </x-button>
+                        </a>
+                    @else
+                        <a href="{{ route('produto.ativar', $produto->id) }}">
+                            <x-button size="sm" variant="primary">
+                                <x-heroicon-o-check-circle class="w-4 h-4" />
+                                Ativar
+                            </x-button>
+                        </a>
+                    @endif
                 </h2>
                 <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
                     Informações completas do produto selecionado.
@@ -30,7 +45,6 @@
                             <x-show-field label="Modelo" :value="$produto->modelo" />
                             @if ($produto->cor)
                                 <x-show-field label="Cor" :value="$produto->cor->nome" />
-                                
                             @else
                                 <x-show-field label="Cor" :value="'Sem cor'" />
                             @endif
@@ -127,7 +141,7 @@
 
                 </x-tabs>
 
-                <!-- Botões -->                                  
+                <!-- Botões -->
                 <div class="flex gap-4 mt-6">
                     <a href="{{ route('produtos.edit', $produto) }}">
                         <x-button size="sm" variant="secondary">

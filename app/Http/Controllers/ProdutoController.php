@@ -131,4 +131,24 @@ class ProdutoController extends Controller
             ->route('produtos.index')
             ->with('success', 'Produto deletado com sucesso!');
     }
+
+    public function inativar($produto_id)
+    {
+        $produto = Produto::findOrFail($produto_id);
+        $produto->update(['status' => 'inativo']); 
+
+        return redirect()
+            ->route('produtos.index')
+            ->with('success', 'Produto desativado com sucesso!');
+    }
+
+    public function ativar($produto_id)
+    {
+        $produto = Produto::findOrFail($produto_id);
+        $produto->update(['status' => 'ativo']); 
+
+        return redirect()
+            ->route('produtos.index')
+            ->with('success', 'Produto ativado com sucesso!');
+    }
 }
