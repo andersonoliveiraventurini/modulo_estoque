@@ -5,7 +5,7 @@
             
             <!-- Header do Pagamento -->
             <div class="mb-6">
-                <h2 class="text-xl font-semibold flex items-center gap-2 mb-2">
+                <h2 class="text-xl font-semibold flex items-center gap-2 mb-2 text-gray-900 dark:text-gray-100">
                     <x-heroicon-o-currency-dollar class="w-6 h-6 text-blue-600 dark:text-blue-400" />
                     Pagamento no Balcão - Orçamento #{{ $orcamento->id }}
                 </h2>
@@ -31,14 +31,24 @@
                 </div>
             @endif
 
+            <!-- Mensagens de Sucesso -->
+            @if (session()->has('success'))
+                <div class="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
+                    <div class="flex gap-3">
+                        <x-heroicon-o-check-circle class="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                        <p class="text-sm text-green-700 dark:text-green-300">{{ session('success') }}</p>
+                    </div>
+                </div>
+            @endif
+
             <!-- Informações do Orçamento -->
             <div class="space-y-4 mb-6">
-                <h3 class="text-lg font-medium flex items-center gap-2">
+                <h3 class="text-lg font-medium flex items-center gap-2 text-gray-900 dark:text-gray-100">
                     <x-heroicon-o-document-text class="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     Informações do Orçamento
                 </h3>
                 
-                <div class="ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10 rounded-lg overflow-hidden">
+                <div class="ring-1 ring-gray-200 dark:ring-gray-700 rounded-lg overflow-hidden">
                     <div class="bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                         <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Dados do Orçamento</h4>
                     </div>
@@ -84,12 +94,12 @@
             <!-- Formas de Pagamento -->
             <div class="space-y-4 mb-6">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-medium flex items-center gap-2">
+                    <h3 class="text-lg font-medium flex items-center gap-2 text-gray-900 dark:text-gray-100">
                         <x-heroicon-o-credit-card class="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         Formas de Pagamento
                     </h3>
                     <button type="button" wire:click="adicionarFormaPagamento"
-                            class="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium">
+                            class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-sm">
                         <x-heroicon-o-plus class="w-4 h-4" />
                         Adicionar Forma
                     </button>
@@ -97,15 +107,16 @@
 
                 <div class="space-y-3">
                     @forelse($formasPagamento as $index => $forma)
-                        <div class="ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10 rounded-lg overflow-hidden" 
+                        <div class="ring-1 ring-gray-200 dark:ring-gray-700 rounded-lg overflow-hidden" 
                              wire:key="forma-{{ $index }}">
                             <div class="bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Forma #{{ $index + 1 }}</span>
                                     @if (count($formasPagamento) > 1)
                                         <button type="button" wire:click="removerFormaPagamento({{ $index }})"
-                                                class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm">
+                                                class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm flex items-center gap-1">
                                             <x-heroicon-o-trash class="w-4 h-4" />
+                                            Remover
                                         </button>
                                     @endif
                                 </div>
@@ -114,10 +125,10 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            Forma de Pagamento
+                                            Forma de Pagamento *
                                         </label>
                                         <select wire:model.live="formasPagamento.{{ $index }}.condicao_id" 
-                                                class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500">
+                                                class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                             <option value="">Selecione...</option>
                                             @foreach ($condicoesPagamento as $condicao)
                                                 <option value="{{ $condicao->id }}">{{ $condicao->nome }}</option>
@@ -129,10 +140,10 @@
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            Valor
+                                            Valor *
                                         </label>
                                         <input type="number" wire:model.live="formasPagamento.{{ $index }}.valor"
-                                               class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                               class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                step="0.01" min="0" placeholder="0,00">
                                         @error('formasPagamento.' . $index . '.valor')
                                             <p class="text-xs text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
@@ -149,7 +160,7 @@
                     @endforelse
 
                     <!-- Valor Restante -->
-                    @if ($valorComDesconto - $valorPago > 0)
+                    @if ($valorComDesconto - $valorPago > 0.01)
                         <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                             <div class="flex items-center justify-between gap-3">
                                 <div class="flex items-center gap-2">
@@ -162,7 +173,7 @@
                                     </div>
                                 </div>
                                 <button type="button" wire:click="preencherRestante"
-                                        class="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                        class="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
                                     <x-heroicon-o-sparkles class="w-4 h-4" />
                                     <span>Preencher</span>
                                 </button>
@@ -181,7 +192,7 @@
                                         A condição original era PIX/Dinheiro com desconto. Ao usar cartão, você pode remover o desconto original.
                                     </p>
                                     <button type="button" wire:click="removerDescontoOriginal"
-                                            class="bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors">
+                                            class="bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors shadow-sm">
                                         Remover Desconto Original
                                     </button>
                                 </div>
@@ -195,12 +206,12 @@
 
             <!-- Desconto no Balcão -->
             <div class="space-y-4 mb-6">
-                <h3 class="text-lg font-medium flex items-center gap-2">
+                <h3 class="text-lg font-medium flex items-center gap-2 text-gray-900 dark:text-gray-100">
                     <x-heroicon-o-tag class="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     Desconto no Balcão (até 3%)
                 </h3>
                 
-                <div class="ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10 rounded-lg overflow-hidden">
+                <div class="ring-1 ring-gray-200 dark:ring-gray-700 rounded-lg overflow-hidden">
                     <div class="bg-white dark:bg-zinc-900 p-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -208,7 +219,7 @@
                                     Valor do Desconto
                                 </label>
                                 <input type="number" wire:model.live="descontoBalcao"
-                                       class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                       class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                        step="0.01" min="0" max="{{ $orcamento->valor_total_itens * 0.03 }}" placeholder="0,00">
                                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     Máximo: R$ {{ number_format($orcamento->valor_total_itens * 0.03, 2, ',', '.') }}
@@ -239,12 +250,12 @@
 
             <!-- Documento Fiscal -->
             <div class="space-y-4 mb-6">
-                <h3 class="text-lg font-medium flex items-center gap-2">
+                <h3 class="text-lg font-medium flex items-center gap-2 text-gray-900 dark:text-gray-100">
                     <x-heroicon-o-document-text class="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     Documento Fiscal
                 </h3>
                 
-                <div class="ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10 rounded-lg overflow-hidden">
+                <div class="ring-1 ring-gray-200 dark:ring-gray-700 rounded-lg overflow-hidden">
                     <div class="bg-white dark:bg-zinc-900 p-4 space-y-4">
                         <label class="flex items-center gap-3 cursor-pointer">
                             <input type="checkbox" wire:model.live="precisaNotaFiscal"
@@ -263,29 +274,6 @@
                                         </p>
                                     </div>
                                 </div>
-
-                                {{--<label class="flex items-center gap-3 cursor-pointer">
-                                    <input type="checkbox" wire:model.live="notaOutroCnpjCpf"
-                                           class="w-4 h-4 text-blue-600 bg-white dark:bg-zinc-800 border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500"
-                                           id="notaOutroCnpjCpf-{{ $orcamentoId }}">
-                                    <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        A nota sai para outro CNPJ ou CPF?
-                                    </span>
-                                </label>
-
-                                @if ($notaOutroCnpjCpf)
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            CNPJ/CPF
-                                        </label>
-                                        <input type="text" wire:model="cnpjCpfNota"
-                                               class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
-                                               placeholder="Digite o CNPJ ou CPF">
-                                        @error('cnpjCpfNota')
-                                            <p class="text-xs text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
-                                        @enderror
-                                    </div>
-                                @endif--}}
                             </div>
                         @else
                             <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
@@ -304,13 +292,13 @@
             <hr class="my-6 border-gray-200 dark:border-gray-700" />
 
             <!-- Resumo do Pagamento -->
-            <div class="space-y-4">
-                <h3 class="text-lg font-medium flex items-center gap-2">
+            <div class="space-y-4 mb-6">
+                <h3 class="text-lg font-medium flex items-center gap-2 text-gray-900 dark:text-gray-100">
                     <x-heroicon-o-calculator class="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     Resumo do Pagamento
                 </h3>
 
-                <div class="ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10 rounded-lg overflow-hidden">
+                <div class="ring-1 ring-gray-200 dark:ring-gray-700 rounded-lg overflow-hidden">
                     <div class="bg-green-600 dark:bg-green-700 px-4 py-3 border-b border-green-700 dark:border-green-800">
                         <h4 class="text-sm font-semibold text-white">Valores Finais</h4>
                     </div>
@@ -342,14 +330,14 @@
                         
                         <div class="flex justify-between items-center py-3 border-t-2 border-gray-300 dark:border-gray-600">
                             <span class="text-base font-bold text-gray-900 dark:text-gray-100">Valor a Pagar:</span>
-                            <span class="text-xl font-bold text-green-700 dark:text-green-400">
+                            <span class="text-xl font-bold text-green-600 dark:text-green-400">
                                 R$ {{ number_format($valorComDesconto, 2, ',', '.') }}
                             </span>
                         </div>
                         
                         <div class="flex justify-between items-center py-3 border-t-2 border-gray-300 dark:border-gray-600">
                             <span class="text-base font-bold text-gray-900 dark:text-gray-100">Valor Pago:</span>
-                            <span class="text-xl font-bold text-blue-600 dark:text-blue-400">
+                            <span class="text-xl font-bold {{ $valorPago >= $valorComDesconto ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400' }}">
                                 R$ {{ number_format($valorPago, 2, ',', '.') }}
                             </span>
                         </div>
@@ -383,12 +371,18 @@
             <!-- Ações -->
             <div class="flex gap-4 mt-6">
                 <button type="button" wire:click="$toggle('showModal')"
-                        class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                        class="bg-gray-500 hover:bg-gray-600 text-white font-medium px-6 py-3 rounded-lg transition-colors shadow-sm">
                     Cancelar
                 </button>
-                <button type="button" wire:click="finalizarPagamento" wire:loading.attr="disabled"
+                <button type="button" 
+                        wire:click="finalizarPagamento" 
+                        wire:loading.attr="disabled"
                         @if ($valorPago < $valorComDesconto) disabled @endif
-                        class="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed dark:disabled:bg-gray-700 text-white font-medium px-6 py-2 rounded-lg transition-colors">
+                        class="flex items-center gap-2 font-medium px-6 py-3 rounded-lg transition-colors shadow-sm
+                               {{ $valorPago >= $valorComDesconto 
+                                  ? 'bg-green-600 hover:bg-green-700 text-white cursor-pointer' 
+                                  : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' }}
+                               disabled:opacity-50 disabled:cursor-not-allowed">
                     <span wire:loading.remove wire:target="finalizarPagamento" class="flex items-center gap-2">
                         <x-heroicon-o-check-circle class="w-5 h-5" />
                         <span>Finalizar Pagamento</span>
