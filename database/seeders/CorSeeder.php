@@ -28,5 +28,6 @@ class CorSeeder extends Seeder
         Cor::create(['nome' => 'Prata', 'codigo_hex' => '#C0C0C0']);
         Cor::create(['nome' => 'Dourado', 'codigo_hex' => '#FFD700']);
         Cor::create(['nome' => 'Bege', 'codigo_hex' => '#F5F5DC']);
+        Cor::create(['nome' => 'Fosco', 'codigo_hex' => '#708090']);
     }
 }

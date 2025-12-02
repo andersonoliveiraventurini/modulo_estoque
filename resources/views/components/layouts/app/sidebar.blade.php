@@ -94,6 +94,9 @@
                 <flux:navlist.item icon="home" :href="route('usuarios.index')"
                     :current="request()->routeIs('usuarios.index')" wire:navigate>{{ __('Listar usuários') }}
                 </flux:navlist.item>
+                <flux:navlist.item icon="home" :href="route('usuarios.create')"
+                    :current="request()->routeIs('usuarios.create')" wire:navigate>{{ __('Criar usuário') }}
+                </flux:navlist.item>
                 <flux:navlist.item icon="home" :href="route('vendedores.index')"
                     :current="request()->routeIs('vendedores.index')" wire:navigate>{{ __('Listar vendedores') }}
                 </flux:navlist.item>
