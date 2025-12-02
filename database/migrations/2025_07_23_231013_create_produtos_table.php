@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('sku')->nullable()->comment('Stock Keeping Unit - Código único para identificar o produto em estoque.');
             $table->string('nome');
+            $table->enum('status', ['ativo', 'inativo'])->default('ativo');
             $table->string('tipo_produto_sped')->nullable()->comment('Tipo do produto conforme a classificação do SPED - Indica a categoria do produto segundo as normas do Sistema Público de Escrituração Digital (SPED).');
             $table->string('ncm')->nullable()->comment('Nomenclatura Comum do Mercosul - Código utilizado para identificar a natureza de um produto no comércio internacional.');
             $table->string('codigo_barras')->nullable()->comment('Código de barras - Código utilizado para identificar o produto de forma única.');
