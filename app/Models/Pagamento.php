@@ -83,11 +83,11 @@ class Pagamento extends Model
     }
 
     /**
-     * Relacionamento com Métodos de Pagamento utilizados
+     * Relacionamento com Formas de Pagamento utilizadas (NOVO)
      */
-    public function metodos()
+    public function formas()
     {
-        return $this->hasMany(PagamentoMetodo::class);
+        return $this->hasMany(PagamentoForma::class);
     }
 
     /**
@@ -96,7 +96,7 @@ class Pagamento extends Model
     public function movimentacoesCredito()
     {
         return $this->hasMany(ClienteCreditoMovimentacoes::class, 'referencia_id')
-            ->where('referencia_tipo', 'pagamento');
+            ->where('referencia_tipo', 'orcamento');
     }
 
     /**
@@ -116,6 +116,30 @@ class Pagamento extends Model
     }
 
     /**
+     * Verifica se o pagamento utilizou créditos
+     */
+    public function utilizouCreditos()
+    {
+        return $this->formas()->where('usa_credito', true)->exists();
+    }
+
+    /**
+     * Obtém o valor total pago com créditos
+     */
+    public function getValorCreditosAttribute()
+    {
+        return $this->formas()->where('usa_credito', true)->sum('valor');
+    }
+
+    /**
+     * Obtém o valor total pago com outros métodos
+     */
+    public function getValorOutrosMetodosAttribute()
+    {
+        return $this->formas()->where('usa_credito', false)->sum('valor');
+    }
+
+     /**
      * Scope para pagamentos de um orçamento específico
      */
     public function scopeDoOrcamento($query, $orcamentoId)
@@ -145,77 +169,5 @@ class Pagamento extends Model
     public function scopeNoPeriodo($query, $dataInicio, $dataFim)
     {
         return $query->whereBetween('data_pagamento', [$dataInicio, $dataFim]);
-    }
-
-    /**
-     * Verifica se o pagamento utilizou créditos
-     */
-    public function utilizouCreditos()
-    {
-        return $this->metodos()->where('usa_credito', true)->exists();
-    }
-
-    /**
-     * Obtém o valor total pago com créditos
-     */
-    public function getValorCreditosAttribute()
-    {
-        return $this->metodos()->where('usa_credito', true)->sum('valor');
-    }
-
-    /**
-     * Obtém o valor total pago com outros métodos
-     */
-    public function getValorOutrosMetodosAttribute()
-    {
-        return $this->metodos()->where('usa_credito', false)->sum('valor');
-    }
-
-    /**
-     * Accessor para formatar o valor final
-     */
-    public function getValorFinalFormatadoAttribute()
-    {
-        return 'R$ ' . number_format($this->valor_final, 2, ',', '.');
-    }
-
-    /**
-     * Accessor para formatar o valor pago
-     */
-    public function getValorPagoFormatadoAttribute()
-    {
-        return 'R$ ' . number_format($this->valor_pago, 2, ',', '.');
-    }
-
-    /**
-     * Accessor para formatar o troco
-     */
-    public function getTrocoFormatadoAttribute()
-    {
-        return 'R$ ' . number_format($this->troco, 2, ',', '.');
-    }
-
-    /**
-     * Obtém o tipo de registro (orçamento ou pedido)
-     */
-    public function getTipoRegistroAttribute()
-    {
-        return $this->orcamento_id ? 'orcamento' : 'pedido';
-    }
-
-    /**
-     * Obtém o número do registro
-     */
-    public function getNumeroRegistroAttribute()
-    {
-        return $this->orcamento_id ?? $this->pedido_id;
-    }
-
-    /**
-     * Obtém o registro completo (orçamento ou pedido)
-     */
-    public function getRegistroAttribute()
-    {
-        return $this->orcamento ?? $this->pedido;
     }
 }

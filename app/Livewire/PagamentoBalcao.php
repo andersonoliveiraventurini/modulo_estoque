@@ -2,409 +2,343 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
 use App\Models\Orcamento;
 use App\Models\CondicoesPagamento;
-use App\Services\CreditoService;
+use App\Models\MetodoPagamento;
+use App\Services\PagamentoService;
+use Livewire\Component;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class PagamentoBalcao extends Component
 {
-    // ID do orçamento
+    public $showModal = false;
     public $orcamentoId;
     public $orcamento;
-
-    // Formas de pagamento
+    
+    public $formasPagamento = [];
     public $condicoesPagamento = [];
-    public $formasPagamento = []; // Array para as formas selecionadas
-
-    // Descontos
+    
     public $descontoBalcao = 0;
-    public $descontoAplicado = 0;
     public $descontoOriginal = 0;
-    public $creditos = 0;
-    public $creditosUtilizados = 0; // Total de créditos sendo usados neste pagamento
-
-    // Nota Fiscal
+    public $descontoAplicado = 0;
+    
     public $precisaNotaFiscal = false;
     public $notaOutroCnpjCpf = false;
     public $cnpjCpfNota = '';
-
-    // Controle
-    public $showModal = false;
-    public $podeAplicarDesconto = true;
-
-    // Valores calculados
+    
     public $valorPago = 0;
     public $valorComDesconto = 0;
     public $troco = 0;
 
-    protected $rules = [
-        'formasPagamento.*.valor' => 'required|numeric|min:0.01',
-        'descontoBalcao' => 'nullable|numeric|min:0',
-        'cnpjCpfNota' => 'required_if:notaOutroCnpjCpf,true',
-    ];
+    protected $pagamentoService;
+
+    public function boot(PagamentoService $pagamentoService)
+    {
+        $this->pagamentoService = $pagamentoService;
+    }
 
     public function mount($orcamentoId)
     {
         $this->orcamentoId = $orcamentoId;
-        $this->orcamento = Orcamento::with(['cliente', 'vendedor', 'condicaoPagamento'])->findOrFail($orcamentoId);
-
-        // Inicializar valores
-        $this->descontoAplicado = $this->orcamento->desconto ?? 0;
-        $this->descontoOriginal = $this->descontoAplicado;
-        $this->valorComDesconto = $this->orcamento->valor_total_itens - $this->descontoAplicado;
-
-        // Carregar condições de pagamento disponíveis
-        $this->condicoesPagamento = CondicoesPagamento::all();
-
-        // Inicializar com uma forma de pagamento vazia
-        $this->formasPagamento = [
-            ['tipo' => 'normal', 'condicao_id' => '', 'valor' => 0]
-        ];
-
-        // Buscar créditos disponíveis do cliente
-        $creditoService = app(CreditoService::class);
-        $this->creditos = $creditoService->getSaldoDisponivel($this->orcamento->cliente_id);
-
+        $this->carregarOrcamento();
+        $this->carregarCondicoesPagamento();
+        $this->inicializarFormaPagamento();
         $this->calcularValores();
     }
 
-    public function updated($propertyName)
+    public function carregarOrcamento()
     {
-        if (
-            str_starts_with($propertyName, 'formasPagamento') ||
-            $propertyName === 'descontoBalcao'
-        ) {
-            $this->calcularValores();
-        }
+        $this->orcamento = Orcamento::with(['cliente', 'vendedor', 'condicaoPagamento', 'itens'])
+            ->findOrFail($this->orcamentoId);
+        
+        $this->descontoOriginal = $this->orcamento->desconto ?? 0;
+        $this->descontoAplicado = $this->descontoOriginal;
     }
 
-    public function calcularValores()
+    public function carregarCondicoesPagamento()
     {
-        // Calcular valor pago e créditos utilizados
-        $this->valorPago = 0;
-        $this->creditosUtilizados = 0;
-
-        foreach ($this->formasPagamento as $forma) {
-            $valor = floatval($forma['valor'] ?? 0);
-            $this->valorPago += $valor;
-
-            if (isset($forma['tipo']) && $forma['tipo'] === 'credito') {
-                $this->creditosUtilizados += $valor;
-            }
-        }
-
-        // Limitar desconto de balcão a 3%
-        $maxDesconto = $this->orcamento->valor_total_itens * 0.03;
-        if ($this->descontoBalcao > $maxDesconto) {
-            $this->descontoBalcao = $maxDesconto;
-        }
-
-        // Verificar se pode aplicar desconto no balcão
-        $this->podeAplicarDesconto = $this->validarDescontoBalcao();
-
-        // Se não pode aplicar desconto, zerar
-        if (!$this->podeAplicarDesconto) {
-            $this->descontoBalcao = 0;
-        }
-
-        // Calcular valor com desconto
-        $this->valorComDesconto = $this->orcamento->valor_total_itens
-            - $this->descontoAplicado
-            - $this->descontoBalcao;
-
-        // Calcular troco
-        $this->troco = max(0, $this->valorPago - $this->valorComDesconto);
+        $this->condicoesPagamento = MetodoPagamento::ativos()
+            ->ordenado()
+            ->get();
     }
 
-    public function validarDescontoBalcao()
+    public function inicializarFormaPagamento()
     {
-        // Desconto de balcão só pode ser aplicado se:
-        // 1. Não houver desconto original
-        // 2. Todas as formas de pagamento sejam PIX ou Dinheiro
-
-        if ($this->descontoOriginal > 0 && $this->descontoAplicado > 0) {
-            return false;
-        }
-
-        $condicoesPix = $this->condicoesPagamento
-            ->whereIn('nome', ['PIX', 'Dinheiro', 'À Vista'])
-            ->pluck('id')
-            ->toArray();
-
-        foreach ($this->formasPagamento as $forma) {
-            // Créditos são permitidos
-            if (isset($forma['tipo']) && $forma['tipo'] === 'credito') {
-                continue;
-            }
-
-            // Se não for PIX/Dinheiro, não pode desconto
-            if (!in_array($forma['condicao_id'] ?? null, $condicoesPix)) {
-                return false;
-            }
-        }
-
-        return true;
+        $this->formasPagamento = [
+            [
+                'condicao_id' => '',
+                'valor' => 0,
+                'usa_credito' => false,
+                'parcelas' => 1,
+            ]
+        ];
     }
 
     public function adicionarFormaPagamento()
     {
         $this->formasPagamento[] = [
-            'tipo' => 'normal',
             'condicao_id' => '',
-            'valor' => 0
+            'valor' => 0,
+            'usa_credito' => false,
+            'parcelas' => 1,
         ];
     }
 
     public function removerFormaPagamento($index)
     {
-        // Não permitir remover se for a única forma
-        if (count($this->formasPagamento) <= 1) {
-            return;
+        if (count($this->formasPagamento) > 1) {
+            unset($this->formasPagamento[$index]);
+            $this->formasPagamento = array_values($this->formasPagamento);
+            $this->calcularValores();
         }
-
-        unset($this->formasPagamento[$index]);
-        $this->formasPagamento = array_values($this->formasPagamento);
-        $this->calcularValores();
     }
-
-    // ========== MÉTODOS DE CRÉDITOS ==========
-
-    /**
-     * Adiciona uma nova forma de pagamento com créditos
-     */
-    public function adicionarCreditos()
-    {
-        if ($this->creditos <= 0) {
-            session()->flash('error', 'Cliente não possui créditos disponíveis.');
-            return;
-        }
-
-        // Verificar se já não está usando todos os créditos
-        if ($this->creditosUtilizados >= $this->creditos) {
-            session()->flash('error', 'Todos os créditos disponíveis já estão sendo utilizados.');
-            return;
-        }
-
-        $this->formasPagamento[] = [
-            'tipo' => 'credito',
-            'condicao_id' => null,
-            'valor' => 0
-        ];
-    }
-
-    /**
-     * Adiciona o valor máximo de créditos disponível ou o valor restante
-     */
-    public function usarTodosCreditos()
-    {
-        if ($this->creditos <= 0) {
-            session()->flash('error', 'Cliente não possui créditos disponíveis.');
-            return;
-        }
-
-        $valorRestante = $this->valorComDesconto - $this->valorPago;
-        $creditosDisponiveis = $this->creditos - $this->creditosUtilizados;
-        $valorUsar = min($creditosDisponiveis, $valorRestante);
-
-        if ($valorUsar <= 0) {
-            session()->flash('info', 'Não há valor restante para pagar ou todos os créditos já foram utilizados.');
-            return;
-        }
-
-        $this->formasPagamento[] = [
-            'tipo' => 'credito',
-            'condicao_id' => null,
-            'valor' => round($valorUsar, 2)
-        ];
-
-        $this->calcularValores();
-    }
-
-    /**
-     * Paga o total da compra usando apenas créditos
-     */
-    public function usarCreditosExatos()
-    {
-        if ($this->creditos < $this->valorComDesconto) {
-            session()->flash('error', 'Créditos insuficientes para pagar o valor total.');
-            return;
-        }
-
-        $this->formasPagamento = [[
-            'tipo' => 'credito',
-            'condicao_id' => null,
-            'valor' => round($this->valorComDesconto, 2)
-        ]];
-
-        $this->calcularValores();
-    }
-
-    // ========== FIM MÉTODOS DE CRÉDITOS ==========
 
     public function preencherRestante()
     {
         $valorRestante = $this->valorComDesconto - $this->valorPago;
-
-        if ($valorRestante <= 0) {
-            session()->flash('info', 'Não há valor restante para preencher.');
-            return;
+        
+        if ($valorRestante > 0) {
+            $ultimoIndex = count($this->formasPagamento) - 1;
+            $this->formasPagamento[$ultimoIndex]['valor'] = number_format($valorRestante, 2, '.', '');
+            $this->calcularValores();
         }
-
-        // Adicionar nova forma de pagamento com o valor restante
-        $this->formasPagamento[] = [
-            'tipo' => 'normal',
-            'condicao_id' => '',
-            'valor' => round($valorRestante, 2)
-        ];
-
-        $this->calcularValores();
-    }
-
-    public function usandoCartao()
-    {
-        // Verifica se alguma forma de pagamento é cartão
-        $condicoesCartao = $this->condicoesPagamento
-            ->whereIn('nome', ['Cartão de Crédito', 'Cartão de Débito', 'Crédito', 'Débito'])
-            ->pluck('id')
-            ->toArray();
-
-        foreach ($this->formasPagamento as $forma) {
-            if (isset($forma['tipo']) && $forma['tipo'] === 'credito') {
-                continue;
-            }
-            
-            if (in_array($forma['condicao_id'] ?? null, $condicoesCartao)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public function removerDescontoOriginal()
     {
         $this->descontoAplicado = 0;
         $this->calcularValores();
+    }
 
-        session()->flash('success', 'Desconto original removido com sucesso!');
+    public function updated($propertyName)
+    {
+        if (str_starts_with($propertyName, 'formasPagamento') || 
+            $propertyName === 'descontoBalcao' || 
+            $propertyName === 'descontoAplicado') {
+            $this->calcularValores();
+        }
+
+        if (str_starts_with($propertyName, 'formasPagamento')) {
+            $this->verificarUsoCreditoCliente();
+        }
+    }
+
+    protected function verificarUsoCreditoCliente()
+    {
+        foreach ($this->formasPagamento as $index => $forma) {
+            if (!empty($forma['condicao_id'])) {
+                $metodo = MetodoPagamento::find($forma['condicao_id']);
+                if ($metodo && $metodo->isCreditoCliente()) {
+                    $this->formasPagamento[$index]['usa_credito'] = true;
+                }
+            }
+        }
+    }
+
+    public function calcularValores()
+    {
+        $valorTotal = $this->orcamento->valor_total_itens ?? 0;
+        
+        $maxDescontoBalcao = $valorTotal * 0.03;
+        if ($this->descontoBalcao > $maxDescontoBalcao) {
+            $this->descontoBalcao = $maxDescontoBalcao;
+        }
+
+        $descontoTotal = $this->descontoAplicado + $this->descontoBalcao;
+        $this->valorComDesconto = max(0, $valorTotal - $descontoTotal);
+
+        $this->valorPago = 0;
+        foreach ($this->formasPagamento as $forma) {
+            $this->valorPago += (float) ($forma['valor'] ?? 0);
+        }
+
+        $this->troco = max(0, $this->valorPago - $this->valorComDesconto);
+    }
+
+    public function usandoCartao()
+    {
+        foreach ($this->formasPagamento as $forma) {
+            if (!empty($forma['condicao_id'])) {
+                $metodo = MetodoPagamento::find($forma['condicao_id']);
+                if ($metodo && in_array($metodo->tipo, ['cartao_credito', 'cartao_debito'])) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public function finalizarPagamento()
     {
-        // Validação customizada para formas de pagamento
-        $this->validate([
-            'descontoBalcao' => 'nullable|numeric|min:0',
-            'cnpjCpfNota' => 'required_if:notaOutroCnpjCpf,true',
+        // 🔍 PONTO DE DEBUG 1: Verificar se o método foi chamado
+        // dd('🎯 PONTO 1: Método finalizarPagamento foi chamado!', [
+        //     'orcamento_id' => $this->orcamentoId,
+        //     'valor_pago' => $this->valorPago,
+        //     'valor_com_desconto' => $this->valorComDesconto,
+        //     'formas_pagamento' => $this->formasPagamento,
+        // ]);
+
+        // Log para acompanhar execução
+        logger('🟢 Iniciando processamento de pagamento', [
+            'orcamento_id' => $this->orcamentoId,
+            'valor_pago' => $this->valorPago,
         ]);
 
-        // Validar cada forma de pagamento
-        foreach ($this->formasPagamento as $index => $forma) {
-            if (isset($forma['tipo']) && $forma['tipo'] === 'credito') {
-                // Validar créditos
-                if (empty($forma['valor']) || $forma['valor'] <= 0) {
-                    session()->flash('error', "Forma de pagamento #" . ($index + 1) . ": valor do crédito deve ser maior que zero.");
-                    return;
-                }
+        try {
+            // Valida os dados antes de enviar
+            $this->validarDadosPagamento();
+            
+            logger('✅ Validação passou');
 
-                if ($forma['valor'] > $this->creditos) {
-                    session()->flash('error', "Forma de pagamento #" . ($index + 1) . ": valor excede os créditos disponíveis.");
-                    return;
-                }
-            } else {
-                // Validar formas normais
-                if (empty($forma['condicao_id'])) {
-                    session()->flash('error', "Forma de pagamento #" . ($index + 1) . ": selecione uma condição de pagamento.");
-                    return;
-                }
+            // Prepara os dados para o service
+            $dadosPagamento = $this->prepararDadosPagamento();
 
-                if (empty($forma['valor']) || $forma['valor'] <= 0) {
-                    session()->flash('error', "Forma de pagamento #" . ($index + 1) . ": valor deve ser maior que zero.");
-                    return;
+            // 🔍 PONTO DE DEBUG 2: Verificar dados preparados
+            // dd('🎯 PONTO 2: Dados preparados para o Service', [
+            //     'dados_pagamento' => $dadosPagamento,
+            //     'metodos_pagamento' => $dadosPagamento['metodos_pagamento'],
+            // ]);
+
+            logger('📦 Dados preparados', ['dados' => $dadosPagamento]);
+
+            // Processa o pagamento
+            $resultado = $this->pagamentoService->salvarPagamentoVenda($dadosPagamento);
+
+            // 🔍 PONTO DE DEBUG 3: Verificar resultado
+            // dd('🎯 PONTO 3: Pagamento processado com sucesso!', [
+            //     'pagamento_id' => $resultado['pagamento']->id,
+            //     'resultado_completo' => $resultado,
+            // ]);
+
+            logger('💾 Pagamento salvo com sucesso', [
+                'pagamento_id' => $resultado['pagamento']->id,
+            ]);
+
+            // Sucesso! Exibe mensagem
+            session()->flash('success', $resultado['mensagem']);
+            
+            // Emite evento de sucesso
+            $this->dispatch('pagamento-finalizado', [
+                'pagamentoId' => $resultado['pagamento']->id,
+                'numeroDocumento' => $resultado['pagamento']->numero_documento,
+            ]);
+
+            // Fecha o modal
+            $this->showModal = false;
+
+            // Redireciona
+            return redirect()->route('orcamentos.index')
+                ->with('success', 'Pagamento realizado com sucesso!');
+
+        } catch (ValidationException $e) {
+            // Erros de validação
+            logger('❌ Erro de validação', ['erros' => $e->errors()]);
+            
+            $this->addError('geral', 'Por favor, corrija os erros abaixo:');
+            foreach ($e->errors() as $field => $messages) {
+                foreach ($messages as $message) {
+                    $this->addError($field, $message);
                 }
             }
-        }
-
-        // Validar se o valor total é suficiente
-        if ($this->valorPago < $this->valorComDesconto) {
-            session()->flash('error', 'Valor pago insuficiente! Falta: R$ ' . number_format($this->valorComDesconto - $this->valorPago, 2, ',', '.'));
-            return;
-        }
-
-        // Validar se não está usando mais créditos do que possui
-        if ($this->creditosUtilizados > $this->creditos) {
-            session()->flash('error', 'O valor total de créditos utilizados excede o disponível!');
-            return;
-        }
-
-        try {
-            DB::transaction(function () {
-                $creditoService = app(CreditoService::class);
-
-                // Processar cada forma de pagamento
-                foreach ($this->formasPagamento as $forma) {
-                    if (isset($forma['tipo']) && $forma['tipo'] === 'credito') {
-                        // Utilizar créditos
-                        $resultado = $creditoService->utilizarCreditos(
-                            $this->orcamento->cliente_id,
-                            $forma['valor'],
-                            $this->orcamento->id,
-                            'orcamento',
-                            auth()->id(),
-                            "Pagamento do orçamento #{$this->orcamento->id}"
-                        );
-
-                        if (!$resultado['sucesso']) {
-                            throw new \Exception('Erro ao utilizar créditos: créditos insuficientes');
-                        }
-                    } else {
-                        // Processar pagamento normal
-                        // TODO: Implementar lógica de pagamento normal
-                        // Exemplo: registrar em uma tabela de pagamentos
-                    }
-                }
-
-                // Se houver troco, gerar crédito para o cliente
-                if ($this->troco > 0) {
-                    $creditoService->gerarCreditoTroco(
-                        $this->orcamento->cliente_id,
-                        $this->troco,
-                        $this->orcamento->id,
-                        'orcamento',
-                        auth()->id(),
-                        "Troco gerado no pagamento do orçamento #{$this->orcamento->id}"
-                    );
-                }
-
-                // Atualizar status do orçamento
-                $this->orcamento->update([
-                    'status' => 'pago',
-                    'desconto_balcao' => $this->descontoBalcao,
-                    'desconto_aplicado' => $this->descontoAplicado,
-                    'valor_final' => $this->valorComDesconto,
-                    'valor_pago' => $this->valorPago,
-                    'troco' => $this->troco,
-                    'precisa_nota_fiscal' => $this->precisaNotaFiscal,
-                    'data_pagamento' => now(),
-                ]);
-
-                // TODO: Gerar nota fiscal ou cupom
-                // TODO: Registrar os pagamentos em uma tabela específica
-
-                session()->flash('success', 'Pagamento realizado com sucesso!' . 
-                    ($this->troco > 0 ? ' Troco de R$ ' . number_format($this->troco, 2, ',', '.') . ' convertido em créditos.' : ''));
-            });
-
-            return redirect()->route('orcamentos.index');
-
         } catch (\Exception $e) {
-            session()->flash('error', 'Erro ao processar pagamento: ' . $e->getMessage());
-            \Log::error('Erro no pagamento do orçamento #' . $this->orcamentoId, [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+            // Outros erros
+            logger('❌ ERRO no processamento', [
+                'mensagem' => $e->getMessage(),
+                'arquivo' => $e->getFile(),
+                'linha' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
             ]);
+
+            // 🔍 PONTO DE DEBUG 4: Ver detalhes do erro
+            // dd('🎯 PONTO 4: Erro capturado!', [
+            //     'mensagem' => $e->getMessage(),
+            //     'arquivo' => $e->getFile(),
+            //     'linha' => $e->getLine(),
+            //     'dados_enviados' => $dadosPagamento ?? 'não preparados',
+            // ]);
+
+            $this->addError('geral', $e->getMessage());
+            session()->flash('error', $e->getMessage());
         }
+    }
+
+    protected function validarDadosPagamento()
+    {
+        $formasValidas = array_filter($this->formasPagamento, function ($forma) {
+            return !empty($forma['condicao_id']) && !empty($forma['valor']) && $forma['valor'] > 0;
+        });
+
+        if (empty($formasValidas)) {
+            throw new \Exception('É necessário adicionar pelo menos uma forma de pagamento válida.');
+        }
+
+        if ($this->valorPago < $this->valorComDesconto) {
+            $faltando = $this->valorComDesconto - $this->valorPago;
+            throw new \Exception(
+                'Valor pago insuficiente! Falta: R$ ' . number_format($faltando, 2, ',', '.')
+            );
+        }
+
+        $maxDesconto = $this->orcamento->valor_total_itens * 0.03;
+        if ($this->descontoBalcao > $maxDesconto) {
+            throw new \Exception(
+                'Desconto de balcão não pode ser maior que 3% do valor total.'
+            );
+        }
+
+        if ($this->precisaNotaFiscal && $this->notaOutroCnpjCpf && empty($this->cnpjCpfNota)) {
+            throw new \Exception('CNPJ/CPF da nota fiscal é obrigatório quando selecionado.');
+        }
+    }
+
+    protected function prepararDadosPagamento()
+    {
+        $formasValidas = array_filter($this->formasPagamento, function ($forma) {
+            return !empty($forma['condicao_id']) && !empty($forma['valor']) && $forma['valor'] > 0;
+        });
+
+        $metodosPagamento = [];
+        foreach ($formasValidas as $forma) {
+            $metodo = MetodoPagamento::find($forma['condicao_id']);
+            
+            $metodosPagamento[] = [
+                'metodo_id' => $forma['condicao_id'],
+                'valor' => (float) $forma['valor'],
+                'usa_credito' => $metodo && $metodo->isCreditoCliente(),
+                'parcelas' => (int) ($forma['parcelas'] ?? 1),
+            ];
+        }
+
+        return [
+            'orcamento_id' => $this->orcamentoId,
+            'condicao_pagamento_id' => $this->orcamento->condicao_pagamento_id ?? 1,
+            'metodos_pagamento' => $metodosPagamento,
+            'desconto_balcao' => (float) $this->descontoBalcao,
+            'tipo_documento' => $this->precisaNotaFiscal ? 'nota_fiscal' : 'cupom_fiscal',
+            'cnpj_cpf_nota' => $this->notaOutroCnpjCpf ? $this->cnpjCpfNota : null,
+            'observacoes' => $this->gerarObservacoes(),
+            'gerar_troco_como_credito' => false,
+        ];
+    }
+
+    protected function gerarObservacoes()
+    {
+        $observacoes = [];
+
+        if ($this->descontoAplicado != $this->descontoOriginal) {
+            $observacoes[] = 'Desconto original removido (estava usando cartão)';
+        }
+
+        if ($this->descontoBalcao > 0) {
+            $observacoes[] = 'Desconto de balcão aplicado: R$ ' . number_format($this->descontoBalcao, 2, ',', '.');
+        }
+
+        if ($this->troco > 0) {
+            $observacoes[] = 'Troco: R$ ' . number_format($this->troco, 2, ',', '.');
+        }
+
+        return implode(' | ', $observacoes);
     }
 
     public function render()

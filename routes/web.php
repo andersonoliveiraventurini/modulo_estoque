@@ -120,9 +120,24 @@ Route::middleware(['auth'])->group(function () {
         ->name('orcamentos.aprovar-desconto');
     // fim rotas separação e conferência
 
-    Route::resource('pagamentos', PagamentoController::class)->names('pagamentos');
-    Route::get('realizar_pagamento/{orcamento_id}', [PagamentoController::class, 'realizar_pagamento'])->name('realizar_pagamento');
+    //Route::resource('pagamentos', PagamentoController::class)->names('pagamentos');
+    //Route::get('realizar_pagamento/{orcamento_id}', [PagamentoController::class, 'realizar_pagamento'])->name('realizar_pagamento');
 
+// Formulário de pagamento de orçamento
+    Route::get('/orcamentos/{orcamento}/pagamento', [PagamentoController::class, 'formPagamentoOrcamento'])
+        ->name('orcamentos.pagamento');
+    
+    // Salvar pagamento de orçamento
+    Route::post('/orcamentos/{orcamento}/pagamento', [PagamentoController::class, 'salvarPagamentoOrcamento'])
+        ->name('orcamentos.pagamento.salvar');
+    
+    // Ver detalhes de um pagamento
+    Route::get('/pagamentos/{pagamento}', [PagamentoController::class, 'show'])
+        ->name('pagamentos.show');
+    
+    // Estornar um pagamento
+    Route::post('/pagamentos/{pagamento}/estornar', [PagamentoController::class, 'estornar'])
+        ->name('pagamentos.estornar');
 
     Route::resource('notas', NotaFiscalController::class)->names('notas');
 
