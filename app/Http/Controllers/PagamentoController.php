@@ -27,7 +27,7 @@ class PagamentoController extends Controller
             ->orderBy('ordem')
             ->orderBy('nome')
             ->get();
-
+        
         return view('paginas.pagamentos.form-pagamento-balcao', compact('orcamento', 'metodosPagamento'));
     }
 
@@ -37,22 +37,26 @@ class PagamentoController extends Controller
     public function salvarPagamentoOrcamento(Request $request, $orcamentoId)
     {
         // Validação dos dados
-        $validated = $request->validate([
-            'formas_pagamento' => 'required|array|min:1',
-            'formas_pagamento.*.metodo_id' => 'required|exists:metodos_pagamento,id',
-            'formas_pagamento.*.valor' => 'required|numeric|min:0.01',
-            'desconto_balcao' => 'nullable|numeric|min:0',
-            'precisa_nota_fiscal' => 'nullable|boolean',
-            'cnpj_cpf_nota' => 'nullable|string|max:20',
-            'observacoes' => 'nullable|string|max:1000',
-        ], [
-            'formas_pagamento.required' => 'É necessário informar pelo menos uma forma de pagamento',
-            'formas_pagamento.*.metodo_id.required' => 'Método de pagamento é obrigatório',
-            'formas_pagamento.*.metodo_id.exists' => 'Método de pagamento inválido',
-            'formas_pagamento.*.valor.required' => 'Valor é obrigatório',
-            'formas_pagamento.*.valor.numeric' => 'Valor deve ser numérico',
-            'formas_pagamento.*.valor.min' => 'Valor deve ser maior que zero',
-        ]);
+        try {
+            $validated = $request->validate([
+                'formas_pagamento' => 'required|array|min:1',
+                'formas_pagamento.*.metodo_id' => 'required|exists:metodos_pagamento,id',
+                'formas_pagamento.*.valor' => 'required|numeric|min:0.01',
+                'desconto_balcao' => 'nullable|numeric|min:0',
+                'precisa_nota_fiscal' => 'nullable|boolean',
+                'cnpj_cpf_nota' => 'nullable|string|max:20',
+                'observacoes' => 'nullable|string|max:1000',
+            ], [
+                'formas_pagamento.required' => 'É necessário informar pelo menos uma forma de pagamento',
+                'formas_pagamento.*.metodo_id.required' => 'Método de pagamento é obrigatório',
+                'formas_pagamento.*.metodo_id.exists' => 'Método de pagamento inválido',
+                'formas_pagamento.*.valor.required' => 'Valor é obrigatório',
+                'formas_pagamento.*.valor.numeric' => 'Valor deve ser numérico',
+                'formas_pagamento.*.valor.min' => 'Valor deve ser maior que zero',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->validator)->withInput();
+        }
 
         try {
             return DB::transaction(function () use ($request, $orcamentoId, $validated) {
@@ -65,7 +69,9 @@ class PagamentoController extends Controller
                     ->exists();
 
                 if ($pagamentoExistente) {
-                    return back()->withErrors(['erro' => 'Este orçamento já possui um pagamento registrado.']);
+                    return back()
+                        ->withErrors(['erro' => 'Este orçamento já possui um pagamento registrado.'])
+                        ->withInput();
                 }
 
                 // Calcula valores
@@ -76,7 +82,9 @@ class PagamentoController extends Controller
                 // Valida desconto de balcão (máximo 3%)
                 $maxDescontoBalcao = $valorTotal * 0.03;
                 if ($descontoBalcao > $maxDescontoBalcao) {
-                    return back()->withErrors(['desconto_balcao' => 'Desconto de balcão não pode ser maior que 3% do valor total.']);
+                    return back()
+                        ->withErrors(['desconto_balcao' => 'Desconto de balcão não pode ser maior que 3% do valor total.'])
+                        ->withInput();
                 }
 
                 $descontoTotal = $descontoOriginal + $descontoBalcao;
@@ -91,7 +99,9 @@ class PagamentoController extends Controller
                 // Valida se o valor pago é suficiente
                 if ($valorPago < $valorFinal) {
                     $faltando = $valorFinal - $valorPago;
-                    return back()->withErrors(['erro' => 'Valor pago insuficiente! Falta: R$ ' . number_format($faltando, 2, ',', '.')]);
+                    return back()
+                        ->withErrors(['erro' => 'Valor pago insuficiente! Falta: R$ ' . number_format($faltando, 2, ',', '.')])
+                        ->withInput();
                 }
 
                 $troco = max(0, $valorPago - $valorFinal);
@@ -153,7 +163,8 @@ class PagamentoController extends Controller
             });
 
         } catch (\Exception $e) {
-            return back()->withErrors(['erro' => 'Erro ao processar pagamento: ' . $e->getMessage()])
+            return back()
+                ->withErrors(['erro' => 'Erro ao processar pagamento: ' . $e->getMessage()])
                 ->withInput();
         }
     }
@@ -237,7 +248,7 @@ class PagamentoController extends Controller
             'user'
         ])->findOrFail($id);
 
-        return view('pagamentos.show', compact('pagamento'));
+        return view('paginas.pagamentos.show', compact('pagamento'));
     }
 
     /**

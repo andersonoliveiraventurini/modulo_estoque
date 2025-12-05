@@ -1,8 +1,6 @@
 <x-layouts.app :title="__('Realizar pagamento')">
     <div class="flex  w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-
-
             <div class="container mx-auto px-4 py-6">
                 <div class="max-w-6xl mx-auto">
                     <div
@@ -35,8 +33,7 @@
                                     </svg>
                                     <div class="flex-1">
                                         <h4 class="font-semibold text-red-900 dark:text-red-200 mb-2">Atenção aos
-                                            seguintes erros:
-                                        </h4>
+                                            seguintes erros:</h4>
                                         <ul class="space-y-1 text-sm text-red-700 dark:text-red-300">
                                             @foreach ($errors->all() as $error)
                                                 <li>• {{ $error }}</li>
@@ -55,8 +52,7 @@
                                 <div>
                                     <p class="text-xs text-gray-500 dark:text-gray-400">Cliente</p>
                                     <p class="font-medium text-gray-900 dark:text-gray-100">
-                                        {{ $orcamento->cliente->nome ?? 'N/A' }}
-                                    </p>
+                                        {{ $orcamento->cliente->nome ?? 'N/A' }}</p>
                                 </div>
                                 <div>
                                     <p class="text-xs text-gray-500 dark:text-gray-400">Vendedor</p>
@@ -94,38 +90,66 @@
                                 </div>
 
                                 <div id="formasPagamentoContainer" class="space-y-3">
-                                    <!-- Primeira forma de pagamento -->
-                                    <div class="forma-pagamento bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                                        <div class="flex items-center justify-between mb-3">
-                                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Forma
-                                                #1</span>
-                                        </div>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label
-                                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                    Método de Pagamento *
-                                                </label>
-                                                <select name="formas_pagamento[0][metodo_id]" required
-                                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                                    <option value="">Selecione...</option>
-                                                    @foreach ($metodosPagamento as $metodo)
-                                                        <option value="{{ $metodo->id }}">{{ $metodo->nome }}</option>
-                                                    @endforeach
-                                                </select>
+                                    @php
+                                        $formasOld = old('formas_pagamento', [['metodo_id' => '', 'valor' => '']]);
+                                    @endphp
+
+                                    @foreach ($formasOld as $index => $formaOld)
+                                        <!-- Forma de pagamento #{{ $index + 1 }} -->
+                                        <div class="forma-pagamento bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                                            <div class="flex items-center justify-between mb-3">
+                                                <span
+                                                    class="text-sm font-semibold text-gray-700 dark:text-gray-300">Forma
+                                                    #{{ $index + 1 }}</span>
+                                                @if ($index > 0)
+                                                    <button type="button" onclick="removerFormaPagamento(this)"
+                                                        class="text-red-600 hover:text-red-800 dark:text-red-400 text-sm font-medium">
+                                                        Remover
+                                                    </button>
+                                                @endif
                                             </div>
-                                            <div>
-                                                <label
-                                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                    Valor *
-                                                </label>
-                                                <input type="number" name="formas_pagamento[0][valor]" step="0.01"
-                                                    min="0" required onchange="calcularValores()"
-                                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                    placeholder="0,00">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label
+                                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                        Método de Pagamento *
+                                                    </label>
+                                                    <select name="formas_pagamento[{{ $index }}][metodo_id]"
+                                                        required
+                                                        class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                        <option value="">Selecione...</option>
+                                                        @foreach ($metodosPagamento as $metodo)
+                                                            <option value="{{ $metodo->id }}"
+                                                                {{ old("formas_pagamento.{$index}.metodo_id") == $metodo->id ? 'selected' : '' }}>
+                                                                {{ $metodo->nome }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error("formas_pagamento.{$index}.metodo_id")
+                                                        <p class="text-xs text-red-600 dark:text-red-400 mt-1">
+                                                            {{ $message }}</p>
+                                                    @enderror
+                                                </div>
+                                                <div>
+                                                    <label
+                                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                        Valor *
+                                                    </label>
+                                                    <input type="number"
+                                                        name="formas_pagamento[{{ $index }}][valor]"
+                                                        step="0.01" min="0" required
+                                                        value="{{ old("formas_pagamento.{$index}.valor", '') }}"
+                                                        onchange="calcularValores()"
+                                                        class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                        placeholder="0,00">
+                                                    @error("formas_pagamento.{$index}.valor")
+                                                        <p class="text-xs text-red-600 dark:text-red-400 mt-1">
+                                                            {{ $message }}</p>
+                                                    @enderror
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    @endforeach
                                 </div>
 
                                 <!-- Resumo de Valores -->
@@ -145,14 +169,12 @@
                                             <p class="text-sm text-blue-900 dark:text-blue-200 font-medium">Valor Pago
                                             </p>
                                             <p class="text-xl font-bold text-green-700 dark:text-green-300"
-                                                id="valorPago">R$ 0,00
-                                            </p>
+                                                id="valorPago">R$ 0,00</p>
                                         </div>
                                         <div>
                                             <p class="text-sm text-blue-900 dark:text-blue-200 font-medium">Troco</p>
                                             <p class="text-xl font-bold text-orange-700 dark:text-orange-300"
-                                                id="valorTroco">R$
-                                                0,00</p>
+                                                id="valorTroco">R$ 0,00</p>
                                         </div>
                                     </div>
                                     <div id="alertaFaltando"
@@ -169,8 +191,7 @@
                             <!-- Desconto no Balcão -->
                             <div class="mb-6">
                                 <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Desconto no Balcão
-                                    (até 3%)
-                                </h3>
+                                    (até 3%)</h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -198,21 +219,28 @@
                                 <div class="space-y-4">
                                     <label class="flex items-center gap-3 cursor-pointer">
                                         <input type="checkbox" name="precisa_nota_fiscal" value="1"
+                                            {{ old('precisa_nota_fiscal') ? 'checked' : '' }}
+                                            onchange="toggleNotaFiscal(this)"
                                             class="w-4 h-4 text-blue-600 bg-white dark:bg-zinc-800 border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500">
                                         <span class="text-sm font-medium text-gray-900 dark:text-gray-100">Precisa de
-                                            Nota
-                                            Fiscal?</span>
+                                            Nota Fiscal?</span>
                                     </label>
 
-                                    <div id="camposNotaFiscal" class="hidden pl-7">
+                                    <div id="camposNotaFiscal"
+                                        class="{{ old('precisa_nota_fiscal') ? '' : 'hidden' }} pl-7">
                                         <div class="max-w-md">
                                             <label
                                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                 CNPJ/CPF para a Nota
                                             </label>
                                             <input type="text" name="cnpj_cpf_nota"
+                                                value="{{ old('cnpj_cpf_nota', '') }}"
                                                 class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                 placeholder="Digite o CNPJ ou CPF">
+                                            @error('cnpj_cpf_nota')
+                                                <p class="text-xs text-red-600 dark:text-red-400 mt-1">{{ $message }}
+                                                </p>
+                                            @enderror
                                         </div>
                                     </div>
                                 </div>
@@ -227,7 +255,10 @@
                                 </label>
                                 <textarea name="observacoes" rows="3"
                                     class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    placeholder="Informações adicionais sobre o pagamento..."></textarea>
+                                    placeholder="Informações adicionais sobre o pagamento...">{{ old('observacoes', '') }}</textarea>
+                                @error('observacoes')
+                                    <p class="text-xs text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <!-- Ações -->
@@ -247,17 +278,16 @@
             </div>
 
             <script>
-                let contadorFormas = 1;
+                let contadorFormas = {{ count(old('formas_pagamento', [['metodo_id' => '', 'valor' => '']])) }};
                 const valorTotalOrcamento = {{ $orcamento->valor_total_itens - ($orcamento->desconto ?? 0) }};
 
                 // Adicionar nova forma de pagamento
                 function adicionarFormaPagamento() {
-                    contadorFormas++;
                     const container = document.getElementById('formasPagamentoContainer');
                     const novaForma = `
         <div class="forma-pagamento bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
             <div class="flex items-center justify-between mb-3">
-                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Forma #${contadorFormas}</span>
+                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Forma #${contadorFormas + 1}</span>
                 <button type="button" onclick="removerFormaPagamento(this)" 
                         class="text-red-600 hover:text-red-800 dark:text-red-400 text-sm font-medium">
                     Remover
@@ -268,7 +298,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Método de Pagamento *
                     </label>
-                    <select name="formas_pagamento[${contadorFormas - 1}][metodo_id]" required
+                    <select name="formas_pagamento[${contadorFormas}][metodo_id]" required
                             class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">Selecione...</option>
                         @foreach ($metodosPagamento as $metodo)
@@ -280,7 +310,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Valor *
                     </label>
-                    <input type="number" name="formas_pagamento[${contadorFormas - 1}][valor]" step="0.01" min="0" required
+                    <input type="number" name="formas_pagamento[${contadorFormas}][valor]" step="0.01" min="0" required
                            onchange="calcularValores()"
                            class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                            placeholder="0,00">
@@ -289,10 +319,19 @@
         </div>
     `;
                     container.insertAdjacentHTML('beforeend', novaForma);
+                    contadorFormas++;
                 }
 
                 // Remover forma de pagamento
                 function removerFormaPagamento(btn) {
+                    const container = document.getElementById('formasPagamentoContainer');
+                    const formas = container.querySelectorAll('.forma-pagamento');
+
+                    // Não permitir remover se for a única forma
+                    if (formas.length <= 1) {
+                        return;
+                    }
+
                     btn.closest('.forma-pagamento').remove();
                     calcularValores();
                 }
@@ -334,12 +373,14 @@
                 }
 
                 // Toggle nota fiscal
-                document.querySelector('[name="precisa_nota_fiscal"]').addEventListener('change', function() {
-                    document.getElementById('camposNotaFiscal').classList.toggle('hidden', !this.checked);
-                });
+                function toggleNotaFiscal(checkbox) {
+                    document.getElementById('camposNotaFiscal').classList.toggle('hidden', !checkbox.checked);
+                }
 
                 // Calcular valores ao carregar a página
-                document.addEventListener('DOMContentLoaded', calcularValores);
+                document.addEventListener('DOMContentLoaded', function() {
+                    calcularValores();
+                });
             </script>
         </div>
     </div>
