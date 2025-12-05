@@ -53,7 +53,8 @@ return new class extends Migration
                   $table->decimal('valor_com_desconto', 10, 2)->default(0)
                         ->comment('Valor final do orçamento após aplicação dos descontos aprovados.');
 
-                  $table->enum('status', ['Aprovar desconto', 'Pendente', 'Aprovado', 'Finalizado', 'Cancelado', 'Rejeitado', 'Expirado'])
+                  $table->enum('status', ['Aprovar desconto', 'Pendente', 'Aprovado',
+                   'Finalizado', 'Cancelado', 'Rejeitado', 'Expirado', 'Pago', 'Estornado'])
                         ->default('Pendente')
                         ->comment('Status do orçamento, como pendente, aprovado, cancelado, etc.');
 

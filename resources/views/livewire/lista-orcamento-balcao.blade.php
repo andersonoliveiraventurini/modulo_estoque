@@ -148,7 +148,7 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 flex gap-2">
-                            <a href="realizar_pagamento/{{ $o->id }}">
+                            <a href="orcamentos/{{ $o->id }}/pagamento">
                                 <x-button size="sm" variant="primary">
                                     <x-heroicon-o-document-duplicate class="w-4 h-4" />
                                     Realizar pagamento

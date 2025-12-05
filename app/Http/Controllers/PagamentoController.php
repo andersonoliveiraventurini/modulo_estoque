@@ -28,7 +28,7 @@ class PagamentoController extends Controller
             ->orderBy('nome')
             ->get();
 
-        return view('pagamentos.form-orcamento', compact('orcamento', 'metodosPagamento'));
+        return view('paginas.pagamentos.form-pagamento-balcao', compact('orcamento', 'metodosPagamento'));
     }
 
     /**
@@ -144,7 +144,7 @@ class PagamentoController extends Controller
                 // Ajuste o status conforme os valores aceitos na sua tabela
                 // Valores comuns: 'aprovado', 'finalizado', 'concluido', 'pago'
                 $orcamento->update([
-                    'status' => 'aprovado', // Altere para o status correto da sua aplicação
+                    'status' => 'Pago', // Altere para o status correto da sua aplicação
                     'data_pagamento' => now(),
                 ]);
 
