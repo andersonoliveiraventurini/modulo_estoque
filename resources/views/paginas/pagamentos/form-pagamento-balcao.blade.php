@@ -154,7 +154,7 @@
 
                                 <!-- Resumo de Valores -->
                                 <div
-                                    class="mt-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                                    class="mt-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg p-4 shadow-sm">
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div>
                                             <p class="text-sm text-blue-900 dark:text-blue-200 font-medium">Valor Total
@@ -178,9 +178,20 @@
                                         </div>
                                     </div>
                                     <div id="alertaFaltando"
-                                        class="mt-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-md p-3 hidden">
+                                        class="mt-3 bg-red-100 dark:bg-red-900/30 border-2 border-red-300 dark:border-red-700 rounded-md p-3 hidden">
                                         <p class="text-sm text-red-800 dark:text-red-200 font-medium">
                                             ⚠️ Falta pagar: <span id="valorFaltando" class="font-bold">R$ 0,00</span>
+                                        </p>
+                                    </div>
+                                    <div id="alertaPronto"
+                                        class="mt-3 bg-green-100 border-2 border-green-300 rounded-md p-3 hidden">
+                                        <p class="text-sm text-green-800 font-medium flex items-center gap-2">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            ✓ Valor correto! Pode finalizar o pagamento.
                                         </p>
                                     </div>
                                 </div>
@@ -190,8 +201,8 @@
 
                             <!-- Desconto no Balcão -->
                             <div class="mb-6">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Desconto no Balcão
-                                    (até 3%)</h3>
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Desconto no
+                                    Balcão (até 3%)</h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -264,11 +275,11 @@
                             <!-- Ações -->
                             <div class="flex gap-4">
                                 <a href="{{ route('orcamentos.index') }}"
-                                    class="bg-gray-500 hover:bg-gray-600 text-white font-medium px-6 py-3 rounded-lg transition-colors">
+                                    class="bg-gray-500 hover:bg-gray-600 text-white font-medium px-6 py-3 rounded-lg transition-colors shadow-md">
                                     Cancelar
                                 </a>
                                 <button type="submit" id="btnFinalizar"
-                                    class="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-3 rounded-lg transition-colors">
+                                    class="bg-green-600 hover:bg-green-700 active:bg-green-800 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl border-2 border-green-700 disabled:border-gray-400">
                                     Finalizar Pagamento
                                 </button>
                             </div>
@@ -356,19 +367,20 @@
 
                     // Alerta de valor faltando
                     const alertaFaltando = document.getElementById('alertaFaltando');
+                    const alertaPronto = document.getElementById('alertaPronto');
                     const btnFinalizar = document.getElementById('btnFinalizar');
 
                     if (faltando > 0.01) {
+                        // Falta dinheiro - mostrar alerta vermelho
                         alertaFaltando.classList.remove('hidden');
+                        alertaPronto.classList.add('hidden');
                         document.getElementById('valorFaltando').textContent = 'R$ ' + faltando.toFixed(2).replace('.', ',');
                         btnFinalizar.disabled = true;
-                        btnFinalizar.classList.remove('bg-green-600', 'hover:bg-green-700');
-                        btnFinalizar.classList.add('bg-gray-400', 'cursor-not-allowed');
                     } else {
+                        // Valor OK - mostrar alerta verde e habilitar botão
                         alertaFaltando.classList.add('hidden');
+                        alertaPronto.classList.remove('hidden');
                         btnFinalizar.disabled = false;
-                        btnFinalizar.classList.remove('bg-gray-400', 'cursor-not-allowed');
-                        btnFinalizar.classList.add('bg-green-600', 'hover:bg-green-700');
                     }
                 }
 
@@ -382,6 +394,7 @@
                     calcularValores();
                 });
             </script>
+
         </div>
     </div>
 </x-layouts.app>
