@@ -64,13 +64,16 @@ RUN npm install
 # ========================================
 # 7️⃣ Prepara diretórios Laravel e permissões
 # ========================================
+
 RUN composer dump-autoload --optimize \
+    && mkdir -p storage/app/public \
     && mkdir -p storage/framework/{sessions,views,cache} \
     && mkdir -p storage/logs bootstrap/cache \
+    && php artisan storage:link \
     # NOVO: Garante que todo o diretório pertença a www-data
     && chown -R www-data:www-data /var/www/html \
     # NOVO: Garante que os diretórios importantes tenham permissão de escrita para o grupo
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+    && chmod -R 775 storage bootstrap/cache
 
 
 # ========================================
