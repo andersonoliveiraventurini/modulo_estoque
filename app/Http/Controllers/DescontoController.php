@@ -17,6 +17,57 @@ class DescontoController extends Controller
         return view('paginas.descontos.index', compact('descontos'));
     }
 
+     public function avaliar(Request $request, Desconto $desconto)
+    {
+        $request->validate([
+            'acao' => 'required|in:aprovar,rejeitar',
+            'justificativa' => 'nullable|string|max:500',
+        ]);
+
+        if ($request->acao === 'aprovar') {
+            $desconto->update([
+                'aprovado_em'            => now(),
+                'aprovado_por'           => auth()->id(),
+                'justificativa_aprovacao'=> $request->justificativa,
+
+                // garante limpeza
+                'rejeitado_em'           => null,
+                'rejeitado_por'          => null,
+                'justificativa_rejeicao' => null,
+            ]);
+        }
+
+        if ($request->acao === 'rejeitar') {
+            $desconto->update([
+                'rejeitado_em'            => now(),
+                'rejeitado_por'           => auth()->id(),
+                'justificativa_rejeicao'  => $request->justificativa,
+
+                // garante limpeza
+                'aprovado_em'             => null,
+                'aprovado_por'            => null,
+                'justificativa_aprovacao' => null,
+            ]);
+        }
+
+        // 🔍 verifica se ainda existem descontos pendentes
+        $orcamento = $desconto->orcamento;
+
+        $existemPendentes = $orcamento->descontos()
+            ->whereNull('aprovado_em')
+            ->whereNull('rejeitado_em')
+            ->exists();
+
+        if (! $existemPendentes) {
+            $orcamento->update([
+                'status' => 'Descontos Avaliados',
+            ]);
+        }
+
+        return redirect()->back()
+            ->with('success', 'Desconto avaliado com sucesso.');
+    }
+
     public function desconto_orcamento($orcamento_id)
     {        
         return view('paginas.descontos.create', compact('orcamento_id'));

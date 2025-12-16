@@ -32,6 +32,9 @@
                     </p>
                 </div>
 
+                
+
+
                 <!-- Alertas de Erro -->
                 @if ($errors->any())
                     <div class="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
@@ -229,6 +232,40 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <h2> Novo envio </h2>
+
+                            <form method="POST"
+     action="{{ route('descontos.avaliar', $desconto->id) }}"
+      class="flex items-center gap-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+    @csrf
+
+    <div class="flex-1">
+        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Justificativa (opcional)
+        </label>
+        <input type="text"
+               name="justificativa"
+               class="w-full text-sm border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2"
+               placeholder="Informe o motivo (opcional)">
+    </div>
+
+    <div class="flex gap-2 pt-5">
+        <button type="submit"
+                name="acao"
+                value="aprovar"
+                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+            Aprovar
+        </button>
+
+        <button type="submit"
+                name="acao"
+                value="rejeitar"
+                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
+            Rejeitar
+        </button>
+    </div>
+</form>
                         @empty
                             <div class="text-center py-12 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                                 <x-heroicon-o-check-circle class="w-16 h-16 mx-auto mb-3 opacity-50 text-green-500" />

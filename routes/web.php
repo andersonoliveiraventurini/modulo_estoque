@@ -156,6 +156,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('fornecedor/{fornecedor_id}/classificar', [ClassificarFornecedorController::class, 'create'])->name('fornecedores.classificar');
     Route::get('fornecedor/{fornecedor_id}/precos', [FornecedorController::class, 'tabelaPrecos'])->name('fornecedores.precos');
     Route::resource('enderecos', EnderecoController::class)->names('enderecos');
+
+    Route::post(
+    '/descontos/{desconto}/avaliar',
+    [DescontoController::class, 'avaliar']
+)->name('descontos.avaliar');
+
+
     Route::resource('descontos', DescontoController::class)->names('descontos');
     Route::get('/descontos/orcamento/{orcamento_id}', [DescontoController::class, 'desconto_orcamento'])->name('descontos.orcamento');
     Route::resource('armazens', ArmazemController::class)->names('armazens');
