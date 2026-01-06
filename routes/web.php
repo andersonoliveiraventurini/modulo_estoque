@@ -63,10 +63,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::delete('produtos/{produto}/imagens/{imagem}', [ProdutoController::class, 'destroyImagem'])
         ->name('produtos.imagens.destroy');
-    
+
     Route::get('ativar_produto/{produto_id}', [ProdutoController::class, 'ativar'])->name('produto.ativar');
     Route::get('inativar_produto/{produto_id}', [ProdutoController::class, 'inativar'])->name('produto.inativar');
-    
+
     Route::resource('cores', CorController::class)->names('cores');
     Route::resource('categorias', CategoriaController::class)->names('categorias');
     Route::resource('subcategorias', SubCategoriaController::class)->names('subcategorias');
@@ -75,7 +75,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('consulta_preco', ConsultaPrecoController::class)->names('consulta_preco');
     Route::get('criar_cotacao/{cliente_id}', [ConsultaPrecoController::class, 'criar_cotacao'])->name('consulta_preco.criar_cotacao');
     Route::get('/cotacoes/view/{token}', [CotacaoController::class, 'visualizarCotacao'])
-    ->name('cotacoes.view');
+        ->name('cotacoes.view');
     Route::resource('ncm', NcmController::class)->names('ncm');
 
     Route::resource('blocok/descartes', BlocokDescartesController::class)->names('blocok.descartes');
@@ -93,6 +93,33 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/orcamentos/{id}/status', [OrcamentoController::class, 'atualizarStatus'])->name('orcamentos.atualizar-status');
     Route::put('/orcamentos/{id}/aprovar-desconto', [OrcamentoController::class, 'aprovarDesconto'])->name('orcamentos.aprovar-desconto');
     Route::get('/orcamentos/{id}/gerenciar', OrcamentoShow::class)->name('orcamentos.gerenciar');
+
+
+    // ========== ROTAS DESCONTOS ==========
+    Route::post('/descontos/{id}/avaliar', [DescontoController::class, 'avaliar'])
+        ->name('descontos.avaliar');
+    /*Route::post(
+        '/descontos/{desconto}/avaliar',
+        [DescontoController::class, 'avaliar']
+    )->name('descontos.avaliar');*/
+
+    Route::post('/descontos/{id}/aprovar', [DescontoController::class, 'aprovar'])
+        ->name('descontos.aprovar');
+
+
+    Route::post('/descontos/{id}/rejeitar', [DescontoController::class, 'rejeitar'])
+        ->name('descontos.rejeitar');
+
+
+    // ========== ROTAS EM LOTE ==========
+
+
+    Route::post('/orcamentos/{orcamentoId}/descontos/aprovar-todos', [DescontoController::class, 'aprovarTodos'])
+        ->name('descontos.aprovarTodos');
+
+    Route::post('/orcamentos/{orcamentoId}/descontos/rejeitar-todos', [DescontoController::class, 'rejeitarTodos'])
+        ->name('descontos.rejeitarTodos');
+
 
     Route::resource('orcamentos', OrcamentoController::class)->names('orcamentos');
 
@@ -123,18 +150,18 @@ Route::middleware(['auth'])->group(function () {
     //Route::resource('pagamentos', PagamentoController::class)->names('pagamentos');
     //Route::get('realizar_pagamento/{orcamento_id}', [PagamentoController::class, 'realizar_pagamento'])->name('realizar_pagamento');
 
-// Formulário de pagamento de orçamento
+    // Formulário de pagamento de orçamento
     Route::get('/orcamentos/{orcamento}/pagamento', [PagamentoController::class, 'formPagamentoOrcamento'])
         ->name('orcamentos.pagamento');
-    
+
     // Salvar pagamento de orçamento
     Route::post('/orcamentos/{orcamento}/pagamento', [PagamentoController::class, 'salvarPagamentoOrcamento'])
         ->name('orcamentos.pagamento.salvar');
-    
+
     // Ver detalhes de um pagamento
     Route::get('/pagamentos/{pagamento}', [PagamentoController::class, 'show'])
         ->name('pagamentos.show');
-    
+
     // Estornar um pagamento
     Route::post('/pagamentos/{pagamento}/estornar', [PagamentoController::class, 'estornar'])
         ->name('pagamentos.estornar');
@@ -157,10 +184,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('fornecedor/{fornecedor_id}/precos', [FornecedorController::class, 'tabelaPrecos'])->name('fornecedores.precos');
     Route::resource('enderecos', EnderecoController::class)->names('enderecos');
 
-    Route::post(
-    '/descontos/{desconto}/avaliar',
-    [DescontoController::class, 'avaliar']
-)->name('descontos.avaliar');
+
 
 
     Route::resource('descontos', DescontoController::class)->names('descontos');

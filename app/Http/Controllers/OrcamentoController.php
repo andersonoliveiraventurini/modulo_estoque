@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\OrcamentoPdfService;
+
 use App\Http\Requests\StoreOrcamentoRequest;
 use App\Http\Requests\UpdateOrcamentoRequest;
 use App\Models\Cliente;
@@ -348,7 +350,7 @@ class OrcamentoController extends Controller
         if ($descontoPercentual > 0) {
             $orcamento->descontos()->create([
                 'motivo'      => 'Desconto percentual aplicado (cliente ou vendedor)',
-                'valor'       => 0,
+                'valor'       => $request->valor_total * ($descontoPercentual / 100),
                 'porcentagem' => $descontoPercentual,
                 'tipo'        => 'percentual',
                 'cliente_id'  => $request->cliente_id,
@@ -403,7 +405,8 @@ class OrcamentoController extends Controller
         }
 
         // 🔟 Geração do PDF
-        $pdfGeradoComSucesso = $this->gerarOrcamentoPdf($orcamento);
+        $pdfService = new OrcamentoPdfService();
+        $pdfGeradoComSucesso = $pdfService->gerarOrcamentoPdf($orcamento);
 
         if ($pdfGeradoComSucesso) {
             return redirect()
@@ -613,6 +616,7 @@ class OrcamentoController extends Controller
         );
     }
 
+    /*
     private function gerarOrcamentoPdf(Orcamento $orcamento): bool
     {
         try {
@@ -665,7 +669,7 @@ class OrcamentoController extends Controller
             Log::error("Erro fatal ao gerar PDF para o orçamento #{$orcamento->id}: " . $e->getMessage());
             return false;
         }
-    }
+    }*/
 
     public function processarAprovacaoDesconto(Request $request, $id)
     {
@@ -687,7 +691,8 @@ class OrcamentoController extends Controller
             ]);
 
             // Chama a função para gerar o PDF e verifica o resultado
-            $pdfGeradoComSucesso = $this->gerarOrcamentoPdf($orcamento);
+        $pdfService = new OrcamentoPdfService();
+        $pdfGeradoComSucesso = $pdfService->gerarOrcamentoPdf($orcamento);
 
             if ($pdfGeradoComSucesso) {
                 // SUCESSO: Redireciona para a página de visualização do orçamento com uma mensagem de sucesso.
@@ -1267,7 +1272,8 @@ class OrcamentoController extends Controller
             }
 
             // 14) GERAR PDF
-            $pdfGeradoComSucesso = $this->gerarOrcamentoPdf($orcamento);
+            $pdfService = new OrcamentoPdfService();
+            $pdfGeradoComSucesso = $pdfService->gerarOrcamentoPdf($orcamento);
 
             if ($pdfGeradoComSucesso) {
                 return redirect()

@@ -19,7 +19,14 @@ class Desconto extends Model
         'orcamento_id',
         'pedido_id',
         'user_id',
-        'porcentagem'
+        'porcentagem',
+        'aprovado_em',
+        'aprovado_por',
+        'justificativa_aprovacao',
+        'rejeitado_em',
+        'rejeitado_por',
+        'justificativa_rejeicao',
+        'observacao',
     ];
 
     protected $casts = [
@@ -59,7 +66,100 @@ class Desconto extends Model
         return $this->belongsTo(User::class);
     }
 
-    
+    /**
+     * Relacionamento com o usuário que aprovou
+     */
+    public function aprovadoPor()
+    {
+        return $this->belongsTo(User::class, 'aprovado_por');
+    }
+
+    /**
+     * Relacionamento com o usuário que rejeitou
+     */
+    public function rejeitadoPor()
+    {
+        return $this->belongsTo(User::class, 'rejeitado_por');
+    }
+
+    /**
+     * Scope para descontos pendentes
+     */
+    public function scopePendentes($query)
+    {
+        return $query->whereNull('aprovado_em')
+            ->whereNull('rejeitado_em');
+    }
+
+    /**
+     * Scope para descontos aprovados
+     */
+    public function scopeAprovados($query)
+    {
+        return $query->whereNotNull('aprovado_em');
+    }
+
+    /**
+     * Scope para descontos rejeitados
+     */
+    public function scopeRejeitados($query)
+    {
+        return $query->whereNotNull('rejeitado_em');
+    }
+
+    /**
+     * Verifica se o desconto está aprovado
+     */
+    public function isAprovado()
+    {
+        return !is_null($this->aprovado_em);
+    }
+
+    /**
+     * Verifica se o desconto está rejeitado
+     */
+    public function isRejeitado()
+    {
+        return !is_null($this->rejeitado_em);
+    }
+
+    /**
+     * Verifica se o desconto está pendente
+     */
+    public function isPendente()
+    {
+        return is_null($this->aprovado_em) && is_null($this->rejeitado_em);
+    }
+
+    /**
+     * Retorna o status do desconto
+     */
+    public function getStatusAttribute()
+    {
+        if ($this->isAprovado()) {
+            return 'aprovado';
+        }
+
+        if ($this->isRejeitado()) {
+            return 'rejeitado';
+        }
+
+        return 'pendente';
+    }
+
+    /**
+     * Retorna a cor do badge de status
+     */
+    public function getStatusColorAttribute()
+    {
+        return match ($this->status) {
+            'aprovado' => 'green',
+            'rejeitado' => 'red',
+            'pendente' => 'yellow',
+            default => 'gray',
+        };
+    }
+
     // Accessors para formatação
     public function getValorFormatadoAttribute()
     {
