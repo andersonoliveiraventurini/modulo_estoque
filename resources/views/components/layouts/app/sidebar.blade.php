@@ -92,7 +92,7 @@
             <flux:navlist.item icon="home" :href="route('descontos.index')"
                 :current="request()->routeIs('descontos.index')" wire:navigate>{{ __('Descontos') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="home" wire:navigate>{{ __('Movimentações') }}
+            <flux:navlist.item icon="home" wire:navigate>{{ __('Histórico dos Clientes') }}
             </flux:navlist.item>
         </flux:navlist.group>
 
