@@ -47,10 +47,9 @@
                             </x-select>
                             <x-input name="motivo_bloqueio" label="Motivo do Bloqueio" />
                         </div>
-                    </div><br />
+                    </div>
                     <x-textarea name="observacoes" label="Observações" placeholder="Informações adicionais..." />
                     <!-- Observações -->
-                    <br />
                     <!-- Ações -->
                     <div class="flex gap-4">
                          <x-button type="submit" >Bloquear Cliente</x-button>

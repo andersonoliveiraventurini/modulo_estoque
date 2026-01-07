@@ -46,6 +46,7 @@
                         </p>
                         <p><strong>Prazo de Entrega:</strong> {{ $orcamento->prazo_entrega ?? '---' }}</p>
                         <p><strong>Vendedor:</strong> {{ $orcamento->vendedor->name ?? '---' }}</p>
+                        <p><strong>Condição de pagamento:</strong> {{ $orcamento->condicaoPagamento->nome ?? '---' }}</p>
                     </div>
                 </div>
 
