@@ -25,7 +25,8 @@ class ConsultaPreco extends Model
         'fornecedor_id',
         'comprador_id',
         'prazo_entrega',
-        'pdf_path'
+        'pdf_path',
+        'part_number'
     ];
 
     public function usuario()
