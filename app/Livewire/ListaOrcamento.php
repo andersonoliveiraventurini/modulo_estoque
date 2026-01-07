@@ -86,7 +86,7 @@ class ListaOrcamento extends Component
                     $normalizedTerm = str_replace(',', '.', $term);
                     $query->where(function ($q) use ($normalizedTerm) {
                         $q->where('obra', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('valor_total', 'like', "%{$normalizedTerm}%")
+                            ->orWhere('valor_total_itens', 'like', "%{$normalizedTerm}%")
                             ->orWhere('status', 'like', "%{$normalizedTerm}%")
                             ->orWhere('observacoes', 'like', "%{$normalizedTerm}%")
                             ->orWhereHas('cliente', fn($q2) => $q2->where('nome', 'like', "%{$normalizedTerm}%"))
@@ -100,8 +100,10 @@ class ListaOrcamento extends Component
 
             // 🧍‍♂️ Filtro específico por cliente
             ->when($this->cliente, function ($query) {
-                $query->whereHas('cliente', fn($q) =>
-                $q->where('nome', 'like', "%{$this->cliente}%"));
+                $query->whereHas('cliente', function ($q) {
+                    $q->where('nome', 'like', "%{$this->cliente}%")
+                    ->orWhere('numero_brcom', 'like', "%{$this->cliente}%");
+                });
             })
 
             // 🧑‍💼 Filtro específico por vendedor
