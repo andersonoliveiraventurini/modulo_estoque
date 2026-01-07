@@ -327,6 +327,16 @@
                     <div class="overflow-x-auto">
                         <div class="flex gap-4 min-w-max">
                             <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700">Condição de pagamento</label>
+                                <x-select name="condicao_pagamento" required
+                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                                    <option value="">Selecione...</option>
+                                    @foreach ($condicao as $c)
+                                        <option value="{{ $c->id }}">{{ $c->nome }}</option>
+                                    @endforeach
+                                </x-select>
+                            </div>
+                            <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Desconto na vendedor %</label>
                                 <input type="text" name="desconto"
                                     value="{{ $desconto_percentual ?? old('desconto') }}" min="0"
@@ -526,498 +536,514 @@
 <script>
     console.log('Script carregando...');
 
-// ==================== VARIÁVEIS GLOBAIS ====================
-// CORREÇÃO: Remover as chaves do Blade aqui
-window.vidroIndex = 0; // Será inicializado corretamente no DOMContentLoaded
-window.produtos = [];
-window.produtoSelecionado = null;
+    // ==================== VARIÁVEIS GLOBAIS ====================
+    // CORREÇÃO: Remover as chaves do Blade aqui
+    window.vidroIndex = 0; // Será inicializado corretamente no DOMContentLoaded
+    window.produtos = [];
+    window.produtoSelecionado = null;
 
-// ==================== MODAL ====================
-window.selecionarProdutoComQuantidade = function(id, nome, preco, fornecedor, cor, part_number) {
-    console.log('Selecionando produto:', { id, nome, preco });
+    // ==================== MODAL ====================
+    window.selecionarProdutoComQuantidade = function(id, nome, preco, fornecedor, cor, part_number) {
+        console.log('Selecionando produto:', {
+            id,
+            nome,
+            preco
+        });
 
-    window.produtoSelecionado = {
-        id: id,
-        nome: nome,
-        preco: parseFloat(preco),
-        fornecedor: fornecedor || '',
-        cor: cor || '',
-        part_number: part_number || '',
-        quantidade: 1
+        window.produtoSelecionado = {
+            id: id,
+            nome: nome,
+            preco: parseFloat(preco),
+            fornecedor: fornecedor || '',
+            cor: cor || '',
+            part_number: part_number || '',
+            quantidade: 1
+        };
+
+        document.getElementById('produto-nome').textContent = nome;
+        document.getElementById('quantidade-produto').value = 1;
+        document.getElementById('modal-quantidade').classList.remove('hidden');
     };
 
-    document.getElementById('produto-nome').textContent = nome;
-    document.getElementById('quantidade-produto').value = 1;
-    document.getElementById('modal-quantidade').classList.remove('hidden');
-};
+    window.fecharModal = function() {
+        document.getElementById('modal-quantidade').classList.add('hidden');
+        window.produtoSelecionado = null;
+    };
 
-window.fecharModal = function() {
-    document.getElementById('modal-quantidade').classList.add('hidden');
-    window.produtoSelecionado = null;
-};
+    window.confirmarQuantidade = function() {
+        if (!window.produtoSelecionado) {
+            alert('Erro: Nenhum produto selecionado');
+            return;
+        }
 
-window.confirmarQuantidade = function() {
-    if (!window.produtoSelecionado) {
-        alert('Erro: Nenhum produto selecionado');
-        return;
-    }
+        var quantidade = parseInt(document.getElementById('quantidade-produto').value) || 1;
 
-    var quantidade = parseInt(document.getElementById('quantidade-produto').value) || 1;
+        window.adicionarProduto(
+            window.produtoSelecionado.id,
+            window.produtoSelecionado.nome,
+            window.produtoSelecionado.preco,
+            window.produtoSelecionado.fornecedor,
+            window.produtoSelecionado.cor,
+            window.produtoSelecionado.part_number,
+            quantidade
+        );
 
-    window.adicionarProduto(
-        window.produtoSelecionado.id,
-        window.produtoSelecionado.nome,
-        window.produtoSelecionado.preco,
-        window.produtoSelecionado.fornecedor,
-        window.produtoSelecionado.cor,
-        window.produtoSelecionado.part_number,
-        quantidade
-    );
+        window.fecharModal();
+    };
 
-    window.fecharModal();
-};
+    // ==================== GERENCIAMENTO DE PRODUTOS NOVOS ====================
+    window.adicionarProduto = function(id, nome, preco, fornecedor, cor, part_number, quantidade) {
+        // Verificar se produto já existe nos produtos originais
+        var produtosOriginais = document.getElementById('produtos-originais');
+        if (produtosOriginais) {
+            var rowsOriginais = produtosOriginais.querySelectorAll('tr');
+            for (var i = 0; i < rowsOriginais.length; i++) {
+                var row = rowsOriginais[i];
+                if (row.style.display === 'none') continue;
 
-// ==================== GERENCIAMENTO DE PRODUTOS NOVOS ====================
-window.adicionarProduto = function(id, nome, preco, fornecedor, cor, part_number, quantidade) {
-    // Verificar se produto já existe nos produtos originais
-    var produtosOriginais = document.getElementById('produtos-originais');
-    if (produtosOriginais) {
-        var rowsOriginais = produtosOriginais.querySelectorAll('tr');
-        for (var i = 0; i < rowsOriginais.length; i++) {
-            var row = rowsOriginais[i];
-            if (row.style.display === 'none') continue;
+                var produtoIdInput = row.querySelector('input[name*="[produto_id]"]');
+                if (produtoIdInput && produtoIdInput.value == id) {
+                    alert("Este produto já está no orçamento!");
+                    return;
+                }
+            }
+        }
 
-            var produtoIdInput = row.querySelector('input[name*="[produto_id]"]');
-            if (produtoIdInput && produtoIdInput.value == id) {
-                alert("Este produto já está no orçamento!");
+        // Verificar se produto já existe nos produtos novos
+        for (var i = 0; i < window.produtos.length; i++) {
+            if (window.produtos[i].id == id) {
+                alert("Produto já adicionado!");
                 return;
             }
         }
+
+        window.produtos.push({
+            id: id,
+            nome: nome,
+            preco: parseFloat(preco) || 0,
+            quantidade: parseInt(quantidade) || 1,
+            fornecedor: fornecedor || '',
+            cor: cor || '',
+            part_number: part_number || ''
+        });
+
+        console.log('Produto adicionado. Total:', window.produtos.length);
+        renderProdutosNovos();
+    };
+
+    window.alterarQuantidade = function(index, valor) {
+        if (window.produtos[index]) {
+            window.produtos[index].quantidade = parseInt(valor) || 1;
+            renderProdutosNovos();
+        }
+    };
+
+    window.removerProduto = function(index) {
+        window.produtos.splice(index, 1);
+        renderProdutosNovos();
+    };
+
+    function renderProdutosNovos() {
+        var wrapper = document.getElementById('produtos-selecionados');
+        if (!wrapper) return;
+
+        wrapper.innerHTML = '';
+
+        var desconto = obterDescontoAplicado();
+
+        for (var i = 0; i < window.produtos.length; i++) {
+            var p = window.produtos[i];
+            var subtotal = p.preco * p.quantidade;
+            var subtotalComDesconto = subtotal - (subtotal * (desconto / 100));
+            var precoUnitarioComDesconto = subtotalComDesconto / p.quantidade;
+
+            var row = document.createElement('tr');
+            row.innerHTML =
+                '<td class="px-3 py-2 border">' +
+                '<input type="hidden" name="itens[' + i + '][id]" value="' + p.id + '">' +
+                p.id + '</td>' +
+                '<td class="px-3 py-2 border">' + escaparHTML(p.nome) + '</td>' +
+                '<td class="px-3 py-2 border">' + escaparHTML(p.part_number) + '</td>' +
+                '<td class="px-3 py-2 border">' + escaparHTML(p.fornecedor) + '</td>' +
+                '<td class="px-3 py-2 border">' + escaparHTML(p.cor) + '</td>' +
+                '<td class="px-3 py-2 border">R$ ' + formatarMoeda(p.preco) +
+                '<input type="hidden" name="itens[' + i + '][preco_unitario]" value="' + p.preco + '"></td>' +
+                '<td class="px-3 py-2 border">' +
+                '<input type="number" name="itens[' + i + '][quantidade]" value="' + p.quantidade + '" ' +
+                'min="1" onchange="alterarQuantidade(' + i + ', this.value)" ' +
+                'class="w-12 border rounded px-2 py-1 text-center" style="max-width:4rem"/></td>' +
+                '<td class="px-3 py-2 border">R$ ' + formatarMoeda(subtotal) +
+                '<input type="hidden" name="itens[' + i + '][subtotal]" value="' + subtotal.toFixed(2) + '"></td>' +
+                '<td class="px-3 py-2 border text-green-600">R$ ' + formatarMoeda(subtotalComDesconto) +
+                '<input type="hidden" name="itens[' + i + '][subtotal_com_desconto]" value="' + subtotalComDesconto
+                .toFixed(2) + '">' +
+                '<input type="hidden" name="itens[' + i + '][preco_unitario_com_desconto]" value="' +
+                precoUnitarioComDesconto.toFixed(2) + '"></td>' +
+                '<td class="px-3 py-2 border text-center">' +
+                '<button type="button" onclick="removerProduto(' + i +
+                ')" class="text-red-600 hover:text-red-800">🗑</button></td>';
+
+            wrapper.appendChild(row);
+        }
+
+        recalcularTotais();
     }
 
-    // Verificar se produto já existe nos produtos novos
-    for (var i = 0; i < window.produtos.length; i++) {
-        if (window.produtos[i].id == id) {
-            alert("Produto já adicionado!");
-            return;
+    // ==================== GERENCIAMENTO DE PRODUTOS ORIGINAIS ====================
+    window.alterarQuantidadeOriginal = function(index, novaQuantidade) {
+        console.log('Alterando quantidade original:', index, novaQuantidade);
+
+        var tbody = document.getElementById('produtos-originais');
+        if (!tbody) return;
+
+        var row = tbody.querySelectorAll('tr')[index];
+        if (!row || row.style.display === 'none') return;
+
+        var quantidade = parseInt(novaQuantidade) || 1;
+
+        var quantidadeInput = row.querySelector('input[name="produtos[' + index + '][quantidade]"]');
+        if (quantidadeInput) {
+            quantidadeInput.value = quantidade;
+        }
+
+        recalcularProdutoOriginal(row, index, quantidade);
+        recalcularTotais();
+    };
+
+    window.removerProdutoOriginal = function(index) {
+        console.log('Removendo produto original:', index);
+        var tbody = document.getElementById('produtos-originais');
+        if (!tbody) return;
+
+        var row = tbody.querySelectorAll('tr')[index];
+        if (row) {
+            row.style.display = 'none';
+
+            var removeInput = document.createElement('input');
+            removeInput.type = 'hidden';
+            removeInput.name = 'produtos[' + index + '][_remove]';
+            removeInput.value = '1';
+            row.appendChild(removeInput);
+        }
+
+        recalcularTotais();
+    };
+
+    function recalcularProdutoOriginal(row, index, quantidade) {
+        var valorUnitarioInput = row.querySelector('.valor-unitario-hidden');
+        if (!valorUnitarioInput) return;
+
+        var valorUnitario = parseFloat(valorUnitarioInput.value) || 0;
+        var desconto = obterDescontoAplicado();
+
+        var subtotal = valorUnitario * quantidade;
+        var subtotalComDesconto = subtotal - (subtotal * (desconto / 100));
+        var precoUnitarioComDesconto = subtotalComDesconto / quantidade;
+
+        var subtotalInput = row.querySelector('input[name="produtos[' + index + '][subtotal]"]');
+        var subtotalComDescontoInput = row.querySelector('input[name="produtos[' + index +
+        '][subtotal_com_desconto]"]');
+        var precoComDescontoInput = row.querySelector('input[name="produtos[' + index +
+            '][preco_unitario_com_desconto]"]');
+
+        if (subtotalInput) subtotalInput.value = subtotal.toFixed(2);
+        if (subtotalComDescontoInput) subtotalComDescontoInput.value = subtotalComDesconto.toFixed(2);
+        if (precoComDescontoInput) precoComDescontoInput.value = precoUnitarioComDesconto.toFixed(2);
+
+        var cells = row.querySelectorAll('td');
+        if (cells[7]) cells[7].innerHTML = 'R$ ' + formatarMoeda(subtotal);
+        if (cells[8]) cells[8].innerHTML = 'R$ ' + formatarMoeda(subtotalComDesconto);
+    }
+
+    function recalcularTodosProdutosOriginais() {
+        var tbody = document.getElementById('produtos-originais');
+        if (!tbody) return;
+
+        var rows = tbody.querySelectorAll('tr');
+
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            if (row.style.display === 'none') continue;
+
+            var quantidadeInput = row.querySelector('input[name="produtos[' + i + '][quantidade]"]');
+            if (!quantidadeInput) continue;
+
+            var quantidade = parseInt(quantidadeInput.value) || 1;
+            recalcularProdutoOriginal(row, i, quantidade);
         }
     }
 
-    window.produtos.push({
-        id: id,
-        nome: nome,
-        preco: parseFloat(preco) || 0,
-        quantidade: parseInt(quantidade) || 1,
-        fornecedor: fornecedor || '',
-        cor: cor || '',
-        part_number: part_number || ''
-    });
+    // ==================== GERENCIAMENTO DE VIDROS ====================
+    window.addVidro = function() {
+        var wrapper = document.getElementById('vidros-wrapper');
+        if (!wrapper) return;
 
-    console.log('Produto adicionado. Total:', window.produtos.length);
-    renderProdutosNovos();
-};
+        var vidroDiv = document.createElement('div');
+        vidroDiv.className = "space-y-2 relative border border-neutral-200 dark:border-neutral-700 rounded-lg p-4";
+        vidroDiv.innerHTML =
+            '<div class="overflow-x-auto"><div class="flex gap-4 min-w-max">' +
+            '<div class="flex-1"><label class="block text-sm font-medium text-gray-700">Descrição</label>' +
+            '<input type="text" name="vidros[' + window.vidroIndex +
+            '][descricao]" placeholder="Ex: Vidro incolor 8mm" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" /></div>' +
+            '<div class="flex-1"><label class="block text-sm font-medium text-gray-700">Quantidade</label>' +
+            '<input type="number" name="vidros[' + window.vidroIndex +
+            '][quantidade]" value="1" oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" /></div>' +
+            '<div class="flex-1"><label class="block text-sm font-medium text-gray-700">Preço m²</label>' +
+            '<input type="number" step="0.01" name="vidros[' + window.vidroIndex +
+            '][preco_m2]" oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" /></div>' +
+            '<div class="flex-1"><label class="block text-sm font-medium text-gray-700">Altura (mm)</label>' +
+            '<input type="number" name="vidros[' + window.vidroIndex +
+            '][altura]" oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" /></div>' +
+            '<div class="flex-1"><label class="block text-sm font-medium text-gray-700">Largura (mm)</label>' +
+            '<input type="number" name="vidros[' + window.vidroIndex +
+            '][largura]" oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" /></div>' +
+            '</div></div>' +
+            '<input type="hidden" name="vidros[' + window.vidroIndex + '][area]" class="area-hidden" />' +
+            '<input type="hidden" name="vidros[' + window.vidroIndex + '][valor_total]" class="valor-hidden" />' +
+            '<input type="hidden" name="vidros[' + window.vidroIndex +
+            '][valor_com_desconto]" class="valor-desconto-hidden" />' +
+            '<div class="mt-2 text-sm"><strong>Área:</strong> <span class="area">0.00</span> m² | ' +
+            '<strong>Valor:</strong> R$ <span class="valor">0.00</span> | ' +
+            '<strong>c/ desc:</strong> R$ <span class="valor-desconto">0.00</span>' +
+            '<button type="button" onclick="removeVidro(this)" class="absolute right-2 text-red-600 hover:text-red-800" style="padding-top: -1rem;">Remover</button></div>';
 
-window.alterarQuantidade = function(index, valor) {
-    if (window.produtos[index]) {
-        window.produtos[index].quantidade = parseInt(valor) || 1;
-        renderProdutosNovos();
-    }
-};
+        wrapper.appendChild(vidroDiv);
+        window.vidroIndex++;
+    };
 
-window.removerProduto = function(index) {
-    window.produtos.splice(index, 1);
-    renderProdutosNovos();
-};
+    window.removeVidro = function(button) {
+        button.closest('div.space-y-2').remove();
+        recalcularTotais();
+    };
 
-function renderProdutosNovos() {
-    var wrapper = document.getElementById('produtos-selecionados');
-    if (!wrapper) return;
+    window.removeVidroExistente = function(button) {
+        var container = button.closest('div.space-y-2');
+        var vidroId = container.getAttribute('data-vidro-id');
 
-    wrapper.innerHTML = '';
+        if (vidroId) {
+            var removeInput = document.createElement('input');
+            removeInput.type = 'hidden';
+            removeInput.name = 'vidros_removidos[]';
+            removeInput.value = vidroId;
+            container.appendChild(removeInput);
+        }
 
-    var desconto = obterDescontoAplicado();
+        container.style.display = 'none';
+        recalcularTotais();
+    };
 
-    for (var i = 0; i < window.produtos.length; i++) {
-        var p = window.produtos[i];
-        var subtotal = p.preco * p.quantidade;
-        var subtotalComDesconto = subtotal - (subtotal * (desconto / 100));
-        var precoUnitarioComDesconto = subtotalComDesconto / p.quantidade;
+    window.calcularVidro = function(element) {
+        var container = element.closest('div.space-y-2');
+        if (!container) return;
 
-        var row = document.createElement('tr');
-        row.innerHTML =
-            '<td class="px-3 py-2 border">' +
-            '<input type="hidden" name="itens[' + i + '][id]" value="' + p.id + '">' +
-            p.id + '</td>' +
-            '<td class="px-3 py-2 border">' + escaparHTML(p.nome) + '</td>' +
-            '<td class="px-3 py-2 border">' + escaparHTML(p.part_number) + '</td>' +
-            '<td class="px-3 py-2 border">' + escaparHTML(p.fornecedor) + '</td>' +
-            '<td class="px-3 py-2 border">' + escaparHTML(p.cor) + '</td>' +
-            '<td class="px-3 py-2 border">R$ ' + formatarMoeda(p.preco) +
-            '<input type="hidden" name="itens[' + i + '][preco_unitario]" value="' + p.preco + '"></td>' +
-            '<td class="px-3 py-2 border">' +
-            '<input type="number" name="itens[' + i + '][quantidade]" value="' + p.quantidade + '" ' +
-            'min="1" onchange="alterarQuantidade(' + i + ', this.value)" ' +
-            'class="w-12 border rounded px-2 py-1 text-center" style="max-width:4rem"/></td>' +
-            '<td class="px-3 py-2 border">R$ ' + formatarMoeda(subtotal) +
-            '<input type="hidden" name="itens[' + i + '][subtotal]" value="' + subtotal.toFixed(2) + '"></td>' +
-            '<td class="px-3 py-2 border text-green-600">R$ ' + formatarMoeda(subtotalComDesconto) +
-            '<input type="hidden" name="itens[' + i + '][subtotal_com_desconto]" value="' + subtotalComDesconto.toFixed(2) + '">' +
-            '<input type="hidden" name="itens[' + i + '][preco_unitario_com_desconto]" value="' + precoUnitarioComDesconto.toFixed(2) + '"></td>' +
-            '<td class="px-3 py-2 border text-center">' +
-            '<button type="button" onclick="removerProduto(' + i + ')" class="text-red-600 hover:text-red-800">🗑</button></td>';
+        var altura = parseFloat(container.querySelector('[name*="[altura]"]').value) || 0;
+        var largura = parseFloat(container.querySelector('[name*="[largura]"]').value) || 0;
+        var quantidade = parseFloat(container.querySelector('[name*="[quantidade]"]').value) || 1;
+        var precoM2 = parseFloat(container.querySelector('[name*="[preco_m2]"]').value) || 0;
 
-        wrapper.appendChild(row);
-    }
+        var area = (altura / 1000) * (largura / 1000);
+        var valor = area * precoM2 * quantidade;
+        var desconto = obterDescontoAplicado();
+        var valorComDesconto = valor - (valor * (desconto / 100));
 
-    recalcularTotais();
-}
+        container.querySelector('.area').textContent = area.toFixed(2);
+        container.querySelector('.valor').textContent = valor.toFixed(2);
+        container.querySelector('.valor-desconto').textContent = valorComDesconto.toFixed(2);
 
-// ==================== GERENCIAMENTO DE PRODUTOS ORIGINAIS ====================
-window.alterarQuantidadeOriginal = function(index, novaQuantidade) {
-    console.log('Alterando quantidade original:', index, novaQuantidade);
+        container.querySelector('.area-hidden').value = area.toFixed(2);
+        container.querySelector('.valor-hidden').value = valor.toFixed(2);
+        container.querySelector('.valor-desconto-hidden').value = valorComDesconto.toFixed(2);
 
-    var tbody = document.getElementById('produtos-originais');
-    if (!tbody) return;
+        setTimeout(recalcularTotais, 10);
+    };
 
-    var row = tbody.querySelectorAll('tr')[index];
-    if (!row || row.style.display === 'none') return;
+    window.calcularVidroExistente = function(element) {
+        calcularVidro(element);
+    };
 
-    var quantidade = parseInt(novaQuantidade) || 1;
+    function calcularTotalVidros() {
+        var totalVidros = 0;
+        var totalVidrosComDesconto = 0;
+        var wrapper = document.getElementById('vidros-wrapper');
 
-    var quantidadeInput = row.querySelector('input[name="produtos[' + index + '][quantidade]"]');
-    if (quantidadeInput) {
-        quantidadeInput.value = quantidade;
-    }
+        if (wrapper) {
+            var containers = wrapper.querySelectorAll('.space-y-2');
+            for (var i = 0; i < containers.length; i++) {
+                if (containers[i].style.display === 'none') continue;
 
-    recalcularProdutoOriginal(row, index, quantidade);
-    recalcularTotais();
-};
+                var valorEl = containers[i].querySelector('.valor-hidden');
+                var valorDescEl = containers[i].querySelector('.valor-desconto-hidden');
+                if (valorEl && valorDescEl) {
+                    totalVidros += parseFloat(valorEl.value) || 0;
+                    totalVidrosComDesconto += parseFloat(valorDescEl.value) || 0;
+                }
+            }
+        }
 
-window.removerProdutoOriginal = function(index) {
-    console.log('Removendo produto original:', index);
-    var tbody = document.getElementById('produtos-originais');
-    if (!tbody) return;
-
-    var row = tbody.querySelectorAll('tr')[index];
-    if (row) {
-        row.style.display = 'none';
-
-        var removeInput = document.createElement('input');
-        removeInput.type = 'hidden';
-        removeInput.name = 'produtos[' + index + '][_remove]';
-        removeInput.value = '1';
-        row.appendChild(removeInput);
-    }
-
-    recalcularTotais();
-};
-
-function recalcularProdutoOriginal(row, index, quantidade) {
-    var valorUnitarioInput = row.querySelector('.valor-unitario-hidden');
-    if (!valorUnitarioInput) return;
-
-    var valorUnitario = parseFloat(valorUnitarioInput.value) || 0;
-    var desconto = obterDescontoAplicado();
-
-    var subtotal = valorUnitario * quantidade;
-    var subtotalComDesconto = subtotal - (subtotal * (desconto / 100));
-    var precoUnitarioComDesconto = subtotalComDesconto / quantidade;
-
-    var subtotalInput = row.querySelector('input[name="produtos[' + index + '][subtotal]"]');
-    var subtotalComDescontoInput = row.querySelector('input[name="produtos[' + index + '][subtotal_com_desconto]"]');
-    var precoComDescontoInput = row.querySelector('input[name="produtos[' + index + '][preco_unitario_com_desconto]"]');
-
-    if (subtotalInput) subtotalInput.value = subtotal.toFixed(2);
-    if (subtotalComDescontoInput) subtotalComDescontoInput.value = subtotalComDesconto.toFixed(2);
-    if (precoComDescontoInput) precoComDescontoInput.value = precoUnitarioComDesconto.toFixed(2);
-
-    var cells = row.querySelectorAll('td');
-    if (cells[7]) cells[7].innerHTML = 'R$ ' + formatarMoeda(subtotal);
-    if (cells[8]) cells[8].innerHTML = 'R$ ' + formatarMoeda(subtotalComDesconto);
-}
-
-function recalcularTodosProdutosOriginais() {
-    var tbody = document.getElementById('produtos-originais');
-    if (!tbody) return;
-
-    var rows = tbody.querySelectorAll('tr');
-
-    for (var i = 0; i < rows.length; i++) {
-        var row = rows[i];
-        if (row.style.display === 'none') continue;
-
-        var quantidadeInput = row.querySelector('input[name="produtos[' + i + '][quantidade]"]');
-        if (!quantidadeInput) continue;
-
-        var quantidade = parseInt(quantidadeInput.value) || 1;
-        recalcularProdutoOriginal(row, i, quantidade);
-    }
-}
-
-// ==================== GERENCIAMENTO DE VIDROS ====================
-window.addVidro = function() {
-    var wrapper = document.getElementById('vidros-wrapper');
-    if (!wrapper) return;
-
-    var vidroDiv = document.createElement('div');
-    vidroDiv.className = "space-y-2 relative border border-neutral-200 dark:border-neutral-700 rounded-lg p-4";
-    vidroDiv.innerHTML =
-        '<div class="overflow-x-auto"><div class="flex gap-4 min-w-max">' +
-        '<div class="flex-1"><label class="block text-sm font-medium text-gray-700">Descrição</label>' +
-        '<input type="text" name="vidros[' + window.vidroIndex + '][descricao]" placeholder="Ex: Vidro incolor 8mm" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" /></div>' +
-        '<div class="flex-1"><label class="block text-sm font-medium text-gray-700">Quantidade</label>' +
-        '<input type="number" name="vidros[' + window.vidroIndex + '][quantidade]" value="1" oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" /></div>' +
-        '<div class="flex-1"><label class="block text-sm font-medium text-gray-700">Preço m²</label>' +
-        '<input type="number" step="0.01" name="vidros[' + window.vidroIndex + '][preco_m2]" oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" /></div>' +
-        '<div class="flex-1"><label class="block text-sm font-medium text-gray-700">Altura (mm)</label>' +
-        '<input type="number" name="vidros[' + window.vidroIndex + '][altura]" oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" /></div>' +
-        '<div class="flex-1"><label class="block text-sm font-medium text-gray-700">Largura (mm)</label>' +
-        '<input type="number" name="vidros[' + window.vidroIndex + '][largura]" oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" /></div>' +
-        '</div></div>' +
-        '<input type="hidden" name="vidros[' + window.vidroIndex + '][area]" class="area-hidden" />' +
-        '<input type="hidden" name="vidros[' + window.vidroIndex + '][valor_total]" class="valor-hidden" />' +
-        '<input type="hidden" name="vidros[' + window.vidroIndex + '][valor_com_desconto]" class="valor-desconto-hidden" />' +
-        '<div class="mt-2 text-sm"><strong>Área:</strong> <span class="area">0.00</span> m² | ' +
-        '<strong>Valor:</strong> R$ <span class="valor">0.00</span> | ' +
-        '<strong>c/ desc:</strong> R$ <span class="valor-desconto">0.00</span>' +
-        '<button type="button" onclick="removeVidro(this)" class="absolute right-2 text-red-600 hover:text-red-800" style="padding-top: -1rem;">Remover</button></div>';
-
-    wrapper.appendChild(vidroDiv);
-    window.vidroIndex++;
-};
-
-window.removeVidro = function(button) {
-    button.closest('div.space-y-2').remove();
-    recalcularTotais();
-};
-
-window.removeVidroExistente = function(button) {
-    var container = button.closest('div.space-y-2');
-    var vidroId = container.getAttribute('data-vidro-id');
-
-    if (vidroId) {
-        var removeInput = document.createElement('input');
-        removeInput.type = 'hidden';
-        removeInput.name = 'vidros_removidos[]';
-        removeInput.value = vidroId;
-        container.appendChild(removeInput);
+        return {
+            totalVidros: totalVidros,
+            totalVidrosComDesconto: totalVidrosComDesconto
+        };
     }
 
-    container.style.display = 'none';
-    recalcularTotais();
-};
+    function recalcularTodosVidros() {
+        var wrapper = document.getElementById('vidros-wrapper');
+        if (!wrapper) return;
 
-window.calcularVidro = function(element) {
-    var container = element.closest('div.space-y-2');
-    if (!container) return;
-
-    var altura = parseFloat(container.querySelector('[name*="[altura]"]').value) || 0;
-    var largura = parseFloat(container.querySelector('[name*="[largura]"]').value) || 0;
-    var quantidade = parseFloat(container.querySelector('[name*="[quantidade]"]').value) || 1;
-    var precoM2 = parseFloat(container.querySelector('[name*="[preco_m2]"]').value) || 0;
-
-    var area = (altura / 1000) * (largura / 1000);
-    var valor = area * precoM2 * quantidade;
-    var desconto = obterDescontoAplicado();
-    var valorComDesconto = valor - (valor * (desconto / 100));
-
-    container.querySelector('.area').textContent = area.toFixed(2);
-    container.querySelector('.valor').textContent = valor.toFixed(2);
-    container.querySelector('.valor-desconto').textContent = valorComDesconto.toFixed(2);
-
-    container.querySelector('.area-hidden').value = area.toFixed(2);
-    container.querySelector('.valor-hidden').value = valor.toFixed(2);
-    container.querySelector('.valor-desconto-hidden').value = valorComDesconto.toFixed(2);
-
-    setTimeout(recalcularTotais, 10);
-};
-
-window.calcularVidroExistente = function(element) {
-    calcularVidro(element);
-};
-
-function calcularTotalVidros() {
-    var totalVidros = 0;
-    var totalVidrosComDesconto = 0;
-    var wrapper = document.getElementById('vidros-wrapper');
-
-    if (wrapper) {
         var containers = wrapper.querySelectorAll('.space-y-2');
         for (var i = 0; i < containers.length; i++) {
             if (containers[i].style.display === 'none') continue;
 
-            var valorEl = containers[i].querySelector('.valor-hidden');
-            var valorDescEl = containers[i].querySelector('.valor-desconto-hidden');
-            if (valorEl && valorDescEl) {
-                totalVidros += parseFloat(valorEl.value) || 0;
-                totalVidrosComDesconto += parseFloat(valorDescEl.value) || 0;
+            var firstInput = containers[i].querySelector('input[type="number"]');
+            if (firstInput) {
+                calcularVidro(firstInput);
             }
         }
     }
 
-    return {
-        totalVidros: totalVidros,
-        totalVidrosComDesconto: totalVidrosComDesconto
-    };
-}
-
-function recalcularTodosVidros() {
-    var wrapper = document.getElementById('vidros-wrapper');
-    if (!wrapper) return;
-
-    var containers = wrapper.querySelectorAll('.space-y-2');
-    for (var i = 0; i < containers.length; i++) {
-        if (containers[i].style.display === 'none') continue;
-
-        var firstInput = containers[i].querySelector('input[type="number"]');
-        if (firstInput) {
-            calcularVidro(firstInput);
-        }
+    // ==================== CÁLCULOS E TOTAIS ====================
+    function obterDescontoAplicado() {
+        var descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]')?.value) || 0;
+        var descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]')?.value) || 0;
+        descontoOrcamento = Math.min(Math.max(descontoOrcamento, 0), 100);
+        return Math.max(descontoCliente, descontoOrcamento);
     }
-}
 
-// ==================== CÁLCULOS E TOTAIS ====================
-function obterDescontoAplicado() {
-    var descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]')?.value) || 0;
-    var descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]')?.value) || 0;
-    descontoOrcamento = Math.min(Math.max(descontoOrcamento, 0), 100);
-    return Math.max(descontoCliente, descontoOrcamento);
-}
+    function calcularTotalProdutosOriginais() {
+        var total = 0;
+        var totalComDesconto = 0;
+        var tbody = document.getElementById('produtos-originais');
 
-function calcularTotalProdutosOriginais() {
-    var total = 0;
-    var totalComDesconto = 0;
-    var tbody = document.getElementById('produtos-originais');
+        if (tbody) {
+            var rows = tbody.querySelectorAll('tr');
+            for (var i = 0; i < rows.length; i++) {
+                if (rows[i].style.display === 'none') continue;
 
-    if (tbody) {
-        var rows = tbody.querySelectorAll('tr');
-        for (var i = 0; i < rows.length; i++) {
-            if (rows[i].style.display === 'none') continue;
+                var subtotalInput = rows[i].querySelector('input[name*="[subtotal]"]:not([name*="com_desconto"])');
+                var subtotalComDescontoInput = rows[i].querySelector('input[name*="[subtotal_com_desconto]"]');
 
-            var subtotalInput = rows[i].querySelector('input[name*="[subtotal]"]:not([name*="com_desconto"])');
-            var subtotalComDescontoInput = rows[i].querySelector('input[name*="[subtotal_com_desconto]"]');
-
-            if (subtotalInput && subtotalComDescontoInput) {
-                total += parseFloat(subtotalInput.value) || 0;
-                totalComDesconto += parseFloat(subtotalComDescontoInput.value) || 0;
+                if (subtotalInput && subtotalComDescontoInput) {
+                    total += parseFloat(subtotalInput.value) || 0;
+                    totalComDesconto += parseFloat(subtotalComDescontoInput.value) || 0;
+                }
             }
         }
+
+        return {
+            total: total,
+            totalComDesconto: totalComDesconto
+        };
     }
 
-    return {
-        total: total,
-        totalComDesconto: totalComDesconto
-    };
-}
+    function calcularTotalProdutosNovos() {
+        var total = 0;
+        var totalComDesconto = 0;
+        var desconto = obterDescontoAplicado();
 
-function calcularTotalProdutosNovos() {
-    var total = 0;
-    var totalComDesconto = 0;
-    var desconto = obterDescontoAplicado();
+        for (var i = 0; i < window.produtos.length; i++) {
+            var subtotal = window.produtos[i].preco * window.produtos[i].quantidade;
+            var subtotalComDesconto = subtotal - (subtotal * (desconto / 100));
+            total += subtotal;
+            totalComDesconto += subtotalComDesconto;
+        }
 
-    for (var i = 0; i < window.produtos.length; i++) {
-        var subtotal = window.produtos[i].preco * window.produtos[i].quantidade;
-        var subtotalComDesconto = subtotal - (subtotal * (desconto / 100));
-        total += subtotal;
-        totalComDesconto += subtotalComDesconto;
+        return {
+            total: total,
+            totalComDesconto: totalComDesconto
+        };
     }
 
-    return {
-        total: total,
-        totalComDesconto: totalComDesconto
-    };
-}
+    function recalcularTotais() {
+        recalcularTodosProdutosOriginais();
 
-function recalcularTotais() {
-    recalcularTodosProdutosOriginais();
+        var totaisOriginais = calcularTotalProdutosOriginais();
+        var totaisNovos = calcularTotalProdutosNovos();
+        var totaisVidros = calcularTotalVidros();
 
-    var totaisOriginais = calcularTotalProdutosOriginais();
-    var totaisNovos = calcularTotalProdutosNovos();
-    var totaisVidros = calcularTotalVidros();
+        var totalGeral = totaisOriginais.total + totaisNovos.total + totaisVidros.totalVidros;
+        var totalGeralComDesconto = totaisOriginais.totalComDesconto + totaisNovos.totalComDesconto + totaisVidros
+            .totalVidrosComDesconto;
 
-    var totalGeral = totaisOriginais.total + totaisNovos.total + totaisVidros.totalVidros;
-    var totalGeralComDesconto = totaisOriginais.totalComDesconto + totaisNovos.totalComDesconto + totaisVidros.totalVidrosComDesconto;
+        var valorTotalInput = document.getElementById('valor_total');
+        if (valorTotalInput) {
+            valorTotalInput.value = totalGeral.toFixed(2);
+        }
 
-    var valorTotalInput = document.getElementById('valor_total');
-    if (valorTotalInput) {
-        valorTotalInput.value = totalGeral.toFixed(2);
-    }
+        var guia = parseFloat(document.querySelector('[name="guia_recolhimento"]')?.value) || 0;
+        var descontoEspecifico = parseFloat(document.querySelector('[name="desconto_especifico"]')?.value) || 0;
 
-    var guia = parseFloat(document.querySelector('[name="guia_recolhimento"]')?.value) || 0;
-    var descontoEspecifico = parseFloat(document.querySelector('[name="desconto_especifico"]')?.value) || 0;
+        var valorFinal = totalGeralComDesconto - descontoEspecifico + guia;
+        if (valorFinal < 0) valorFinal = 0;
 
-    var valorFinal = totalGeralComDesconto - descontoEspecifico + guia;
-    if (valorFinal < 0) valorFinal = 0;
+        var maxDesconto = totalGeralComDesconto + guia;
+        if (descontoEspecifico > maxDesconto) {
+            descontoEspecifico = maxDesconto;
+            var descontoEspecificoInput = document.querySelector('[name="desconto_especifico"]');
+            if (descontoEspecificoInput) {
+                descontoEspecificoInput.value = maxDesconto.toFixed(2);
+            }
+        }
 
-    var maxDesconto = totalGeralComDesconto + guia;
-    if (descontoEspecifico > maxDesconto) {
-        descontoEspecifico = maxDesconto;
-        var descontoEspecificoInput = document.querySelector('[name="desconto_especifico"]');
-        if (descontoEspecificoInput) {
-            descontoEspecificoInput.value = maxDesconto.toFixed(2);
+        var valorFinalInput = document.getElementById('valor_final');
+        if (valorFinalInput) {
+            valorFinalInput.value = valorFinal.toFixed(2);
         }
     }
 
-    var valorFinalInput = document.getElementById('valor_final');
-    if (valorFinalInput) {
-        valorFinalInput.value = valorFinal.toFixed(2);
-    }
-}
-
-// ==================== FUNÇÕES AUXILIARES ====================
-function escaparHTML(texto) {
-    return String(texto || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
-
-function formatarMoeda(valor) {
-    return parseFloat(valor).toFixed(2).replace('.', ',');
-}
-
-// ==================== INICIALIZAÇÃO ====================
-function inicializar() {
-    console.log('Inicializando sistema de orçamento...');
-
-    // Inicializar vidroIndex com base na quantidade de vidros existentes
-    var vidrosWrapper = document.getElementById('vidros-wrapper');
-    if (vidrosWrapper) {
-        var vidrosExistentes = vidrosWrapper.querySelectorAll('.space-y-2');
-        window.vidroIndex = vidrosExistentes.length;
-        console.log('Vidros existentes:', window.vidroIndex);
+    // ==================== FUNÇÕES AUXILIARES ====================
+    function escaparHTML(texto) {
+        return String(texto || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
-    // Recalcular vidros existentes na inicialização
-    recalcularTodosVidros();
+    function formatarMoeda(valor) {
+        return parseFloat(valor).toFixed(2).replace('.', ',');
+    }
 
-    // Recalcular tudo na inicialização
-    recalcularTotais();
+    // ==================== INICIALIZAÇÃO ====================
+    function inicializar() {
+        console.log('Inicializando sistema de orçamento...');
 
-    var camposDesconto = [
-        '[name="desconto"]',
-        '[name="desconto_especifico"]',
-        '[name="guia_recolhimento"]'
-    ];
-
-    camposDesconto.forEach(function(selector) {
-        var campo = document.querySelector(selector);
-        if (campo) {
-            campo.addEventListener('input', function() {
-                recalcularTodosVidros();
-                recalcularTotais();
-            });
+        // Inicializar vidroIndex com base na quantidade de vidros existentes
+        var vidrosWrapper = document.getElementById('vidros-wrapper');
+        if (vidrosWrapper) {
+            var vidrosExistentes = vidrosWrapper.querySelectorAll('.space-y-2');
+            window.vidroIndex = vidrosExistentes.length;
+            console.log('Vidros existentes:', window.vidroIndex);
         }
-    });
 
-    console.log('Sistema inicializado com sucesso!');
-}
+        // Recalcular vidros existentes na inicialização
+        recalcularTodosVidros();
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', inicializar);
-} else {
-    inicializar();
-}
+        // Recalcular tudo na inicialização
+        recalcularTotais();
+
+        var camposDesconto = [
+            '[name="desconto"]',
+            '[name="desconto_especifico"]',
+            '[name="guia_recolhimento"]'
+        ];
+
+        camposDesconto.forEach(function(selector) {
+            var campo = document.querySelector(selector);
+            if (campo) {
+                campo.addEventListener('input', function() {
+                    recalcularTodosVidros();
+                    recalcularTotais();
+                });
+            }
+        });
+
+        console.log('Sistema inicializado com sucesso!');
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', inicializar);
+    } else {
+        inicializar();
+    }
 </script>

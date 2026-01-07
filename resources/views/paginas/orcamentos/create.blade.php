@@ -241,7 +241,7 @@
                                         <option value="{{ $c->id }}">{{ $c->nome }}</option>
                                     @endforeach
                                 </x-select>
-                            </div>
+                            </div> 
                             <div class="flex-1">
                                 <x-input type="text" name="desconto" value="0" min="0"
                                     max="100" placeholder="Digite a porcentagem de desconto (0 a 100)"

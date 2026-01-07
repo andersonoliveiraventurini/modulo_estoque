@@ -54,10 +54,14 @@ class ConsultaPreco extends Model
         }
     }
     
-  public function cor()
-{
-    return $this->belongsTo(Cor::class, 'cor_id');
-}
-
+    public function cor()
+    {
+        return $this->belongsTo(Cor::class, 'cor_id');
+    }
+    
+    public function orcamento()
+    {
+        return $this->belongsTo(Orcamento::class);
+    }
 
 }

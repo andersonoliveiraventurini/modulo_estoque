@@ -259,7 +259,8 @@
                                     <td class="px-3 py-2 border">{{ $prod->nome ?? '—' }}</td>
                                     <td class="px-3 py-2 border">{{ $prod->part_number ?? '—' }}</td>
                                     <td class="px-3 py-2 border">{{ $prod->fornecedor->nome ?? '—' }}</td>
-                                    <td class="px-3 py-2 border">{{ $prod->cor ?? '—' }}</td>
+                                    <td class="px-3 py-2 border"> <span class="w-5 h-5 border border-zinc-300 dark:border-zinc-600 rounded"
+                                        style="background-color: {{ $prod->cor->codigo_hex ?? '' }}">	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>{{ $prod->cor->nome ?? '—' }}</td>
                                     <td class="px-3 py-2 border text-center">{{ $item->quantidade }}</td>
                                     <td class="px-3 py-2 border text-right">R$
                                         {{ number_format($item->valor_unitario, 2, ',', '.') }}
