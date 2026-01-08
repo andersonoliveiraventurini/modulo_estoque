@@ -14,7 +14,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                                 </svg>
-                                Pagamento no Balcão - Orçamento #{{ $orcamento->id }}
+                                Pagamento no Balcão - Orçamento #{{ $orcamento->id }} 
                             </h2>
                             <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
                                 Finalize o pagamento do orçamento selecionado
@@ -67,7 +67,7 @@
                                 <div>
                                     <p class="text-xs text-gray-500 dark:text-gray-400">Valor Total</p>
                                     <p class="text-lg font-bold text-blue-600 dark:text-blue-400">
-                                        R$ {{ number_format($orcamento->valor_total_itens, 2, ',', '.') }}
+                                        R$ {{ number_format($orcamento->valor_total_itens - ($orcamento->totalDescontosAprovados() ?? 0), 2, ',', '.') }}
                                     </p>
                                 </div>
                             </div>
@@ -162,7 +162,7 @@
                                             <p class="text-xl font-bold text-blue-700 dark:text-blue-300"
                                                 id="valorTotal">
                                                 R$
-                                                {{ number_format($orcamento->valor_total_itens - ($orcamento->desconto ?? 0), 2, ',', '.') }}
+                                                {{ number_format($orcamento->valor_total_itens - $orcamento->totalDescontosAprovados(), 2, ',', '.') }}
                                             </p>
                                         </div>
                                         <div>
@@ -209,13 +209,13 @@
                                             Valor do Desconto
                                         </label>
                                         <input type="number" name="desconto_balcao" step="0.01" min="0"
-                                            max="{{ $orcamento->valor_total_itens * 0.03 }}"
+                                            max="{{ ($orcamento->valor_total_itens - $orcamento->totalDescontosAprovados()) * 0.03 }}"
                                             onchange="calcularValores()"
                                             class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                             placeholder="0,00">
                                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                             Máximo: R$
-                                            {{ number_format($orcamento->valor_total_itens * 0.03, 2, ',', '.') }}
+                                            {{ number_format(($orcamento->valor_total_itens- $orcamento->totalDescontosAprovados()) * 0.03, 2, ',', '.') }}
                                         </p>
                                     </div>
                                 </div>
@@ -290,7 +290,7 @@
 
             <script>
                 let contadorFormas = {{ count(old('formas_pagamento', [['metodo_id' => '', 'valor' => '']])) }};
-                const valorTotalOrcamento = {{ $orcamento->valor_total_itens - ($orcamento->desconto ?? 0) }};
+                const valorTotalOrcamento = {{ $orcamento->valor_total_itens - ($orcamento->totalDescontosAprovados() ?? 0) }};
 
                 // Adicionar nova forma de pagamento
                 function adicionarFormaPagamento() {

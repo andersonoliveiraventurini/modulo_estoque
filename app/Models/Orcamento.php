@@ -80,6 +80,13 @@ class Orcamento extends Model
         return $this->hasMany(Desconto::class);
     }
 
+    public function totalDescontosAprovados(): float
+    {
+        return $this->descontos()
+            ->whereNotNull('aprovado_por')
+            ->sum('valor');
+    }
+
     /**
      * Relacionamento com Condição de Pagamento
      */

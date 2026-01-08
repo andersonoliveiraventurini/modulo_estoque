@@ -80,7 +80,7 @@
                                 <div class="flex-1">
                                     <p class="text-xs text-gray-500 dark:text-gray-400">Valor Total</p>
                                     <p class="text-lg font-bold text-blue-600 dark:text-blue-400">
-                                        R$ {{ number_format($orcamento->valor_total_itens, 2, ',', '.') }}
+                                        R$ {{ number_format($orcamento->valor_total_itens - $orcamento->totalDescontosAprovados(), 2, ',', '.') }}
                                     </p>
                                 </div>
                             </div>
@@ -306,7 +306,7 @@
                         <div class="flex justify-between items-center py-2">
                             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Valor Total dos Itens:</span>
                             <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                R$ {{ number_format($orcamento->valor_total_itens, 2, ',', '.') }}
+                                R$ {{ number_format($orcamento->valor_total_itens - $orcamento->totalDescontosAprovados(), 2, ',', '.') }}
                             </span>
                         </div>
                         

@@ -27,7 +27,8 @@
                 <div class="mb-6">
                     <h2 class="text-xl font-semibold flex items-center gap-2 mb-2">
                         <x-heroicon-o-receipt-percent class="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                        Aprovação de Descontos - <a href="{{ route('orcamentos.show', $orcamento->id) }}">Orçamento #{{ $orcamento->id }}</a>
+                        Aprovação de Descontos - <a href="{{ route('orcamentos.show', $orcamento->id) }}">Orçamento
+                            #{{ $orcamento->id }}</a>
                     </h2>
                     <p class="text-sm text-zinc-600 dark:text-zinc-400">
                         Revise e aprove ou rejeite cada desconto aplicado ao orçamento
@@ -97,6 +98,20 @@
                                         </p>
                                     </div>
                                 </div>
+                                @if ($orcamento->totalDescontosAprovados() > 0)
+                                    <div class="flex items-start gap-2">
+                                        <x-heroicon-o-currency-dollar
+                                            class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                                        <div class="flex-1">
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">Valor Total Com
+                                                Descontos</p>
+                                            <p class="text-lg font-bold text-gray-900 dark:text-gray-100">
+                                                R$
+                                                {{ number_format($orcamento->valor_total_itens - $orcamento->totalDescontosAprovados() ?? 0, 2, ',', '.') }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -208,7 +223,7 @@
                                                     Valor Total</p>
                                                 <p class="text-lg font-bold text-green-700 dark:text-green-300">
                                                     R$
-                                                    {{ number_format(($orcamento->valor_total_itens ?? 0) - $desconto->valor, 2, ',', '.') }}
+                                                    {{ number_format(($orcamento->valor_total_itens ?? 0) - $orcamento->totalDescontosAprovados() - $desconto->valor, 2, ',', '.') }}
                                                 </p>
                                             </div>
                                         </div>
@@ -324,6 +339,17 @@
                                     </span>
                                 </div>
 
+                                @if ($orcamento->totalDescontosAprovados() > 0)
+                                    <div
+                                        class="flex justify-between items-center py-2 border-t border-gray-200 dark:border-gray-700">
+                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Total de
+                                            Descontos já aprovados:</span>
+                                        <span class="text-sm font-semibold text-red-600 dark:text-red-400">
+                                            - R$
+                                            {{ number_format($orcamento->totalDescontosAprovados(), 2, ',', '.') }}
+                                        </span>
+                                    </div>
+                                @endif
                                 <div
                                     class="flex justify-between items-center py-2 border-t border-gray-200 dark:border-gray-700">
                                     <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Total de
@@ -340,7 +366,7 @@
                                         todos aprovados):</span>
                                     <span class="text-xl font-bold text-blue-600 dark:text-blue-400">
                                         R$
-                                        {{ number_format(($orcamento->valor_total_itens ?? 0) - collect($descontos)->sum('valor'), 2, ',', '.') }}
+                                        {{ number_format(($orcamento->valor_total_itens - $orcamento->totalDescontosAprovados() ?? 0) - collect($descontos)->sum('valor'), 2, ',', '.') }}
                                     </span>
                                 </div>
 
@@ -355,7 +381,7 @@
                                                     class="text-sm font-medium text-yellow-900 dark:text-yellow-200 mb-1">
                                                     Percentual Total de Desconto:</p>
                                                 <p class="text-lg font-bold text-yellow-700 dark:text-yellow-300">
-                                                    {{ number_format((collect($descontos)->sum('valor') / $orcamento->valor_total_itens) * 100, 2, ',', '.') }}%
+                                                    {{ number_format(($orcamento->totalDescontosAprovados() / $orcamento->valor_total_itens) * 100, 2, ',', '.') }}%
                                                 </p>
                                             </div>
                                         </div>
