@@ -67,9 +67,17 @@
                                 <div>
                                     <p class="text-xs text-gray-500 dark:text-gray-400">Valor Total</p>
                                     <p class="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                        R$ {{ number_format($orcamento->valor_total_itens, 2, ',', '.') }}
+                                    </p>
+                                </div>
+                                @if ($orcamento->totalDescontosAprovados() > 0)
+                                    <div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Valor com desconto</p>
+                                    <p class="text-lg font-bold text-blue-600 dark:text-blue-400">
                                         R$ {{ number_format($orcamento->valor_total_itens - ($orcamento->totalDescontosAprovados() ?? 0), 2, ',', '.') }}
                                     </p>
                                 </div>
+                                @endif
                             </div>
                         </div>
 
