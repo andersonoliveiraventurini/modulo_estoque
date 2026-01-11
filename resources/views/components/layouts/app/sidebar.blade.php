@@ -101,7 +101,7 @@
 
         <flux:navlist.group heading="Administração" expandable :expanded="false">
 
-            <flux:navlist.group heading="Usuário e perfis" expandable :expanded="false">
+            <flux:navlist.group heading="Usuários e perfis" expandable :expanded="false">
                 <flux:navlist.item icon="home" :href="route('usuarios.index')"
                     :current="request()->routeIs('usuarios.index')" wire:navigate>{{ __('Usuários') }}
                 </flux:navlist.item>
