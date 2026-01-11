@@ -98,7 +98,7 @@ class PagamentoController extends Controller
 
                 // Valida se o valor pago é suficiente
                 if ($valorPago < $valorFinal) {
-                    $faltando = $valorFinal - $valorPago;
+                    $faltando = $valorFinal - ($orcamento->totalDescontosAprovados ?? 0) - $valorPago;
                     return back()
                         ->withErrors(['erro' => 'Valor pago insuficiente! Falta: R$ ' . number_format($faltando, 2, ',', '.')])
                         ->withInput();

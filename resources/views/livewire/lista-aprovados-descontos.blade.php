@@ -4,7 +4,7 @@
     <!-- Cabeçalho -->
     <div class="flex items-center justify-between p-6 border-b border-zinc-200 dark:border-zinc-700">
         <h2 class="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-            Listagem de Descontos
+            Listagem de Descontos Aprovados
         </h2>
         <div class="flex items-end gap-4">
             <!-- Pesquisa (flexível, ocupa 2x mais espaço) -->
@@ -36,12 +36,6 @@
         <table class="w-full text-sm">
             <thead class="bg-zinc-50 dark:bg-zinc-800">
                 <tr>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('status')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Status
-                        </button>
-                    </th>
                     <th class="px-6 py-3 text-left">
                         <button wire:click="sortBy('motivo')"
                             class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
@@ -89,24 +83,6 @@
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse($descontos as $d)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            @if($d->aprovado_por)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                    Aprovado
-                                </span>
-                            @elseif($d->aprovado_por == null && $d->rejeitado_por==null)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                                    Pendente
-                                </span>
-                            @elseif($d->rejeitado_por)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                                    Rejeitado
-                                </span>
-                            @endif
-                        </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             {{ $d->motivo }}
                         </td>
