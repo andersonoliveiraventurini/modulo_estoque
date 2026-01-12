@@ -39,7 +39,28 @@ class ConferenciaItem extends Model
     {
         return $this->belongsTo(Produto::class);
     }
+
+    public function orcamento()
+    {
+        return $this->belongsTo(Orcamento::class);
+    }
+
+    public function batch()
+    {
+        return $this->belongsTo(PickingBatch::class, 'picking_batch_id');
+    }
+
+    public function itens()
+    {
+        return $this->hasMany(ConferenciaItem::class);
+    }
+
     public function conferente()
+    {
+        return $this->belongsTo(User::class, 'conferente_id');
+    }
+
+    public function conferidoPor()
     {
         return $this->belongsTo(User::class, 'conferido_por_id');
     }

@@ -242,7 +242,12 @@
                         @if ($orcamento->validade)
                             @php
                                 $validade = \Carbon\Carbon::parse($orcamento->validade);
-                                $isExpired = $validade->isPast();
+                                if( $orcamento->status == 'Aprovado' || $orcamento->status == 'Finalizado')
+                                {
+                                    $isExpired = false;
+                                }else{
+                                    $isExpired = $validade->isPast();
+                                }
                             @endphp
                             <span
                                 class="flex items-center gap-1 {{ $isExpired ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-amber-600 dark:text-amber-400' }}">
