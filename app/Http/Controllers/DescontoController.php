@@ -24,6 +24,13 @@ class DescontoController extends Controller
         return view('paginas.descontos.index', compact('descontos'));
     }
 
+    public function descontosAprovados()
+    {
+        dd('teste');
+        return view('paginas.descontos.aprovados');
+    }
+
+
     private function verificarEAtualizarOrcamento($orcamentoId)
     {
         if (!$orcamentoId) {

@@ -89,6 +89,9 @@
             <flux:navlist.item icon="home" :href="route('clientes.index')"
                 :current="request()->routeIs('clientes.index')" wire:navigate>{{ __('Clientes') }}
             </flux:navlist.item>
+            <flux:navlist.item icon="home" :href="route('descontos.aprovados')"
+                :current="request()->routeIs('descontos.aprovados')" wire:navigate>{{ __('Descontos Aprovados') }}
+            </flux:navlist.item>
             <flux:navlist.item icon="home" :href="route('descontos.index')"
                 :current="request()->routeIs('descontos.index')" wire:navigate>{{ __('Descontos') }}
             </flux:navlist.item>
@@ -98,7 +101,7 @@
 
         <flux:navlist.group heading="Administração" expandable :expanded="false">
 
-            <flux:navlist.group heading="Usuário e perfis" expandable :expanded="false">
+            <flux:navlist.group heading="Usuários e perfis" expandable :expanded="false">
                 <flux:navlist.item icon="home" :href="route('usuarios.index')"
                     :current="request()->routeIs('usuarios.index')" wire:navigate>{{ __('Usuários') }}
                 </flux:navlist.item>

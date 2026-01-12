@@ -185,9 +185,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('enderecos', EnderecoController::class)->names('enderecos');
 
 
-
-
     Route::resource('descontos', DescontoController::class)->names('descontos');
+    Route::get('/descontos/aprovados', [DescontoController::class, 'descontosAprovados'])->name('descontos.aprovados');
     Route::get('/descontos/orcamento/{orcamento_id}', [DescontoController::class, 'desconto_orcamento'])->name('descontos.orcamento');
     Route::resource('armazens', ArmazemController::class)->names('armazens');
 

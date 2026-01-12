@@ -776,7 +776,7 @@ class OrcamentoController extends Controller
             // 3) Copiar descontos
             foreach ($orcamentoOriginal->descontos as $desconto) {
                 $novoOrcamento->descontos()->create([
-                    'motivo'      => $desconto->motivo,
+                    //'motivo'      => $desconto->motivo,
                     'valor'       => $desconto->valor,
                     'porcentagem' => $desconto->porcentagem,
                     'tipo'        => $desconto->tipo,
