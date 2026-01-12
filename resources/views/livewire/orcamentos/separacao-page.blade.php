@@ -44,18 +44,6 @@
                             Início: {{ optional($batch->started_at)->format('d/m/Y H:i') }}
                         </p>
                     </div>
-                    <div class="flex flex-col items-end">
-                        @if ($orcamento->validade >= now() || in_array($orcamento->status, ['Aprovado']))
-                            <button wire:click="concluirLote" wire:loading.attr="disabled"
-                                class="inline-flex items-center px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-sm transition-colors disabled:opacity-50">
-                                <span wire:loading.remove wire:target="concluirLote">Concluir Lote</span>
-                                <span wire:loading wire:target="concluirLote">Concluindo...</span>
-                            </button>
-                            @error('batch')
-                                <div class="mt-1 text-xs text-red-500 dark:text-red-400">{{ $message }}</div>
-                            @enderror
-                        @endif
-                    </div>
                 </div>
             </div>
 
@@ -169,7 +157,46 @@
                 </table>
             </div>
         </div>
-
+        @if ($orcamento->validade >= now() || in_array($orcamento->status, ['Aprovado']))
+            <div class="mt-6 rounded-lg border bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+                <div class="p-4">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Informações de Embalagem</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                        Declare como foram armazenados os {{ $batch->items->count() }} itens presentes neste lote:
+                    </p>
+                    <div class="flex flex-col gap-3 md:flex-row md:items-end">
+                        <div class="flex-1">
+                            <label for="caixas" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Caixas</label>
+                            <input type="number" id="caixas" wire:model="caixas" min="0"
+                                class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500" />
+                        </div>
+                        <div class="flex-1">
+                            <label for="sacos" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Sacos</label>
+                            <input type="number" id="sacos" wire:model="sacos" min="0"
+                                class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500" />
+                        </div>
+                        <div class="flex-1">
+                            <label for="sacolas" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Sacolas</label>
+                            <input type="number" id="sacolas" wire:model="sacolas" min="0"
+                                class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500" />
+                        </div>
+                        <div class="flex-1">
+                            <label for="outros" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Outros</label>
+                            <input type="text" id="outros" wire:model="outros" placeholder="Ex: Pallets"
+                                class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500" />
+                        </div>
+                        <button wire:click="concluirLote" wire:loading.attr="disabled"
+                            class="px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-sm transition-colors disabled:opacity-50">
+                            <span wire:loading.remove wire:target="concluirLote">Concluir Lote</span>
+                            <span wire:loading wire:target="concluirLote">Concluindo...</span>
+                        </button>
+                    </div>
+                    @error('batch')
+                        <div class="mt-2 text-xs text-red-500 dark:text-red-400">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+        @endif
         {{-- SEÇÃO 2: BOTÃO PARA INICIAR SEPARAÇÃO (se não houver lote ativo) --}}
     @else
         <div
@@ -186,7 +213,7 @@
                     <span wire:loading wire:target="iniciarSeparacao">Iniciando...</span>
                 </button>
             @else
-                <div class="text-sm text-gray-500 dark:text-gray-400"><br/>
+                <div class="text-sm text-gray-500 dark:text-gray-400"><br />
                     A separação só pode ser iniciada quando o orçamento estiver com status
                     <span class="font-semibold">Aprovado</span>.
                 </div>
@@ -205,7 +232,8 @@
                             <button @click="open = open === {{ $cBatch->id }} ? null : {{ $cBatch->id }}"
                                 class="w-full flex justify-between items-center p-4 text-left">
                                 <div class="flex-1">
-                                    <p class="font-semibold text-gray-800 dark:text-gray-200">Lote #{{ $cBatch->id }}
+                                    <p class="font-semibold text-gray-800 dark:text-gray-200">Lote
+                                        #{{ $cBatch->id }}
                                     </p>
                                     <p class="text-sm text-gray-500 dark:text-gray-400">
                                         Concluído em: {{ optional($cBatch->finished_at)->format('d/m/Y H:i') }} por

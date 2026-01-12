@@ -10,7 +10,11 @@ class PickingBatch extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'orcamento_id','armazem_id','status','observacoes','started_at','finished_at','criado_por_id'
+        'orcamento_id','armazem_id','status','observacoes','started_at','finished_at','criado_por_id',
+        'qtd_caixas',
+        'qtd_sacos',
+        'qtd_sacolas',
+        'outros_embalagem',
     ];
 
     protected $casts = [

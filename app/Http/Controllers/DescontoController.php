@@ -29,6 +29,11 @@ class DescontoController extends Controller
         return view('paginas.descontos.aprovados');
     }
 
+    public function descontosClientes()
+    {
+        return view('paginas.descontos.clientes');
+    }
+
 
     private function verificarEAtualizarOrcamento($orcamentoId)
     {

@@ -93,7 +93,10 @@
                 :current="request()->routeIs('descontos.aprovados')" wire:navigate>{{ __('Descontos Aprovados') }}
             </flux:navlist.item>
             <flux:navlist.item icon="home" :href="route('descontos.index')"
-                :current="request()->routeIs('descontos.index')" wire:navigate>{{ __('Descontos') }}
+                :current="request()->routeIs('descontos.index')" wire:navigate>{{ __('Descontos solicitados') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="home" :href="route('descontos.clientes')"
+                :current="request()->routeIs('descontos.clientes')" wire:navigate>{{ __('Descontos por cliente') }}
             </flux:navlist.item>
             <flux:navlist.item icon="home" wire:navigate>{{ __('Histórico dos Clientes') }}
             </flux:navlist.item>

@@ -96,6 +96,7 @@ Route::middleware(['auth'])->group(function () {
 
 
     // ========== ROTAS DESCONTOS ==========
+    Route::get('/descontos/clientes', [DescontoController::class, 'descontosClientes'])->name('descontos.clientes');
     Route::get('/descontos/aprovados', [DescontoController::class, 'descontosAprovados'])->name('descontos.aprovados');
     Route::get('/descontos/orcamento/{orcamento_id}', [DescontoController::class, 'desconto_orcamento'])->name('descontos.orcamento');
     Route::put('/orcamentos/{id}/aprovar-desconto', [OrcamentoController::class, 'processarAprovacaoDesconto'])

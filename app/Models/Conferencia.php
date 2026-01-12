@@ -16,7 +16,11 @@ class Conferencia extends Model
         'conferente_id',
         'observacoes',
         'started_at',
-        'finished_at'
+        'finished_at',
+        'qtd_caixas',
+        'qtd_sacos',
+        'qtd_sacolas',
+        'outros_embalagem'
     ];
 
     protected $casts = [
