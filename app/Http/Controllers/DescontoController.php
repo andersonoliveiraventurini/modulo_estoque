@@ -26,7 +26,6 @@ class DescontoController extends Controller
 
     public function descontosAprovados()
     {
-        dd('teste');
         return view('paginas.descontos.aprovados');
     }
 

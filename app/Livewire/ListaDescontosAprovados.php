@@ -6,7 +6,7 @@ use App\Models\Desconto;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-class ListaDescontoAprovados extends Component
+class ListaDescontosAprovados extends Component
 {
     use WithPagination;
 
@@ -72,6 +72,7 @@ class ListaDescontoAprovados extends Component
     public function render()
     {
         $descontos = Desconto::query()
+            ->whereNotNull('aprovado_por')
             ->with(['cliente', 'orcamento', 'pedido', 'user'])
             ->when($this->search, function ($query) {
                 // Divide a busca em palavras (tokens)

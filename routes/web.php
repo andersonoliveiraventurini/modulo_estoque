@@ -96,6 +96,11 @@ Route::middleware(['auth'])->group(function () {
 
 
     // ========== ROTAS DESCONTOS ==========
+    Route::get('/descontos/aprovados', [DescontoController::class, 'descontosAprovados'])->name('descontos.aprovados');
+    Route::get('/descontos/orcamento/{orcamento_id}', [DescontoController::class, 'desconto_orcamento'])->name('descontos.orcamento');
+    Route::put('/orcamentos/{id}/aprovar-desconto', [OrcamentoController::class, 'processarAprovacaoDesconto'])
+        ->name('orcamentos.aprovar-desconto');
+
     Route::post('/descontos/{id}/avaliar', [DescontoController::class, 'avaliar'])
         ->name('descontos.avaliar');
     /*Route::post(
@@ -120,6 +125,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/orcamentos/{orcamentoId}/descontos/rejeitar-todos', [DescontoController::class, 'rejeitarTodos'])
         ->name('descontos.rejeitarTodos');
 
+    Route::resource('descontos', DescontoController::class)->names('descontos');
+    // fim descontos
 
     Route::resource('orcamentos', OrcamentoController::class)->names('orcamentos');
 
@@ -143,8 +150,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/conferencia/{conf}/concluir', [ConferenciaController::class, 'concluir'])->name('conferencia.concluir');
 
 
-    Route::put('/orcamentos/{id}/aprovar-desconto', [OrcamentoController::class, 'processarAprovacaoDesconto'])
-        ->name('orcamentos.aprovar-desconto');
+
     // fim rotas separação e conferência
 
     //Route::resource('pagamentos', PagamentoController::class)->names('pagamentos');
@@ -185,9 +191,6 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('enderecos', EnderecoController::class)->names('enderecos');
 
 
-    Route::resource('descontos', DescontoController::class)->names('descontos');
-    Route::get('/descontos/aprovados', [DescontoController::class, 'descontosAprovados'])->name('descontos.aprovados');
-    Route::get('/descontos/orcamento/{orcamento_id}', [DescontoController::class, 'desconto_orcamento'])->name('descontos.orcamento');
     Route::resource('armazens', ArmazemController::class)->names('armazens');
 
     Route::resource('vendedores', VendedorController::class)->names('vendedores');
