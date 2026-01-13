@@ -4,25 +4,27 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: laravel-app
+    env_file:
+      - .env
     ports:
       - "8087:80"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     environment:
-      - APACHE_RUN_USER=www-data
-      - APACHE_RUN_GROUP=www-data
+      APACHE_RUN_USER: www-data
+      APACHE_RUN_GROUP: www-data
     volumes:
-      - .:/var/www/html
-      # - /var/www/html/vendor
-      # - /var/www/html/node_modules
+      # Volume nomeado para storage (PRESERVA DADOS)
+      - storage_data:/var/www/html/storage
+      # Volume nomeado para cache (pode ser recriado)
+      - bootstrap_cache:/var/www/html/bootstrap/cache
     networks:
       - laravel-network
 
   mysql:
     image: mysql:8.0
     container_name: mysql-1
-    ports:
-      - "33060:3306"
     environment:
       MYSQL_ROOT_PASSWORD: rootpass123
       MYSQL_DATABASE: estoque
@@ -30,11 +32,26 @@ services:
       MYSQL_PASSWORD: teste37
     volumes:
       - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - laravel-network
 
 volumes:
+  # Volume do banco de dados (NUNCA SERÁ APAGADO)
   db_data:
+    name: estoque_mysql_data
+  
+  # Volume do storage Laravel (NUNCA SERÁ APAGADO)
+  storage_data:
+    name: estoque_storage_data
+  
+  # Volume do cache bootstrap (pode ser recriado se necessário)
+  bootstrap_cache:
+    name: estoque_bootstrap_cache
 
 networks:
   laravel-network:
