@@ -349,7 +349,7 @@ class OrcamentoController extends Controller
         // 7️⃣ Descontos
         if ($descontoPercentual > 0) {
             $orcamento->descontos()->create([
-                'motivo'      => 'Desconto percentual aplicado (cliente ou vendedor)',
+                'motivo'      => 'Desconto percentual aplicado pelo vendedor',
                 'valor'       => $request->valor_total * ($descontoPercentual / 100),
                 'porcentagem' => $descontoPercentual,
                 'tipo'        => 'percentual',
@@ -776,7 +776,7 @@ class OrcamentoController extends Controller
             // 3) Copiar descontos
             foreach ($orcamentoOriginal->descontos as $desconto) {
                 $novoOrcamento->descontos()->create([
-                    //'motivo'      => $desconto->motivo,
+                    'motivo'      => 'Orçamento duplicado ', 
                     'valor'       => $desconto->valor,
                     'porcentagem' => $desconto->porcentagem,
                     'tipo'        => $desconto->tipo,
@@ -1234,7 +1234,7 @@ class OrcamentoController extends Controller
 
             if ($descontoPercentual) {
                 $orcamento->descontos()->create([
-                    'motivo' => 'Desconto percentual aplicado (cliente ou vendedor)',
+                    'motivo' => 'Desconto percentual aplicado pelo vendedor',
                     'valor' => 0,
                     'porcentagem' => $descontoPercentual,
                     'tipo' => 'percentual',

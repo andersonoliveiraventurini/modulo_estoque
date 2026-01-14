@@ -26,7 +26,7 @@ class Desconto extends Model
         'rejeitado_em',
         'rejeitado_por',
         'justificativa_rejeicao',
-        'observacao',
+        'observacao'
     ];
 
     protected $casts = [

@@ -76,9 +76,11 @@ class Orcamento extends Model
      * Relacionamento com Descontos
      */
     public function descontos()
-    {
-        return $this->hasMany(Desconto::class);
-    }
+{
+    return $this->hasMany(Desconto::class)
+        ->select('id', 'valor', 'tipo', 'porcentagem', 'cliente_id', 'user_id', 'orcamento_id');
+}
+
 
     public function totalDescontosAprovados(): float
     {

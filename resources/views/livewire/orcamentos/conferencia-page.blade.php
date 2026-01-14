@@ -172,6 +172,11 @@
                                 class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500" />
                         </div>
                         <div class="flex-1">
+                            <label for="telas" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Telas</label>
+                            <input type="number" id="telas" wire:model="telas" min="0"
+                                class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500" />
+                        </div>
+                        <div class="flex-1">
                             <label for="outros" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Outros</label>
                             <input type="text" id="outros" wire:model="outros" placeholder="Ex: Pallets"
                                 class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500" />
@@ -236,6 +241,7 @@
                                             @if($cConf->qtd_caixas) {{ $cConf->qtd_caixas }} caixas @endif
                                             @if($cConf->qtd_sacos) {{ $cConf->qtd_sacos }} sacos @endif
                                             @if($cConf->qtd_sacolas) {{ $cConf->qtd_sacolas }} sacolas @endif
+                                            @if($cConf->qtd_telas) {{ $cConf->qtd_telas }} telas @endif
                                             @if($cConf->outros_embalagem) {{ $cConf->outros_embalagem }} @endif
                                         </p>
                                     @endif
