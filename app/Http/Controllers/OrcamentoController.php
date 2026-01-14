@@ -870,6 +870,9 @@ class OrcamentoController extends Controller
             $path = "orcamentos/orcamento_{$novoOrcamento->id}.pdf";
             Storage::disk('public')->put($path, $pdf->output());
             $novoOrcamento->update(['pdf_path' => $path]);
+        }else{
+            $novoOrcamento->status = 'Aprovar desconto';
+            $novoOrcamento->save();
         }
         return redirect()
             ->route('orcamentos.index')
