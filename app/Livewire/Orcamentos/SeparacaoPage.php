@@ -74,6 +74,7 @@ class SeparacaoPage extends Component
             $this->caixas = $this->batch->qtd_caixas ?? 0;
             $this->sacos = $this->batch->qtd_sacos ?? 0;
             $this->sacolas = $this->batch->qtd_sacolas ?? 0;
+            $this->telas = $this->batch->qtd_telas ?? 0;
             $this->outros = $this->batch->outros_embalagem ?? '';
         }
     }
@@ -214,6 +215,7 @@ class SeparacaoPage extends Component
                 'qtd_caixas' => $this->caixas ? (int) $this->caixas : null,
                 'qtd_sacos' => $this->sacos ? (int) $this->sacos : null,
                 'qtd_sacolas' => $this->sacolas ? (int) $this->sacolas : null,
+                'qtd_telas' => $this->telas ? (int) $this->telas : null,
                 'outros_embalagem' => !empty($this->outros) ? trim($this->outros) : null,
             ]);
 
