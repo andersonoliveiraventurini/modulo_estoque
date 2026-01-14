@@ -118,7 +118,7 @@
                     :current="request()->routeIs('vendedores.create')" wire:navigate>{{ __('Criar vendedor') }}
                 </flux:navlist.item>
             </flux:navlist.group>
-            <flux:navlist.item icon="lock" :href="route('filament.admin.pages.dashboard')" wire:navigate>
+            <flux:navlist.item icon="lock-closed" :href="route('filament.admin.pages.dashboard')" wire:navigate>
                 {{ __('Permissões') }}
             </flux:navlist.item>
             <flux:navlist.group heading="Cores" expandable :expanded="false">
