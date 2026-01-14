@@ -834,36 +834,38 @@ class OrcamentoController extends Controller
             $novoOrcamento->update(['endereco_id' => $novoEndereco->id]);
         }
 
+        if ($novoOrcamento->descontos->isEmpty()) {
+            // não tem nenhum desconto, então gera o PDF normalmente
 
-        // 5) Gerar token e expiração
-        $novoOrcamento->update([
-            'token_acesso' => Str::uuid(),
-            'token_expira_em' => Carbon::now()->addDays(2),
-        ]);
+            // 5) Gerar token e expiração
+            $novoOrcamento->update([
+                'token_acesso' => Str::uuid(),
+                'token_expira_em' => Carbon::now()->addDays(2),
+            ]);
 
-        // 6) Gerar PDF com QR Code
-        $linkSeguro = route('orcamentos.view', ['token' => $novoOrcamento->token_acesso]);
-        $qrCodeBase64 = base64_encode(
-            QrCode::format('png')->size(130)->margin(1)->generate($linkSeguro)
-        );
+            // 6) Gerar PDF com QR Code
+            $linkSeguro = route('orcamentos.view', ['token' => $novoOrcamento->token_acesso]);
+            $qrCodeBase64 = base64_encode(
+                QrCode::format('png')->size(130)->margin(1)->generate($linkSeguro)
+            );
 
-        $pdf = Pdf::loadView('documentos_pdf.orcamento', [
-            'orcamento' => $novoOrcamento,
-            'percentualAplicado' => $novoOrcamento->descontos->where('tipo', 'percentual')->first()?->porcentagem ?? null,
-            'qrCode' => $qrCodeBase64,
-        ])->setPaper('a4');
+            $pdf = Pdf::loadView('documentos_pdf.orcamento', [
+                'orcamento' => $novoOrcamento,
+                'percentualAplicado' => $novoOrcamento->descontos->where('tipo', 'percentual')->first()?->porcentagem ?? null,
+                'qrCode' => $qrCodeBase64,
+            ])->setPaper('a4');
 
-        $canvas = $pdf->getDomPDF()->getCanvas();
-        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "Página $pageNumber / $pageCount";
-            $font = $fontMetrics->get_font("Helvetica", "normal");
-            $canvas->text(270, 820, $text, $font, 10);
-        });
+            $canvas = $pdf->getDomPDF()->getCanvas();
+            $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
+                $text = "Página $pageNumber / $pageCount";
+                $font = $fontMetrics->get_font("Helvetica", "normal");
+                $canvas->text(270, 820, $text, $font, 10);
+            });
 
-        $path = "orcamentos/orcamento_{$novoOrcamento->id}.pdf";
-        Storage::disk('public')->put($path, $pdf->output());
-        $novoOrcamento->update(['pdf_path' => $path]);
-
+            $path = "orcamentos/orcamento_{$novoOrcamento->id}.pdf";
+            Storage::disk('public')->put($path, $pdf->output());
+            $novoOrcamento->update(['pdf_path' => $path]);
+        }
         return redirect()
             ->route('orcamentos.index')
             ->with('success', 'Orçamento duplicado com sucesso!');
