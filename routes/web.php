@@ -128,10 +128,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('descontos', DescontoController::class)->names('descontos');
     // fim descontos
-
-    Route::resource('orcamentos', OrcamentoController::class)->names('orcamentos');
-
+    
     Route::get('balcao', [OrcamentoController::class, 'balcao'])->name('orcamentos.balcao');
+    Route::get('orcamentos_concluidos', [OrcamentoController::class, 'orcamentos_concluidos'])->name('orcamentos.concluidos');
     Route::get('balcao_concluidos', [OrcamentoController::class, 'balcao_concluidos'])->name('orcamentos.balcao_concluidos');
     Route::get('status_orcamentos', [OrcamentoController::class, 'kanban_orcamentos'])->name('orcamentos.status_orcamentos');
     // rotas separação e conferência
@@ -164,6 +163,9 @@ Route::middleware(['auth'])->group(function () {
     // Salvar pagamento de orçamento
     Route::post('/orcamentos/{orcamento}/pagamento', [PagamentoController::class, 'salvarPagamentoOrcamento'])
         ->name('orcamentos.pagamento.salvar');
+
+    Route::resource('orcamentos', OrcamentoController::class)->names('orcamentos');
+
 
     // Ver detalhes de um pagamento
     Route::get('/pagamentos/{pagamento}', [PagamentoController::class, 'show'])

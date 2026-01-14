@@ -51,6 +51,11 @@ class OrcamentoController extends Controller
         return view('paginas.orcamentos.index_balcao_concluidos');
     }
 
+    public function orcamentos_concluidos()
+    {
+        return view('paginas.orcamentos.index_concluidos');
+    }
+
 
     public function kanban_orcamentos()
     {
