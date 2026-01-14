@@ -23,6 +23,12 @@ class ConferenciaPage extends Component
     #[Validate(['array'])]
     public array $inputs = [];
 
+    // Campos de embalagem
+    public $caixas = 0;
+    public $sacos = 0;
+    public $sacolas = 0;
+    public $outros = '';
+
     public function mount(int $id)
     {
         $this->orcamentoId = $id;
@@ -39,7 +45,7 @@ class ConferenciaPage extends Component
                 'conferente',
                 'itens.produto',
                 'itens.conferidoPor',
-                'batch'
+                'batch' // Certifica que o batch está sendo carregado
             ])
             ->where('orcamento_id', $this->orcamentoId)
             ->whereIn('status', ['aberta', 'em_conferencia'])
@@ -69,6 +75,13 @@ class ConferenciaPage extends Component
                     'motivo' => $it->motivo_divergencia ?? '',
                 ];
             }
+            
+            // Carrega dados de embalagem da conferência ou do batch
+            // Se a conferência já tem valores, usa eles, senão pega do batch
+            $this->caixas = $this->conferencia->qtd_caixas ?? ($this->conferencia->batch ? $this->conferencia->batch->qtd_caixas : 0) ?? 0;
+            $this->sacos = $this->conferencia->qtd_sacos ?? ($this->conferencia->batch ? $this->conferencia->batch->qtd_sacos : 0) ?? 0;
+            $this->sacolas = $this->conferencia->qtd_sacolas ?? ($this->conferencia->batch ? $this->conferencia->batch->qtd_sacolas : 0) ?? 0;
+            $this->outros = $this->conferencia->outros_embalagem ?? ($this->conferencia->batch ? $this->conferencia->batch->outros_embalagem : '') ?? '';
         }
     }
 
@@ -171,9 +184,14 @@ class ConferenciaPage extends Component
         $divergente = $this->conferencia->itens->firstWhere('status', 'divergente');
 
         DB::transaction(function () use ($divergente, $estoque) {
+            // Atualiza a conferência com os dados de embalagem
             $this->conferencia->update([
                 'status' => 'concluida',
                 'finished_at' => now(),
+                'qtd_caixas' => $this->caixas ? (int) $this->caixas : null,
+                'qtd_sacos' => $this->sacos ? (int) $this->sacos : null,
+                'qtd_sacolas' => $this->sacolas ? (int) $this->sacolas : null,
+                'outros_embalagem' => !empty($this->outros) ? trim($this->outros) : null,
             ]);
 
             if ($divergente) {

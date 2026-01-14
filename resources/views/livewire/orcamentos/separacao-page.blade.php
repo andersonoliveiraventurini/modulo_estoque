@@ -157,6 +157,8 @@
                 </table>
             </div>
         </div>
+
+        {{-- SEÇÃO DE EMBALAGEM - Antes de concluir o lote --}}
         @if ($orcamento->validade >= now() || in_array($orcamento->status, ['Aprovado']))
             <div class="mt-6 rounded-lg border bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
                 <div class="p-4">
@@ -197,6 +199,7 @@
                 </div>
             </div>
         @endif
+
         {{-- SEÇÃO 2: BOTÃO PARA INICIAR SEPARAÇÃO (se não houver lote ativo) --}}
     @else
         <div
@@ -232,13 +235,21 @@
                             <button @click="open = open === {{ $cBatch->id }} ? null : {{ $cBatch->id }}"
                                 class="w-full flex justify-between items-center p-4 text-left">
                                 <div class="flex-1">
-                                    <p class="font-semibold text-gray-800 dark:text-gray-200">Lote
-                                        #{{ $cBatch->id }}
+                                    <p class="font-semibold text-gray-800 dark:text-gray-200">Lote #{{ $cBatch->id }}
                                     </p>
                                     <p class="text-sm text-gray-500 dark:text-gray-400">
                                         Concluído em: {{ optional($cBatch->finished_at)->format('d/m/Y H:i') }} por
                                         {{ optional($cBatch->criadoPor)->name ?? 'N/A' }}
                                     </p>
+                                    @if ($cBatch->qtd_caixas || $cBatch->qtd_sacos || $cBatch->qtd_sacolas || $cBatch->outros_embalagem)
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            Embalagem: 
+                                            @if($cBatch->qtd_caixas) {{ $cBatch->qtd_caixas }} caixas @endif
+                                            @if($cBatch->qtd_sacos) {{ $cBatch->qtd_sacos }} sacos @endif
+                                            @if($cBatch->qtd_sacolas) {{ $cBatch->qtd_sacolas }} sacolas @endif
+                                            @if($cBatch->outros_embalagem) {{ $cBatch->outros_embalagem }} @endif
+                                        </p>
+                                    @endif
                                 </div>
                                 <svg class="w-5 h-5 text-gray-500 transform transition-transform"
                                     :class="{ 'rotate-180': open === {{ $cBatch->id }} }" fill="none"

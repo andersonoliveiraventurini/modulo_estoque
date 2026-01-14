@@ -147,7 +147,44 @@
             </div>
         </div>
 
-        {{-- SEÇÃO 2: BOTÃO PARA INICIAR CONFERÊNCIA (se não houver conferência ativa) --}}
+        {{-- SEÇÃO DE EMBALAGEM - Antes de concluir --}}
+        @if ($orcamento->validade >= now() || in_array($orcamento->status, ['Aprovado']))
+            <div class="mt-6 rounded-lg border bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+                <div class="p-4">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Informações de Embalagem</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                        Confirme ou ajuste como foram armazenados os {{ $conferencia->itens->count() }} itens presentes nesta conferência:
+                    </p>
+                    <div class="flex flex-col gap-3 md:flex-row md:items-end">
+                        <div class="flex-1">
+                            <label for="caixas" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Caixas</label>
+                            <input type="number" id="caixas" wire:model="caixas" min="0"
+                                class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500" />
+                        </div>
+                        <div class="flex-1">
+                            <label for="sacos" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Sacos</label>
+                            <input type="number" id="sacos" wire:model="sacos" min="0"
+                                class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500" />
+                        </div>
+                        <div class="flex-1">
+                            <label for="sacolas" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Sacolas</label>
+                            <input type="number" id="sacolas" wire:model="sacolas" min="0"
+                                class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500" />
+                        </div>
+                        <div class="flex-1">
+                            <label for="outros" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Outros</label>
+                            <input type="text" id="outros" wire:model="outros" placeholder="Ex: Pallets"
+                                class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500" />
+                        </div>
+                        <button wire:click="concluir" wire:loading.attr="disabled"
+                            class="px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-sm transition-colors disabled:opacity-50">
+                            <span wire:loading.remove wire:target="concluir">Concluir Conferência</span>
+                            <span wire:loading wire:target="concluir">Concluindo...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endif
     @else
         <div
             class="rounded-lg border-2 border-dashed p-8 text-center border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
@@ -193,6 +230,15 @@
                                         @endif
                                         • Lote de Separação: #{{ $cConf->picking_batch_id }}
                                     </p>
+                                    @if ($cConf->qtd_caixas || $cConf->qtd_sacos || $cConf->qtd_sacolas || $cConf->outros_embalagem)
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            Embalagem: 
+                                            @if($cConf->qtd_caixas) {{ $cConf->qtd_caixas }} caixas @endif
+                                            @if($cConf->qtd_sacos) {{ $cConf->qtd_sacos }} sacos @endif
+                                            @if($cConf->qtd_sacolas) {{ $cConf->qtd_sacolas }} sacolas @endif
+                                            @if($cConf->outros_embalagem) {{ $cConf->outros_embalagem }} @endif
+                                        </p>
+                                    @endif
                                 </div>
                                 <svg class="w-5 h-5 text-gray-500 transform transition-transform"
                                     :class="{ 'rotate-180': open === {{ $cConf->id }} }" fill="none"

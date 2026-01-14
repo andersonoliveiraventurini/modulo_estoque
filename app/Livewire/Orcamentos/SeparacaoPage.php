@@ -20,6 +20,12 @@ class SeparacaoPage extends Component
     public ?Collection $concludedBatches = null;
     public array $inputs = [];
 
+    // Campos de embalagem
+    public $caixas = 0;
+    public $sacos = 0;
+    public $sacolas = 0;
+    public $outros = '';
+
     public function mount(int $id)
     {
         $this->orcamentoId = $id;
@@ -31,18 +37,16 @@ class SeparacaoPage extends Component
     {
         $this->orcamento = Orcamento::with(['cliente'])->findOrFail($this->orcamentoId);
 
-        // 1. Tenta carregar o lote de separação ativo com as relações aninhadas CORRIGIDAS
         $this->batch = PickingBatch::with([
-                'criadoPor', // Relação direta de PickingBatch
-                'items.produto', // Relação aninhada: items e, para cada item, seu produto
-                'items.separadoPor' // Relação aninhada: items e, para cada item, quem o separou
+                'criadoPor',
+                'items.produto',
+                'items.separadoPor'
             ])
             ->where('orcamento_id', $this->orcamentoId)
             ->whereIn('status', ['aberto', 'em_separacao'])
             ->latest('id')
             ->first();
 
-        // 2. Se não houver lote ativo, carrega os lotes concluídos (com a MESMA CORREÇÃO)
         if (!$this->batch) {
             $this->concludedBatches = PickingBatch::with([
                     'criadoPor',
@@ -55,7 +59,6 @@ class SeparacaoPage extends Component
                 ->get();
         }
 
-        // 3. Preenche os inputs do formulário se houver um lote ativo
         if ($this->batch) {
             $this->inputs = [];
             foreach ($this->batch->items as $it) {
@@ -66,14 +69,17 @@ class SeparacaoPage extends Component
                     'obs' => $it->inconsistencia_obs ?? '',
                 ];
             }
+            
+            // Carrega dados de embalagem se já existirem
+            $this->caixas = $this->batch->qtd_caixas ?? 0;
+            $this->sacos = $this->batch->qtd_sacos ?? 0;
+            $this->sacolas = $this->batch->qtd_sacolas ?? 0;
+            $this->outros = $this->batch->outros_embalagem ?? '';
         }
     }
 
-    // ... O restante do seu arquivo PHP permanece exatamente igual ...
-    
     public function iniciarSeparacao(EstoqueService $estoque)
     {
-        // Impede a criação de um novo lote se já existir um ativo.
         $existingBatch = PickingBatch::where('orcamento_id', $this->orcamentoId)
             ->whereIn('status', ['aberto', 'em_separacao'])
             ->exists();
@@ -201,9 +207,14 @@ class SeparacaoPage extends Component
                 }
             }
 
+            // Atualiza o batch com os dados de embalagem
             $this->batch->update([
                 'status' => 'concluido',
                 'finished_at' => now(),
+                'qtd_caixas' => $this->caixas ? (int) $this->caixas : null,
+                'qtd_sacos' => $this->sacos ? (int) $this->sacos : null,
+                'qtd_sacolas' => $this->sacolas ? (int) $this->sacolas : null,
+                'outros_embalagem' => !empty($this->outros) ? trim($this->outros) : null,
             ]);
 
             $this->batch->orcamento()->update([
