@@ -6,7 +6,7 @@
                 {{-- Logo/Brand --}}
                 <div class="flex items-center">
                     <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">
-                        Status dos Orçamentos
+                        Status dos Pedidos
                     </h1>
                     <span
                         class="ml-3 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full">
@@ -124,10 +124,7 @@
                                                         <div class="flex items-center gap-2 mb-1">
                                                             <span
                                                                 class="text-xs font-mono font-semibold text-zinc-900 dark:text-white">
-                                                                #{{ $orcamento->id }} -
-                                                                <span
-                                                                    class="text-xs px-2 py-1 rounded-full whitespace-nowrap
-                                                     bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">{{ $orcamento->transportes[0]->nome ?? '' }}</span>
+                                                                #{{ $orcamento->id }}
 
                                                                 @if ($orcamento->versao > 1)
                                                                     <span
@@ -151,7 +148,7 @@
                                                     </a>
                                                 </div>
 
-                                                {{-- Status Badge --}}
+                                                {{-- Status Badge 
                                                 <span
                                                     class="text-xs px-2 py-1 rounded-full whitespace-nowrap
                                                     {{ $orcamento->status === 'Aprovado' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : '' }}
@@ -161,9 +158,11 @@
                                                     {{ $orcamento->status === 'Cancelado' ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' : '' }}
                                                     {{ $orcamento->status === 'Rejeitado' ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' : '' }}
                                                     {{ $orcamento->status === 'Expirado' ? 'bg-zinc-100 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300' : '' }}
-                                                ">
-                                                    {{ $orcamento->status }}
-                                                </span>
+                                                "> --}}
+                                                <span
+                                                    class="text-xs px-2 py-1 rounded-full whitespace-nowrap
+                                                     bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">{{ $orcamento->transportes[0]->nome ?? '' }}</span>
+
                                             </div>
                                         </div>
 
