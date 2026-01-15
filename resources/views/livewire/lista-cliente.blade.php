@@ -69,7 +69,19 @@
                             class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             CNPJ
                         </button>
+                    </th>                    
+                    <th class="px-6 py-3 text-left">
+                        <button wire:click="sortBy('vendedor_id')"
+                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Vendedor Interno
+                        </button>
                     </th>
+                    <th class="px-6 py-3 text-left">
+                        <button wire:click="sortBy('vendedor_externo_id')"
+                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Vendedor externo
+                        </button>
+                    </th>   
                     <th class="px-6 py-3 text-left">
                         <button wire:click="sortBy('limite')"
                             class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
@@ -112,6 +124,8 @@
                         <td class="px-6 py-4 font-mono text-zinc-800 dark:text-zinc-200"><a
                                 href="/clientes/{{ $c->id }}"
                                 class="hover:underline">{{ $c->cnpj_formatado }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->vendedor_interno->name ?? '-' }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->vendedor_externo->name ?? '-' }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->limite ?? '-' }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->desconto ?? '-' }}</td>
                         <td class="px-6 py-4 flex gap-2">
