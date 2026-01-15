@@ -22,14 +22,19 @@ return new class extends Migration
             $table->decimal('porcentagem', 5, 2)->nullable()
                 ->comment('Porcentagem do desconto, se aplicável. Exemplo: 15.00 para 15%.');
 
-            $table->enum('tipo', ['fixo', 'percentual'])
-                ->comment('Tipo de desconto: "fixo" para um valor fixo ou "percentual" para uma porcentagem.');
+            $table->enum('tipo', ['fixo', 'percentual', 'produto'])
+                ->comment('Tipo de desconto: "fixo" para um valor fixo ou "produto" ou "percentual" para uma porcentagem.');
 
             // qual cliente
             $table->unsignedBigInteger('cliente_id')->nullable()
                 ->comment('Referência ao cliente associado ao documento, se aplicável.');
             $table->foreign('cliente_id')->references('id')->on('clientes');
 
+            // qual cliente
+            $table->unsignedBigInteger('produto_id')->nullable()
+                ->comment('Referência ao cliente associado ao documento, se aplicável.');
+            $table->foreign('produto_id')->references('id')->on('produtos');
+            
             // orçamento
             $table->unsignedBigInteger('orcamento_id')->nullable()
                 ->comment('Referência ao orçamento associado ao desconto, se aplicável.');

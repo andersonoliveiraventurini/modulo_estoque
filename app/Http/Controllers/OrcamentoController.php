@@ -62,6 +62,13 @@ class OrcamentoController extends Controller
         return view('paginas.orcamentos.index_kanban_orcamentos');
     }
 
+    public function copiarOrcamento()
+    {
+        $orcamentos = Orcamento::orderBy('id', 'desc')->get();
+        $clientes = Cliente::orderBy('nome_fantasia')->get();
+        return view('paginas.orcamentos.copiar_orcamento', compact('orcamentos', 'clientes'));
+    }
+
     /**
      * Show the form for creating a new resource.
      */
@@ -696,8 +703,8 @@ class OrcamentoController extends Controller
             ]);
 
             // Chama a função para gerar o PDF e verifica o resultado
-        $pdfService = new OrcamentoPdfService();
-        $pdfGeradoComSucesso = $pdfService->gerarOrcamentoPdf($orcamento);
+            $pdfService = new OrcamentoPdfService();
+            $pdfGeradoComSucesso = $pdfService->gerarOrcamentoPdf($orcamento);
 
             if ($pdfGeradoComSucesso) {
                 // SUCESSO: Redireciona para a página de visualização do orçamento com uma mensagem de sucesso.
@@ -727,8 +734,12 @@ class OrcamentoController extends Controller
         }
     }
 
-    public function duplicar($id, $descontoautorizado = null)
+    public function duplicar(int $id, ?int $clienteID = null)
     {
+        if ($clienteID && !Cliente::whereKey($clienteID)->exists()) {
+            abort(404, 'Cliente não encontrado');
+        } 
+
         $orcamentoOriginal = Orcamento::with(['itens', 'vidros', 'descontos', 'endereco'])->findOrFail($id);
 
         // Novo nome da obra com data e hora
@@ -737,7 +748,7 @@ class OrcamentoController extends Controller
 
         // Criar novo orçamento
         $novoOrcamento = Orcamento::create([
-            'cliente_id'   => $orcamentoOriginal->cliente_id,
+            'cliente_id'   => $clienteID ?? $orcamentoOriginal->cliente_id,
             // quem está duplicando o orçamento fica com o atendimento
             'vendedor_id'  => Auth()->user()->id,
             'obra'         => $novaObra,
@@ -749,78 +760,34 @@ class OrcamentoController extends Controller
             'validade'     => Carbon::now()->addDays(2),
         ]);
 
-        if ($descontoautorizado == null) {
-            // 1) Copiar itens
-            foreach ($orcamentoOriginal->itens as $item) {
-                $novoOrcamento->itens()->create([
-                    'produto_id'         => $item->produto_id,
-                    'quantidade'         => $item->quantidade,
-                    'valor_unitario'     => $item->valor_unitario,
-                    'valor_unitario_com_desconto' => $item->valor_unitario_com_desconto,
-                    'desconto'           => $item->desconto,
-                    'valor_com_desconto' => $item->valor_com_desconto,
-                    'user_id'            => $item->user_id,
-                ]);
-            }
+        // 1) Copiar itens
+        foreach ($orcamentoOriginal->itens as $item) {
 
-            // 2) Copiar vidros
-            foreach ($orcamentoOriginal->vidros as $vidro) {
-                $novoOrcamento->vidros()->create([
-                    'descricao'            => $vidro->descricao,
-                    'quantidade'           => $vidro->quantidade,
-                    'altura'               => $vidro->altura,
-                    'largura'              => $vidro->largura,
-                    'preco_metro_quadrado' => $vidro->preco_metro_quadrado,
-                    'desconto'             => $vidro->desconto,
-                    'valor_total'          => $vidro->valor_total,
-                    'valor_com_desconto'   => $vidro->valor_com_desconto,
-                    'user_id'              => $vidro->user_id,
-                ]);
-            }
+            $valor_final = $item->valor_unitario * $item->quantidade;
 
-            // 3) Copiar descontos
-            foreach ($orcamentoOriginal->descontos as $desconto) {
-                $novoOrcamento->descontos()->create([
-                    'motivo'      => 'Orçamento duplicado ', 
-                    'valor'       => $desconto->valor,
-                    'porcentagem' => $desconto->porcentagem,
-                    'tipo'        => $desconto->tipo,
-                    'cliente_id'  => $desconto->cliente_id,
-                    'user_id'     => $desconto->user_id,
-                ]);
-            }
-        } else {
-            // Se for para duplicar sem desconto, não copia os descontos
+            $novoOrcamento->itens()->create([
+                'produto_id'         => $item->produto_id,
+                'quantidade'         => $item->quantidade,
+                'valor_unitario'     => $item->valor_unitario,
+                'valor_com_desconto' => $valor_final,
+                'user_id'            => $item->user_id,
+            ]);
+        }
 
-            // 1) Copiar itens
-            foreach ($orcamentoOriginal->itens as $item) {
+        // 2) Copiar vidros
+        foreach ($orcamentoOriginal->vidros as $vidro) {
 
-                $valor_final = $item->valor_unitario * $item->quantidade;
+            $valor_final = $vidro->preco_metro_quadrado * $vidro->quantidade * ($vidro->altura / 100) * ($vidro->largura / 100);
 
-                $novoOrcamento->itens()->create([
-                    'produto_id'         => $item->produto_id,
-                    'quantidade'         => $item->quantidade,
-                    'valor_unitario'     => $item->valor_unitario,
-                    'valor_com_desconto' => $valor_final,
-                    'user_id'            => $item->user_id,
-                ]);
-            }
-
-            // 2) Copiar vidros
-            foreach ($orcamentoOriginal->vidros as $vidro) {
-
-                $valor_final = $vidro->preco_metro_quadrado * $vidro->quantidade * ($vidro->altura / 100) * ($vidro->largura / 100);
-
-                $novoOrcamento->vidros()->create([
-                    'descricao'            => $vidro->descricao,
-                    'quantidade'           => $vidro->quantidade,
-                    'altura'               => $vidro->altura,
-                    'largura'              => $vidro->largura,
-                    'preco_metro_quadrado' => $vidro->preco_metro_quadrado,
-                    'valor_total'          => $valor_final,
-                    'user_id'              => $vidro->user_id,
-                ]);
-            }
+            $novoOrcamento->vidros()->create([
+                'descricao'            => $vidro->descricao,
+                'quantidade'           => $vidro->quantidade,
+                'altura'               => $vidro->altura,
+                'largura'              => $vidro->largura,
+                'preco_metro_quadrado' => $vidro->preco_metro_quadrado,
+                'valor_total'          => $valor_final,
+                'user_id'              => $vidro->user_id,
+            ]);
         }
 
         // 4) Copiar endereço de entrega
@@ -870,7 +837,7 @@ class OrcamentoController extends Controller
             $path = "orcamentos/orcamento_{$novoOrcamento->id}.pdf";
             Storage::disk('public')->put($path, $pdf->output());
             $novoOrcamento->update(['pdf_path' => $path]);
-        }else{
+        } else {
             $novoOrcamento->status = 'Aprovar desconto';
             $novoOrcamento->save();
         }

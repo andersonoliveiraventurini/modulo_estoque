@@ -20,7 +20,7 @@
     <!-- Tabela de produtos -->
     <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-neutral-700" style="max-height: 280px;">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-            <thead class="bg-gray-50 dark:bg-neutral-800">
+            <thead class="bg-gray-50 dark:bg-neutral-800 sticky top-0 z-10">
                 <tr>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Código</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Cor</th>

@@ -87,13 +87,13 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('pedidos', PedidoController::class)->names('pedidos');
     Route::get('orcamento/cliente/{cliente_id}', [OrcamentoController::class, 'clienteOrcamento'])->name('orcamentos.cliente');
     Route::get('orcamento/criar/{cliente_id}', [OrcamentoController::class, 'criarOrcamento'])->name('orcamentos.criar');
-    Route::post('/orcamentos/{id}/duplicar', [OrcamentoController::class, 'duplicar'])
+    Route::get('orcamento/copiar', [OrcamentoController::class, 'copiarOrcamento'])->name('orcamentos.copiar');
+    Route::post('/orcamentos/duplicar/{id}/{clienteID?}', [OrcamentoController::class, 'duplicar'])
         ->name('orcamentos.duplicar');
 
     Route::put('/orcamentos/{id}/status', [OrcamentoController::class, 'atualizarStatus'])->name('orcamentos.atualizar-status');
     Route::put('/orcamentos/{id}/aprovar-desconto', [OrcamentoController::class, 'aprovarDesconto'])->name('orcamentos.aprovar-desconto');
     Route::get('/orcamentos/{id}/gerenciar', OrcamentoShow::class)->name('orcamentos.gerenciar');
-
 
     // ========== ROTAS DESCONTOS ==========
     Route::get('/descontos/clientes', [DescontoController::class, 'descontosClientes'])->name('descontos.clientes');
