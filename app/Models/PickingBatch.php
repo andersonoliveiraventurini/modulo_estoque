@@ -14,7 +14,6 @@ class PickingBatch extends Model
         'qtd_caixas',
         'qtd_sacos',
         'qtd_sacolas',
-        'qtd_telas',
         'outros_embalagem',
     ];
 
@@ -24,13 +23,11 @@ class PickingBatch extends Model
         'qtd_caixas' => 'integer',
         'qtd_sacos' => 'integer',
         'qtd_sacolas' => 'integer',
-        'qtd_telas' => 'integer',
     ];
 
     public function orcamento() { return $this->belongsTo(Orcamento::class); }
     public function items() { return $this->hasMany(PickingItem::class, 'picking_batch_id'); }
     public function criador() { return $this->belongsTo(User::class, 'criado_por_id'); }
-
 
     public function armazem()
     {

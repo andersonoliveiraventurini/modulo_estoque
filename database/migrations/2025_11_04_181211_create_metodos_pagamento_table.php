@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nome')->comment('Nome do método de pagamento');
             $table->string('codigo')->unique()->comment('Código único do método');
-            $table->enum('tipo', ['dinheiro', 'cartao_credito', 'cartao_debito', 'pix', 'boleto', 'transferencia', 'credito_cliente', 'outro'])
+            $table->enum('tipo', ['dinheiro', 'cartao_credito', 'cartao_debito', 'pix', 'boleto1', 'boleto2', 'boleto3', 'boleto4', 'boleto5', 'boleto6', 'boleto7', 'transferencia', 'credito_cliente', 'outros'])
                 ->comment('Tipo do método de pagamento');
             $table->boolean('permite_parcelamento')->default(false)
                 ->comment('Se permite parcelamento');
@@ -55,6 +55,32 @@ return new class extends Migration
                 'updated_at' => now(),
             ],
             [
+                'nome' => 'Boleto 07 dias',
+                'codigo' => 'boleto1',
+                'tipo' => 'boleto1',
+                'permite_parcelamento' => false,
+                'max_parcelas' => null,
+                'ativo' => true,
+                'ordem' => 3,
+                'observacoes' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nome' => 'Boleto 14 dias',
+                'codigo' => 'boleto2',
+                'tipo' => 'boleto2',
+                'permite_parcelamento' => false,
+                'max_parcelas' => null,
+                'ativo' => true,
+                'ordem' => 4,
+                'observacoes' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ], 
+             
+
+            [
                 'nome' => 'Cartão de Débito',
                 'codigo' => 'cartao_debito',
                 'tipo' => 'cartao_debito',
@@ -66,6 +92,7 @@ return new class extends Migration
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+            
             [
                 'nome' => 'Cartão de Crédito',
                 'codigo' => 'cartao_credito',

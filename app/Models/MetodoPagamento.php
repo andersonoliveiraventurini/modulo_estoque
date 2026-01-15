@@ -80,10 +80,16 @@ class MetodoPagamento extends Model
             'cartao_credito' => 'Cartão de Crédito',
             'cartao_debito' => 'Cartão de Débito',
             'pix' => 'PIX',
-            'boleto' => 'Boleto',
+            'boleto1' => 'Boleto 07 dias',
+            'boleto2' => 'Boleto 14 dias',
+            'boleto3' => 'Boleto 21 dias',
+            'boleto4' => 'Boleto 28 dias',
+            'boleto5' => 'Boleto 28/56 dias',
+            'boleto6' => 'Boleto 28/42/56 dias',
+            'boleto7' => 'Boleto 28/56/84 dias',
             'transferencia' => 'Transferência',
             'credito_cliente' => 'Crédito do Cliente',
-            'outro' => 'Outro',
+            'outros' => 'Outros',
         ];
 
         return $tipos[$this->tipo] ?? $this->tipo;

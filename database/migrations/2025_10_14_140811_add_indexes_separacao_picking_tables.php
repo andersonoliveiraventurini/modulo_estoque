@@ -13,7 +13,6 @@ return new class extends Migration
             $table->integer('qtd_caixas')->nullable()->after('observacoes');
             $table->integer('qtd_sacos')->nullable()->after('qtd_caixas');
             $table->integer('qtd_sacolas')->nullable()->after('qtd_sacos');
-            $table->integer('qtd_telas')->nullable()->after('qtd_sacolas');
             $table->string('outros_embalagem')->nullable()->after('qtd_sacolas');
         });
 
@@ -22,7 +21,6 @@ return new class extends Migration
             $table->integer('qtd_caixas')->nullable()->after('observacoes');
             $table->integer('qtd_sacos')->nullable()->after('qtd_caixas');
             $table->integer('qtd_sacolas')->nullable()->after('qtd_sacos');
-            $table->integer('qtd_telas')->nullable()->after('qtd_sacolas');
             $table->string('outros_embalagem')->nullable()->after('qtd_sacolas');
         });
     }
@@ -30,11 +28,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('picking_batches', function (Blueprint $table) {
-            $table->dropColumn(['qtd_caixas', 'qtd_sacos', 'qtd_sacolas', 'qtd_telas', 'outros_embalagem']);
+            $table->dropColumn(['qtd_caixas', 'qtd_sacos', 'qtd_sacolas', 'outros_embalagem']);
         });
 
         Schema::table('conferencias', function (Blueprint $table) {
-            $table->dropColumn(['qtd_caixas', 'qtd_sacos', 'qtd_sacolas', 'qtd_telas', 'outros_embalagem']);
+            $table->dropColumn(['qtd_caixas', 'qtd_sacos', 'qtd_sacolas', 'outros_embalagem']);
         });
     }
 };

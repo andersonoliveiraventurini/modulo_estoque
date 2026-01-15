@@ -183,11 +183,6 @@
                                 class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500" />
                         </div>
                         <div class="flex-1">
-                            <label for="telas" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Telas</label>
-                            <input type="number" id="telas" wire:model="telas" min="0"
-                                class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500" />
-                        </div>
-                        <div class="flex-1">
                             <label for="outros" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Outros</label>
                             <input type="text" id="outros" wire:model="outros" placeholder="Ex: Pallets"
                                 class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500" />
@@ -252,7 +247,6 @@
                                             @if($cBatch->qtd_caixas) {{ $cBatch->qtd_caixas }} caixas @endif
                                             @if($cBatch->qtd_sacos) {{ $cBatch->qtd_sacos }} sacos @endif
                                             @if($cBatch->qtd_sacolas) {{ $cBatch->qtd_sacolas }} sacolas @endif
-                                            @if($cBatch->qtd_telas) {{ $cBatch->qtd_telas }} telas @endif
                                             @if($cBatch->outros_embalagem) {{ $cBatch->outros_embalagem }} @endif
                                         </p>
                                     @endif

@@ -20,7 +20,6 @@ class Conferencia extends Model
         'qtd_caixas',
         'qtd_sacos',
         'qtd_sacolas',
-        'qtd_telas',
         'outros_embalagem'
     ];
 

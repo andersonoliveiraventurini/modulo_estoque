@@ -81,7 +81,6 @@ class ConferenciaPage extends Component
             $this->caixas = $this->conferencia->qtd_caixas ?? ($this->conferencia->batch ? $this->conferencia->batch->qtd_caixas : 0) ?? 0;
             $this->sacos = $this->conferencia->qtd_sacos ?? ($this->conferencia->batch ? $this->conferencia->batch->qtd_sacos : 0) ?? 0;
             $this->sacolas = $this->conferencia->qtd_sacolas ?? ($this->conferencia->batch ? $this->conferencia->batch->qtd_sacolas : 0) ?? 0;
-            $this->telas = $this->conferencia->qtd_telas ?? ($this->conferencia->batch ? $this->conferencia->batch->qtd_telas : 0) ?? 0;
             $this->outros = $this->conferencia->outros_embalagem ?? ($this->conferencia->batch ? $this->conferencia->batch->outros_embalagem : '') ?? '';
         }
     }
@@ -192,7 +191,6 @@ class ConferenciaPage extends Component
                 'qtd_caixas' => $this->caixas ? (int) $this->caixas : null,
                 'qtd_sacos' => $this->sacos ? (int) $this->sacos : null,
                 'qtd_sacolas' => $this->sacolas ? (int) $this->sacolas : null,
-                'qtd_telas' => $this->telas ? (int) $this->telas : null,
                 'outros_embalagem' => !empty($this->outros) ? trim($this->outros) : null,
             ]);
 

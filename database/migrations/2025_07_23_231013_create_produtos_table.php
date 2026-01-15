@@ -25,7 +25,7 @@ return new class extends Migration
             $table->decimal('preco_base', 15, 2)->nullable()->comment('Preço de base (sem imposto) - Valor gasto para adquirir ou produzir o produto.');
             $table->decimal('preco_custo', 15, 2)->nullable()->comment('Preço de custo do produto - Valor gasto para adquirir ou produzir o produto.');
             $table->decimal('preco_venda', 15, 2)->nullable()->comment('Preço de venda do produto - Valor pelo qual o produto é comercializado.');
-            $table->boolean('liberar_desconto')->default(false)->comment('Indica se o desconto pode ser aplicado ao produto.');
+            $table->boolean('liberar_desconto')->default(true)->comment('Indica se o desconto pode ser aplicado ao produto.');
             $table->decimal('porcentagem_desconto', 5, 2)->nullable()->comment('Porcentagem de desconto a ser aplicada ao produto.');
             $table->decimal('valor_desconto', 15, 2)->nullable()->comment('Valor do desconto a ser aplicado ao produto.');
             $table->decimal('estoque_web', 15, 2)->nullable()->comment('Quantidade separada para venda site.');

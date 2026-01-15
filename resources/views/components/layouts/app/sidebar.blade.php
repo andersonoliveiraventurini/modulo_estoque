@@ -19,7 +19,7 @@
         </flux:navlist.item>
         <flux:navlist.group heading="Balcão" expandable :expanded="false">
             <flux:navlist.item icon="home" :href="route('orcamentos.balcao')"
-                :current="request()->routeIs('orcamentos.balcao')" wire:navigate>{{ __('Pedidos pendentes') }}
+                :current="request()->routeIs('orcamentos.balcao')" wire:navigate>{{ __('Caixa') }}
             </flux:navlist.item>
             <flux:navlist.item icon="home" :href="route('orcamentos.balcao_concluidos')"
                 :current="request()->routeIs('orcamentos.balcao_concluidos')" wire:navigate>

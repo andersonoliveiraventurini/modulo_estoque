@@ -42,7 +42,7 @@
                         'nome' => 'Nome',
                         'descricao' => 'Descrição',
                         'fornecedor_id' => 'Fornecedor',
-                        'ncm' => 'NCM',
+                        'part_number' => 'Part Number',
                         'preco_venda' => 'Preço venda',
                         'preco_custo' => 'Preço custo',
                         'estoque_atual' => 'Quantidade atual',
@@ -109,7 +109,7 @@
                         <td class="px-6 py-4">
                             <a href="/produtos/{{ $c->id }}"  class="hover:underline"
                             class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition">
-                                {{ $c->ncm }}
+                                {{ $c->part_number }}
                             </a>
                         </td>
                         <!-- Preço venda -->
