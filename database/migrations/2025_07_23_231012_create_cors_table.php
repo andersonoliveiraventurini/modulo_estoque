@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('cores', function (Blueprint $table) {
             $table->id();
             $table->string('nome')->unique();
-            $table->string('codigo_hex', 7)->unique()->nullable();
+            $table->string('codigo_hex', 7)->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
