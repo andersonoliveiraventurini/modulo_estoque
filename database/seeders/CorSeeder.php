@@ -28,9 +28,11 @@ class CorSeeder extends Seeder
         Cor::create(['nome' => 'Prata', 'codigo_hex' => '#C0C0C0']);
         Cor::create(['nome' => 'Dourado', 'codigo_hex' => '#FFD700']);
         Cor::create(['nome' => 'Bege', 'codigo_hex' => '#F5F5DC']);
-        Cor::create(['nome' => 'Fosco', 'codigo_hex' => '#708090']);
-        Cor::create(['nome' => 'Cromado', 'codigo_hex' => '#708090']);
-        Cor::create(['nome' => 'Brilhante', 'codigo_hex' => '#708090']);        
-        Cor::create(['nome' => 'Rose', 'codigo_hex' => '#708090']);
+        Cor::create(['nome' => 'Fosco',     'codigo_hex' => '#4F4F4F']); // Cinza escuro fosco
+        Cor::create(['nome' => 'Cromado',   'codigo_hex' => '#E5E5E5']); // Prata/cromado
+        Cor::create(['nome' => 'Brilhante', 'codigo_hex' => '#FFFFFF']); // Branco/brilhante
+        Cor::create(['nome' => 'Rose',      'codigo_hex' => '#B76E79']); // Rose Gold
+
+
     }
 }
