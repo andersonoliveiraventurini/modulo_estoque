@@ -48,7 +48,7 @@ class ConsultaPrecoController extends Controller
     {
         $request->merge(['usuario_id' => auth()->id()]);
         $consultaPreco = ConsultaPreco::create($request->except('_token'));
-        return redirect()->route('consulta_preco.show', $consultaPreco)->with('success', 'Consulta de Preço criada com sucesso.');
+        return redirect()->route('consulta_preco.show', $consultaPreco)->with('success', 'Encomenda criada com sucesso.');
     }
 
     /**
@@ -89,12 +89,12 @@ class ConsultaPrecoController extends Controller
         if ($pdfGeradoComSucesso) {
             return redirect()
                 ->route('consulta_preco.show', $consultaPreco->id)
-                ->with('success', 'Consulta de Preço atualizada e PDF gerado com sucesso!');
+                ->with('success', 'Encomenda atualizada e PDF gerado com sucesso!');
         }
 
         return redirect()
             ->route('consulta_preco.show', $consultaPreco->id)
-            ->with('error', 'Consulta de Preço atualizada com sucesso, mas ocorreu uma falha ao gerar o PDF. Por favor, contate o suporte.');
+            ->with('error', 'Encomenda atualizada com sucesso, mas ocorreu uma falha ao gerar o PDF. Por favor, contate o suporte.');
     }
 
     private function gerarCotacaoPdf(ConsultaPreco $cotacao): bool
@@ -214,6 +214,6 @@ try{
     {
         $consultaPreco = ConsultaPreco::findOrFail($consulta_id);
         $consultaPreco->delete();
-        return redirect()->route('consulta_preco.index')->with('success', 'Consulta de Preço excluída com sucesso.');
+        return redirect()->route('consulta_preco.index')->with('success', 'Encomenda excluída com sucesso.');
     }
 }

@@ -38,6 +38,10 @@
                 <tr>
                     <th class="px-6 py-3 text-left">Nome Fantasia</th>
                     <th class="px-6 py-3 text-left">CNPJ</th>
+                    <th class="px-6 py-3 text-left">Razão social</th>
+                    <th class="px-6 py-3 text-left">Tratamento</th>
+                    <th class="px-6 py-3 text-left">CNPJ</th>
+                    <th class="px-6 py-3 text-left">Vendedor</th>
                     <th class="px-6 py-3 text-left">Data Bloqueio</th>
                     <th class="px-6 py-3 text-left">Motivo</th>
                     <th class="px-6 py-3 text-left">Bloqueado por</th>
@@ -52,6 +56,9 @@
                             </a>
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->cnpj ?? '-' }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->razao_social ?? 'Não cadastrado' }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->tratamento ?? 'Não cadastrado' }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->vendedor?->name ?? 'Não cadastrado' }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             {{ optional($c->ultimoBloqueio?->created_at)->format('d/m/Y H:i') ?? '-' }}
                         </td>

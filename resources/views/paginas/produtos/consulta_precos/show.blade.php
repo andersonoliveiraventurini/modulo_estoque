@@ -1,4 +1,4 @@
-<x-layouts.app :title="__('Visualizar consulta de preço')">
+<x-layouts.app :title="__('Visualizar Encomenda')">
     <div class="flex w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
 
@@ -11,7 +11,7 @@
                     <div class="col-span-12 md:col-span-8">
                         <h2 class="text-xl font-semibold flex items-center gap-2">
                             <x-heroicon-o-currency-dollar class="w-5 h-5 text-primary-600" />
-                            Dados da Consulta de Preço #{{ $consulta->id }} @if ($consulta->pdf_path)
+                            Dados da Encomenda #{{ $consulta->id }} @if ($consulta->pdf_path)
                                 <a href="{{ asset('storage/' . $consulta->pdf_path) }}" target="_blank"
                                     rel="noopener">
                                     <x-button size="sm" variant="primary">
@@ -22,7 +22,7 @@
                             @endif
                         </h2>
                         <p class="text-sm text-neutral-500 dark:text-neutral-400">
-                            Informações detalhadas da consulta de preço selecionada.
+                            Informações detalhadas da encomenda selecionada.
                         </p>
                     </div>
 

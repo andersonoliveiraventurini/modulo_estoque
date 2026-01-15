@@ -4,7 +4,7 @@
     <!-- Cabeçalho -->
     <div class="flex items-center justify-between p-6 border-b border-zinc-200 dark:border-zinc-700">
         <h2 class="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-            Consulta de preços
+            Consulta Encomendas
         </h2>
         <div class="flex items-end gap-4">
             <!-- Pesquisa (flexível, ocupa 2x mais espaço) -->
@@ -104,7 +104,7 @@
                             </a>
 
                             <form action="{{ route('consulta_preco.destroy', $p->id) }}" method="POST"
-                                onsubmit="return confirm('Deseja excluir esta consulta de preço?');">
+                                onsubmit="return confirm('Deseja excluir esta encomenda?');">
                                 @csrf
                                 @method('DELETE')
                                 <x-button size="sm" variant="danger">
@@ -118,7 +118,7 @@
                 @empty
                     <tr>
                         <td colspan="6" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
-                            Nenhum produto encontrado.
+                            Nenhuma encomenda encontrada.
                         </td>
                     </tr>
                 @endforelse

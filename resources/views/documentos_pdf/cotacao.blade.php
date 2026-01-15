@@ -231,7 +231,7 @@
         <tbody>
             <tr>
                 <td align="center">Cotação #{{ $cotacao->id }}</td>
-                <td>{{ $cotacao->descricao ?? 'Consulta de preço' }}</td>
+                <td>{{ $cotacao->descricao ?? 'Encomenda' }}</td>
                 <td class="valor">{{ $cotacao->quantidade ?? '---' }}</td>
                 <td align="center">
                     @if ($cotacao->cor)

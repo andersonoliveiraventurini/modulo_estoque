@@ -59,12 +59,12 @@
             <flux:navlist.item icon="truck" :href="route('fornecedores.create')"
                 :current="request()->routeIs('fornecedores.create')" wire:navigate>
                 {{ __('Cadastrar fornecedor') }}</flux:navlist.item>
+            <flux:navlist.item icon="home" :href="route('consulta_preco.index')"
+                :current="request()->routeIs('consulta_preco.index')" wire:navigate>{{ __('Encomendas') }}
+            </flux:navlist.item>
         </flux:navlist.group>
 
         <flux:navlist.group heading="Estoque" expandable :expanded="false">
-            <flux:navlist.item icon="home" :href="route('consulta_preco.index')"
-                :current="request()->routeIs('consulta_preco.index')" wire:navigate>{{ __('Consultas de preço') }}
-            </flux:navlist.item>
             <flux:navlist.item icon="home" :href="route('movimentacao.index')"
                 :current="request()->routeIs('movimentacao.index')" wire:navigate>{{ __('Movimentações') }}
             </flux:navlist.item>
@@ -81,7 +81,7 @@
                 :current="request()->routeIs('produtos.create')" wire:navigate>{{ __('Criar produto') }}
             </flux:navlist.item>
             <flux:navlist.item icon="home" :href="route('consulta_preco.index')"
-                :current="request()->routeIs('consulta_preco.index')" wire:navigate>{{ __('Cotações feitas') }}
+                :current="request()->routeIs('consulta_preco.index')" wire:navigate>{{ __('Encomendas') }}
             </flux:navlist.item>
         </flux:navlist.group>
 

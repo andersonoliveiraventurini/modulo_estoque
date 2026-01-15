@@ -97,7 +97,7 @@
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             <a href="{{ route('consulta_preco.criar_cotacao', $c->id ?? null) }}"
                                 class="text-secondary-600 text-sm font-medium" class="hover:underline">
-                                Fazer cotação
+                                Fazer encomenda
                             </a>
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">

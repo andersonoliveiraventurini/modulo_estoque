@@ -38,18 +38,7 @@
                             <x-select name="unidade" label="Unidade de Medida *">
                                 <option value="">Selecione...</option>
                                 <option value="UN - Unidade">UN - Unidade</option>
-                                <option value="PC - Peça">PC - Peça</option>
                                 <option value="KG - Quilograma">KG - Quilograma</option>
-                                <option value="G - Grama">G - Grama</option>
-                                <option value="L - Litro">L - Litro</option>
-                                <option value="ML - Mililitro">ML - Mililitro</option>
-                                <option value="M - Metro">M - Metro</option>
-                                <option value="CM - Centímetro">CM - Centímetro</option>
-                                <option value="M2 - Metro Quadrado">M2 - Metro Quadrado</option>
-                                <option value="M3 - Metro Cúbico">M3 - Metro Cúbico</option>
-                                <option value="CX - Caixa">CX - Caixa</option>
-                                <option value="PAR - Par">PAR - Par</option>
-                                <option value="DZ - Dúzia">DZ - Dúzia</option>
                                 <option value="PT - Pacote">PT - Pacote</option>
                             </x-select>
 

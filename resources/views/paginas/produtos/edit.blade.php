@@ -54,7 +54,7 @@
 
                             <x-select name="unidade_medida" label="Unidade de Medida *">
                                 <option value="">Selecione...</option>
-                                @foreach (['UN - Unidade', 'PC - Peça', 'KG - Quilograma', 'G - Grama', 'L - Litro', 'ML - Mililitro', 'M - Metro', 'CM - Centímetro', 'M2 - Metro Quadrado', 'M3 - Metro Cúbico', 'CX - Caixa', 'PAR - Par', 'DZ - Dúzia', 'PT - Pacote'] as $opt)
+                                @foreach (['UN - Unidade', 'KG - Quilograma', 'PT - Pacote'] as $opt)
                                     <option value="{{ $opt }}" @selected(old('unidade_medida', $produto->unidade_medida) == $opt)>
                                         {{ $opt }}
                                     </option>
