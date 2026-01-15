@@ -127,32 +127,33 @@
                                                                 #{{ $orcamento->id }} -
                                                                 <span
                                                                     class="text-xs px-2 py-1 rounded-full whitespace-nowrap
-                                                     bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300" >{{ $orcamento->transportes[0]->nome }}</span>
-                                                            
-                                                            @if ($orcamento->versao > 1)
-<span
-                                                                    class="text-xs
+                                                     bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">{{ $orcamento->transportes[0]->nome ?? '' }}</span>
+
+                                                                @if ($orcamento->versao > 1)
+                                                                    <span
+                                                                        class="text-xs
                                                                     px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-700
                                                                     text-zinc-600 dark:text-zinc-400 rounded">
-                                                                    v{{ $orcamento->versao }}
-                                                                </span>
-                                @endif
-                                @if ($orcamento->complemento === 'Sim')
-                                    <span
-                                        class="text-xs px-1.5 py-0.5 bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 rounded">
-                                        Complemento
-                                    </span>
-                                @endif
-                            </div>
-                            <h4 class="font-semibold text-sm text-zinc-900 dark:text-white line-clamp-2">
-                                {{ $orcamento->obra ?: 'Sem título de obra' }}
-                            </h4>
-                            </a>
-                        </div>
+                                                                        v{{ $orcamento->versao }}
+                                                                    </span>
+                                                                @endif
+                                                                @if ($orcamento->complemento === 'Sim')
+                                                                    <span
+                                                                        class="text-xs px-1.5 py-0.5 bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 rounded">
+                                                                        Complemento
+                                                                    </span>
+                                                                @endif
+                                                        </div>
+                                                        <h4
+                                                            class="font-semibold text-sm text-zinc-900 dark:text-white line-clamp-2">
+                                                            {{ $orcamento->obra ?: 'Sem título de obra' }}
+                                                        </h4>
+                                                    </a>
+                                                </div>
 
-                        {{-- Status Badge --}}
-                        <span
-                            class="text-xs px-2 py-1 rounded-full whitespace-nowrap
+                                                {{-- Status Badge --}}
+                                                <span
+                                                    class="text-xs px-2 py-1 rounded-full whitespace-nowrap
                                                     {{ $orcamento->status === 'Aprovado' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : '' }}
                                                     {{ $orcamento->status === 'Pendente' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' : '' }}
                                                     {{ $orcamento->status === 'Aprovar desconto' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300' : '' }}
@@ -161,111 +162,122 @@
                                                     {{ $orcamento->status === 'Rejeitado' ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' : '' }}
                                                     {{ $orcamento->status === 'Expirado' ? 'bg-zinc-100 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300' : '' }}
                                                 ">
-                            {{ $orcamento->status }}
-                        </span>
-                    </div>
-            </div>
+                                                    {{ $orcamento->status }}
+                                                </span>
+                                            </div>
+                                        </div>
 
-            {{-- Card Body --}}
-            <div class="p-3 space-y-2">
-                {{-- Cliente --}}
-                @if ($orcamento->cliente)
-                    <div class="flex items-center gap-2 text-xs">
-                        <svg class="w-4 h-4 text-zinc-400 flex-shrink-0" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        <span class="text-zinc-700 dark:text-zinc-300 truncate">
-                            {{ $orcamento->cliente->nome }}
-                        </span>
-                    </div>
-                @endif
+                                        {{-- Card Body --}}
+                                        <div class="p-3 space-y-2">
+                                            {{-- Cliente --}}
+                                            @if ($orcamento->cliente)
+                                                <div class="flex items-center gap-2 text-xs">
+                                                    <svg class="w-4 h-4 text-zinc-400 flex-shrink-0" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                    </svg>
+                                                    <span class="text-zinc-700 dark:text-zinc-300 truncate">
+                                                        {{ $orcamento->cliente->nome }}
+                                                    </span>
+                                                </div>
+                                            @endif
 
-                {{-- Endereço/Cidade --}}
-                @if ($orcamento->endereco)
-                    <div class="flex items-center gap-2 text-xs">
-                        <svg class="w-4 h-4 text-zinc-400 flex-shrink-0" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <span class="text-zinc-700 dark:text-zinc-300 truncate">
-                            {{ $orcamento->endereco->cidade }}{{ $orcamento->endereco->estado ? '/' . $orcamento->endereco->estado : '' }}
-                        </span>
-                    </div>
-                @endif
+                                            {{-- Endereço/Cidade --}}
+                                            @if ($orcamento->endereco)
+                                                <div class="flex items-center gap-2 text-xs">
+                                                    <svg class="w-4 h-4 text-zinc-400 flex-shrink-0" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    </svg>
+                                                    <span class="text-zinc-700 dark:text-zinc-300 truncate">
+                                                        {{ $orcamento->endereco->cidade }}{{ $orcamento->endereco->estado ? '/' . $orcamento->endereco->estado : '' }}
+                                                    </span>
+                                                </div>
+                                            @endif
 
-                {{-- Vendedor --}}
-                @if ($orcamento->vendedor)
-                    <div class="flex items-center gap-2 text-xs">
-                        <svg class="w-4 h-4 text-zinc-400 flex-shrink-0" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                        <span class="text-zinc-700 dark:text-zinc-300 truncate">
-                            Vendedor: {{ $orcamento->vendedor->name }}
-                        </span>
-                    </div>
-                @endif
+                                            {{-- Vendedor --}}
+                                            @if ($orcamento->vendedor)
+                                                <div class="flex items-center gap-2 text-xs">
+                                                    <svg class="w-4 h-4 text-zinc-400 flex-shrink-0" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                    </svg>
+                                                    <span class="text-zinc-700 dark:text-zinc-300 truncate">
+                                                        Vendedor: {{ $orcamento->vendedor->name }}
+                                                    </span>
+                                                </div>
+                                            @endif
 
-                {{-- Valor Total --}}
-                @if ($orcamento->valor_total_itens)
-                    <div class="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-700">
-                        <span class="text-xs text-zinc-500 dark:text-zinc-400">
-                            Valor Total itens:
-                        </span>
-                        <span class="text-sm font-bold text-green-600 dark:text-green-400">
-                            R$
-                            {{ number_format($orcamento->valor_total_itens, 2, ',', '.') }}
-                        </span>
-                    </div>
-                @endif
-            </div>
+                                            {{-- Valor Total --}}
+                                            @if ($orcamento->valor_total_itens)
+                                                <div
+                                                    class="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-700">
+                                                    <span class="text-xs text-zinc-500 dark:text-zinc-400">
+                                                        Valor Total itens:
+                                                    </span>
+                                                    <span class="text-sm font-bold text-green-600 dark:text-green-400">
+                                                        R$
+                                                        {{ number_format($orcamento->valor_total_itens, 2, ',', '.') }}
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        </div>
 
-            {{-- Card Footer --}}
-            <div
-                class="px-3 py-2 bg-zinc-50 dark:bg-zinc-900/50 border-t border-zinc-100 dark:border-zinc-700 rounded-b-lg">
-                <div class="flex items-center justify-between text-xs">
-                    <div class="flex items-center gap-3 text-zinc-500 dark:text-zinc-400">
-                        <span class="flex items-center gap-1">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            {{ $orcamento->created_at->format('d/m/Y') }}
-                        </span>
+                                        {{-- Card Footer --}}
+                                        <div
+                                            class="px-3 py-2 bg-zinc-50 dark:bg-zinc-900/50 border-t border-zinc-100 dark:border-zinc-700 rounded-b-lg">
+                                            <div class="flex items-center justify-between text-xs">
+                                                <div class="flex items-center gap-3 text-zinc-500 dark:text-zinc-400">
+                                                    <span class="flex items-center gap-1">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                        </svg>
+                                                        {{ $orcamento->created_at->format('d/m/Y') }}
+                                                    </span>
 
-                        @if ($orcamento->validade)
-                            @php
-                                $validade = \Carbon\Carbon::parse($orcamento->validade);
-                                if( $orcamento->status == 'Aprovado' || $orcamento->status == 'Finalizado')
-                                {
-                                    $isExpired = false;
-                                }else{
-                                    $isExpired = $validade->isPast();
-                                }
-                            @endphp
-                            <span
-                                class="flex items-center gap-1 {{ $isExpired ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-amber-600 dark:text-amber-400' }}">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Val: {{ $validade->format('d/m/Y') }}
-                                @if ($isExpired)
-                                    <span class="text-[10px] uppercase">(Expirado)</span>
-                                @endif
-                            </span>
-                        @endif
-                    </div>
+                                                    @if ($orcamento->validade)
+                                                        @php
+                                                            $validade = \Carbon\Carbon::parse($orcamento->validade);
+                                                            if (
+                                                                $orcamento->status == 'Aprovado' ||
+                                                                $orcamento->status == 'Finalizado'
+                                                            ) {
+                                                                $isExpired = false;
+                                                            } else {
+                                                                $isExpired = $validade->isPast();
+                                                            }
+                                                        @endphp
+                                                        <span
+                                                            class="flex items-center gap-1 {{ $isExpired ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-amber-600 dark:text-amber-400' }}">
+                                                            <svg class="w-3.5 h-3.5" fill="none"
+                                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                            Val: {{ $validade->format('d/m/Y') }}
+                                                            @if ($isExpired)
+                                                                <span class="text-[10px] uppercase">(Expirado)</span>
+                                                            @endif
+                                                        </span>
+                                                    @endif
+                                                </div>
 
-                    {{-- Quick Actions (visible on hover) --}}
-                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {{-- <button
+                                                {{-- Quick Actions (visible on hover) --}}
+                                                <div
+                                                    class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    {{-- <button
                                                         class="p-1 text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400"
                                                         title="Ver detalhes">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor"
@@ -288,28 +300,28 @@
                                                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                         </svg>
                                                     </button> --}}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="flex-1 flex flex-col items-center justify-center text-center py-12">
+                                        <svg class="w-12 h-12 text-zinc-300 dark:text-zinc-600 mb-3" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                        </svg>
+                                        <p class="text-sm text-zinc-400 dark:text-zinc-500">
+                                            Nenhum orçamento
+                                        </p>
+                                    </div>
+                                @endforelse
+                            </div>
+                        </div>
                     </div>
-                </div>
+                @endforeach
             </div>
         </div>
-        @empty
-            <div class="flex-1 flex flex-col items-center justify-center text-center py-12">
-                <svg class="w-12 h-12 text-zinc-300 dark:text-zinc-600 mb-3" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                </svg>
-                <p class="text-sm text-zinc-400 dark:text-zinc-500">
-                    Nenhum orçamento
-                </p>
-            </div>
-            @endforelse
-        </div>
-    </div>
-    </div>
-    @endforeach
-    </div>
-    </div>
     </div>
 
     {{-- Drag and Drop Script --}}
@@ -387,4 +399,4 @@
             });
         </script>
     @endscript
-    </div>
+</div>

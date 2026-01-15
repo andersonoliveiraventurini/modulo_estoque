@@ -62,6 +62,12 @@
             <flux:navlist.item icon="home" :href="route('consulta_preco.index')"
                 :current="request()->routeIs('consulta_preco.index')" wire:navigate>{{ __('Encomendas') }}
             </flux:navlist.item>
+            <flux:navlist.item icon="home" 
+                wire:navigate>{{ __('Pedidos de compras - Cezar') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="home" 
+                 wire:navigate>{{ __('Relatórios- Cezar') }}
+            </flux:navlist.item>
         </flux:navlist.group>
 
         <flux:navlist.group heading="Estoque" expandable :expanded="false">
@@ -71,6 +77,16 @@
             <flux:navlist.item icon="truck" :href="route('movimentacao.create')"
                 :current="request()->routeIs('movimentacao.create')" wire:navigate>
                 {{ __('Receber produto') }}</flux:navlist.item>
+
+                <flux:navlist.item icon="home" 
+                wire:navigate>{{ __('Devoluções - Cezar') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="home" 
+                 wire:navigate>{{ __('Não conformidades - Cezar') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="home" 
+                 wire:navigate>{{ __('Relatórios- Cezar') }}
+            </flux:navlist.item>
         </flux:navlist.group>
 
         <flux:navlist.group heading="Produtos" expandable :expanded="false">
@@ -82,6 +98,9 @@
             </flux:navlist.item>
             <flux:navlist.item icon="home" :href="route('consulta_preco.index')"
                 :current="request()->routeIs('consulta_preco.index')" wire:navigate>{{ __('Encomendas') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="home" 
+                 wire:navigate>{{ __('Relatórios - Cezar') }}
             </flux:navlist.item>
         </flux:navlist.group>
 
