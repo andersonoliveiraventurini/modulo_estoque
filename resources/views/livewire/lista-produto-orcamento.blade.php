@@ -24,12 +24,12 @@
                 <tr>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Código</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Cor</th>
-                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Preço Venda</th>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Preço</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Descrição</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Part Number</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Fornecedor</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Estoque atual</th>
-                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Dar desconto</th>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Permite desconto</th>
                     <th class="px-4 py-2 text-center text-sm font-medium text-gray-600">Ações</th>
                 </tr>
             </thead>

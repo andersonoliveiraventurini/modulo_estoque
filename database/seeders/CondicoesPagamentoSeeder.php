@@ -15,6 +15,10 @@ class CondicoesPagamentoSeeder extends Seeder
     {
         $tipos = [
             'PIX',
+            'Carteira',
+            'Dinheiro',
+            'Cartão de crédito',
+            'Cartão de débito',
             'Boleto 07 dias',
             'Boleto 14 dias',
             'Boleto 21 dias',
@@ -22,11 +26,13 @@ class CondicoesPagamentoSeeder extends Seeder
             'Boleto 28/56 dias',
             'Boleto 28/42/56 dias',
             'Boleto 28/56/84 dias',
-            'Cheque',
-            'Cartão de crédito',
-            'Cartão de débito',
-            'Carteira',
-            'Dinheiro',
+            'Cheque 07 dias',
+            'Cheque 14 dias',
+            'Cheque 21 dias',
+            'Cheque 28 dias',
+            'Cheque 28/56 dias',
+            'Cheque 28/42/56 dias',
+            'Cheque 28/56/84 dias',
             'Outros'
         ];
 
