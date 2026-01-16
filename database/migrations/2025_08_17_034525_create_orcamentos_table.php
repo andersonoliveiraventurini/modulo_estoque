@@ -24,6 +24,9 @@ return new class extends Migration
                         ->comment('Referência à condição de pagamento associada a este orçamento.');
                   $table->foreign('condicao_id')->references('id')->on('condicoes_pagamento');
 
+                  $table->text('outros_meios_pagamento')->nullable()
+                        ->comment('Descrição de outros meios de pagamento, para esse orçamento, se aplicável.');
+
                   $table->unsignedBigInteger('cliente_id')->nullable()
                         ->comment('Referência ao cliente associado a este orçamento.');
                   $table->foreign('cliente_id')->references('id')->on('clientes');
@@ -62,6 +65,11 @@ return new class extends Migration
                         ->comment('Prazo de entrega do orçamento.');
                   $table->enum('tipo_documento', ['Nota fiscal', 'Cupom Fiscal', 'Homologação'])->default('Nota fiscal')
                         ->comment('Tipo de documento associado ao orçamento.');
+$table->integer('homologacao')->nullable();                      
+                  $table->boolean('venda_triangular')->default(false)
+                        ->comment('Indica se a venda é triangular.');
+                  $table->string('cnpj_triangular')->nullable()
+                        ->comment('CNPJ da empresa triangular, se aplicável.');
                   $table->text('observacoes')->nullable()
                         ->comment('Observações adicionais sobre o orçamento.');
                   $table->string('pdf_path')->nullable();

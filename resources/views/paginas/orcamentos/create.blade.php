@@ -274,7 +274,7 @@
                                 </x-select>
                             </div>
                             <div class="flex-1">
-                                <x-input type="text" name="cnpj" id="cnpj" disabled size="18"
+                                <x-input type="text" name="cnpj_triangular" id="cnpj_triangular" disabled size="18"
                                     maxlength="18" onkeypress="mascara(this, '##.###.###/####-##')"
                                     placeholder="00.000.000/0000-00" label="CNPJ venda triangular" />
                             </div>
@@ -368,19 +368,19 @@
         document.addEventListener('DOMContentLoaded', function() {
 
             const vendaTriangular = document.getElementById('venda_triangular');
-            const cnpj = document.getElementById('cnpj');
+            const cnpj_triangular = document.getElementById('cnpj_triangular');
 
             const condicaoPagamento = document.getElementById('condicao_pagamento');
             const outrosMeios = document.getElementById('outros_meios_pagamento');
 
             function toggleVendaTriangular() {
                 if (vendaTriangular.value === '1') {
-                    cnpj.disabled = false;
-                    cnpj.required = true;
+                    cnpj_triangular.disabled = false;
+                    cnpj_triangular.required = true;
                 } else {
-                    cnpj.disabled = true;
-                    cnpj.required = false;
-                    cnpj.value = '';
+                    cnpj_triangular.disabled = true;
+                    cnpj_triangular.required = false;
+                    cnpj_triangular.value = '';
                 }
             }
 

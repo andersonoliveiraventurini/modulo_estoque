@@ -41,7 +41,7 @@ class StoreOrcamentoRequest extends FormRequest
             'tipos_transporte' => 'nullable|exists:tipos_transportes,id',
             'condicao_pagamento' => 'required|exists:condicoes_pagamento,id',
             'venda_triangular' => 'required|boolean',
-            'cnpj' => 'required_if:venda_triangular,1|nullable|cnpj',
+            'cnpj_triangular' => 'required_if:venda_triangular,1|nullable|cnpj',
 
             'condicao_pagamento' => 'required',
             'outros_meios_pagamento' => 'required_if:condicao_pagamento,20|nullable|string|max:255',
