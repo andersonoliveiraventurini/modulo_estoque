@@ -15,8 +15,29 @@ return new class extends Migration
             $table->id();
             $table->string('nome')->comment('Nome do método de pagamento');
             $table->string('codigo')->unique()->comment('Código único do método');
-            $table->enum('tipo', ['dinheiro', 'cartao_credito', 'cartao_debito', 'pix', 'boleto1', 'boleto2', 'boleto3', 'boleto4', 'boleto5', 'boleto6', 'boleto7', 'transferencia', 'credito_cliente', 'outros'])
-                ->comment('Tipo do método de pagamento');
+           $table->enum('tipo', [
+                            'dinheiro',
+                            'cartao_credito',
+                            'cartao_debito',
+                            'pix',
+                            'boleto1',
+                            'boleto2',
+                            'boleto3',
+                            'boleto4',
+                            'boleto5',
+                            'boleto6',
+                            'boleto7',
+                            'cheque1',
+                            'cheque2',
+                            'cheque3',
+                            'cheque4',
+                            'cheque5',
+                            'cheque6',
+                            'cheque7',
+                            'credito_cliente',
+                            'outros'
+                        ])->comment('Tipo do método de pagamento');
+
             $table->boolean('permite_parcelamento')->default(false)
                 ->comment('Se permite parcelamento');
             $table->integer('max_parcelas')->nullable()->default(null)
