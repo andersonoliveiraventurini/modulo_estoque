@@ -34,6 +34,11 @@ class UpdateOrcamentoRequest extends FormRequest
             'desconto_aprovado' => 'nullable|numeric|min:0|max:100',
             'desconto_especifico' => 'nullable|string',
             'guia_recolhimento' => 'nullable|string',
+            'venda_triangular' => 'required|boolean',
+            'cnpj' => 'required_if:venda_triangular,1|nullable|cnpj',
+
+            'condicao_pagamento' => 'required',
+            'outros_meios_pagamento' => 'required_if:condicao_pagamento,20|nullable|string|max:255',
                         
             // Endereço
             'entrega_cep' => 'nullable|string|max:9',

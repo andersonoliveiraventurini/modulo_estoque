@@ -6,15 +6,17 @@ services:
     container_name: laravel-app
     ports:
       - "8087:80"
-    depends_on:
-      - mysql
+    env_file:
+      - .env
     environment:
-      - APACHE_RUN_USER=www-data
-      - APACHE_RUN_GROUP=www-data
+      APP_ENV: ${APP_ENV}
+      CLEAR_CACHE_ON_START: "false"
     volumes:
       - .:/var/www/html
       - /var/www/html/vendor
       - /var/www/html/node_modules
+    depends_on:
+      - mysql
     networks:
       - laravel-network
 

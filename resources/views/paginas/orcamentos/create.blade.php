@@ -228,10 +228,7 @@
                                 </label>
                             @endforeach
                         </div>
-
                     </div>
-
-
                     <hr />
                     <!-- Valores e descontos -->
                     <div class="overflow-x-auto">
@@ -247,8 +244,9 @@
                                 </x-select>
                             </div>
                             <div class="flex-1">
-                                <x-input type="text" name="outros_meios_pagamento" disabled
-                                    placeholder="Ex: Boleto 28/56/84/120, etc" label="Outros meios pagamento" />
+                                <x-input type="text" name="outros_meios_pagamento" id="outros_meios_pagamento"
+                                    disabled placeholder="Ex: Boleto 28/56/84/120, etc"
+                                    label="Outros meios pagamento" />
                             </div>
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Nota fiscal</label>
@@ -279,7 +277,6 @@
                                 <x-input type="text" name="cnpj" id="cnpj" disabled size="18"
                                     maxlength="18" onkeypress="mascara(this, '##.###.###/####-##')"
                                     placeholder="00.000.000/0000-00" label="CNPJ venda triangular" />
-
                             </div>
                         </div>
                         <br />
@@ -305,7 +302,7 @@
 
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Valor Total dos Itens s/
-                                    desconto (R$)</label>
+                                    desconto</label>
                                 <input type="text" id="valor_total" name="valor_total" readonly value="0,00"
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" />
                             </div>
@@ -388,10 +385,7 @@
             }
 
             function toggleOutrosMeios() {
-                // supondo que "outros" seja um ID específico
-                const OUTROS_ID = 'outros'; // ou número, ex: 5
-
-                if (condicaoPagamento.value == OUTROS_ID) {
+                if (condicaoPagamento.value == 20) {
                     outrosMeios.disabled = false;
                     outrosMeios.required = true;
                 } else {
@@ -409,6 +403,7 @@
             toggleOutrosMeios();
         });
     </script>
+
 
     <script src="{{ asset('js/valida.js') }}"></script>
     <script>
