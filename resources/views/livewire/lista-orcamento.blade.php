@@ -94,13 +94,7 @@
                     <th class="px-6 py-3 text-left">
                         <button wire:click="sortBy('id')"
                             class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Código
-                        </button>
-                    </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('obra')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Obra
+                            Nº do orçamento
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
@@ -113,6 +107,12 @@
                         <button wire:click="sortBy('cliente')"
                             class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Cliente
+                        </button>
+                    </th>
+                    <th class="px-6 py-3 text-left">
+                        <button wire:click="sortBy('obra')"
+                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Obra
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left">
@@ -137,11 +137,11 @@
                 @forelse($orcamentos as $o)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="{{ route('orcamentos.show', $o) }}" class="hover:underline">{{ $o->id }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="{{ route('orcamentos.show', $o) }}"  class="hover:underline">{{ $o->obra }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="{{ route('clientes.show', $o->cliente) }}" class="hover:underline">{{ $o->cliente->numero_brcom }}</a></td>
+                           <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="{{ route('clientes.show', $o->cliente) }}" class="hover:underline">{{ $o->cliente->numero_brcom }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="{{ route('clientes.show', $o->cliente) }}" class="hover:underline">{{ $o->cliente->nome }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->status }}</td>
+                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
+                                href="{{ route('orcamentos.show', $o) }}"  class="hover:underline">{{ $o->obra }}</a></td>
+                    <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->status }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->vendedor->name }}</td>
                         <td class="px-6 py-4">
                             @if ($o->pdf_path)

@@ -305,6 +305,7 @@ class OrcamentoController extends Controller
             'guia_recolhimento'   => $request->guia_recolhimento,
             'observacoes'         => $request->observacoes,
             'condicao_id'         => $request->condicao_pagamento,
+            'tipo_documento'      => $request->tipo_documento,
             'validade'            => Carbon::now()->addDays(2), // +2 dias
         ]);
 
@@ -756,7 +757,8 @@ class OrcamentoController extends Controller
             'status'       => 'Pendente',
             'observacoes'  => $orcamentoOriginal->observacoes,
             'frete'        => $orcamentoOriginal->frete,
-            'guia_recolhimento' => $orcamentoOriginal->guia_recolhimento,
+            'guia_recolhimento' => $orcamentoOriginal->guia_recolhimento,            
+            'tipo_documento'      => $orcamentoOriginal->tipo_documento,
             'validade'     => Carbon::now()->addDays(2),
         ]);
 
@@ -1022,6 +1024,7 @@ class OrcamentoController extends Controller
                 'observacoes' => $request->observacoes,
                 'versao' => $novaVersao,
                 'condicao_id' => $request->condicao_pagamento,
+                'tipo_documento' => $request->tipo_documento,
                 'validade' => Carbon::now()->addDays(2),
             ]);
 

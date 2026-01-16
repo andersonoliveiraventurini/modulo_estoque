@@ -12,6 +12,9 @@
                         </path>
                     </svg>
                     Criar Orçamento para Cliente {{ $cliente->id }} - {{ $cliente->nome ?? $cliente->nome_fantasia }}
+                    @if ($cliente->desconto != null)
+                        Autorizado desconto de até {{ $cliente->desconto }}%
+                    @endif
                 </h2>
                 @if ($cliente->vendedor_interno != null)
                     <p> Vendedor interno: {{ $cliente->vendedor_interno ?? 'Não atribuído' }} </p>
@@ -146,11 +149,11 @@
                                 <option value="cif">CIF - entrega por conta do fornecedor
                                 </option>
                                 <option value="fob">FOB - entrega por conta do cliente</option>
-                            </x-select> 
+                            </x-select>
                             <x-select name="enderecos_cadastrados" label="Endereços de cadastrados do cliente">
                                 <option value="">Selecione...</option>
                                 @foreach ($cliente->enderecos as $endereco)
-                                <option value="{{ $endereco->id }}"> 
+                                    <option value="{{ $endereco->id }}">
                                         @if ($endereco->logradouro != null)
                                             {{ $endereco->logradouro . ' - ' }}
                                         @endif
@@ -169,10 +172,11 @@
                                         @if ($endereco->estado != null)
                                             {{ $endereco->estado . ' - ' }}
                                         @endif
-                                </option>
+                                    </option>
                                 @endforeach
                             </x-select>
-                            <x-input id="entrega_cep" name="entrega_cep" label="CEP - Para adicionar um novo endereço" placeholder="00000-000"
+                            <x-input id="entrega_cep" name="entrega_cep"
+                                label="CEP - Para adicionar um novo endereço" placeholder="00000-000"
                                 onblur="pesquisacepentrega(this.value);" onkeypress="mascara(this, '#####-###')"
                                 size="10" maxlength="9" value="{{ old('entrega_cep') }}" />
 
@@ -243,9 +247,47 @@
                                 </x-select>
                             </div> 
                             <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700">Outros meios pagamento</label>
+                                <x-input name="outros_meios_pagamento" placeholder="Ex: Boleto, Pix, etc."
+                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700">Nota fiscal</label>
+                                <x-select name="tipo_documento"
+                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                                    <option value="">Selecione...</option>
+                                    <option value="Nota fiscal">Nota fiscal</option>
+                                    <option value="Cupom Fiscal">Cupom Fiscal</option>
+                                </x-select>
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700">Homologação</label>
+                                <x-select name="homologacao" required
+                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                                    <option value="0" selected>Não</option>
+                                    <option value="1">Sim</option>
+                                </x-select>
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700">Venda triangular?</label>
+                                <x-select name="venda_triangular" required
+                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                                    <option value="0" selected>Não</option>
+                                    <option value="1">Sim</option>
+                                </x-select>
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700">CNPJ</label>
+                                <x-input name="cnpj" disabled
+                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                            </div>
+                        </div>
+                        <br/>
+                        <div class="flex gap-4 min-w-max">
+                            <div class="flex-1">
                                 <x-input type="text" name="desconto" value="0" min="0"
                                     max="100" placeholder="Digite a porcentagem de desconto (0 a 100)"
-                                    label="Desconto na vendedor %"
+                                    label="Desconto na venda %"
                                     oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
                             </div>
 

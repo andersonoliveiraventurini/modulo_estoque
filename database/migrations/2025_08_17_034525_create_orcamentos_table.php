@@ -60,6 +60,8 @@ return new class extends Migration
 
                   $table->string('prazo_entrega', 100)->nullable()
                         ->comment('Prazo de entrega do orçamento.');
+                  $table->enum('tipo_documento', ['Nota fiscal', 'Cupom Fiscal', 'Homologação'])->default('Nota fiscal')
+                        ->comment('Tipo de documento associado ao orçamento.');
                   $table->text('observacoes')->nullable()
                         ->comment('Observações adicionais sobre o orçamento.');
                   $table->string('pdf_path')->nullable();

@@ -28,6 +28,7 @@ class Orcamento extends Model
         'pdf_path',
         'prazo_entrega',
         'token_acesso',
+        'tipo_documento',
         'token_expira_em',
         'workflow_status',
         'condicao_id',

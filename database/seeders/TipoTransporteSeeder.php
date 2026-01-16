@@ -20,7 +20,7 @@ class TipoTransporteSeeder extends Seeder
             'Balcão',
             'Retira WhatsApp',
             'Rota',
-            'Express',
+            'Express'
         ];
 
         foreach ($tipos as $tipo) {
