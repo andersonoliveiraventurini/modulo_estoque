@@ -238,7 +238,7 @@
                         <div class="flex gap-4 min-w-max">
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Condição de pagamento</label>
-                                <x-select name="condicao_pagamento" required
+                                <x-select name="condicao_pagamento" id="condicao_pagamento" required
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
                                     <option value="">Selecione...</option>
                                     @foreach ($condicao as $c)
@@ -269,15 +269,17 @@
                             </div>
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Venda triangular?</label>
-                                <x-select name="venda_triangular" required
+                                <x-select name="venda_triangular" id="venda_triangular" required
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
                                     <option value="0" selected>Não</option>
                                     <option value="1">Sim</option>
                                 </x-select>
                             </div>
                             <div class="flex-1">
-                                <x-input type="text" name="cnpj" disabled
-                                    placeholder="Ex: Boleto 28/56/84/120, etc" label="CNPJ venda triangular" />
+                                <x-input type="text" name="cnpj" id="cnpj" disabled size="18"
+                                    maxlength="18" onkeypress="mascara(this, '##.###.###/####-##')"
+                                    placeholder="00.000.000/0000-00" label="CNPJ venda triangular" />
+
                             </div>
                         </div>
                         <br />
@@ -365,6 +367,49 @@
             </button>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            const vendaTriangular = document.getElementById('venda_triangular');
+            const cnpj = document.getElementById('cnpj');
+
+            const condicaoPagamento = document.getElementById('condicao_pagamento');
+            const outrosMeios = document.getElementById('outros_meios_pagamento');
+
+            function toggleVendaTriangular() {
+                if (vendaTriangular.value === '1') {
+                    cnpj.disabled = false;
+                    cnpj.required = true;
+                } else {
+                    cnpj.disabled = true;
+                    cnpj.required = false;
+                    cnpj.value = '';
+                }
+            }
+
+            function toggleOutrosMeios() {
+                // supondo que "outros" seja um ID específico
+                const OUTROS_ID = 'outros'; // ou número, ex: 5
+
+                if (condicaoPagamento.value == OUTROS_ID) {
+                    outrosMeios.disabled = false;
+                    outrosMeios.required = true;
+                } else {
+                    outrosMeios.disabled = true;
+                    outrosMeios.required = false;
+                    outrosMeios.value = '';
+                }
+            }
+
+            vendaTriangular.addEventListener('change', toggleVendaTriangular);
+            condicaoPagamento.addEventListener('change', toggleOutrosMeios);
+
+            // Executa ao carregar a página
+            toggleVendaTriangular();
+            toggleOutrosMeios();
+        });
+    </script>
+
     <script src="{{ asset('js/valida.js') }}"></script>
     <script>
         let vidroIndex = 1;
