@@ -245,11 +245,10 @@
                                         <option value="{{ $c->id }}">{{ $c->nome }}</option>
                                     @endforeach
                                 </x-select>
-                            </div> 
+                            </div>
                             <div class="flex-1">
-                                <label class="block text-sm font-medium text-gray-700">Outros meios pagamento</label>
-                                <x-input name="outros_meios_pagamento" placeholder="Ex: Boleto, Pix, etc."
-                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                <x-input type="text" name="outros_meios_pagamento" disabled
+                                    placeholder="Ex: Boleto 28/56/84/120, etc" label="Outros meios pagamento" />
                             </div>
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Nota fiscal</label>
@@ -277,12 +276,11 @@
                                 </x-select>
                             </div>
                             <div class="flex-1">
-                                <label class="block text-sm font-medium text-gray-700">CNPJ</label>
-                                <x-input name="cnpj" disabled
-                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                <x-input type="text" name="cnpj" disabled
+                                    placeholder="Ex: Boleto 28/56/84/120, etc" label="CNPJ venda triangular" />
                             </div>
                         </div>
-                        <br/>
+                        <br />
                         <div class="flex gap-4 min-w-max">
                             <div class="flex-1">
                                 <x-input type="text" name="desconto" value="0" min="0"
