@@ -274,8 +274,8 @@
                                 </x-select>
                             </div>
                             <div class="flex-1">
-                                <x-input type="text" name="cnpj_triangular" id="cnpj_triangular" disabled size="18"
-                                    maxlength="18" onkeypress="mascara(this, '##.###.###/####-##')"
+                                <x-input type="text" name="cnpj_triangular" id="cnpj_triangular" disabled
+                                    size="18" maxlength="18" onkeypress="mascara(this, '##.###.###/####-##')"
                                     placeholder="00.000.000/0000-00" label="CNPJ venda triangular" />
                             </div>
                         </div>
@@ -364,6 +364,15 @@
             </button>
         </div>
     </div>
+
+    @if (!$ativo)
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                alert('⚠️ Atenção: a situação do CNPJ não está ATIVA na Receita Federal.');
+            });
+        </script>
+    @endif
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 

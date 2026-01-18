@@ -87,13 +87,18 @@ class OrcamentoController extends Controller
     public function criarOrcamento($cliente_id)
     {
         $cliente = Cliente::with('enderecos')->findOrFail($cliente_id);
+
+        // validação CNPJ ativo na Receita Federal        
+        $ativo = Http::get("https://brasilapi.com.br/api/cnpj/v1/" . preg_replace('/\D/', '', $cliente->cnpj))
+    ->json('descricao_situacao_cadastral') === 'ATIVA';
+
         $produtos = Produto::all();
         $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
         $cores = Cor::orderBy('nome')->get();
         $vendedores = User::whereHas('vendedor')->get();
         $opcoesTransporte = TipoTransporte::all();
         $condicao = CondicoesPagamento::all();
-        return view('paginas.orcamentos.create', compact('produtos', 'cliente', 'fornecedores', 'cores', 'vendedores', 'opcoesTransporte', 'condicao'));
+        return view('paginas.orcamentos.create', compact('produtos', 'cliente', 'fornecedores', 'cores', 'vendedores', 'opcoesTransporte', 'condicao', 'ativo'));
     }
 
     public function aprovarDesconto(Request $request, $id)
