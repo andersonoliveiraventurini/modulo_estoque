@@ -19,26 +19,65 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::create([
+        /*User::create([
             'name' => 'Anderson',
             'email' => 'anderson@gmail.com',
             'password' => Hash::make('12345'),
             'email_verified_at' => Carbon::now()
-        ]);
+        ]);*/
 
-        User::create([
-            'name' => 'Cezar',
-            'email' => 'cezar@acav.com',
-            'password' => Hash::make('12345'),
-            'email_verified_at' => Carbon::now()
-        ]);
+         $users = [
+        // Usuários existentes (mantidos)
+        ['name' => 'Anderson', 'email' => 'anderson@gmail.com'],
+        ['name' => 'Cezar', 'email' => 'cezar@acav.com'],
+        ['name' => 'Thiago', 'email' => 'thiago@acav.com'],
 
-        User::create([
-            'name' => 'Thiago',
-            'email' => 'thiago@acav.com',
-            'password' => Hash::make('12345'),
-            'email_verified_at' => Carbon::now()
-        ]);
+        // Financeiro
+        ['name' => 'Alline', 'email' => 'alline@acav.com'],
+        ['name' => 'Jaqueline', 'email' => 'jaqueline@acav.com'],
+        ['name' => 'Ana Claudia', 'email' => 'ana.claudia@acav.com'],
+        ['name' => 'Juliane', 'email' => 'juliane@acav.com'],
+        ['name' => 'Emily', 'email' => 'emily@acav.com'],
+
+        // Compras
+        ['name' => 'Fabio', 'email' => 'fabio@acav.com'],
+
+        // Estoque
+        ['name' => 'Sandro', 'email' => 'sandro@acav.com'],
+        ['name' => 'Adenilson', 'email' => 'adenilson@acav.com'],
+
+        // Conferência / Expedição / Separação
+        ['name' => 'Lucas', 'email' => 'lucas@acav.com'],
+        ['name' => 'Matheus', 'email' => 'matheus@acav.com'],
+        ['name' => 'Victor', 'email' => 'victor@acav.com'],
+        ['name' => 'Pedro', 'email' => 'pedro@acav.com'],
+        ['name' => 'Carlos Eduardo', 'email' => 'carlos.eduardo@acav.com'],
+
+        // Vendas / Logística
+        ['name' => 'Aylam', 'email' => 'aylam@acav.com'],
+
+        // Vendas
+        ['name' => 'Pamela', 'email' => 'pamela@acav.com'],
+        ['name' => 'Gustavo', 'email' => 'gustavo@acav.com'],
+        ['name' => 'Aline Maia', 'email' => 'aline.maia@acav.com'],
+        ['name' => 'Leticia Loretti', 'email' => 'leticia.loretti@acav.com'],
+        ['name' => 'Miria', 'email' => 'miria@acav.com'],
+        ['name' => 'Eduardo', 'email' => 'eduardo@acav.com'],
+        ['name' => 'Silvane', 'email' => 'silvane@acav.com'],
+        ['name' => 'Leticia Dusso', 'email' => 'leticia.dusso@acav.com'],
+        ['name' => 'Alessandro', 'email' => 'alessandro@acav.com'],
+    ];
+
+    foreach ($users as $user) {
+        User::firstOrCreate(
+            ['email' => $user['email']],
+            [
+                'name' => $user['name'],
+                'password' => Hash::make('12345'),
+                'email_verified_at' => Carbon::now(),
+            ]
+        );
+    }
         //$this->call(FornecedorSeeder::class);
 
         $this->call(NcmSeeder::class);
