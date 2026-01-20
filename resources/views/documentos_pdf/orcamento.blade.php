@@ -207,10 +207,10 @@
             {{ $orcamento->versao }}
         @endif
         @if ($orcamento->complemento > 'Sim')
-            <br/> Complemento
+            <br /> Complemento
         @endif
         @if ($orcamento->transportes->count() > 0)
-            <br/>Transporte:
+            <br />Transporte:
             {{ $orcamento->transportes->pluck('nome')->join(', ') }}
         @endif
     </h2>
@@ -272,9 +272,7 @@
                     <th>Qtd</th>
                     <th>Produto</th>
                     <th>Unitário</th>
-                    @if ($percentualAplicado > 0)
-                        <th>Unitário com desconto</th>
-                    @endif
+                    <th>Unitário com desconto</th>
                     <th>Valor final</th>
                 </tr>
             </thead>
@@ -284,10 +282,8 @@
                         <td align="center">{{ $item->quantidade }}</td>
                         <td>{{ $item->produto->nome ?? '---' }}</td>
                         <td class="valor">R$ {{ number_format($item->valor_unitario, 2, ',', '.') }}</td>
-                        @if ($percentualAplicado > 0)
-                            <td class="valor">R$ {{ number_format($item->valor_unitario_com_desconto, 2, ',', '.') }}
-                            </td>
-                        @endif
+                        <td class="valor">R$ {{ number_format($item->valor_unitario_com_desconto, 2, ',', '.') }}
+                        </td>
                         <td class="valor">R$ {{ number_format($item->valor_com_desconto, 2, ',', '.') }}</td>
                     </tr>
                 @endforeach
