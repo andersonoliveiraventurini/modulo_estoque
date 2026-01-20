@@ -305,17 +305,20 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 17v-2a4 4 0 014-4h4l3 3-3 3h-8zM3 7h13a2 2 0 012 2v2"></path>
                             </svg>
-                            Tipo de venda
+                            Tipo de venda <span class="text-red-500">*</span>
                         </h3>
+                        @error('tipos_transporte')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                         <div
                             class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                             @foreach ($opcoesTransporte as $opcao)
                                 <label
                                     class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 hover:bg-blue-50 cursor-pointer transition">
 
-                                    <input type="radio" name="tipo_transporte" value="{{ $opcao->id }}"
-                                        class="rounded-full border-gray-300 text-blue-600 focus:ring-blue-500"
-                                        @if ($orcamento->transportes->contains($opcao->id)) checked @endif /> <span
+                                    <input type="radio" name="tipos_transporte" value="{{ $opcao->id }}"
+                                        required class="rounded-full border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        @if ($orcamento->transportes->contains($opcao->id)) checked @endif /><span
                                         class="text-sm text-gray-700">{{ $opcao->nome }}</span>
                                 </label>
                             @endforeach
@@ -742,7 +745,7 @@
 
         var subtotalInput = row.querySelector('input[name="produtos[' + index + '][subtotal]"]');
         var subtotalComDescontoInput = row.querySelector('input[name="produtos[' + index +
-        '][subtotal_com_desconto]"]');
+            '][subtotal_com_desconto]"]');
         var precoComDescontoInput = row.querySelector('input[name="produtos[' + index +
             '][preco_unitario_com_desconto]"]');
 

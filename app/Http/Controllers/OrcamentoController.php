@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\PickingBatch;
 use App\Models\PickingItem;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -90,7 +91,7 @@ class OrcamentoController extends Controller
 
         // validação CNPJ ativo na Receita Federal        
         $ativo = Http::get("https://brasilapi.com.br/api/cnpj/v1/" . preg_replace('/\D/', '', $cliente->cnpj))
-    ->json('descricao_situacao_cadastral') === 'ATIVA';
+            ->json('descricao_situacao_cadastral') === 'ATIVA';
 
         $produtos = Produto::all();
         $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
@@ -224,43 +225,29 @@ class OrcamentoController extends Controller
 
     public function store(StoreOrcamentoRequest $request)
     {
-        /**
-         * 🔹 Função para converter valores monetários no formato brasileiro para decimal
-         * Aceita formatos como: "10,00", "1.234,56", "10"
-         */
         $brToDecimal = function ($valor) {
             if ($valor === null || $valor === '') {
                 return null;
             }
 
-            // Mantém sinal negativo
             $negativo = false;
             $valor = trim($valor);
             if (strpos($valor, '-') !== false) {
                 $negativo = true;
-                // remove apenas o sinal (mantemos resto)
                 $valor = str_replace('-', '', $valor);
             }
 
-            // remove espaços
             $valor = str_replace(' ', '', $valor);
 
-            // Caso tenha ambos '.' e ',' -> assumimos '.' como milhares e ',' como decimal
             if (strpos($valor, '.') !== false && strpos($valor, ',') !== false) {
-                $valor = str_replace('.', '', $valor); // remove separadores de milhar
-                $valor = str_replace(',', '.', $valor); // vírgula -> ponto decimal
-            }
-            // Se tem só vírgula -> vírgula é decimal
-            elseif (strpos($valor, ',') !== false) {
+                $valor = str_replace('.', '', $valor);
                 $valor = str_replace(',', '.', $valor);
-            }
-            // Se só tem ponto -> ponto é decimal (mantemos)
-            else {
-                // removemos qualquer caractere que não seja dígito ou ponto
+            } elseif (strpos($valor, ',') !== false) {
+                $valor = str_replace(',', '.', $valor);
+            } else {
                 $valor = preg_replace('/[^\d\.]/', '', $valor);
             }
 
-            // Se por acaso houver mais de um ponto, mantemos o último como separador decimal
             if (substr_count($valor, '.') > 1) {
                 $parts = explode('.', $valor);
                 $decimal = array_pop($parts);
@@ -271,8 +258,6 @@ class OrcamentoController extends Controller
             return $negativo ? -$float : $float;
         };
 
-
-        // 🔹 Converte campos monetários e numéricos
         $request->merge([
             'guia_recolhimento'   => $brToDecimal($request->guia_recolhimento),
             'desconto_especifico' => $brToDecimal($request->desconto_especifico),
@@ -280,8 +265,6 @@ class OrcamentoController extends Controller
             'valor_total'         => $brToDecimal($request->valor_total),
         ]);
 
-
-        // 1️⃣ Definir desconto percentual (cliente x vendedor)
         $descontoPercentual = 0;
         if ($request->filled('desconto_aprovado') || $request->filled('desconto')) {
             $descontoPercentual = max(
@@ -290,17 +273,14 @@ class OrcamentoController extends Controller
             );
         }
 
-        // 2️⃣ Definir desconto específico em valor (reais)
         $descontoEspecifico = $request->filled('desconto_especifico')
             ? (float) $request->desconto_especifico
             : null;
 
-        // Corrige valor total zerado
         if ($request->valor_total == "0,00" || $request->valor_total == 0) {
             $request->merge(['valor_total' => 0]);
         }
 
-        // 3️⃣ Criação do orçamento
         $orcamento = Orcamento::create([
             'cliente_id'          => $request->cliente_id,
             'vendedor_id'         => Auth()->user()->id,
@@ -311,41 +291,62 @@ class OrcamentoController extends Controller
             'observacoes'         => $request->observacoes,
             'condicao_id'         => $request->condicao_pagamento,
             'tipo_documento'      => $request->tipo_documento,
-            'validade'            => Carbon::now()->addDays(2), // +2 dias
+            'venda_triangular'    => $request->venda_triangular,
+            'homologacao'         => $request->homologacao,
+            'validade'            => Carbon::now()->addDays(2),
         ]);
 
-        // 4️⃣ Transporte
+        if ($request->venda_triangular == 1) {
+            $orcamento->update([
+                'cnpj_triangular' => $request->cnpj_triangular,
+            ]);
+        }
+
+        if ($request->condicao_pagamento == 20) {
+            $orcamento->update([
+                'outros_meios_pagamento' => $request->outros_meios_pagamento,
+            ]);
+        }
+
         if ($request->tipos_transporte) {
             $orcamento->transportes()->sync($request->tipos_transporte);
         }
 
-        // 5️⃣ Itens do orçamento
+        // ✅ ITENS COM VERIFICAÇÃO DE BLOQUEIO DE DESCONTO
         if ($request->has('itens')) {
             foreach ($request->itens as $item) {
                 $valorUnitario = (float) ($item['preco_unitario'] ?? 0);
                 $quantidade    = (float) ($item['quantidade'] ?? 0);
                 $subtotal      = $valorUnitario * $quantidade;
-                $valorUnitarioComDesconto = (float) ($item['preco_unitario_com_desconto'] ?? null);
 
-                // Aplica desconto percentual no item
+                // ✅ Verifica se o produto permite desconto
+                $liberarDesconto = isset($item['liberar_desconto']) ? (int) $item['liberar_desconto'] : 1;
+
+                // ✅ Pega o desconto efetivamente aplicado do frontend
+                $descontoAplicado = isset($item['desconto_aplicado']) ? (float) $item['desconto_aplicado'] : 0;
+
+                // ✅ Aplica desconto APENAS se o produto permitir
                 $valorComDesconto = $subtotal;
-                if ($descontoPercentual > 0) {
+                if ($liberarDesconto === 1 && $descontoPercentual > 0) {
                     $valorComDesconto = $subtotal - ($subtotal * ($descontoPercentual / 100));
                 }
+
+                // ✅ Calcula valor unitário com desconto
+                $valorUnitarioComDesconto = $quantidade > 0 ? $valorComDesconto / $quantidade : 0;
 
                 $orcamento->itens()->create([
                     'produto_id'                  => $item['id'],
                     'quantidade'                  => $quantidade,
                     'valor_unitario'              => $valorUnitario,
                     'valor_unitario_com_desconto' => $valorUnitarioComDesconto,
-                    'desconto'                    => $descontoPercentual ?? 0,
+                    'desconto'                    => $descontoAplicado,
                     'valor_com_desconto'          => $valorComDesconto,
                     'user_id'                     => $request->user()->id ?? null,
                 ]);
             }
         }
 
-        // 6️⃣ Vidros
+        // ✅ VIDROS (mantém lógica existente - vidros sempre permitem desconto)
         if ($request->has('vidros')) {
             foreach ($request->vidros as $vidro) {
                 if (!empty($vidro['preco_m2']) && !empty($vidro['quantidade']) && !empty($vidro['altura']) && !empty($vidro['largura'])) {
@@ -364,16 +365,43 @@ class OrcamentoController extends Controller
             }
         }
 
-        // 7️⃣ Descontos
+        // ✅ DESCONTOS - Calcula apenas sobre itens que permitem
         if ($descontoPercentual > 0) {
-            $orcamento->descontos()->create([
-                'motivo'      => 'Desconto percentual aplicado pelo vendedor',
-                'valor'       => $request->valor_total * ($descontoPercentual / 100),
-                'porcentagem' => $descontoPercentual,
-                'tipo'        => 'percentual',
-                'cliente_id'  => $request->cliente_id,
-                'user_id'     => Auth()->id(),
-            ]);
+            $totalDescontoAplicado = 0;
+
+            if ($request->has('itens')) {
+                foreach ($request->itens as $item) {
+                    $liberarDesconto = isset($item['liberar_desconto']) ? (int) $item['liberar_desconto'] : 1;
+
+                    if ($liberarDesconto === 1) {
+                        $valorUnitario = (float) ($item['preco_unitario'] ?? 0);
+                        $quantidade    = (float) ($item['quantidade'] ?? 0);
+                        $subtotal      = $valorUnitario * $quantidade;
+                        $totalDescontoAplicado += $subtotal * ($descontoPercentual / 100);
+                    }
+                }
+            }
+
+            // Adiciona desconto dos vidros
+            if ($request->has('vidros')) {
+                foreach ($request->vidros as $vidro) {
+                    if (!empty($vidro['valor_total'])) {
+                        $valorTotal = $brToDecimal($vidro['valor_total']) ?? 0;
+                        $totalDescontoAplicado += $valorTotal * ($descontoPercentual / 100);
+                    }
+                }
+            }
+
+            if ($totalDescontoAplicado > 0) {
+                $orcamento->descontos()->create([
+                    'motivo'      => 'Desconto percentual aplicado pelo vendedor',
+                    'valor'       => $totalDescontoAplicado,
+                    'porcentagem' => $descontoPercentual,
+                    'tipo'        => 'percentual',
+                    'cliente_id'  => $request->cliente_id,
+                    'user_id'     => Auth()->id(),
+                ]);
+            }
         }
 
         if ($descontoEspecifico) {
@@ -387,7 +415,6 @@ class OrcamentoController extends Controller
             ]);
         }
 
-        // 8️⃣ Endereço de entrega
         if ($request->filled('endereco_cep')) {
             $endereco = Endereco::updateOrCreate(
                 [
@@ -409,7 +436,6 @@ class OrcamentoController extends Controller
             $orcamento->update(['endereco_id' => $request->enderecos_cadastrados]);
         }
 
-        // 9️⃣ Aprovação de desconto
         if (
             $descontoPercentual > $request->desconto_aprovado ||
             Auth()->user()->vendedor->desconto < $descontoPercentual
@@ -422,7 +448,6 @@ class OrcamentoController extends Controller
                 ->with('error', 'Orçamento criado, mas é necessária a aprovação do desconto.');
         }
 
-        // 🔟 Geração do PDF
         $pdfService = new OrcamentoPdfService();
         $pdfGeradoComSucesso = $pdfService->gerarOrcamentoPdf($orcamento);
 
@@ -744,7 +769,7 @@ class OrcamentoController extends Controller
     {
         if ($clienteID && !Cliente::whereKey($clienteID)->exists()) {
             abort(404, 'Cliente não encontrado');
-        } 
+        }
 
         $orcamentoOriginal = Orcamento::with(['itens', 'vidros', 'descontos', 'endereco'])->findOrFail($id);
 
@@ -762,7 +787,7 @@ class OrcamentoController extends Controller
             'status'       => 'Pendente',
             'observacoes'  => $orcamentoOriginal->observacoes,
             'frete'        => $orcamentoOriginal->frete,
-            'guia_recolhimento' => $orcamentoOriginal->guia_recolhimento,            
+            'guia_recolhimento' => $orcamentoOriginal->guia_recolhimento,
             'tipo_documento'      => $orcamentoOriginal->tipo_documento,
             'validade'     => Carbon::now()->addDays(2),
         ]);
@@ -770,12 +795,14 @@ class OrcamentoController extends Controller
         // 1) Copiar itens
         foreach ($orcamentoOriginal->itens as $item) {
 
-            $valor_final = $item->valor_unitario * $item->quantidade;
+            // verifica o valor atual do produto
+            $produtoAtual = Produto::find($item->produto_id);
+            $valor_final = $produtoAtual->preco_venda * $item->quantidade;
 
             $novoOrcamento->itens()->create([
                 'produto_id'         => $item->produto_id,
                 'quantidade'         => $item->quantidade,
-                'valor_unitario'     => $item->valor_unitario,
+                'valor_unitario'     => $produtoAtual->preco_venda,
                 'valor_com_desconto' => $valor_final,
                 'user_id'            => $item->user_id,
             ]);
@@ -1030,8 +1057,24 @@ class OrcamentoController extends Controller
                 'versao' => $novaVersao,
                 'condicao_id' => $request->condicao_pagamento,
                 'tipo_documento' => $request->tipo_documento,
+                'venda_triangular'    => $request->venda_triangular,
+                'homologacao'         => $request->homologacao,
                 'validade' => Carbon::now()->addDays(2),
             ]);
+
+
+            if ($request->venda_triangular == 1) {
+                $orcamento->update([
+                    'cnpj_triangular' => $request->cnpj_triangular,
+                ]);
+            }
+
+            if ($request->condicao_pagamento == 20) {
+                $orcamento->update([
+                    'outros_meios_pagamento' => $request->outros_meios_pagamento,
+                ]);
+            }
+
 
             // 5) Atualizar ou criar endereço
             if ($request->filled('endereco_cep')) {

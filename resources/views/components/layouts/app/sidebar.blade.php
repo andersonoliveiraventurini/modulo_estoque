@@ -38,6 +38,9 @@
             <flux:navlist.item icon="home" :href="route('orcamentos.index')"
                 :current="request()->routeIs('orcamentos.index')" wire:navigate>{{ __('Orçamentos') }}
             </flux:navlist.item>
+            <flux:navlist.item icon="document-duplicate" :href="route('orcamentos.copiar')"
+                :current="request()->routeIs('orcamentos.copiar')" wire:navigate>{{ __('Copiar orçamento') }}
+            </flux:navlist.item>
             <flux:navlist.item icon="home" :href="route('bloqueios.index')"
                 :current="request()->routeIs('bloqueios.index')" wire:navigate>{{ __('Bloqueados') }}
             </flux:navlist.item>

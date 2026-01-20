@@ -24,7 +24,7 @@
                             <option value="">Selecione um cliente...</option>
                             @foreach ($clientes as $cliente)
                                 <option value="{{ $cliente->id }}">
-                                    {{ $cliente->id }} -{{ $cliente->nome_fantasia }} - {{ $cliente->razao_social }}
+                                    {{ $cliente->id }} - {{ $cliente->nome }} - {{ $cliente->nome_fantasia }} - {{ $cliente->razao_social }} - {{ $cliente->tratamento }}
                                 </option>
                             @endforeach
                         </x-select>
@@ -33,7 +33,7 @@
                             <option value="">Selecione um orçamento...</option>
                             @foreach ($orcamentos as $orcamento)
                                 <option value="{{ $orcamento->id }}">
-                                    {{ $orcamento->id }} - {{ $orcamento->obra }} - Cliente: {{ $orcamento->cliente->nome_fantasia }}
+                                    {{ $orcamento->id }} - {{ $orcamento->obra }} - Cliente: {{ $orcamento->cliente->id }} - {{ $orcamento->cliente->nome }}
                                 </option>
                             @endforeach
                         </x-select>

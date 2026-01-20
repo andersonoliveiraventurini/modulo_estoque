@@ -38,10 +38,11 @@ class StoreOrcamentoRequest extends FormRequest
             'endereco_cep' => 'nullable|string|max:9',
             'endereco_logradouro' => 'nullable|string|max:255',
             'endereco_numero' => 'nullable|string|max:20',
-            'tipos_transporte' => 'nullable|exists:tipos_transportes,id',
+            'tipo_documento' => 'required',
+            'tipos_transporte' => 'required|integer|exists:tipos_transportes,id',
             'condicao_pagamento' => 'required|exists:condicoes_pagamento,id',
             'venda_triangular' => 'required|boolean',
-            'cnpj_triangular' => 'required_if:venda_triangular,1|nullable|cnpj',
+            'cnpj_triangular' => 'required_if:venda_triangular,1|nullable|string|max:18',
 
             'condicao_pagamento' => 'required',
             'outros_meios_pagamento' => 'required_if:condicao_pagamento,20|nullable|string|max:255',

@@ -66,7 +66,8 @@
                                             '{{ $produto->preco_venda }}',
                                             '{{ addslashes($produto->fornecedor?->nome_fantasia ?? 'Sem fornecedor') }}',
                                             '{{ addslashes($produto->cor?->nome ?? 'Sem cor') }}',
-                                            '{{ addslashes($produto->part_number ?? '') }}'
+                                            '{{ addslashes($produto->part_number ?? '') }}',
+                                            '{{ $produto->liberar_desconto }}'
                                         )">
                                 <x-heroicon-o-plus class="w-4 h-4" />
                                 Selecionar

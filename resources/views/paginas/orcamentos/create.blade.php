@@ -213,9 +213,11 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 17v-2a4 4 0 014-4h4l3 3-3 3h-8zM3 7h13a2 2 0 012 2v2"></path>
                             </svg>
-                            Tipo de venda
+                            Tipo de venda <span class="text-red-500">*</span>
                         </h3>
-
+                        @error('tipos_transporte')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                         <div
                             class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                             @foreach ($opcoesTransporte as $opcao)
@@ -223,6 +225,7 @@
                                     class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 hover:bg-blue-50 cursor-pointer transition">
 
                                     <input type="radio" name="tipos_transporte" value="{{ $opcao->id }}"
+                                        required {{ old('tipos_transporte') == $opcao->id ? 'checked' : '' }}
                                         class="rounded-full border-gray-300 text-blue-600 focus:ring-blue-500" /> <span
                                         class="text-sm text-gray-700">{{ $opcao->nome }}</span>
                                 </label>
@@ -250,7 +253,7 @@
                             </div>
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Nota fiscal</label>
-                                <x-select name="tipo_documento"
+                                <x-select name="tipo_documento" required
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
                                     <option value="">Selecione...</option>
                                     <option value="Nota fiscal">Nota fiscal</option>
@@ -603,7 +606,8 @@
 
         let produtos = [];
 
-        function adicionarProduto(id, nome, preco, fornecedor = '', cor = '', quantidade = 1) {
+        function adicionarProduto(id, nome, preco, fornecedor = '', cor = '', quantidade = 1, partNumber = '',
+            liberarDesconto = 1) {
             if (produtos.find(p => p.id === id)) {
                 alert("Produto já adicionado!");
                 return;
@@ -615,7 +619,9 @@
                 preco: parseFloat(preco),
                 quantidade: parseInt(quantidade) || 1, // ✅ agora recebe quantidade
                 fornecedor,
-                cor
+                cor,
+                partNumber,
+                liberarDesconto: parseInt(liberarDesconto) // 0 = não pode desconto, 1 = pode desconto
             };
             produtos.push(produto);
             renderProdutos();
@@ -642,25 +648,49 @@
 
             const descontoAplicado = Math.max(descontoCliente, descontoOrcamento);
 
-            // 🔹 Inicializar totais dos produtos aqui
             let totalProdutos = 0;
             let totalProdutosComDesconto = 0;
 
             produtos.forEach((p, i) => {
                 const subtotal = p.preco * p.quantidade;
-                const subtotalComDesconto = subtotal - (subtotal * (descontoAplicado / 100));
 
-                totalProdutos += subtotal; // ✅ acumula total
-                totalProdutosComDesconto += subtotalComDesconto; // ✅ acumula total c/ desconto
+                // ✅ APLICA DESCONTO APENAS SE O PRODUTO PERMITIR
+                let subtotalComDesconto;
+                let descontoEfetivo = 0;
+
+                if (p.liberarDesconto === 1) {
+                    subtotalComDesconto = subtotal - (subtotal * (descontoAplicado / 100));
+                    descontoEfetivo = descontoAplicado;
+                } else {
+                    subtotalComDesconto = subtotal; // SEM DESCONTO
+                }
+
+                totalProdutos += subtotal;
+                totalProdutosComDesconto += subtotalComDesconto;
+
+                // ✅ BADGE VISUAL PARA INDICAR STATUS DO DESCONTO
+                const descontoStatus = p.liberarDesconto === 0 ?
+                    '<span class="inline-block px-2 py-1 text-xs font-semibold text-red-700 bg-red-100 rounded-full">Desconto bloqueado</span>' :
+                    `<span class="inline-block px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">${descontoEfetivo}% aplicado</span>`;
 
                 const row = document.createElement('tr');
+                row.className = p.liberarDesconto === 0 ? 'bg-red-50 dark:bg-red-900/10' : '';
+
                 row.innerHTML = `
-            <td class="px-3 py-2 border"><input type="hidden" name="itens[${i}][id]" value="${p.id}">${p.id}</td>
-            <td class="px-3 py-2 border">${p.nome}</td>
-            <td class="px-3 py-2 border">${p.part_number || ''}</td>
-            <td class="px-3 py-2 border">${p.fornecedor || ''}</td>
-            <td class="px-3 py-2 border">${p.cor || ''}</td>
-            <td class="px-3 py-2 border">R$ ${p.preco.toFixed(2)}
+            <td class="px-3 py-2 border">
+                <input type="hidden" name="itens[${i}][id]" value="${p.id}">
+                <input type="hidden" name="itens[${i}][liberar_desconto]" value="${p.liberarDesconto}">
+                ${p.id}
+            </td>
+            <td class="px-3 py-2 border">
+                ${p.nome}
+                <div class="mt-1">${descontoStatus}</div>
+            </td>
+            <td class="px-3 py-2 border">${p.partNumber || '-'}</td>
+            <td class="px-3 py-2 border">${p.fornecedor || '-'}</td>
+            <td class="px-3 py-2 border">${p.cor || '-'}</td>
+            <td class="px-3 py-2 border">
+                R$ ${p.preco.toFixed(2)}
                 <input type="hidden" name="itens[${i}][preco_unitario]" value="${p.preco}">
             </td>
             <td class="px-3 py-2 border">
@@ -668,14 +698,16 @@
                     value="${p.quantidade}" min="1"
                     onchange="alterarQuantidade(${i}, this.value)"
                     class="w-12 border rounded px-2 py-1 text-center" style="max-width: 4rem;"/>
-
             </td>
-            <td class="px-3 py-2 border">R$ ${subtotal.toFixed(2)}
+            <td class="px-3 py-2 border">
+                R$ ${subtotal.toFixed(2)}
                 <input type="hidden" name="itens[${i}][subtotal]" value="${subtotal.toFixed(2)}">
             </td>
-            <td class="px-3 py-2 border text-green-600">R$ ${subtotalComDesconto.toFixed(2)}
+            <td class="px-3 py-2 border ${p.liberarDesconto === 1 ? 'text-green-600' : 'text-gray-600'}">
+                R$ ${subtotalComDesconto.toFixed(2)}
                 <input type="hidden" name="itens[${i}][subtotal_com_desconto]" value="${subtotalComDesconto.toFixed(2)}">
                 <input type="hidden" name="itens[${i}][preco_unitario_com_desconto]" value="${(subtotalComDesconto / p.quantidade).toFixed(2)}">
+                <input type="hidden" name="itens[${i}][desconto_aplicado]" value="${descontoEfetivo}">
             </td>
             <td class="px-3 py-2 border text-center">
                 <button type="button" onclick="removerProduto(${i})"
@@ -695,15 +727,47 @@
             const totalGeral = totalProdutos + totalVidros;
             const totalGeralComDesconto = totalProdutosComDesconto + totalVidrosComDesconto;
 
-            // Atualizar campo total
             document.getElementById('valor_total').value = totalGeral.toFixed(2);
-
-            // Atualizar valores finais
             atualizarValorFinal(totalGeral, totalGeralComDesconto);
+
+            // ✅ EXIBIR ALERTA SE HOUVER PRODUTOS SEM DESCONTO
+            exibirAvisoDescontoBloqueado();
+        }
+
+        function exibirAvisoDescontoBloqueado() {
+            const produtosSemDesconto = produtos.filter(p => p.liberarDesconto === 0);
+            const avisoExistente = document.getElementById('aviso-desconto-bloqueado');
+
+            if (avisoExistente) {
+                avisoExistente.remove();
+            }
+
+            if (produtosSemDesconto.length > 0) {
+                const aviso = document.createElement('div');
+                aviso.id = 'aviso-desconto-bloqueado';
+                aviso.className = 'bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-4 mb-4';
+                aviso.innerHTML = `
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-700 dark:text-yellow-300">
+                        <strong>Atenção:</strong> ${produtosSemDesconto.length} produto(s) neste orçamento não permite(m) desconto.
+                        O desconto percentual não será aplicado sobre esses itens.
+                    </p>
+                </div>
+            </div>
+        `;
+
+                const tabelaProdutos = document.getElementById('produtos-selecionados').closest('.space-y-4');
+                tabelaProdutos.insertBefore(aviso, tabelaProdutos.firstChild.nextSibling);
+            }
         }
 
         function atualizarValorFinal(total = null, totalComDesconto = null) {
-            // Se não veio parâmetros, calcular novamente
             if (total === null) {
                 let totalProdutos = 0;
                 let totalProdutosComDesconto = 0;
@@ -718,7 +782,14 @@
 
                 produtos.forEach(p => {
                     const subtotal = p.preco * p.quantidade;
-                    const subtotalComDesconto = subtotal - (subtotal * (descontoAplicado / 100));
+                    let subtotalComDesconto;
+
+                    if (p.liberarDesconto === 1) {
+                        subtotalComDesconto = subtotal - (subtotal * (descontoAplicado / 100));
+                    } else {
+                        subtotalComDesconto = subtotal;
+                    }
+
                     totalProdutos += subtotal;
                     totalProdutosComDesconto += subtotalComDesconto;
                 });
@@ -737,30 +808,24 @@
             const guia_recolhimento = parseFloat(document.querySelector('[name="guia_recolhimento"]').value) || 0;
             const descontoEspecificoInput = document.querySelector('[name="desconto_especifico"]');
 
-            // Converte valor mascarado (ex: "1.234,56") para número
             let descontoEspecifico = parseFloat(
                 descontoEspecificoInput.value.replace(/\./g, '').replace(',', '.')
             ) || 0;
 
-            // Calcula valores finais
             const valorSemDescontoFinal = total + guia_recolhimento;
             let valorFinalComDesconto = totalComDesconto - descontoEspecifico + guia_recolhimento;
 
-            // 🔹 Impede valor final negativo
             if (valorFinalComDesconto < 0) valorFinalComDesconto = 0;
 
-            // 🔹 Impede desconto maior que o total
             const maxDesconto = totalComDesconto + guia_recolhimento;
             if (descontoEspecifico > maxDesconto) {
                 descontoEspecifico = maxDesconto;
-                // Atualiza campo mascarado
                 descontoEspecificoInput.value = maxDesconto.toLocaleString('pt-BR', {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
                 });
             }
 
-            // Atualiza valor final
             document.getElementById('valor_final').value = valorFinalComDesconto.toFixed(2);
         }
 
@@ -809,17 +874,39 @@
 
         let produtoSelecionado = null; // variável global para armazenar o produto temporário
 
-        function selecionarProdutoComQuantidade(id, nome, preco, fornecedor = '', cor = '') {
+        function selecionarProdutoComQuantidade(id, nome, preco, fornecedor = '', cor = '', partNumber = '',
+            liberarDesconto = '1') {
             produtoSelecionado = {
                 id,
                 nome,
                 preco: parseFloat(preco),
                 fornecedor,
                 cor,
+                partNumber,
+                liberarDesconto: parseInt(liberarDesconto),
                 quantidade: 1
             };
+
             document.getElementById('produto-nome').textContent = nome;
             document.getElementById('quantidade-produto').value = 1;
+
+            const modalBody = document.getElementById('modal-quantidade').querySelector('.bg-white');
+            const avisoExistente = modalBody.querySelector('.aviso-desconto-modal');
+
+            if (avisoExistente) {
+                avisoExistente.remove();
+            }
+
+            if (parseInt(liberarDesconto) === 0) {
+                const aviso = document.createElement('div');
+                aviso.className =
+                    'aviso-desconto-modal bg-red-50 border border-red-200 rounded p-2 mb-3 text-sm text-red-700';
+                aviso.innerHTML = '⚠️ Este produto não permite desconto';
+
+                const inputQuantidade = document.getElementById('quantidade-produto');
+                inputQuantidade.parentNode.insertBefore(aviso, inputQuantidade);
+            }
+
             document.getElementById('modal-quantidade').classList.remove('hidden');
         }
 
@@ -840,7 +927,9 @@
                 produtoSelecionado.preco,
                 produtoSelecionado.fornecedor,
                 produtoSelecionado.cor,
-                produtoSelecionado.quantidade // ✅ passa a quantidade correta
+                produtoSelecionado.quantidade,
+                produtoSelecionado.partNumber,
+                produtoSelecionado.liberarDesconto
             );
 
             fecharModal();

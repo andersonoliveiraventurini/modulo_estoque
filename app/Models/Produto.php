@@ -23,6 +23,7 @@ class Produto extends Model
         'status',
         'tipo_produto_sped',
         'ncm',
+        'liberar_desconto',
         'codigo_barras',
         'fornecedor_id',
         'preco_custo',
