@@ -617,16 +617,41 @@
                 id,
                 nome,
                 preco: parseFloat(preco),
+                precoOriginal: parseFloat(preco), // ✅ NOVO: Armazena preço original
                 quantidade: parseInt(quantidade) || 1, // ✅ agora recebe quantidade
                 fornecedor,
                 cor,
                 partNumber,
-                liberarDesconto: parseInt(liberarDesconto) // 0 = não pode desconto, 1 = pode desconto
+                liberarDesconto: parseInt(liberarDesconto), // 0 = não pode desconto, 1 = pode desconto
+                descontoProduto: 0 // ✅ NOVO: Desconto específico do produto em R$
             };
             produtos.push(produto);
             renderProdutos();
         }
 
+        function alterarPrecoProduto(index, novoPreco) {
+            const produto = produtos[index];
+
+            if (produto.liberarDesconto === 0) {
+                alert("Este produto não permite alteração de preço!");
+                return;
+            }
+
+            novoPreco = parseFloat(novoPreco) || produto.precoOriginal;
+
+            // Não permite preço negativo
+            if (novoPreco < 0) {
+                novoPreco = 0;
+            }
+
+            // Calcula o desconto em R$ (diferença entre preço original e novo)
+            const descontoEmReais = produto.precoOriginal - novoPreco;
+
+            produtos[index].preco = novoPreco;
+            produtos[index].descontoProduto = descontoEmReais;
+
+            renderProdutos();
+        }
 
         function alterarQuantidade(index, valor) {
             produtos[index].quantidade = parseInt(valor) || 1;
@@ -646,32 +671,51 @@
             let descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]').value) || 0;
             descontoOrcamento = Math.min(Math.max(descontoOrcamento, 0), 100);
 
-            const descontoAplicado = Math.max(descontoCliente, descontoOrcamento);
+            const descontoPercentual = Math.max(descontoCliente, descontoOrcamento);
 
             let totalProdutos = 0;
             let totalProdutosComDesconto = 0;
 
             produtos.forEach((p, i) => {
-                const subtotal = p.preco * p.quantidade;
+                // ✅ Usa o preço atual (que pode ter sido alterado manualmente)
+                const valorUnitarioAtual = p.preco;
+                const subtotal = valorUnitarioAtual * p.quantidade;
 
-                // ✅ APLICA DESCONTO APENAS SE O PRODUTO PERMITIR
                 let subtotalComDesconto;
                 let descontoEfetivo = 0;
+                let tipoDesconto = 'nenhum';
 
-                if (p.liberarDesconto === 1) {
-                    subtotalComDesconto = subtotal - (subtotal * (descontoAplicado / 100));
-                    descontoEfetivo = descontoAplicado;
+                // ✅ Verifica se houve desconto manual no produto
+                if (p.descontoProduto > 0) {
+                    // Desconto por produto (manual) - NÃO aplica desconto percentual
+                    subtotalComDesconto = subtotal;
+                    tipoDesconto = 'produto';
+                    descontoEfetivo = ((p.descontoProduto / p.precoOriginal) * 100).toFixed(2);
+                } else if (p.liberarDesconto === 1 && descontoPercentual > 0) {
+                    // Desconto percentual
+                    subtotalComDesconto = subtotal - (subtotal * (descontoPercentual / 100));
+                    descontoEfetivo = descontoPercentual;
+                    tipoDesconto = 'percentual';
                 } else {
-                    subtotalComDesconto = subtotal; // SEM DESCONTO
+                    // Sem desconto
+                    subtotalComDesconto = subtotal;
                 }
 
-                totalProdutos += subtotal;
+                totalProdutos += p.precoOriginal * p.quantidade; // Total sempre com preço original
                 totalProdutosComDesconto += subtotalComDesconto;
 
-                // ✅ BADGE VISUAL PARA INDICAR STATUS DO DESCONTO
-                const descontoStatus = p.liberarDesconto === 0 ?
-                    '<span class="inline-block px-2 py-1 text-xs font-semibold text-red-700 bg-red-100 rounded-full">Desconto bloqueado</span>' :
-                    `<span class="inline-block px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">${descontoEfetivo}% aplicado</span>`;
+                // ✅ Badge de status do desconto
+                let descontoStatus = '';
+                if (p.liberarDesconto === 0) {
+                    descontoStatus =
+                        '<span class="inline-block px-2 py-1 text-xs font-semibold text-red-700 bg-red-100 rounded-full">Desconto bloqueado</span>';
+                } else if (tipoDesconto === 'produto') {
+                    descontoStatus =
+                        `<span class="inline-block px-2 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full">Preço alterado (-R$ ${p.descontoProduto.toFixed(2)})</span>`;
+                } else if (tipoDesconto === 'percentual') {
+                    descontoStatus =
+                        `<span class="inline-block px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">${descontoEfetivo}% aplicado</span>`;
+                }
 
                 const row = document.createElement('tr');
                 row.className = p.liberarDesconto === 0 ? 'bg-red-50 dark:bg-red-900/10' : '';
@@ -680,6 +724,9 @@
             <td class="px-3 py-2 border">
                 <input type="hidden" name="itens[${i}][id]" value="${p.id}">
                 <input type="hidden" name="itens[${i}][liberar_desconto]" value="${p.liberarDesconto}">
+                <input type="hidden" name="itens[${i}][preco_original]" value="${p.precoOriginal}">
+                <input type="hidden" name="itens[${i}][desconto_produto]" value="${p.descontoProduto}">
+                <input type="hidden" name="itens[${i}][tipo_desconto]" value="${tipoDesconto}">
                 ${p.id}
             </td>
             <td class="px-3 py-2 border">
@@ -690,8 +737,18 @@
             <td class="px-3 py-2 border">${p.fornecedor || '-'}</td>
             <td class="px-3 py-2 border">${p.cor || '-'}</td>
             <td class="px-3 py-2 border">
-                R$ ${p.preco.toFixed(2)}
-                <input type="hidden" name="itens[${i}][preco_unitario]" value="${p.preco}">
+                ${p.liberarDesconto === 1 ? `
+                        <div class="flex flex-col gap-1">
+                            <input type="number" step="0.01" value="${valorUnitarioAtual.toFixed(2)}" 
+                                onchange="alterarPrecoProduto(${i}, this.value)"
+                                class="w-24 border rounded px-2 py-1 text-sm" 
+                                title="Clique para alterar o preço"/>
+                            ${p.descontoProduto > 0 ? `<small class="text-xs text-gray-500">Original: R$ ${p.precoOriginal.toFixed(2)}</small>` : ''}
+                        </div>
+                    ` : `
+                        R$ ${valorUnitarioAtual.toFixed(2)}
+                    `}
+                <input type="hidden" name="itens[${i}][preco_unitario]" value="${valorUnitarioAtual}">
             </td>
             <td class="px-3 py-2 border">
                 <input type="number" name="itens[${i}][quantidade]" 
@@ -700,14 +757,15 @@
                     class="w-12 border rounded px-2 py-1 text-center" style="max-width: 4rem;"/>
             </td>
             <td class="px-3 py-2 border">
-                R$ ${subtotal.toFixed(2)}
+                R$ ${(p.precoOriginal * p.quantidade).toFixed(2)}
+                <input type="hidden" name="itens[${i}][subtotal_original]" value="${(p.precoOriginal * p.quantidade).toFixed(2)}">
                 <input type="hidden" name="itens[${i}][subtotal]" value="${subtotal.toFixed(2)}">
             </td>
-            <td class="px-3 py-2 border ${p.liberarDesconto === 1 ? 'text-green-600' : 'text-gray-600'}">
+            <td class="px-3 py-2 border ${tipoDesconto !== 'nenhum' ? 'text-green-600' : 'text-gray-600'}">
                 R$ ${subtotalComDesconto.toFixed(2)}
                 <input type="hidden" name="itens[${i}][subtotal_com_desconto]" value="${subtotalComDesconto.toFixed(2)}">
                 <input type="hidden" name="itens[${i}][preco_unitario_com_desconto]" value="${(subtotalComDesconto / p.quantidade).toFixed(2)}">
-                <input type="hidden" name="itens[${i}][desconto_aplicado]" value="${descontoEfetivo}">
+                <input type="hidden" name="itens[${i}][desconto_percentual_aplicado]" value="${tipoDesconto === 'percentual' ? descontoPercentual : 0}">
             </td>
             <td class="px-3 py-2 border text-center">
                 <button type="button" onclick="removerProduto(${i})"
@@ -717,20 +775,17 @@
                 wrapper.appendChild(row);
             });
 
-            // Calcular total dos vidros
             const {
                 totalVidros,
                 totalVidrosComDesconto
             } = calcularTotalVidros();
 
-            // Total geral (produtos + vidros)
             const totalGeral = totalProdutos + totalVidros;
             const totalGeralComDesconto = totalProdutosComDesconto + totalVidrosComDesconto;
 
             document.getElementById('valor_total').value = totalGeral.toFixed(2);
             atualizarValorFinal(totalGeral, totalGeralComDesconto);
 
-            // ✅ EXIBIR ALERTA SE HOUVER PRODUTOS SEM DESCONTO
             exibirAvisoDescontoBloqueado();
         }
 
@@ -768,66 +823,67 @@
         }
 
         function atualizarValorFinal(total = null, totalComDesconto = null) {
-            if (total === null) {
-                let totalProdutos = 0;
-                let totalProdutosComDesconto = 0;
+    if (total === null) {
+        let totalProdutos = 0;
+        let totalProdutosComDesconto = 0;
 
-                const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]').value) || 0;
-                let descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]').value) || 0;
+        const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]').value) || 0;
+        let descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]').value) || 0;
 
-                if (descontoOrcamento < 0) descontoOrcamento = 0;
-                if (descontoOrcamento > 100) descontoOrcamento = 100;
+        if (descontoOrcamento < 0) descontoOrcamento = 0;
+        if (descontoOrcamento > 100) descontoOrcamento = 100;
 
-                const descontoAplicado = Math.max(descontoCliente, descontoOrcamento);
+        const descontoPercentual = Math.max(descontoCliente, descontoOrcamento);
 
-                produtos.forEach(p => {
-                    const subtotal = p.preco * p.quantidade;
-                    let subtotalComDesconto;
-
-                    if (p.liberarDesconto === 1) {
-                        subtotalComDesconto = subtotal - (subtotal * (descontoAplicado / 100));
-                    } else {
-                        subtotalComDesconto = subtotal;
-                    }
-
-                    totalProdutos += subtotal;
-                    totalProdutosComDesconto += subtotalComDesconto;
-                });
-
-                const {
-                    totalVidros,
-                    totalVidrosComDesconto
-                } = calcularTotalVidros();
-
-                total = totalProdutos + totalVidros;
-                totalComDesconto = totalProdutosComDesconto + totalVidrosComDesconto;
-
-                document.getElementById('valor_total').value = total.toFixed(2);
+        produtos.forEach(p => {
+            const subtotal = p.preco * p.quantidade;
+            const subtotalOriginal = p.precoOriginal * p.quantidade;
+            let subtotalComDesconto;
+            
+            // ✅ Se tem desconto no produto, não aplica percentual
+            if (p.descontoProduto > 0) {
+                subtotalComDesconto = subtotal;
+            } else if (p.liberarDesconto === 1 && descontoPercentual > 0) {
+                subtotalComDesconto = subtotal - (subtotal * (descontoPercentual / 100));
+            } else {
+                subtotalComDesconto = subtotal;
             }
+            
+            totalProdutos += subtotalOriginal;
+            totalProdutosComDesconto += subtotalComDesconto;
+        });
 
-            const guia_recolhimento = parseFloat(document.querySelector('[name="guia_recolhimento"]').value) || 0;
-            const descontoEspecificoInput = document.querySelector('[name="desconto_especifico"]');
+        const { totalVidros, totalVidrosComDesconto } = calcularTotalVidros();
 
-            let descontoEspecifico = parseFloat(
-                descontoEspecificoInput.value.replace(/\./g, '').replace(',', '.')
-            ) || 0;
+        total = totalProdutos + totalVidros;
+        totalComDesconto = totalProdutosComDesconto + totalVidrosComDesconto;
 
-            const valorSemDescontoFinal = total + guia_recolhimento;
-            let valorFinalComDesconto = totalComDesconto - descontoEspecifico + guia_recolhimento;
+        document.getElementById('valor_total').value = total.toFixed(2);
+    }
 
-            if (valorFinalComDesconto < 0) valorFinalComDesconto = 0;
+    const guia_recolhimento = parseFloat(document.querySelector('[name="guia_recolhimento"]').value) || 0;
+    const descontoEspecificoInput = document.querySelector('[name="desconto_especifico"]');
 
-            const maxDesconto = totalComDesconto + guia_recolhimento;
-            if (descontoEspecifico > maxDesconto) {
-                descontoEspecifico = maxDesconto;
-                descontoEspecificoInput.value = maxDesconto.toLocaleString('pt-BR', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
-            }
+    let descontoEspecifico = parseFloat(
+        descontoEspecificoInput.value.replace(/\./g, '').replace(',', '.')
+    ) || 0;
 
-            document.getElementById('valor_final').value = valorFinalComDesconto.toFixed(2);
-        }
+    const valorSemDescontoFinal = total + guia_recolhimento;
+    let valorFinalComDesconto = totalComDesconto - descontoEspecifico + guia_recolhimento;
+
+    if (valorFinalComDesconto < 0) valorFinalComDesconto = 0;
+
+    const maxDesconto = totalComDesconto + guia_recolhimento;
+    if (descontoEspecifico > maxDesconto) {
+        descontoEspecifico = maxDesconto;
+        descontoEspecificoInput.value = maxDesconto.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    document.getElementById('valor_final').value = valorFinalComDesconto.toFixed(2);
+}
 
 
 

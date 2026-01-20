@@ -312,41 +312,63 @@ class OrcamentoController extends Controller
             $orcamento->transportes()->sync($request->tipos_transporte);
         }
 
-        // ✅ ITENS COM VERIFICAÇÃO DE BLOQUEIO DE DESCONTO
+        // ✅ ITENS COM SUPORTE A DESCONTO POR PRODUTO
         if ($request->has('itens')) {
             foreach ($request->itens as $item) {
-                $valorUnitario = (float) ($item['preco_unitario'] ?? 0);
+                $precoOriginal = (float) ($item['preco_original'] ?? $item['preco_unitario'] ?? 0);
+                $precoUnitario = (float) ($item['preco_unitario'] ?? 0);
                 $quantidade    = (float) ($item['quantidade'] ?? 0);
-                $subtotal      = $valorUnitario * $quantidade;
 
-                // ✅ Verifica se o produto permite desconto
                 $liberarDesconto = isset($item['liberar_desconto']) ? (int) $item['liberar_desconto'] : 1;
+                $tipoDesconto = $item['tipo_desconto'] ?? 'nenhum';
+                $descontoProduto = (float) ($item['desconto_produto'] ?? 0);
 
-                // ✅ Pega o desconto efetivamente aplicado do frontend
-                $descontoAplicado = isset($item['desconto_aplicado']) ? (float) $item['desconto_aplicado'] : 0;
+                $subtotalOriginal = $precoOriginal * $quantidade;
+                $subtotal = $precoUnitario * $quantidade;
 
-                // ✅ Aplica desconto APENAS se o produto permitir
                 $valorComDesconto = $subtotal;
-                if ($liberarDesconto === 1 && $descontoPercentual > 0) {
-                    $valorComDesconto = $subtotal - ($subtotal * ($descontoPercentual / 100));
-                }
+                $valorUnitarioComDesconto = $precoUnitario;
+                $descontoAplicadoItem = 0;
 
-                // ✅ Calcula valor unitário com desconto
-                $valorUnitarioComDesconto = $quantidade > 0 ? $valorComDesconto / $quantidade : 0;
+                // ✅ LÓGICA DE DESCONTO
+                if ($liberarDesconto === 1) {
+                    if ($tipoDesconto === 'produto' && $descontoProduto > 0) {
+                        // Desconto por produto (preço alterado manualmente)
+                        // Já vem calculado do frontend
+                        $valorComDesconto = $subtotal;
+                        $valorUnitarioComDesconto = $precoUnitario;
+
+                        // Registra desconto do produto
+                        $orcamento->descontos()->create([
+                            'motivo'      => "Desconto individual ".$quantidade." em unidades do produto ID ". $item['id'],
+                            'valor'       => $descontoProduto * $quantidade,
+                            'porcentagem' => null,
+                            'tipo'        => 'produto',
+                            'produto_id'  => $item['id'],
+                            'cliente_id'  => $request->cliente_id,
+                            'user_id'     => Auth()->id(),
+                        ]);
+                    } elseif ($tipoDesconto === 'percentual' && $descontoPercentual > 0) {
+                        // Desconto percentual
+                        $valorComDesconto = $subtotal - ($subtotal * ($descontoPercentual / 100));
+                        $valorUnitarioComDesconto = $valorComDesconto / $quantidade;
+                        $descontoAplicadoItem = $descontoPercentual;
+                    }
+                }
 
                 $orcamento->itens()->create([
                     'produto_id'                  => $item['id'],
                     'quantidade'                  => $quantidade,
-                    'valor_unitario'              => $valorUnitario,
+                    'valor_unitario'              => $precoOriginal, // Sempre salva o preço original
                     'valor_unitario_com_desconto' => $valorUnitarioComDesconto,
-                    'desconto'                    => $descontoAplicado,
+                    'desconto'                    => $descontoAplicadoItem,
                     'valor_com_desconto'          => $valorComDesconto,
                     'user_id'                     => $request->user()->id ?? null,
                 ]);
             }
         }
 
-        // ✅ VIDROS (mantém lógica existente - vidros sempre permitem desconto)
+        // ✅ VIDROS (mantém lógica existente)
         if ($request->has('vidros')) {
             foreach ($request->vidros as $vidro) {
                 if (!empty($vidro['preco_m2']) && !empty($vidro['quantidade']) && !empty($vidro['altura']) && !empty($vidro['largura'])) {
@@ -365,19 +387,21 @@ class OrcamentoController extends Controller
             }
         }
 
-        // ✅ DESCONTOS - Calcula apenas sobre itens que permitem
+        // ✅ DESCONTO PERCENTUAL (apenas para itens que não tiveram desconto por produto)
         if ($descontoPercentual > 0) {
-            $totalDescontoAplicado = 0;
+            $totalDescontoPercentual = 0;
 
             if ($request->has('itens')) {
                 foreach ($request->itens as $item) {
                     $liberarDesconto = isset($item['liberar_desconto']) ? (int) $item['liberar_desconto'] : 1;
+                    $tipoDesconto = $item['tipo_desconto'] ?? 'nenhum';
 
-                    if ($liberarDesconto === 1) {
-                        $valorUnitario = (float) ($item['preco_unitario'] ?? 0);
-                        $quantidade    = (float) ($item['quantidade'] ?? 0);
-                        $subtotal      = $valorUnitario * $quantidade;
-                        $totalDescontoAplicado += $subtotal * ($descontoPercentual / 100);
+                    // Só contabiliza se for desconto percentual (não produto)
+                    if ($liberarDesconto === 1 && $tipoDesconto === 'percentual') {
+                        $precoUnitario = (float) ($item['preco_unitario'] ?? 0);
+                        $quantidade = (float) ($item['quantidade'] ?? 0);
+                        $subtotal = $precoUnitario * $quantidade;
+                        $totalDescontoPercentual += $subtotal * ($descontoPercentual / 100);
                     }
                 }
             }
@@ -387,15 +411,15 @@ class OrcamentoController extends Controller
                 foreach ($request->vidros as $vidro) {
                     if (!empty($vidro['valor_total'])) {
                         $valorTotal = $brToDecimal($vidro['valor_total']) ?? 0;
-                        $totalDescontoAplicado += $valorTotal * ($descontoPercentual / 100);
+                        $totalDescontoPercentual += $valorTotal * ($descontoPercentual / 100);
                     }
                 }
             }
 
-            if ($totalDescontoAplicado > 0) {
+            if ($totalDescontoPercentual > 0) {
                 $orcamento->descontos()->create([
                     'motivo'      => 'Desconto percentual aplicado pelo vendedor',
-                    'valor'       => $totalDescontoAplicado,
+                    'valor'       => $totalDescontoPercentual,
                     'porcentagem' => $descontoPercentual,
                     'tipo'        => 'percentual',
                     'cliente_id'  => $request->cliente_id,
@@ -404,6 +428,7 @@ class OrcamentoController extends Controller
             }
         }
 
+        // ✅ DESCONTO ESPECÍFICO (fixo)
         if ($descontoEspecifico) {
             $orcamento->descontos()->create([
                 'motivo'      => 'Desconto específico em reais',

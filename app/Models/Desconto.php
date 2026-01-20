@@ -18,6 +18,7 @@ class Desconto extends Model
         'cliente_id',
         'orcamento_id',
         'pedido_id',
+        'produto_id',
         'user_id',
         'porcentagem',
         'aprovado_em',
