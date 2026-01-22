@@ -225,6 +225,8 @@ class OrcamentoController extends Controller
 
     public function store(StoreOrcamentoRequest $request)
     {
+        $itenscomdesconto = false;
+
         $brToDecimal = function ($valor) {
             if ($valor === null || $valor === '') {
                 return null;
@@ -348,6 +350,8 @@ class OrcamentoController extends Controller
                             'cliente_id'  => $request->cliente_id,
                             'user_id'     => Auth()->id(),
                         ]);
+
+                        $itenscomdesconto = true;
                     } elseif ($tipoDesconto === 'percentual' && $descontoPercentual > 0) {
                         // Desconto percentual
                         $valorComDesconto = $subtotal - ($subtotal * ($descontoPercentual / 100));
@@ -463,7 +467,7 @@ class OrcamentoController extends Controller
 
         if (
             $descontoPercentual > $request->desconto_aprovado ||
-            Auth()->user()->vendedor->desconto < $descontoPercentual
+            Auth()->user()->vendedor->desconto < $descontoPercentual || $itenscomdesconto
         ) {
             $orcamento->status = 'aprovar desconto';
             $orcamento->save();
