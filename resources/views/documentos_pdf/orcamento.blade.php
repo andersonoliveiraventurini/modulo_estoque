@@ -241,7 +241,7 @@
         </tr>        
         <tr>
             <td class="label">Condição pagamento:</td>
-            <td class="value">{{ $orcamento->condicao_id }} @if($orcamento->condicao_id == 20) {{$orcamento->outros_meios_pagamento}} @endif</td>
+            <td class="value">{{ $orcamento->condicaoPagamento->nome }} @if($orcamento->condicao_id == 20) {{$orcamento->outros_meios_pagamento}} @endif</td>
             <td class="label">Tipo de frete:</td>
             <td class="value">{{ $orcamento->frete ?? 'Não registrado' }}</td>
         </tr>
