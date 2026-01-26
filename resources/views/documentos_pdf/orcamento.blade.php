@@ -238,7 +238,19 @@
             <td class="value">{{ $usuario->name }}</td>
             <td class="label">Prazo de Entrega:</td>
             <td class="value">{{ $orcamento->prazo_entrega ?? '---' }}</td>
+        </tr>        
+        <tr>
+            <td class="label">Condição pagamento:</td>
+            <td class="value">{{ $orcamento->condicao_id }} @if($orcamento->condicao_id == 20) {{$orcamento->outros_meios_pagamento}} @endif</td>
+            <td class="label">Tipo de frete:</td>
+            <td class="value">{{ $orcamento->frete ?? 'Não registrado' }}</td>
         </tr>
+        @if($orcamento->guia_recolhimento != null)
+            <tr>
+                <td class="label">Guia de recolhimento:</td>
+                <td class="value" colspan="3">{{ $orcamento->guia_recolhimento }}</td>
+            </tr>
+        @endif
         <tr>
             <td class="label">Obra:</td>
             <td class="value" colspan="3">{{ $orcamento->obra }}</td>
@@ -250,7 +262,7 @@
         @if ($orcamento->observacoes != null)
             <tr>
                 <td class="label">Observações:</td>
-                <td class="value" colspan="3">{{ $orcamento->observacoes ?? '---' }}</td>
+                <td class="value" colspan="3">{{ $orcamento->observacoes }}</td>
             </tr>
         @endif
 
