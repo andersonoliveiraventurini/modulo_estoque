@@ -32,6 +32,7 @@ use App\Livewire\OrcamentoShow;
 use App\Http\Controllers\SeparacaoController;
 use App\Http\Controllers\ConferenciaController;
 use App\Http\Controllers\PagamentoController;
+use App\Http\Controllers\SolicitacaoPagamentoController;
 use App\Livewire\ListaConferencia;
 use App\Livewire\ListaSeparacao;
 use App\Livewire\Logistica\SeparacaoListaPage;
@@ -174,6 +175,19 @@ Route::middleware(['auth'])->group(function () {
     // Estornar um pagamento
     Route::post('/pagamentos/{pagamento}/estornar', [PagamentoController::class, 'estornar'])
         ->name('pagamentos.estornar');
+
+
+    Route::get('/solicitacoes-pagamento', [SolicitacaoPagamentoController::class, 'index'])
+        ->name('solicitacoes-pagamento.index');
+    
+    Route::get('/solicitacoes-pagamento/aprovadas', [SolicitacaoPagamentoController::class, 'aprovadas'])
+        ->name('solicitacoes-pagamento.aprovadas');
+    
+    Route::get('/solicitacoes-pagamento/{orcamento_id}/aprovar', [SolicitacaoPagamentoController::class, 'solicitacao_orcamento'])
+        ->name('solicitacoes-pagamento.aprovar');
+    
+    Route::post('/solicitacoes-pagamento/{id}/avaliar', [SolicitacaoPagamentoController::class, 'avaliar'])
+        ->name('solicitacoes-pagamento.avaliar');
 
     Route::resource('notas', NotaFiscalController::class)->names('notas');
 

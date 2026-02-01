@@ -186,4 +186,29 @@ class Orcamento extends Model
             return true; // Indica que a operação de cancelamento foi bem-sucedida.
         });
     }
+
+    // solicitações de pagamento 
+
+    public function solicitacoesPagamento()
+    {
+        return $this->hasMany(SolicitacaoPagamento::class);
+    }
+
+    public function solicitacaoPagamentoPendente()
+    {
+        return $this->hasOne(SolicitacaoPagamento::class)
+                    ->where('status', 'Pendente')
+                    ->whereNull('aprovado_em')
+                    ->whereNull('rejeitado_em')
+                    ->latest();
+    }
+
+    public function temSolicitacaoPagamentoPendente()
+    {
+        return $this->solicitacoesPagamento()
+                    ->where('status', 'Pendente')
+                    ->whereNull('aprovado_em')
+                    ->whereNull('rejeitado_em')
+                    ->exists();
+    }
 }
