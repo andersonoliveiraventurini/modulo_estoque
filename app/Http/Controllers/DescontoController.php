@@ -12,6 +12,7 @@ use App\Models\OrcamentoItens;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\SolicitacaoPagamento;
 
 class DescontoController extends Controller
 {
@@ -313,15 +314,31 @@ class DescontoController extends Controller
     private function gerarpdfeAtualizarOrcamento($orcamentoId)
     {
          $totalDescontosAprovados = Desconto::where('orcamento_id', $orcamentoId)
-                ->whereNotNull('aprovado_em')
-                ->sum('valor');
+        ->whereNotNull('aprovado_em')
+        ->sum('valor');
 
-            $orcamento = Orcamento::find($orcamentoId);
-            // Calcula o novo valor total do orçamento
-            $valorOriginal = $orcamento->valor_total_itens ?? 0;
-            $valorFinal = $valorOriginal - $totalDescontosAprovados;
+        $orcamento = Orcamento::find($orcamentoId);
+        
+        // Calcula o novo valor total do orçamento
+        $valorOriginal = $orcamento->valor_total_itens ?? 0;
+        $valorFinal = $valorOriginal - $totalDescontosAprovados;
 
-            // Atualiza o orçamento
+        // ✅ VERIFICA SE HÁ SOLICITAÇÃO DE PAGAMENTO PENDENTE
+        $temSolicitacaoPagamentoPendente = SolicitacaoPagamento::where('orcamento_id', $orcamentoId)
+            ->pendentes()
+            ->exists();
+
+        if ($temSolicitacaoPagamentoPendente) {
+            // Se ainda há solicitação de pagamento pendente, não gera o PDF
+            $orcamento->update([
+                'status' => 'Aprovar pagamento',
+                'desconto_total' => $totalDescontosAprovados,
+                'valor_com_desconto' => $valorFinal,
+            ]);
+
+            Log::info("Descontos aprovados, mas ainda há solicitação de pagamento pendente no orçamento #{$orcamentoId}");
+        } else {
+            // Não há mais nada pendente - atualiza e gera o PDF
             $orcamento->update([
                 'status' => 'Pendente',
                 'desconto_total' => $totalDescontosAprovados,
@@ -329,7 +346,10 @@ class DescontoController extends Controller
             ]);
 
             $pdfService = new OrcamentoPdfService();
-            $pdfGeradoComSucesso = $pdfService->gerarOrcamentoPdf($orcamento);
+            $pdfService->gerarOrcamentoPdf($orcamento);
+
+            Log::info("Descontos aprovados e PDF gerado para orçamento #{$orcamentoId}");
+        }
     }
 
     public function desconto_orcamento($orcamento_id)

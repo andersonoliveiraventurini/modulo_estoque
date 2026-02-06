@@ -9,9 +9,11 @@
                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 Gerenciar Orçamento #{{ $orcamento->id }}
-                @if ($orcamento->status != 'Aprovar desconto')
-                    -
+                
+                {{-- ✅ VALIDAÇÃO ATUALIZADA: Só mostra PDF se não tiver desconto OU pagamento pendente --}}
+                @if ($orcamento->status != 'Aprovar desconto' && $orcamento->status != 'Aprovar pagamento')
                     @if ($orcamento->pdf_path)
+                        -
                         <a href="{{ asset('storage/' . $orcamento->pdf_path) }}" target="_blank" rel="noopener">
                             <x-button size="sm" variant="primary">
                                 <x-heroicon-o-document-arrow-down class="w-4 h-4" />
@@ -21,7 +23,7 @@
                     @endif
                 @endif
 
-                @if ($orcamento->status == 'Aprovar desconto' || $orcamento->status == 'Pendente')
+                @if ($orcamento->status == 'Aprovar desconto' || $orcamento->status == 'Aprovar pagamento' || $orcamento->status == 'Pendente')
                     <a href="{{ route('orcamentos.edit', $orcamento->id) }}">
                         <x-button size="sm" variant="secondary">
                             <x-heroicon-o-pencil-square class="w-4 h-4" />
@@ -42,27 +44,48 @@
                     </div>
                     <div>
                         <p><strong>Data do Orçamento:</strong> {{ $orcamento->created_at->format('d/m/Y') }}</p>
-                        <p><strong>Validade:</strong> {{ \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }}
-                        </p>
+                        <p><strong>Validade:</strong> {{ \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }}</p>
                         <p><strong>Prazo de Entrega:</strong> {{ $orcamento->prazo_entrega ?? '---' }}</p>
                         <p><strong>Vendedor:</strong> {{ $orcamento->vendedor->name ?? '---' }}</p>
                         <p><strong>Condição de pagamento:</strong> {{ $orcamento->condicaoPagamento->nome ?? '---' }}</p>
+                        
+                        {{-- ✅ EXIBE DESCRIÇÃO DO MEIO DE PAGAMENTO SE EXISTIR --}}
+                        @if ($orcamento->outros_meios_pagamento)
+                            <p><strong>Meio de Pagamento Especial:</strong> {{ $orcamento->outros_meios_pagamento }}</p>
+                        @endif
                     </div>
                 </div>
 
                 @if ($orcamento->validade >= now() || in_array($orcamento->status, ['Aprovado']))
                     {{-- Status Comercial + Atualização --}}
                     <div class="text-right min-w-[280px]">
+                        {{-- ✅ BOTÃO PARA APROVAR DESCONTO --}}
                         @if ($orcamento->status === 'Aprovar desconto')
-                            <span
-                                class="inline-block bg-yellow-200 text-yellow-800 text-sm px-3 py-1 rounded-full font-medium mb-2">
+                            <span class="inline-block bg-yellow-200 text-yellow-800 text-sm px-3 py-1 rounded-full font-medium mb-2">
                                 Aguardando aprovação de desconto
                             </span>
-                            <a href="/descontos/orcamento/{{ $orcamento->id }}"><x-button size="sm"
-                                    variant="primary">Validar desconto</x-button></a>                          
+                            <a href="/descontos/orcamento/{{ $orcamento->id }}">
+                                <x-button size="sm" variant="primary">
+                                    <x-heroicon-o-receipt-percent class="w-4 h-4" />
+                                    Validar desconto
+                                </x-button>
+                            </a>
+                        
+                        {{-- ✅ BOTÃO PARA APROVAR MEIO DE PAGAMENTO --}}
+                        @elseif ($orcamento->status === 'Aprovar pagamento')
+                            <span class="inline-block bg-orange-200 text-orange-800 text-sm px-3 py-1 rounded-full font-medium mb-2">
+                                Aguardando aprovação de meio de pagamento
+                            </span>
+                            <a href="{{ route('solicitacoes-pagamento.aprovar', $orcamento->id) }}">
+                                <x-button size="sm" variant="primary">
+                                    <x-heroicon-o-credit-card class="w-4 h-4" />
+                                    Validar meio de pagamento
+                                </x-button>
+                            </a>
+                        
+                        {{-- ✅ STATUS NORMAL --}}
                         @else
-                            <span
-                                class="inline-block bg-yellow-200 text-yellow-800 text-sm px-3 py-1 rounded-full font-medium mb-2">
+                            <span class="inline-block bg-yellow-200 text-yellow-800 text-sm px-3 py-1 rounded-full font-medium mb-2">
                                 Status
                             </span>
                             <form id="form-status-{{ $orcamento->id }}" class="inline-flex flex-wrap gap-2"
@@ -95,8 +118,7 @@
                                 $map = [
                                     'aguardando_separacao' => [
                                         'label' => 'Aguardando Separação',
-                                        'class' =>
-                                            'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
+                                        'class' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
                                     ],
                                     'em_separacao' => [
                                         'label' => 'Em Separação',
@@ -104,8 +126,7 @@
                                     ],
                                     'aguardando_conferencia' => [
                                         'label' => 'Aguardando Conferência',
-                                        'class' =>
-                                            'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
+                                        'class' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
                                     ],
                                     'em_conferencia' => [
                                         'label' => 'Em Conferência',
@@ -113,21 +134,18 @@
                                     ],
                                     'conferido' => [
                                         'label' => 'Conferido',
-                                        'class' =>
-                                            'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
+                                        'class' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
                                     ],
                                     'finalizado' => [
                                         'label' => 'Conferido e Finalizado',
-                                        'class' =>
-                                            'bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-100',
+                                        'class' => 'bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-100',
                                     ],
                                 ];
                                 $badge = $map[$wf] ?? null;
                             @endphp
 
                             @if ($badge)
-                                <span
-                                    class="inline-block px-3 py-1 rounded-full text-xs font-medium {{ $badge['class'] }}">
+                                <span class="inline-block px-3 py-1 rounded-full text-xs font-medium {{ $badge['class'] }}">
                                     {{ $badge['label'] }}
                                 </span>
                             @endif
@@ -147,6 +165,68 @@
                 @endif
             </div>
         </div>
+
+        {{-- ✅ ALERTA PARA APROVAÇÕES PENDENTES --}}
+        @if ($orcamento->status === 'Aprovar desconto')
+            <div class="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 dark:border-yellow-600 p-4 rounded-lg">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <x-heroicon-o-exclamation-triangle class="h-5 w-5 text-yellow-400 dark:text-yellow-500" />
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                            Aprovação de Desconto Necessária
+                        </h3>
+                        <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+                            <p>
+                                Este orçamento possui descontos pendentes de aprovação. 
+                                O PDF não estará disponível até que todos os descontos sejam aprovados ou rejeitados.
+                            </p>
+                        </div>
+                        <div class="mt-4">
+                            <a href="/descontos/orcamento/{{ $orcamento->id }}"
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                <x-heroicon-o-receipt-percent class="w-4 h-4" />
+                                Ir para Aprovação de Descontos
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @if ($orcamento->status === 'Aprovar pagamento')
+            <div class="bg-orange-50 dark:bg-orange-900/20 border-l-4 border-orange-400 dark:border-orange-600 p-4 rounded-lg">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <x-heroicon-o-exclamation-triangle class="h-5 w-5 text-orange-400 dark:text-orange-500" />
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-orange-800 dark:text-orange-200">
+                            Aprovação de Meio de Pagamento Necessária
+                        </h3>
+                        <div class="mt-2 text-sm text-orange-700 dark:text-orange-300">
+                            <p>
+                                Este orçamento possui uma solicitação de meio de pagamento especial pendente de aprovação.
+                                O PDF não estará disponível até que o meio de pagamento seja aprovado ou rejeitado.
+                            </p>
+                            @if ($orcamento->outros_meios_pagamento)
+                                <p class="mt-2 font-medium">
+                                    Meio solicitado: {{ $orcamento->outros_meios_pagamento }}
+                                </p>
+                            @endif
+                        </div>
+                        <div class="mt-4">
+                            <a href="{{ route('solicitacoes-pagamento.aprovar', $orcamento->id) }}"
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                <x-heroicon-o-credit-card class="w-4 h-4" />
+                                Ir para Aprovação de Meio de Pagamento
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         {{-- Progresso da Expedição --}}
         <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
@@ -197,8 +277,7 @@
                 ->exists();
         @endphp
         @if ($orcamento->status === 'Aprovado' && $temBatchAtivo)
-            <div
-                class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
+            <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
                 <div class="flex items-center justify-between">
                     <div>
                         <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100">Pronto para Separação</h4>
@@ -214,8 +293,7 @@
 
         {{-- Itens do Orçamento --}}
         @if ($orcamento->itens->count() > 0)
-            <div
-                class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
+            <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
                 <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
                     <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -237,7 +315,6 @@
                                 <th class="px-3 py-2 border text-right">Preço Unit.</th>
                                 <th class="px-3 py-2 border text-right">Preço Unit. c/ Desc.</th>
                                 <th class="px-3 py-2 border text-right">Subtotal</th>
-                                {{-- Novas colunas de estoque --}}
                                 <th class="px-3 py-2 border text-right">Estoque Atual</th>
                                 <th class="px-3 py-2 border text-right">Reservado</th>
                                 <th class="px-3 py-2 border text-right">Disponível</th>
@@ -261,38 +338,26 @@
                                     <td class="px-3 py-2 border">{{ $prod->nome ?? '—' }}</td>
                                     <td class="px-3 py-2 border">{{ $item->produto->part_number ?? '—' }}</td>
                                     <td class="px-3 py-2 border">{{ $item->produto->fornecedor->nome ?? '—' }}</td>
-                                    <td class="px-3 py-2 border"> <span class="w-5 h-5 border border-zinc-300 dark:border-zinc-600 rounded"
-                                        style="background-color: {{ $prod->cor->codigo_hex ?? '' }}">	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>{{ $prod->cor->nome ?? '—' }}</td>
-                                    <td class="px-3 py-2 border text-center">{{ $item->quantidade }}</td> 
+                                    <td class="px-3 py-2 border">
+                                        <span class="w-5 h-5 border border-zinc-300 dark:border-zinc-600 rounded"
+                                            style="background-color: {{ $prod->cor->codigo_hex ?? '' }}">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                                        {{ $prod->cor->nome ?? '—' }}
+                                    </td>
+                                    <td class="px-3 py-2 border text-center">{{ $item->quantidade }}</td>
                                     <td class="px-3 py-2 border text-center">{{ $item->produto->liberar_desconto == 0 ? 'Não' : 'Sim' }}</td>
-                                    <td class="px-3 py-2 border text-right">R$
-                                        {{ number_format($item->valor_unitario, 2, ',', '.') }}
-                                    </td>
-                                    <td class="px-3 py-2 border text-right text-green-600 font-medium">R$
-                                        {{ number_format($item->valor_unitario_com_desconto, 2, ',', '.') }}
-                                    </td>
-                                    <td class="px-3 py-2 border text-right">R$
-                                        {{ number_format($item->valor_com_desconto, 2, ',', '.') }}
-                                    </td>
-                                    {{-- Estoque --}}
-                                    <td class="px-3 py-2 border text-right">
-                                        {{ number_format($estoqueAtual, 2, ',', '.') }}
-                                    </td>
-                                    <td class="px-3 py-2 border text-right">
-                                        {{ number_format($reservado, 2, ',', '.') }}
-                                    </td>
-                                    <td class="px-3 py-2 border text-right">
-                                        {{ number_format($disponivel, 2, ',', '.') }}
-                                    </td>
+                                    <td class="px-3 py-2 border text-right">R$ {{ number_format($item->valor_unitario, 2, ',', '.') }}</td>
+                                    <td class="px-3 py-2 border text-right text-green-600 font-medium">R$ {{ number_format($item->valor_unitario_com_desconto, 2, ',', '.') }}</td>
+                                    <td class="px-3 py-2 border text-right">R$ {{ number_format($item->valor_com_desconto, 2, ',', '.') }}</td>
+                                    <td class="px-3 py-2 border text-right">{{ number_format($estoqueAtual, 2, ',', '.') }}</td>
+                                    <td class="px-3 py-2 border text-right">{{ number_format($reservado, 2, ',', '.') }}</td>
+                                    <td class="px-3 py-2 border text-right">{{ number_format($disponivel, 2, ',', '.') }}</td>
                                     <td class="px-3 py-2 border text-center">
                                         @if ($risco)
-                                            <span
-                                                class="inline-flex items-center px-2 py-1 rounded text-xs bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+                                            <span class="inline-flex items-center px-2 py-1 rounded text-xs bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
                                                 Abaixo do mínimo
                                             </span>
                                         @else
-                                            <span
-                                                class="inline-flex items-center px-2 py-1 rounded text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
+                                            <span class="inline-flex items-center px-2 py-1 rounded text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
                                                 OK
                                             </span>
                                         @endif
@@ -307,8 +372,7 @@
 
         {{-- Vidros / Esteiras --}}
         @if ($orcamento->vidros->count() > 0)
-            <div
-                class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
+            <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
                 <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
                     <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -336,15 +400,11 @@
                                     <td class="px-3 py-2 border">{{ $vidro->descricao }}</td>
                                     <td class="px-3 py-2 border text-center">{{ $vidro->altura }}</td>
                                     <td class="px-3 py-2 border text-center">{{ $vidro->largura }}</td>
-                                    <td class="px-3 py-2 border text-right">R$
-                                        {{ number_format($vidro->preco_metro_quadrado, 2, ',', '.') }}
-                                    </td>
+                                    <td class="px-3 py-2 border text-right">R$ {{ number_format($vidro->preco_metro_quadrado, 2, ',', '.') }}</td>
                                     <td class="px-3 py-2 border text-right">R$
                                         {{ number_format($vidro->preco_metro_quadrado * (($orcamento->descontos->where('tipo', 'percentual')->max('porcentagem') ?? 0) / 100), 2, ',', '.') }}
                                     </td>
-                                    <td class="px-3 py-2 border text-right font-semibold text-green-600">R$
-                                        {{ number_format($vidro->valor_com_desconto, 2, ',', '.') }}
-                                    </td>
+                                    <td class="px-3 py-2 border text-right font-semibold text-green-600">R$ {{ number_format($vidro->valor_com_desconto, 2, ',', '.') }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -367,19 +427,16 @@
                 ($orcamento->guia_recolhimento ?? 0);
         @endphp
 
-        <div
-            class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
+        <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
             <h3 class="text-lg font-semibold mb-4">Totais e Descontos</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <p><strong>Desconto Percentual:</strong> {{ number_format($percentual, 2, ',', '.') }}%</p>
                     @foreach ($orcamento->descontos->where('tipo', 'fixo') as $desc)
-                        <p><strong>{{ $desc->motivo }}:</strong> -R$ {{ number_format($desc->valor, 2, ',', '.') }}
-                        </p>
+                        <p><strong>{{ $desc->motivo }}:</strong> -R$ {{ number_format($desc->valor, 2, ',', '.') }}</p>
                     @endforeach
                     @if ($orcamento->guia_recolhimento > 0)
-                        <p><strong>Guia de Recolhimento:</strong> R$
-                            {{ number_format($orcamento->guia_recolhimento, 2, ',', '.') }}</p>
+                        <p><strong>Guia de Recolhimento:</strong> R$ {{ number_format($orcamento->guia_recolhimento, 2, ',', '.') }}</p>
                     @endif
                     @if ($orcamento->frete > 0)
                         <p><strong>Frete:</strong> R$ {{ number_format($orcamento->frete, 2, ',', '.') }}</p>
@@ -400,8 +457,7 @@
         </div>
 
         {{-- Observações --}}
-        <div
-            class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
+        <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
             <h4 class="font-medium mb-2">Observações</h4>
             <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                 {{ $orcamento->observacoes ?? 'Nenhuma observação registrada.' }}
@@ -520,7 +576,6 @@
             document.addEventListener('click', function(ev) {
                 var btn = ev.target;
 
-                // Verifica se o elemento clicado ou seu ancestral tem a classe 'atualizar-status'
                 if (!btn.classList.contains('atualizar-status')) {
                     btn = findAncestorWithClass(ev.target, 'atualizar-status');
                 }
@@ -569,8 +624,7 @@
                     }
 
                     formFetch(url, form, extra).then(function(data) {
-                        var msg = (data && data.message) ? data.message :
-                            'Status atualizado com sucesso!';
+                        var msg = (data && data.message) ? data.message : 'Status atualizado com sucesso!';
                         Swal.fire({
                             title: 'Sucesso',
                             text: msg,
@@ -588,8 +642,7 @@
                             }, 1600);
                         }
                     }, function(err) {
-                        var emsg = (err && err.message) ? err.message :
-                            'Não foi possível atualizar o status.';
+                        var emsg = (err && err.message) ? err.message : 'Não foi possível atualizar o status.';
                         Swal.fire({
                             title: 'Erro',
                             text: emsg,
@@ -637,8 +690,7 @@
                 formFetch(action, form, {
                     acao: acao
                 }).then(function(data) {
-                    var msg = (data && data.message) ? data.message :
-                        'Ação executada com sucesso!';
+                    var msg = (data && data.message) ? data.message : 'Ação executada com sucesso!';
                     Swal.fire({
                         title: 'Sucesso',
                         text: msg,
@@ -657,8 +709,7 @@
                     }
                 }).catch(function(err) {
                     console.error('Erro capturado:', err);
-                    var emsg = (err && err.message) ? err.message :
-                        'Não foi possível concluir a operação.';
+                    var emsg = (err && err.message) ? err.message : 'Não foi possível concluir a operação.';
                     Swal.fire({
                         title: 'Erro',
                         text: emsg,

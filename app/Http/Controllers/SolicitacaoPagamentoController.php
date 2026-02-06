@@ -34,7 +34,7 @@ class SolicitacaoPagamentoController extends Controller
      */
     public function solicitacao_orcamento($orcamento_id)
     {
-        return view('paginas.pagamentos.solicitacoes-pagamento.aprovar', compact('orcamento_id'));
+        return view('paginas.pagamentos.solicitacoes-pagamento', compact('orcamento_id'));
     }
 
     /**
@@ -182,15 +182,35 @@ class SolicitacaoPagamentoController extends Controller
             ->pendentes()
             ->count();
 
-        // Se não houver mais solicitações pendentes, atualiza o status
+        // Se não houver mais solicitações pendentes
         if ($solicitacoesPendentes === 0) {
-            $orcamento->update([
-                'status' => 'Pendente', // ou outro status apropriado
-            ]);
+            // Verifica se ainda há descontos pendentes
+            $descontosPendentes = Desconto::where('orcamento_id', $orcamentoId)
+                ->whereNull('aprovado_em')
+                ->whereNull('rejeitado_em')
+                ->count();
 
-            // Gera o PDF atualizado
-            $pdfService = new OrcamentoPdfService();
-            $pdfService->gerarOrcamentoPdf($orcamento);
+            if ($descontosPendentes > 0) {
+                // Ainda tem descontos pendentes - muda para aprovar desconto
+                $orcamento->update([
+                    'status' => 'Aprovar desconto',
+                ]);
+
+                Log::info("Pagamento aprovado, mas ainda há descontos pendentes no orçamento #{$orcamentoId}");
+            } else {
+                // Não tem mais nada pendente - gera o PDF
+                $orcamento->update([
+                    'status' => 'Pendente',
+                ]);
+
+                // Gera o PDF atualizado
+                $pdfService = new OrcamentoPdfService();
+                $pdfService->gerarOrcamentoPdf($orcamento);
+
+                Log::info("Pagamento aprovado e PDF gerado para orçamento #{$orcamentoId}");
+            }
+        } else {
+            Log::info("Pagamento aprovado, mas ainda há {$solicitacoesPendentes} solicitações pendentes no orçamento #{$orcamentoId}");
         }
     }
 
@@ -205,12 +225,14 @@ class SolicitacaoPagamentoController extends Controller
             return;
         }
 
-        // Limpa o campo outros_meios_pagamento se necessário
+        // Limpa o campo outros_meios_pagamento
         $orcamento->update([
             'outros_meios_pagamento' => null,
-            // Volta para uma condição de pagamento padrão, se necessário
-            // 'condicao_id' => null,
+            'condicao_id' => null, // Volta para null para o vendedor escolher outra condição
+            'status' => 'Pendente', // Ou outro status que faça sentido
         ]);
+
+        Log::info("Solicitação de pagamento rejeitada para orçamento #{$orcamentoId} - meio de pagamento resetado");
     }
 
     /**
