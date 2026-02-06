@@ -279,3 +279,34 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('livewire:init', () => {
+        Livewire.on('alert', (event) => {
+            const data = event[0] || event;
+            const type = data.type || 'info';
+            const message = data.message || 'Operação realizada';
+            
+            Swal.fire({
+                title: type === 'success' ? 'Sucesso!' : type === 'error' ? 'Erro!' : 'Atenção!',
+                text: message,
+                icon: type,
+                timer: type === 'success' ? 2000 : null,
+                showConfirmButton: type !== 'success',
+                timerProgressBar: true
+            });
+        });
+
+        Livewire.on('redirect', (event) => {
+            const data = event[0] || event;
+            const delay = data.delay || 2000;
+            
+            setTimeout(() => {
+                window.location.href = data.url;
+            }, delay);
+        });
+    });
+</script>
+@endpush

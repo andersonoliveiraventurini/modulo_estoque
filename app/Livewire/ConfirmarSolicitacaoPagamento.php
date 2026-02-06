@@ -4,6 +4,8 @@ namespace App\Livewire;
 
 use App\Models\Orcamento;
 use App\Models\SolicitacaoPagamento;
+use App\Models\Desconto;
+use App\Services\OrcamentoPdfService;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -24,6 +26,8 @@ class ConfirmarSolicitacaoPagamento extends Component
         if ($orcamentoId) {
             $this->orcamentoId = $orcamentoId;
             $this->carregarDados();
+        } else {
+            Log::warning('orcamentoId não foi passado para o componente');
         }
     }
 
@@ -68,6 +72,11 @@ class ConfirmarSolicitacaoPagamento extends Component
                 return;
             }
 
+            Log::info('Orçamento carregado com sucesso', [
+                'orcamento_id' => $this->orcamento->id,
+                'cliente' => $this->orcamento->cliente->nome ?? 'N/A'
+            ]);
+
             // Carrega as solicitações pendentes
             $this->solicitacoes = SolicitacaoPagamento::where('orcamento_id', $this->orcamentoId)
                 ->pendentes()
@@ -85,6 +94,7 @@ class ConfirmarSolicitacaoPagamento extends Component
             Log::error('Erro ao carregar dados', [
                 'orcamento_id' => $this->orcamentoId,
                 'erro' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             
             $this->dispatch('alert', [
@@ -114,6 +124,7 @@ class ConfirmarSolicitacaoPagamento extends Component
                     'type' => 'error',
                     'message' => 'Solicitação não pertence a este orçamento!'
                 ]);
+                DB::rollBack();
                 return;
             }
 
@@ -122,9 +133,11 @@ class ConfirmarSolicitacaoPagamento extends Component
                     'type' => 'error',
                     'message' => 'Esta solicitação já foi avaliada!'
                 ]);
+                DB::rollBack();
                 return;
             }
 
+            // Atualiza a solicitação
             $solicitacao->update([
                 'aprovado_em' => now(),
                 'aprovado_por' => Auth::id(),
@@ -132,17 +145,32 @@ class ConfirmarSolicitacaoPagamento extends Component
                 'status' => 'Aprovado',
             ]);
 
+            Log::info("Solicitação de pagamento #{$solicitacaoId} aprovada", [
+                'orcamento_id' => $this->orcamentoId,
+                'aprovado_por' => Auth::id()
+            ]);
+
+            // Atualiza o orçamento
+            $this->atualizarOrcamentoAposAprovacao();
+
             DB::commit();
 
             $this->dispatch('alert', [
                 'type' => 'success',
-                'message' => 'Solicitação aprovada com sucesso!'
+                'message' => 'Solicitação de pagamento aprovada com sucesso!'
             ]);
 
-            $this->carregarDados();
+            // Aguarda 2 segundos e redireciona
+            $this->dispatch('redirect', ['url' => route('orcamentos.show', $this->orcamentoId), 'delay' => 2000]);
 
         } catch (\Exception $e) {
             DB::rollBack();
+            
+            Log::error('Erro ao aprovar solicitação', [
+                'solicitacao_id' => $solicitacaoId,
+                'erro' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             
             $this->dispatch('alert', [
                 'type' => 'error',
@@ -179,6 +207,7 @@ class ConfirmarSolicitacaoPagamento extends Component
                     'type' => 'error',
                     'message' => 'Solicitação não pertence a este orçamento!'
                 ]);
+                DB::rollBack();
                 return;
             }
 
@@ -187,9 +216,11 @@ class ConfirmarSolicitacaoPagamento extends Component
                     'type' => 'error',
                     'message' => 'Esta solicitação já foi avaliada!'
                 ]);
+                DB::rollBack();
                 return;
             }
 
+            // Atualiza a solicitação
             $solicitacao->update([
                 'rejeitado_em' => now(),
                 'rejeitado_por' => Auth::id(),
@@ -197,23 +228,137 @@ class ConfirmarSolicitacaoPagamento extends Component
                 'status' => 'Rejeitado',
             ]);
 
+            Log::info("Solicitação de pagamento #{$solicitacaoId} rejeitada", [
+                'orcamento_id' => $this->orcamentoId,
+                'rejeitado_por' => Auth::id()
+            ]);
+
+            // Atualiza o orçamento
+            $this->atualizarOrcamentoAposRejeicao();
+
             DB::commit();
 
             $this->dispatch('alert', [
                 'type' => 'success',
-                'message' => 'Solicitação rejeitada!'
+                'message' => 'Solicitação de pagamento rejeitada!'
             ]);
 
-            $this->carregarDados();
+            // Aguarda 2 segundos e redireciona
+            $this->dispatch('redirect', ['url' => route('orcamentos.show', $this->orcamentoId), 'delay' => 2000]);
 
         } catch (\Exception $e) {
             DB::rollBack();
+            
+            Log::error('Erro ao rejeitar solicitação', [
+                'solicitacao_id' => $solicitacaoId,
+                'erro' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             
             $this->dispatch('alert', [
                 'type' => 'error',
                 'message' => 'Erro ao rejeitar solicitação: ' . $e->getMessage()
             ]);
         }
+    }
+
+    private function atualizarOrcamentoAposAprovacao()
+    {
+        if (!$this->orcamento) {
+            Log::warning('Tentativa de atualizar orçamento nulo após aprovação');
+            return;
+        }
+
+        // Recarrega o orçamento para ter dados atualizados
+        $this->orcamento->refresh();
+
+        // Verifica se ainda existem solicitações de pagamento pendentes
+        $solicitacoesPendentes = SolicitacaoPagamento::where('orcamento_id', $this->orcamentoId)
+            ->pendentes()
+            ->count();
+
+        Log::info('Verificando solicitações pendentes após aprovação', [
+            'orcamento_id' => $this->orcamentoId,
+            'solicitacoes_pendentes' => $solicitacoesPendentes
+        ]);
+
+        // Se ainda houver solicitações pendentes, não faz nada
+        if ($solicitacoesPendentes > 0) {
+            Log::info("Ainda há {$solicitacoesPendentes} solicitação(ões) de pagamento pendente(s)");
+            return;
+        }
+
+        // Verifica se há descontos pendentes
+        $descontosPendentes = Desconto::where('orcamento_id', $this->orcamentoId)
+            ->whereNull('aprovado_em')
+            ->whereNull('rejeitado_em')
+            ->count();
+
+        Log::info('Verificando descontos pendentes após aprovação de pagamento', [
+            'orcamento_id' => $this->orcamentoId,
+            'descontos_pendentes' => $descontosPendentes
+        ]);
+
+        if ($descontosPendentes > 0) {
+            // Ainda tem descontos pendentes - muda status para aprovar desconto
+            $this->orcamento->update([
+                'status' => 'Aprovar desconto',
+            ]);
+
+            Log::info("Orçamento #{$this->orcamentoId} aguardando aprovação de {$descontosPendentes} desconto(s)", [
+                'novo_status' => 'Aprovar desconto'
+            ]);
+        } else {
+            // Não tem mais nada pendente - muda para Pendente e gera PDF
+            $this->orcamento->update([
+                'status' => 'Pendente',
+            ]);
+
+            Log::info("Orçamento #{$this->orcamentoId} aprovado - gerando PDF", [
+                'novo_status' => 'Pendente'
+            ]);
+
+            // Gera o PDF
+            try {
+                $pdfService = new OrcamentoPdfService();
+                $pdfGerado = $pdfService->gerarOrcamentoPdf($this->orcamento);
+
+                if ($pdfGerado) {
+                    Log::info("PDF gerado com sucesso para orçamento #{$this->orcamentoId}");
+                } else {
+                    Log::warning("Falha ao gerar PDF para orçamento #{$this->orcamentoId}");
+                }
+            } catch (\Exception $e) {
+                Log::error("Erro ao gerar PDF para orçamento #{$this->orcamentoId}", [
+                    'erro' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+            }
+        }
+    }
+
+    private function atualizarOrcamentoAposRejeicao()
+    {
+        if (!$this->orcamento) {
+            Log::warning('Tentativa de atualizar orçamento nulo após rejeição');
+            return;
+        }
+
+        // Recarrega o orçamento
+        $this->orcamento->refresh();
+
+        // Limpa os campos de meio de pagamento e volta status para Rejeitado
+        $this->orcamento->update([
+            'outros_meios_pagamento' => null,
+            'condicao_id' => null,
+            'status' => 'Rejeitado',
+        ]);
+
+        Log::info("Orçamento #{$this->orcamentoId} rejeitado - meio de pagamento removido", [
+            'novo_status' => 'Rejeitado',
+            'condicao_id' => 'null',
+            'outros_meios_pagamento' => 'null'
+        ]);
     }
 
     public function render()

@@ -144,7 +144,7 @@
                             </x-select>
                             <x-input type="text" name="prazo_entrega" placeholder="Ex: 15 dias úteis"
                                 label="Prazo de Entrega" />
-                            <x-select name="tipo_frete" label="Tipo de Frete">
+                            <x-select name="tipo_frete" label="Tipo de Frete" required>
                                 <option value="">Selecione...</option>
                                 <option value="cif">CIF - entrega por conta do fornecedor
                                 </option>
