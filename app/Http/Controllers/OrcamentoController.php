@@ -852,7 +852,7 @@ class OrcamentoController extends Controller
             abort(404, 'Cliente não encontrado');
         }
 
-        $orcamentoOriginal = Orcamento::with(['itens', 'vidros', 'descontos', 'endereco'])->findOrFail($id);
+        $orcamentoOriginal = Orcamento::with(['itens', 'vidros', 'descontos', 'endereco', 'condicaoPagamento'])->findOrFail($id);
 
         // Novo nome da obra com data e hora
         $dataHora = Carbon::now()->format('d/m/Y H:i');
@@ -860,30 +860,56 @@ class OrcamentoController extends Controller
 
         // Criar novo orçamento
         $novoOrcamento = Orcamento::create([
-            'cliente_id'   => $clienteID ?? $orcamentoOriginal->cliente_id,
-            // quem está duplicando o orçamento fica com o atendimento
-            'vendedor_id'  => Auth()->user()->id,
-            'obra'         => $novaObra,
-            'valor_total_itens' => $orcamentoOriginal->valor_total_itens,
-            'status'       => 'Pendente',
-            'observacoes'  => $orcamentoOriginal->observacoes,
-            'frete'        => $orcamentoOriginal->frete,
-            'guia_recolhimento' => $orcamentoOriginal->guia_recolhimento,
+            'cliente_id'          => $clienteID ?? $orcamentoOriginal->cliente_id,
+            'vendedor_id'         => Auth()->user()->id,
+            'obra'                => $novaObra,
+            'valor_total_itens'   => $orcamentoOriginal->valor_total_itens,
+            'status'              => 'Pendente',
+            'observacoes'         => $orcamentoOriginal->observacoes,
+            'frete'               => $orcamentoOriginal->frete,
+            'guia_recolhimento'   => $orcamentoOriginal->guia_recolhimento,
             'tipo_documento'      => $orcamentoOriginal->tipo_documento,
-            'validade'     => Carbon::now()->addDays(2),
+            'condicao_id'         => $orcamentoOriginal->condicao_id,
+            'outros_meios_pagamento' => $orcamentoOriginal->outros_meios_pagamento,
+            'validade'            => Carbon::now()->addDays(2),
         ]);
 
-        // 1) Copiar itens
-        foreach ($orcamentoOriginal->itens as $item) {
+        // ✅ PRIORIDADE 1: VERIFICAR SE A CONDIÇÃO É "OUTROS" (ID 20)
+        $necessitaAprovacaoPagamento = false;
+        if ($orcamentoOriginal->condicao_id == 20 && $orcamentoOriginal->outros_meios_pagamento) {
+            $novoOrcamento->solicitacoesPagamento()->create([
+                'descricao_pagamento' => $orcamentoOriginal->outros_meios_pagamento,
+                'justificativa_solicitacao' => 'Duplicação de orçamento #' . $orcamentoOriginal->id . ' que possuía meio de pagamento especial.',
+                'solicitado_por' => Auth()->id(),
+                'status' => 'Pendente',
+            ]);
 
-            // verifica o valor atual do produto
+            $necessitaAprovacaoPagamento = true;
+
+            Log::info("Solicitação de pagamento criada na duplicação do orçamento #{$orcamentoOriginal->id}", [
+                'novo_orcamento_id' => $novoOrcamento->id,
+                'descricao' => $orcamentoOriginal->outros_meios_pagamento,
+                'vendedor_id' => Auth()->id(),
+            ]);
+        }
+
+        // 1) Copiar itens
+        $itensComDesconto = false;
+        foreach ($orcamentoOriginal->itens as $item) {
+            // Verifica o valor atual do produto
             $produtoAtual = Produto::find($item->produto_id);
-            $valor_final = $produtoAtual->preco_venda * $item->quantidade;
+            $precoAtual = $produtoAtual->preco_venda ?? $item->valor_unitario;
+            $valor_final = $precoAtual * $item->quantidade;
+
+            // Se o item original tinha desconto, marca flag
+            if ($item->desconto > 0 || $item->valor_unitario_com_desconto < $item->valor_unitario) {
+                $itensComDesconto = true;
+            }
 
             $novoOrcamento->itens()->create([
                 'produto_id'         => $item->produto_id,
                 'quantidade'         => $item->quantidade,
-                'valor_unitario'     => $produtoAtual->preco_venda,
+                'valor_unitario'     => $precoAtual,
                 'valor_com_desconto' => $valor_final,
                 'user_id'            => $item->user_id,
             ]);
@@ -891,7 +917,6 @@ class OrcamentoController extends Controller
 
         // 2) Copiar vidros
         foreach ($orcamentoOriginal->vidros as $vidro) {
-
             $valor_final = $vidro->preco_metro_quadrado * $vidro->quantidade * ($vidro->altura / 100) * ($vidro->largura / 100);
 
             $novoOrcamento->vidros()->create([
@@ -905,60 +930,128 @@ class OrcamentoController extends Controller
             ]);
         }
 
+        // 3) Copiar descontos (SE HOUVER)
+        $necessitaAprovacaoDesconto = false;
+        foreach ($orcamentoOriginal->descontos as $descontoOriginal) {
+            $novoOrcamento->descontos()->create([
+                'motivo'      => $descontoOriginal->motivo . ' (Duplicado)',
+                'valor'       => $descontoOriginal->valor,
+                'porcentagem' => $descontoOriginal->porcentagem,
+                'tipo'        => $descontoOriginal->tipo,
+                'produto_id'  => $descontoOriginal->produto_id,
+                'cliente_id'  => $clienteID ?? $descontoOriginal->cliente_id,
+                'user_id'     => Auth()->id(),
+                // ✅ DESCONTOS DUPLICADOS PRECISAM DE NOVA APROVAÇÃO
+                'aprovado_em' => null,
+                'aprovado_por' => null,
+                'rejeitado_em' => null,
+                'rejeitado_por' => null,
+            ]);
+
+            $necessitaAprovacaoDesconto = true;
+        }
+
+        // Se tinha itens com desconto mas não tinha registro na tabela descontos
+        if ($itensComDesconto && !$necessitaAprovacaoDesconto) {
+            $necessitaAprovacaoDesconto = true;
+        }
+
         // 4) Copiar endereço de entrega
         if ($orcamentoOriginal->endereco) {
             $novoEndereco = Endereco::create([
-                'tipo'       => $orcamentoOriginal->endereco->tipo,
-                'cliente_id' => $orcamentoOriginal->endereco->cliente_id,
-                'cep'        => $orcamentoOriginal->endereco->cep,
-                'logradouro' => $orcamentoOriginal->endereco->logradouro,
-                'numero'     => $orcamentoOriginal->endereco->numero,
+                'tipo'        => $orcamentoOriginal->endereco->tipo,
+                'cliente_id'  => $clienteID ?? $orcamentoOriginal->endereco->cliente_id,
+                'cep'         => $orcamentoOriginal->endereco->cep,
+                'logradouro'  => $orcamentoOriginal->endereco->logradouro,
+                'numero'      => $orcamentoOriginal->endereco->numero,
                 'complemento' => $orcamentoOriginal->endereco->complemento,
-                'bairro'     => $orcamentoOriginal->endereco->bairro,
-                'cidade'     => $orcamentoOriginal->endereco->cidade,
-                'estado'     => $orcamentoOriginal->endereco->estado,
+                'bairro'      => $orcamentoOriginal->endereco->bairro,
+                'cidade'      => $orcamentoOriginal->endereco->cidade,
+                'estado'      => $orcamentoOriginal->endereco->estado,
             ]);
             $novoOrcamento->update(['endereco_id' => $novoEndereco->id]);
         }
 
-        if ($novoOrcamento->descontos->isEmpty()) {
-            // não tem nenhum desconto, então gera o PDF normalmente
+        // ✅ VALIDAÇÃO FINAL: PRIORIDADE PARA MEIO DE PAGAMENTO
+        if ($necessitaAprovacaoPagamento && $necessitaAprovacaoDesconto) {
+            // ✅ PRIORIDADE: Primeiro aprova PAGAMENTO, depois DESCONTO
+            $novoOrcamento->update(['status' => 'Aprovar pagamento']);
 
-            // 5) Gerar token e expiração
-            $novoOrcamento->update([
-                'token_acesso' => Str::uuid(),
-                'token_expira_em' => Carbon::now()->addDays(2),
+            Log::info("Orçamento duplicado #{$novoOrcamento->id} aguardando aprovação de PAGAMENTO (depois desconto)", [
+                'original_id' => $orcamentoOriginal->id,
+                'status' => 'Aprovar pagamento',
+                'tem_desconto_pendente' => true,
             ]);
 
-            // 6) Gerar PDF com QR Code
-            $linkSeguro = route('orcamentos.view', ['token' => $novoOrcamento->token_acesso]);
-            $qrCodeBase64 = base64_encode(
-                QrCode::format('png')->size(130)->margin(1)->generate($linkSeguro)
-            );
+            return redirect()
+                ->route('orcamentos.index')
+                ->with('warning', 'Orçamento duplicado com sucesso! É necessária a aprovação do meio de pagamento e depois do desconto antes de gerar o PDF.');
+                
+        } elseif ($necessitaAprovacaoPagamento) {
+            // Só pagamento precisa de aprovação
+            $novoOrcamento->update(['status' => 'Aprovar pagamento']);
 
-            $pdf = Pdf::loadView('documentos_pdf.orcamento', [
-                'orcamento' => $novoOrcamento,
-                'percentualAplicado' => $novoOrcamento->descontos->where('tipo', 'percentual')->first()?->porcentagem ?? null,
-                'qrCode' => $qrCodeBase64,
-            ])->setPaper('a4');
+            Log::info("Orçamento duplicado #{$novoOrcamento->id} aguardando aprovação de pagamento", [
+                'original_id' => $orcamentoOriginal->id,
+                'status' => 'Aprovar pagamento',
+            ]);
 
-            $canvas = $pdf->getDomPDF()->getCanvas();
-            $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-                $text = "Página $pageNumber / $pageCount";
-                $font = $fontMetrics->get_font("Helvetica", "normal");
-                $canvas->text(270, 820, $text, $font, 10);
-            });
+            return redirect()
+                ->route('orcamentos.index')
+                ->with('info', 'Orçamento duplicado com sucesso! Aguardando aprovação do meio de pagamento especial para gerar o PDF.');
+                
+        } elseif ($necessitaAprovacaoDesconto) {
+            // Só desconto precisa de aprovação
+            $novoOrcamento->update(['status' => 'Aprovar desconto']);
 
-            $path = "orcamentos/orcamento_{$novoOrcamento->id}.pdf";
-            Storage::disk('public')->put($path, $pdf->output());
-            $novoOrcamento->update(['pdf_path' => $path]);
-        } else {
-            $novoOrcamento->status = 'Aprovar desconto';
-            $novoOrcamento->save();
+            Log::info("Orçamento duplicado #{$novoOrcamento->id} aguardando aprovação de desconto", [
+                'original_id' => $orcamentoOriginal->id,
+                'status' => 'Aprovar desconto',
+            ]);
+
+            return redirect()
+                ->route('orcamentos.index')
+                ->with('error', 'Orçamento duplicado com sucesso! É necessária a aprovação do desconto antes de gerar o PDF.');
         }
+
+        // ✅ NÃO PRECISA DE APROVAÇÃO - GERA O PDF NORMALMENTE
+        // 5) Gerar token e expiração
+        $novoOrcamento->update([
+            'token_acesso' => Str::uuid(),
+            'token_expira_em' => Carbon::now()->addDays(2),
+        ]);
+
+        // 6) Gerar PDF com QR Code
+        $linkSeguro = route('orcamentos.view', ['token' => $novoOrcamento->token_acesso]);
+        $qrCodeBase64 = base64_encode(
+            QrCode::format('png')->size(130)->margin(1)->generate($linkSeguro)
+        );
+
+        $pdf = Pdf::loadView('documentos_pdf.orcamento', [
+            'orcamento' => $novoOrcamento,
+            'percentualAplicado' => $novoOrcamento->descontos->where('tipo', 'percentual')->first()?->porcentagem ?? null,
+            'qrCode' => $qrCodeBase64,
+        ])->setPaper('a4');
+
+        $canvas = $pdf->getDomPDF()->getCanvas();
+        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
+            $text = "Página $pageNumber / $pageCount";
+            $font = $fontMetrics->get_font("Helvetica", "normal");
+            $canvas->text(270, 820, $text, $font, 10);
+        });
+
+        $path = "orcamentos/orcamento_{$novoOrcamento->id}.pdf";
+        Storage::disk('public')->put($path, $pdf->output());
+        $novoOrcamento->update(['pdf_path' => $path]);
+
+        Log::info("Orçamento duplicado #{$novoOrcamento->id} com PDF gerado", [
+            'original_id' => $orcamentoOriginal->id,
+            'status' => 'Pendente',
+        ]);
+
         return redirect()
             ->route('orcamentos.index')
-            ->with('success', 'Orçamento duplicado com sucesso!');
+            ->with('success', 'Orçamento duplicado e PDF gerado com sucesso!');
     }
 
     /**

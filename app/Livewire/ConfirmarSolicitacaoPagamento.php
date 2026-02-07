@@ -107,11 +107,8 @@ class ConfirmarSolicitacaoPagamento extends Component
     public function aprovarSolicitacao($solicitacaoId)
     {
         if (!$this->orcamento) {
-            $this->dispatch('alert', [
-                'type' => 'error',
-                'message' => 'Orçamento não encontrado!'
-            ]);
-            return;
+            session()->flash('error', 'Orçamento não encontrado!');
+            return redirect()->route('orcamentos.index');
         }
 
         try {
@@ -120,21 +117,15 @@ class ConfirmarSolicitacaoPagamento extends Component
             $solicitacao = SolicitacaoPagamento::findOrFail($solicitacaoId);
 
             if ($solicitacao->orcamento_id != $this->orcamentoId) {
-                $this->dispatch('alert', [
-                    'type' => 'error',
-                    'message' => 'Solicitação não pertence a este orçamento!'
-                ]);
+                session()->flash('error', 'Solicitação não pertence a este orçamento!');
                 DB::rollBack();
-                return;
+                return redirect()->route('orcamentos.show', $this->orcamentoId);
             }
 
             if (!$solicitacao->isPendente()) {
-                $this->dispatch('alert', [
-                    'type' => 'error',
-                    'message' => 'Esta solicitação já foi avaliada!'
-                ]);
+                session()->flash('error', 'Esta solicitação já foi avaliada!');
                 DB::rollBack();
-                return;
+                return redirect()->route('orcamentos.show', $this->orcamentoId);
             }
 
             // Atualiza a solicitação
@@ -155,13 +146,8 @@ class ConfirmarSolicitacaoPagamento extends Component
 
             DB::commit();
 
-            $this->dispatch('alert', [
-                'type' => 'success',
-                'message' => 'Solicitação de pagamento aprovada com sucesso!'
-            ]);
-
-            // Aguarda 2 segundos e redireciona
-            $this->dispatch('redirect', ['url' => route('orcamentos.show', $this->orcamentoId), 'delay' => 2000]);
+            session()->flash('success', 'Solicitação de pagamento aprovada com sucesso!');
+            return redirect()->route('orcamentos.show', $this->orcamentoId);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -172,28 +158,27 @@ class ConfirmarSolicitacaoPagamento extends Component
                 'trace' => $e->getTraceAsString()
             ]);
             
-            $this->dispatch('alert', [
-                'type' => 'error',
-                'message' => 'Erro ao aprovar solicitação: ' . $e->getMessage()
-            ]);
+            session()->flash('error', 'Erro ao aprovar solicitação: ' . $e->getMessage());
+            return redirect()->route('orcamentos.show', $this->orcamentoId);
         }
     }
 
     public function rejeitarSolicitacao($solicitacaoId)
     {
         if (!$this->orcamento) {
-            $this->dispatch('alert', [
-                'type' => 'error',
-                'message' => 'Orçamento não encontrado!'
-            ]);
-            return;
+            session()->flash('error', 'Orçamento não encontrado!');
+            return redirect()->route('orcamentos.index');
         }
 
+        // Validação da justificativa
         if (empty($this->justificativas[$solicitacaoId])) {
+            $this->addError('justificativa_' . $solicitacaoId, 'A justificativa é obrigatória para rejeitar!');
+            
             $this->dispatch('alert', [
                 'type' => 'error',
                 'message' => 'A justificativa é obrigatória para rejeitar!'
             ]);
+            
             return;
         }
 
@@ -203,21 +188,15 @@ class ConfirmarSolicitacaoPagamento extends Component
             $solicitacao = SolicitacaoPagamento::findOrFail($solicitacaoId);
 
             if ($solicitacao->orcamento_id != $this->orcamentoId) {
-                $this->dispatch('alert', [
-                    'type' => 'error',
-                    'message' => 'Solicitação não pertence a este orçamento!'
-                ]);
+                session()->flash('error', 'Solicitação não pertence a este orçamento!');
                 DB::rollBack();
-                return;
+                return redirect()->route('orcamentos.show', $this->orcamentoId);
             }
 
             if (!$solicitacao->isPendente()) {
-                $this->dispatch('alert', [
-                    'type' => 'error',
-                    'message' => 'Esta solicitação já foi avaliada!'
-                ]);
+                session()->flash('error', 'Esta solicitação já foi avaliada!');
                 DB::rollBack();
-                return;
+                return redirect()->route('orcamentos.show', $this->orcamentoId);
             }
 
             // Atualiza a solicitação
@@ -230,7 +209,8 @@ class ConfirmarSolicitacaoPagamento extends Component
 
             Log::info("Solicitação de pagamento #{$solicitacaoId} rejeitada", [
                 'orcamento_id' => $this->orcamentoId,
-                'rejeitado_por' => Auth::id()
+                'rejeitado_por' => Auth::id(),
+                'justificativa' => $this->justificativas[$solicitacaoId]
             ]);
 
             // Atualiza o orçamento
@@ -238,13 +218,8 @@ class ConfirmarSolicitacaoPagamento extends Component
 
             DB::commit();
 
-            $this->dispatch('alert', [
-                'type' => 'success',
-                'message' => 'Solicitação de pagamento rejeitada!'
-            ]);
-
-            // Aguarda 2 segundos e redireciona
-            $this->dispatch('redirect', ['url' => route('orcamentos.show', $this->orcamentoId), 'delay' => 2000]);
+            session()->flash('success', 'Solicitação de pagamento rejeitada!');
+            return redirect()->route('orcamentos.show', $this->orcamentoId);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -255,11 +230,139 @@ class ConfirmarSolicitacaoPagamento extends Component
                 'trace' => $e->getTraceAsString()
             ]);
             
+            session()->flash('error', 'Erro ao rejeitar solicitação: ' . $e->getMessage());
+            return redirect()->route('orcamentos.show', $this->orcamentoId);
+        }
+    }
+
+    public function aprovarTodos()
+    {
+        if (!$this->orcamento) {
             $this->dispatch('alert', [
                 'type' => 'error',
-                'message' => 'Erro ao rejeitar solicitação: ' . $e->getMessage()
+                'message' => 'Orçamento não encontrado!'
+            ]);
+            return;
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $totalAprovados = 0;
+
+            foreach ($this->solicitacoes as $solicitacao) {
+                if ($solicitacao->aprovado_em || $solicitacao->rejeitado_em) {
+                    continue;
+                }
+
+                $solicitacao->update([
+                    'aprovado_em' => now(),
+                    'aprovado_por' => Auth::id(),
+                    'justificativa_aprovacao' => 'Aprovação em lote',
+                ]);
+
+                $totalAprovados++;
+            }
+
+            $this->atualizarOrcamentoAposAprovacao();
+
+            DB::commit();
+
+            $this->dispatch('alert', [
+                'type' => 'success',
+                'message' => "{$totalAprovados} solicitação(ões) aprovada(s) com sucesso!"
+            ]);
+
+            $this->carregarDados();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            $this->dispatch('alert', [
+                'type' => 'error',
+                'message' => 'Erro ao aprovar solicitações: ' . $e->getMessage()
             ]);
         }
+    }
+
+    public function rejeitarTodos()
+    {
+        if (!$this->orcamento) {
+            $this->dispatch('alert', [
+                'type' => 'error',
+                'message' => 'Orçamento não encontrado!'
+            ]);
+            return;
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $totalRejeitados = 0;
+
+            foreach ($this->solicitacoes as $solicitacao) {
+                if ($solicitacao->aprovado_em || $solicitacao->rejeitado_em) {
+                    continue;
+                }
+
+                $solicitacao->update([
+                    'rejeitado_em' => now(),
+                    'rejeitado_por' => Auth::id(),
+                    'justificativa_rejeicao' => 'Rejeição em lote',
+                ]);
+
+                $totalRejeitados++;
+            }
+
+            DB::commit();
+
+            $this->dispatch('alert', [
+                'type' => 'success',
+                'message' => "{$totalRejeitados} solicitação(ões) rejeitada(s)!"
+            ]);
+
+            $this->carregarDados();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            $this->dispatch('alert', [
+                'type' => 'error',
+                'message' => 'Erro ao rejeitar solicitações: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function finalizarAnalise()
+    {
+        if (!$this->orcamento) {
+            $this->dispatch('alert', [
+                'type' => 'error',
+                'message' => 'Orçamento não encontrado!'
+            ]);
+            return;
+        }
+
+        $pendentes = collect($this->solicitacoes)->filter(function ($solicitacao) {
+            return !$solicitacao->aprovado_em && !$solicitacao->rejeitado_em;
+        });
+
+        if ($pendentes->count() > 0) {
+            $this->dispatch('alert', [
+                'type' => 'warning',
+                'message' => 'Ainda existem ' . $pendentes->count() . ' solicitação(ões) pendente(s) de análise!'
+            ]);
+            return;
+        }
+
+        $this->showModal = false;
+
+        $this->dispatch('alert', [
+            'type' => 'success',
+            'message' => 'Análise de solicitações de pagamento finalizada com sucesso!'
+        ]);
+
+        $this->dispatch('solicitacoesAnalisadas', ['orcamentoId' => $this->orcamentoId]);
     }
 
     private function atualizarOrcamentoAposAprovacao()
