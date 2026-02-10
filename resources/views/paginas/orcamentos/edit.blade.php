@@ -12,6 +12,13 @@
                     </svg>
                     Editar Orçamento para Cliente {{ $cliente->id }} - {{ $cliente->nome ?? $cliente->nome_fantasia }}
                 </h2>
+                @if (!$ativo)
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            alert('⚠️ Atenção: a situação do CNPJ não está ATIVA na Receita Federal.');
+                        });
+                    </script>
+                @endif
                 @if ($cliente->vendedor_interno != null)
                     <p> Vendedor interno: {{ $cliente->vendedor_interno ?? 'Não atribuído' }} </p>
                 @endif
@@ -331,14 +338,52 @@
                         <div class="flex gap-4 min-w-max">
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Condição de pagamento</label>
-                                <x-select name="condicao_pagamento" required
+                                <x-select name="condicao_pagamento" id="condicao_pagamento" required
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
                                     <option value="">Selecione...</option>
                                     @foreach ($condicao as $c)
-                                        <option value="{{ $c->id }}">{{ $c->nome }}</option>
+                                        <option value="{{ $c->id }}" @selected($orcamento->condicao_id == $c->id)>
+                                            {{ $c->nome }}</option>
                                     @endforeach
                                 </x-select>
                             </div>
+                            <div class="flex-1">
+                                <x-input type="text" name="outros_meios_pagamento" id="outros_meios_pagamento"
+                                    disabled placeholder="Ex: Boleto 28/56/84/120, etc" label="Outros meios pagamento"
+                                    :value="$orcamento->outros_meios_pagamento" />
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700">Nota fiscal</label>
+                                <x-select name="tipo_documento"
+                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                                    <option value="">Selecione...</option>
+                                    <option value="Nota fiscal" @selected($orcamento->tipo_documento == 'Nota fiscal')>Nota fiscal</option>
+                                    <option value="Cupom Fiscal" @selected($orcamento->tipo_documento == 'Cupom Fiscal')>Cupom Fiscal</option>
+                                </x-select>
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700">Homologação</label>
+                                <x-select name="homologacao" required
+                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                                    <option value="0" @selected($orcamento->homologacao == 0)>Não</option>
+                                    <option value="1" @selected($orcamento->homologacao == 1)>Sim</option>
+                                </x-select>
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700">Venda triangular?</label>
+                                <x-select name="venda_triangular" id="venda_triangular" required
+                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                                    <option value="0" @selected($orcamento->venda_triangular == 0)>Não</option>
+                                    <option value="1" @selected($orcamento->venda_triangular == 1)>Sim</option>
+                                </x-select>
+                            </div>
+                            <div class="flex-1">
+                                <x-input type="text" name="cnpj_triangular" id="cnpj_triangular" disabled
+                                    size="18" maxlength="18" onkeypress="mascara(this, '##.###.###/####-##')"
+                                    placeholder="00.000.000/0000-00" label="CNPJ venda triangular"
+                                    :value="$orcamento->cnpj_triangular" />
+                            </div> </div>
+                            <div class="flex gap-4 min-w-max">
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Desconto na vendedor %</label>
                                 <input type="text" name="desconto"
@@ -537,34 +582,51 @@
 </script>
 
 <script>
+    // ==================== SUBSTITUIR TODO O JAVASCRIPT DO BLADE EDIT ====================
+
     console.log('Script carregando...');
 
     // ==================== VARIÁVEIS GLOBAIS ====================
-    // CORREÇÃO: Remover as chaves do Blade aqui
-    window.vidroIndex = 0; // Será inicializado corretamente no DOMContentLoaded
+    window.vidroIndex = 0;
     window.produtos = [];
     window.produtoSelecionado = null;
 
     // ==================== MODAL ====================
-    window.selecionarProdutoComQuantidade = function(id, nome, preco, fornecedor, cor, part_number) {
-        console.log('Selecionando produto:', {
-            id,
-            nome,
-            preco
-        });
-
+    window.selecionarProdutoComQuantidade = function(id, nome, preco, fornecedor, cor, partNumber, liberarDesconto) {
         window.produtoSelecionado = {
             id: id,
             nome: nome,
             preco: parseFloat(preco),
+            precoOriginal: parseFloat(preco),
             fornecedor: fornecedor || '',
             cor: cor || '',
-            part_number: part_number || '',
-            quantidade: 1
+            partNumber: partNumber || '',
+            liberarDesconto: parseInt(liberarDesconto || 1),
+            quantidade: 1,
+            descontoProduto: 0
         };
 
         document.getElementById('produto-nome').textContent = nome;
         document.getElementById('quantidade-produto').value = 1;
+
+        // Aviso se não permitir desconto
+        const modalBody = document.getElementById('modal-quantidade').querySelector('.bg-white');
+        const avisoExistente = modalBody.querySelector('.aviso-desconto-modal');
+
+        if (avisoExistente) {
+            avisoExistente.remove();
+        }
+
+        if (parseInt(liberarDesconto) === 0) {
+            const aviso = document.createElement('div');
+            aviso.className =
+                'aviso-desconto-modal bg-red-50 border border-red-200 rounded p-2 mb-3 text-sm text-red-700';
+            aviso.innerHTML = '⚠️ Este produto não permite desconto';
+
+            const inputQuantidade = document.getElementById('quantidade-produto');
+            inputQuantidade.parentNode.insertBefore(aviso, inputQuantidade);
+        }
+
         document.getElementById('modal-quantidade').classList.remove('hidden');
     };
 
@@ -574,12 +636,10 @@
     };
 
     window.confirmarQuantidade = function() {
-        if (!window.produtoSelecionado) {
-            alert('Erro: Nenhum produto selecionado');
-            return;
-        }
+        if (!window.produtoSelecionado) return;
 
-        var quantidade = parseInt(document.getElementById('quantidade-produto').value) || 1;
+        const quantidade = parseInt(document.getElementById('quantidade-produto').value) || 1;
+        window.produtoSelecionado.quantidade = quantidade;
 
         window.adicionarProduto(
             window.produtoSelecionado.id,
@@ -587,50 +647,67 @@
             window.produtoSelecionado.preco,
             window.produtoSelecionado.fornecedor,
             window.produtoSelecionado.cor,
-            window.produtoSelecionado.part_number,
-            quantidade
+            window.produtoSelecionado.partNumber,
+            quantidade,
+            window.produtoSelecionado.liberarDesconto
         );
 
         window.fecharModal();
     };
 
-    // ==================== GERENCIAMENTO DE PRODUTOS NOVOS ====================
-    window.adicionarProduto = function(id, nome, preco, fornecedor, cor, part_number, quantidade) {
-        // Verificar se produto já existe nos produtos originais
-        var produtosOriginais = document.getElementById('produtos-originais');
+    // ==================== PRODUTOS NOVOS ====================
+    window.adicionarProduto = function(id, nome, preco, fornecedor, cor, partNumber, quantidade, liberarDesconto) {
+        // Verificar duplicados
+        const produtosOriginais = document.getElementById('produtos-originais');
         if (produtosOriginais) {
-            var rowsOriginais = produtosOriginais.querySelectorAll('tr');
-            for (var i = 0; i < rowsOriginais.length; i++) {
-                var row = rowsOriginais[i];
+            const rows = produtosOriginais.querySelectorAll('tr');
+            for (let row of rows) {
                 if (row.style.display === 'none') continue;
-
-                var produtoIdInput = row.querySelector('input[name*="[produto_id]"]');
-                if (produtoIdInput && produtoIdInput.value == id) {
+                const input = row.querySelector('input[name*="[produto_id]"]');
+                if (input && input.value == id) {
                     alert("Este produto já está no orçamento!");
                     return;
                 }
             }
         }
 
-        // Verificar se produto já existe nos produtos novos
-        for (var i = 0; i < window.produtos.length; i++) {
-            if (window.produtos[i].id == id) {
-                alert("Produto já adicionado!");
-                return;
-            }
+        if (window.produtos.find(p => p.id == id)) {
+            alert("Produto já adicionado!");
+            return;
         }
 
         window.produtos.push({
             id: id,
             nome: nome,
             preco: parseFloat(preco) || 0,
+            precoOriginal: parseFloat(preco) || 0,
             quantidade: parseInt(quantidade) || 1,
             fornecedor: fornecedor || '',
             cor: cor || '',
-            part_number: part_number || ''
+            partNumber: partNumber || '',
+            liberarDesconto: parseInt(liberarDesconto || 1),
+            descontoProduto: 0
         });
 
-        console.log('Produto adicionado. Total:', window.produtos.length);
+        renderProdutosNovos();
+    };
+
+    window.alterarPrecoProdutoNovo = function(index, novoPreco) {
+        const produto = window.produtos[index];
+
+        if (produto.liberarDesconto === 0) {
+            alert("Este produto não permite alteração de preço!");
+            return;
+        }
+
+        novoPreco = parseFloat(novoPreco) || produto.precoOriginal;
+        if (novoPreco < 0) novoPreco = 0;
+
+        const descontoEmReais = produto.precoOriginal - novoPreco;
+
+        window.produtos[index].preco = novoPreco;
+        window.produtos[index].descontoProduto = descontoEmReais;
+
         renderProdutosNovos();
     };
 
@@ -647,141 +724,280 @@
     };
 
     function renderProdutosNovos() {
-        var wrapper = document.getElementById('produtos-selecionados');
+        const wrapper = document.getElementById('produtos-selecionados');
         if (!wrapper) return;
 
         wrapper.innerHTML = '';
 
-        var desconto = obterDescontoAplicado();
+        const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]')?.value) || 0;
+        let descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]')?.value) || 0;
+        descontoOrcamento = Math.min(Math.max(descontoOrcamento, 0), 100);
+        const descontoPercentual = Math.max(descontoCliente, descontoOrcamento);
 
-        for (var i = 0; i < window.produtos.length; i++) {
-            var p = window.produtos[i];
-            var subtotal = p.preco * p.quantidade;
-            var subtotalComDesconto = subtotal - (subtotal * (desconto / 100));
-            var precoUnitarioComDesconto = subtotalComDesconto / p.quantidade;
+        window.produtos.forEach((p, i) => {
+            const valorUnitarioAtual = p.preco;
+            const subtotal = valorUnitarioAtual * p.quantidade;
 
-            var row = document.createElement('tr');
-            row.innerHTML =
-                '<td class="px-3 py-2 border">' +
-                '<input type="hidden" name="itens[' + i + '][id]" value="' + p.id + '">' +
-                p.id + '</td>' +
-                '<td class="px-3 py-2 border">' + escaparHTML(p.nome) + '</td>' +
-                '<td class="px-3 py-2 border">' + escaparHTML(p.part_number) + '</td>' +
-                '<td class="px-3 py-2 border">' + escaparHTML(p.fornecedor) + '</td>' +
-                '<td class="px-3 py-2 border">' + escaparHTML(p.cor) + '</td>' +
-                '<td class="px-3 py-2 border">R$ ' + formatarMoeda(p.preco) +
-                '<input type="hidden" name="itens[' + i + '][preco_unitario]" value="' + p.preco + '"></td>' +
-                '<td class="px-3 py-2 border">' +
-                '<input type="number" name="itens[' + i + '][quantidade]" value="' + p.quantidade + '" ' +
-                'min="1" onchange="alterarQuantidade(' + i + ', this.value)" ' +
-                'class="w-12 border rounded px-2 py-1 text-center" style="max-width:4rem"/></td>' +
-                '<td class="px-3 py-2 border">R$ ' + formatarMoeda(subtotal) +
-                '<input type="hidden" name="itens[' + i + '][subtotal]" value="' + subtotal.toFixed(2) + '"></td>' +
-                '<td class="px-3 py-2 border text-green-600">R$ ' + formatarMoeda(subtotalComDesconto) +
-                '<input type="hidden" name="itens[' + i + '][subtotal_com_desconto]" value="' + subtotalComDesconto
-                .toFixed(2) + '">' +
-                '<input type="hidden" name="itens[' + i + '][preco_unitario_com_desconto]" value="' +
-                precoUnitarioComDesconto.toFixed(2) + '"></td>' +
-                '<td class="px-3 py-2 border text-center">' +
-                '<button type="button" onclick="removerProduto(' + i +
-                ')" class="text-red-600 hover:text-red-800">🗑</button></td>';
+            let subtotalComDesconto;
+            let descontoEfetivo = 0;
+            let tipoDesconto = 'nenhum';
+
+            if (p.descontoProduto > 0) {
+                subtotalComDesconto = subtotal;
+                tipoDesconto = 'produto';
+                descontoEfetivo = ((p.descontoProduto / p.precoOriginal) * 100).toFixed(2);
+            } else if (p.liberarDesconto === 1 && descontoPercentual > 0) {
+                subtotalComDesconto = subtotal - (subtotal * (descontoPercentual / 100));
+                descontoEfetivo = descontoPercentual;
+                tipoDesconto = 'percentual';
+            } else {
+                subtotalComDesconto = subtotal;
+            }
+
+            let descontoStatus = '';
+            if (p.liberarDesconto === 0) {
+                descontoStatus =
+                    '<span class="inline-block px-2 py-1 text-xs font-semibold text-red-700 bg-red-100 rounded-full">Desconto bloqueado</span>';
+            } else if (tipoDesconto === 'produto') {
+                descontoStatus =
+                    `<span class="inline-block px-2 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full">Preço alterado (-R$ ${p.descontoProduto.toFixed(2)})</span>`;
+            } else if (tipoDesconto === 'percentual') {
+                descontoStatus =
+                    `<span class="inline-block px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">${descontoEfetivo}% aplicado</span>`;
+            }
+
+            const row = document.createElement('tr');
+            row.className = p.liberarDesconto === 0 ? 'bg-red-50 dark:bg-red-900/10' : '';
+
+            row.innerHTML = `
+            <td class="px-3 py-2 border">
+                <input type="hidden" name="itens[${i}][id]" value="${p.id}">
+                <input type="hidden" name="itens[${i}][liberar_desconto]" value="${p.liberarDesconto}">
+                <input type="hidden" name="itens[${i}][preco_original]" value="${p.precoOriginal}">
+                <input type="hidden" name="itens[${i}][desconto_produto]" value="${p.descontoProduto}">
+                <input type="hidden" name="itens[${i}][tipo_desconto]" value="${tipoDesconto}">
+                ${p.id}
+            </td>
+            <td class="px-3 py-2 border">
+                ${escaparHTML(p.nome)}
+                <div class="mt-1">${descontoStatus}</div>
+            </td>
+            <td class="px-3 py-2 border">${escaparHTML(p.partNumber)}</td>
+            <td class="px-3 py-2 border">${escaparHTML(p.fornecedor)}</td>
+            <td class="px-3 py-2 border">${escaparHTML(p.cor)}</td>
+            <td class="px-3 py-2 border">
+                ${p.liberarDesconto === 1 ? `
+                    <div class="flex flex-col gap-1">
+                        <input type="number" step="0.01" value="${valorUnitarioAtual.toFixed(2)}" 
+                            onchange="alterarPrecoProdutoNovo(${i}, this.value)"
+                            class="w-24 border rounded px-2 py-1 text-sm" />
+                        ${p.descontoProduto > 0 ? `<small class="text-xs text-gray-500">Original: R$ ${p.precoOriginal.toFixed(2)}</small>` : ''}
+                    </div>
+                ` : `R$ ${valorUnitarioAtual.toFixed(2)}`}
+                <input type="hidden" name="itens[${i}][preco_unitario]" value="${valorUnitarioAtual}">
+            </td>
+            <td class="px-3 py-2 border">
+                <input type="number" name="itens[${i}][quantidade]" value="${p.quantidade}" min="1"
+                    onchange="alterarQuantidade(${i}, this.value)"
+                    class="w-12 border rounded px-2 py-1 text-center" style="max-width:4rem"/>
+            </td>
+            <td class="px-3 py-2 border">
+                R$ ${formatarMoeda(p.precoOriginal * p.quantidade)}
+                <input type="hidden" name="itens[${i}][subtotal_original]" value="${(p.precoOriginal * p.quantidade).toFixed(2)}">
+                <input type="hidden" name="itens[${i}][subtotal]" value="${subtotal.toFixed(2)}">
+            </td>
+            <td class="px-3 py-2 border ${tipoDesconto !== 'nenhum' ? 'text-green-600' : 'text-gray-600'}">
+                R$ ${formatarMoeda(subtotalComDesconto)}
+                <input type="hidden" name="itens[${i}][subtotal_com_desconto]" value="${subtotalComDesconto.toFixed(2)}">
+                <input type="hidden" name="itens[${i}][preco_unitario_com_desconto]" value="${(subtotalComDesconto / p.quantidade).toFixed(2)}">
+                <input type="hidden" name="itens[${i}][desconto_percentual_aplicado]" value="${tipoDesconto === 'percentual' ? descontoPercentual : 0}">
+            </td>
+            <td class="px-3 py-2 border text-center">
+                <button type="button" onclick="removerProduto(${i})"
+                        class="text-red-600 hover:text-red-800">🗑</button>
+            </td>
+        `;
 
             wrapper.appendChild(row);
-        }
+        });
 
         recalcularTotais();
     }
 
-    // ==================== GERENCIAMENTO DE PRODUTOS ORIGINAIS ====================
-    window.alterarQuantidadeOriginal = function(index, novaQuantidade) {
-        console.log('Alterando quantidade original:', index, novaQuantidade);
-
-        var tbody = document.getElementById('produtos-originais');
+    // ==================== PRODUTOS ORIGINAIS ====================
+    window.alterarPrecoProdutoOriginal = function(index, novoPreco) {
+        const tbody = document.getElementById('produtos-originais');
         if (!tbody) return;
 
-        var row = tbody.querySelectorAll('tr')[index];
+        const row = tbody.querySelectorAll('tr')[index];
         if (!row || row.style.display === 'none') return;
 
-        var quantidade = parseInt(novaQuantidade) || 1;
+        const liberarDescontoInput = row.querySelector('input[name="produtos[' + index + '][liberar_desconto]"]');
+        const liberarDesconto = liberarDescontoInput ? parseInt(liberarDescontoInput.value) : 1;
 
-        var quantidadeInput = row.querySelector('input[name="produtos[' + index + '][quantidade]"]');
+        if (liberarDesconto === 0) {
+            alert("Este produto não permite alteração de preço!");
+            return;
+        }
+
+        const precoOriginalInput = row.querySelector('input[name="produtos[' + index + '][preco_original]"]');
+        const precoOriginal = precoOriginalInput ? parseFloat(precoOriginalInput.value) : 0;
+
+        novoPreco = parseFloat(novoPreco) || precoOriginal;
+        if (novoPreco < 0) novoPreco = 0;
+
+        const descontoEmReais = precoOriginal - novoPreco;
+
+        // Atualizar valor unitário
+        const valorUnitarioInput = row.querySelector('.valor-unitario-hidden');
+        if (valorUnitarioInput) {
+            valorUnitarioInput.value = novoPreco;
+        }
+
+        // Atualizar desconto produto
+        let descontoProdutoInput = row.querySelector('input[name="produtos[' + index + '][desconto_produto]"]');
+        if (!descontoProdutoInput) {
+            descontoProdutoInput = document.createElement('input');
+            descontoProdutoInput.type = 'hidden';
+            descontoProdutoInput.name = 'produtos[' + index + '][desconto_produto]';
+            row.appendChild(descontoProdutoInput);
+        }
+        descontoProdutoInput.value = descontoEmReais;
+
+        // Atualizar tipo desconto
+        let tipoDescontoInput = row.querySelector('input[name="produtos[' + index + '][tipo_desconto]"]');
+        if (!tipoDescontoInput) {
+            tipoDescontoInput = document.createElement('input');
+            tipoDescontoInput.type = 'hidden';
+            tipoDescontoInput.name = 'produtos[' + index + '][tipo_desconto]';
+            row.appendChild(tipoDescontoInput);
+        }
+        tipoDescontoInput.value = descontoEmReais > 0 ? 'produto' : 'percentual';
+
+        const quantidadeInput = row.querySelector('input[name="produtos[' + index + '][quantidade]"]');
+        const quantidade = quantidadeInput ? parseInt(quantidadeInput.value) : 1;
+
+        recalcularProdutoOriginal(row, index, quantidade, novoPreco, descontoEmReais);
+        recalcularTotais();
+    };
+
+    window.alterarQuantidadeOriginal = function(index, novaQuantidade) {
+        const tbody = document.getElementById('produtos-originais');
+        if (!tbody) return;
+
+        const row = tbody.querySelectorAll('tr')[index];
+        if (!row || row.style.display === 'none') return;
+
+        const quantidade = parseInt(novaQuantidade) || 1;
+
+        const quantidadeInput = row.querySelector('input[name="produtos[' + index + '][quantidade]"]');
         if (quantidadeInput) {
             quantidadeInput.value = quantidade;
         }
 
-        recalcularProdutoOriginal(row, index, quantidade);
+        const valorUnitarioInput = row.querySelector('.valor-unitario-hidden');
+        const valorUnitario = valorUnitarioInput ? parseFloat(valorUnitarioInput.value) : 0;
+
+        const descontoProdutoInput = row.querySelector('input[name="produtos[' + index + '][desconto_produto]"]');
+        const descontoProduto = descontoProdutoInput ? parseFloat(descontoProdutoInput.value) : 0;
+
+        recalcularProdutoOriginal(row, index, quantidade, valorUnitario, descontoProduto);
         recalcularTotais();
     };
 
     window.removerProdutoOriginal = function(index) {
-        console.log('Removendo produto original:', index);
-        var tbody = document.getElementById('produtos-originais');
+        const tbody = document.getElementById('produtos-originais');
         if (!tbody) return;
 
-        var row = tbody.querySelectorAll('tr')[index];
+        const row = tbody.querySelectorAll('tr')[index];
         if (row) {
             row.style.display = 'none';
 
-            var removeInput = document.createElement('input');
-            removeInput.type = 'hidden';
-            removeInput.name = 'produtos[' + index + '][_remove]';
-            removeInput.value = '1';
-            row.appendChild(removeInput);
+            let removeInput = row.querySelector('input[name="produtos[' + index + '][_remove]"]');
+            if (!removeInput) {
+                removeInput = document.createElement('input');
+                removeInput.type = 'hidden';
+                removeInput.name = 'produtos[' + index + '][_remove]';
+                removeInput.value = '1';
+                row.appendChild(removeInput);
+            }
         }
 
         recalcularTotais();
     };
 
-    function recalcularProdutoOriginal(row, index, quantidade) {
-        var valorUnitarioInput = row.querySelector('.valor-unitario-hidden');
-        if (!valorUnitarioInput) return;
+    function recalcularProdutoOriginal(row, index, quantidade, valorUnitario, descontoProduto) {
+        const precoOriginalInput = row.querySelector('input[name="produtos[' + index + '][preco_original]"]');
+        const precoOriginal = precoOriginalInput ? parseFloat(precoOriginalInput.value) : valorUnitario;
 
-        var valorUnitario = parseFloat(valorUnitarioInput.value) || 0;
-        var desconto = obterDescontoAplicado();
+        const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado]"')?.value) || 0;
+        let descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]')?.value) || 0;
+        descontoOrcamento = Math.min(Math.max(descontoOrcamento, 0), 100);
+        const descontoPercentual = Math.max(descontoCliente, descontoOrcamento);
 
-        var subtotal = valorUnitario * quantidade;
-        var subtotalComDesconto = subtotal - (subtotal * (desconto / 100));
-        var precoUnitarioComDesconto = subtotalComDesconto / quantidade;
+        const subtotalOriginal = precoOriginal * quantidade;
+        const subtotal = valorUnitario * quantidade;
 
-        var subtotalInput = row.querySelector('input[name="produtos[' + index + '][subtotal]"]');
-        var subtotalComDescontoInput = row.querySelector('input[name="produtos[' + index +
+        let subtotalComDesconto;
+        let tipoDesconto = 'nenhum';
+
+        if (descontoProduto > 0) {
+            subtotalComDesconto = subtotal;
+            tipoDesconto = 'produto';
+        } else {
+            subtotalComDesconto = subtotal - (subtotal * (descontoPercentual / 100));
+            tipoDesconto = 'percentual';
+        }
+
+        const precoUnitarioComDesconto = subtotalComDesconto / quantidade;
+
+        // Atualizar inputs hidden
+        const subtotalInput = row.querySelector('input[name="produtos[' + index + '][subtotal]"]');
+        const subtotalComDescontoInput = row.querySelector('input[name="produtos[' + index +
             '][subtotal_com_desconto]"]');
-        var precoComDescontoInput = row.querySelector('input[name="produtos[' + index +
+        const precoComDescontoInput = row.querySelector('input[name="produtos[' + index +
             '][preco_unitario_com_desconto]"]');
 
         if (subtotalInput) subtotalInput.value = subtotal.toFixed(2);
         if (subtotalComDescontoInput) subtotalComDescontoInput.value = subtotalComDesconto.toFixed(2);
         if (precoComDescontoInput) precoComDescontoInput.value = precoUnitarioComDesconto.toFixed(2);
 
-        var cells = row.querySelectorAll('td');
+        // Atualizar células visíveis
+        const cells = row.querySelectorAll('td');
         if (cells[7]) cells[7].innerHTML = 'R$ ' + formatarMoeda(subtotal);
         if (cells[8]) cells[8].innerHTML = 'R$ ' + formatarMoeda(subtotalComDesconto);
     }
 
     function recalcularTodosProdutosOriginais() {
-        var tbody = document.getElementById('produtos-originais');
+        const tbody = document.getElementById('produtos-originais');
         if (!tbody) return;
 
-        var rows = tbody.querySelectorAll('tr');
+        const rows = tbody.querySelectorAll('tr');
 
-        for (var i = 0; i < rows.length; i++) {
-            var row = rows[i];
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
             if (row.style.display === 'none') continue;
 
-            var quantidadeInput = row.querySelector('input[name="produtos[' + i + '][quantidade]"]');
+            const quantidadeInput = row.querySelector('input[name="produtos[' + i + '][quantidade]"]');
             if (!quantidadeInput) continue;
 
-            var quantidade = parseInt(quantidadeInput.value) || 1;
-            recalcularProdutoOriginal(row, i, quantidade);
+            const quantidade = parseInt(quantidadeInput.value) || 1;
+            const valorUnitarioInput = row.querySelector('.valor-unitario-hidden');
+            const valorUnitario = valorUnitarioInput ? parseFloat(valorUnitarioInput.value) : 0;
+
+            const descontoProdutoInput = row.querySelector('input[name="produtos[' + i + '][desconto_produto]"]');
+            const descontoProduto = descontoProdutoInput ? parseFloat(descontoProdutoInput.value) : 0;
+
+            recalcularProdutoOriginal(row, i, quantidade, valorUnitario, descontoProduto);
         }
     }
 
-    // ==================== GERENCIAMENTO DE VIDROS ====================
+    // ==================== VIDROS (mantém mesma lógica) ====================
     window.addVidro = function() {
-        var wrapper = document.getElementById('vidros-wrapper');
+        const wrapper = document.getElementById('vidros-wrapper');
         if (!wrapper) return;
 
-        var vidroDiv = document.createElement('div');
+        const vidroDiv = document.createElement('div');
         vidroDiv.className = "space-y-2 relative border border-neutral-200 dark:border-neutral-700 rounded-lg p-4";
         vidroDiv.innerHTML =
             '<div class="overflow-x-auto"><div class="flex gap-4 min-w-max">' +
@@ -820,15 +1036,18 @@
     };
 
     window.removeVidroExistente = function(button) {
-        var container = button.closest('div.space-y-2');
-        var vidroId = container.getAttribute('data-vidro-id');
+        const container = button.closest('div.space-y-2');
+        const vidroId = container.getAttribute('data-vidro-id');
 
         if (vidroId) {
-            var removeInput = document.createElement('input');
-            removeInput.type = 'hidden';
-            removeInput.name = 'vidros_removidos[]';
-            removeInput.value = vidroId;
-            container.appendChild(removeInput);
+            let removeInput = container.querySelector('input[name="vidros_removidos[]"]');
+            if (!removeInput) {
+                removeInput = document.createElement('input');
+                removeInput.type = 'hidden';
+                removeInput.name = 'vidros_removidos[]';
+                removeInput.value = vidroId;
+                container.appendChild(removeInput);
+            }
         }
 
         container.style.display = 'none';
@@ -836,18 +1055,23 @@
     };
 
     window.calcularVidro = function(element) {
-        var container = element.closest('div.space-y-2');
+        const container = element.closest('div.space-y-2');
         if (!container) return;
 
-        var altura = parseFloat(container.querySelector('[name*="[altura]"]').value) || 0;
-        var largura = parseFloat(container.querySelector('[name*="[largura]"]').value) || 0;
-        var quantidade = parseFloat(container.querySelector('[name*="[quantidade]"]').value) || 1;
-        var precoM2 = parseFloat(container.querySelector('[name*="[preco_m2]"]').value) || 0;
+        const altura = parseFloat(container.querySelector('[name*="[altura]"]').value) || 0;
+        const largura = parseFloat(container.querySelector('[name*="[largura]"]').value) || 0;
+        const quantidade = parseFloat(container.querySelector('[name*="[quantidade]"]').value) || 1;
+        const precoM2 = parseFloat(container.querySelector('[name*="[preco_m2]"]').value) || 0;
 
-        var area = (altura / 1000) * (largura / 1000);
-        var valor = area * precoM2 * quantidade;
-        var desconto = obterDescontoAplicado();
-        var valorComDesconto = valor - (valor * (desconto / 100));
+        const area = (altura / 1000) * (largura / 1000);
+        const valor = area * precoM2 * quantidade;
+
+        const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]')?.value) || 0;
+        let descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]')?.value) || 0;
+        descontoOrcamento = Math.min(Math.max(descontoOrcamento, 0), 100);
+        const desconto = Math.max(descontoCliente, descontoOrcamento);
+
+        const valorComDesconto = valor - (valor * (desconto / 100));
 
         container.querySelector('.area').textContent = area.toFixed(2);
         container.querySelector('.valor').textContent = valor.toFixed(2);
@@ -865,17 +1089,17 @@
     };
 
     function calcularTotalVidros() {
-        var totalVidros = 0;
-        var totalVidrosComDesconto = 0;
-        var wrapper = document.getElementById('vidros-wrapper');
+        let totalVidros = 0;
+        let totalVidrosComDesconto = 0;
+        const wrapper = document.getElementById('vidros-wrapper');
 
         if (wrapper) {
-            var containers = wrapper.querySelectorAll('.space-y-2');
-            for (var i = 0; i < containers.length; i++) {
-                if (containers[i].style.display === 'none') continue;
+            const containers = wrapper.querySelectorAll('.space-y-2');
+            for (let container of containers) {
+                if (container.style.display === 'none') continue;
 
-                var valorEl = containers[i].querySelector('.valor-hidden');
-                var valorDescEl = containers[i].querySelector('.valor-desconto-hidden');
+                const valorEl = container.querySelector('.valor-hidden');
+                const valorDescEl = container.querySelector('.valor-desconto-hidden');
                 if (valorEl && valorDescEl) {
                     totalVidros += parseFloat(valorEl.value) || 0;
                     totalVidrosComDesconto += parseFloat(valorDescEl.value) || 0;
@@ -884,46 +1108,46 @@
         }
 
         return {
-            totalVidros: totalVidros,
-            totalVidrosComDesconto: totalVidrosComDesconto
+            totalVidros,
+            totalVidrosComDesconto
         };
     }
 
     function recalcularTodosVidros() {
-        var wrapper = document.getElementById('vidros-wrapper');
+        const wrapper = document.getElementById('vidros-wrapper');
         if (!wrapper) return;
 
-        var containers = wrapper.querySelectorAll('.space-y-2');
-        for (var i = 0; i < containers.length; i++) {
-            if (containers[i].style.display === 'none') continue;
+        const containers = wrapper.querySelectorAll('.space-y-2');
+        for (let container of containers) {
+            if (container.style.display === 'none') continue;
 
-            var firstInput = containers[i].querySelector('input[type="number"]');
+            const firstInput = container.querySelector('input[type="number"]');
             if (firstInput) {
                 calcularVidro(firstInput);
             }
         }
     }
 
-    // ==================== CÁLCULOS E TOTAIS ====================
+    // ==================== TOTAIS ====================
     function obterDescontoAplicado() {
-        var descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]')?.value) || 0;
-        var descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]')?.value) || 0;
+        const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]')?.value) || 0;
+        let descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]')?.value) || 0;
         descontoOrcamento = Math.min(Math.max(descontoOrcamento, 0), 100);
         return Math.max(descontoCliente, descontoOrcamento);
     }
 
     function calcularTotalProdutosOriginais() {
-        var total = 0;
-        var totalComDesconto = 0;
-        var tbody = document.getElementById('produtos-originais');
+        let total = 0;
+        let totalComDesconto = 0;
+        const tbody = document.getElementById('produtos-originais');
 
         if (tbody) {
-            var rows = tbody.querySelectorAll('tr');
-            for (var i = 0; i < rows.length; i++) {
-                if (rows[i].style.display === 'none') continue;
+            const rows = tbody.querySelectorAll('tr');
+            for (let row of rows) {
+                if (row.style.display === 'none') continue;
 
-                var subtotalInput = rows[i].querySelector('input[name*="[subtotal]"]:not([name*="com_desconto"])');
-                var subtotalComDescontoInput = rows[i].querySelector('input[name*="[subtotal_com_desconto]"]');
+                const subtotalInput = row.querySelector('input[name*="[subtotal]"]:not([name*="com_desconto"])');
+                const subtotalComDescontoInput = row.querySelector('input[name*="[subtotal_com_desconto]"]');
 
                 if (subtotalInput && subtotalComDescontoInput) {
                     total += parseFloat(subtotalInput.value) || 0;
@@ -933,61 +1157,71 @@
         }
 
         return {
-            total: total,
-            totalComDesconto: totalComDesconto
+            total,
+            totalComDesconto
         };
     }
+    // ==================== CONTINUAÇÃO DO JAVASCRIPT ====================
 
     function calcularTotalProdutosNovos() {
-        var total = 0;
-        var totalComDesconto = 0;
-        var desconto = obterDescontoAplicado();
+        let total = 0;
+        let totalComDesconto = 0;
+        const descontoPercentual = obterDescontoAplicado();
 
-        for (var i = 0; i < window.produtos.length; i++) {
-            var subtotal = window.produtos[i].preco * window.produtos[i].quantidade;
-            var subtotalComDesconto = subtotal - (subtotal * (desconto / 100));
-            total += subtotal;
-            totalComDesconto += subtotalComDesconto;
-        }
+        window.produtos.forEach(p => {
+            const subtotalOriginal = p.precoOriginal * p.quantidade;
+            const subtotal = p.preco * p.quantidade;
+
+            let subtotalComDesc;
+            if (p.descontoProduto > 0) {
+                subtotalComDesc = subtotal;
+            } else if (p.liberarDesconto === 1 && descontoPercentual > 0) {
+                subtotalComDesc = subtotal - (subtotal * (descontoPercentual / 100));
+            } else {
+                subtotalComDesc = subtotal;
+            }
+
+            total += subtotalOriginal;
+            totalComDesconto += subtotalComDesc;
+        });
 
         return {
-            total: total,
-            totalComDesconto: totalComDesconto
+            total,
+            totalComDesconto
         };
     }
 
     function recalcularTotais() {
         recalcularTodosProdutosOriginais();
 
-        var totaisOriginais = calcularTotalProdutosOriginais();
-        var totaisNovos = calcularTotalProdutosNovos();
-        var totaisVidros = calcularTotalVidros();
+        const totaisOriginais = calcularTotalProdutosOriginais();
+        const totaisNovos = calcularTotalProdutosNovos();
+        const totaisVidros = calcularTotalVidros();
 
-        var totalGeral = totaisOriginais.total + totaisNovos.total + totaisVidros.totalVidros;
-        var totalGeralComDesconto = totaisOriginais.totalComDesconto + totaisNovos.totalComDesconto + totaisVidros
+        const totalGeral = totaisOriginais.total + totaisNovos.total + totaisVidros.totalVidros;
+        const totalGeralComDesconto = totaisOriginais.totalComDesconto + totaisNovos.totalComDesconto + totaisVidros
             .totalVidrosComDesconto;
 
-        var valorTotalInput = document.getElementById('valor_total');
+        const valorTotalInput = document.getElementById('valor_total');
         if (valorTotalInput) {
             valorTotalInput.value = totalGeral.toFixed(2);
         }
 
-        var guia = parseFloat(document.querySelector('[name="guia_recolhimento"]')?.value) || 0;
-        var descontoEspecifico = parseFloat(document.querySelector('[name="desconto_especifico"]')?.value) || 0;
+        const guia = parseFloat(document.querySelector('[name="guia_recolhimento"]')?.value) || 0;
+        const descontoEspecifico = parseFloat(document.querySelector('[name="desconto_especifico"]')?.value) || 0;
 
-        var valorFinal = totalGeralComDesconto - descontoEspecifico + guia;
+        let valorFinal = totalGeralComDesconto - descontoEspecifico + guia;
         if (valorFinal < 0) valorFinal = 0;
 
-        var maxDesconto = totalGeralComDesconto + guia;
+        const maxDesconto = totalGeralComDesconto + guia;
         if (descontoEspecifico > maxDesconto) {
-            descontoEspecifico = maxDesconto;
-            var descontoEspecificoInput = document.querySelector('[name="desconto_especifico"]');
+            const descontoEspecificoInput = document.querySelector('[name="desconto_especifico"]');
             if (descontoEspecificoInput) {
                 descontoEspecificoInput.value = maxDesconto.toFixed(2);
             }
         }
 
-        var valorFinalInput = document.getElementById('valor_final');
+        const valorFinalInput = document.getElementById('valor_final');
         if (valorFinalInput) {
             valorFinalInput.value = valorFinal.toFixed(2);
         }
@@ -1009,30 +1243,100 @@
 
     // ==================== INICIALIZAÇÃO ====================
     function inicializar() {
-        console.log('Inicializando sistema de orçamento...');
+        console.log('Inicializando sistema de orçamento - EDIT...');
 
-        // Inicializar vidroIndex com base na quantidade de vidros existentes
-        var vidrosWrapper = document.getElementById('vidros-wrapper');
+        // Inicializar vidroIndex
+        const vidrosWrapper = document.getElementById('vidros-wrapper');
         if (vidrosWrapper) {
-            var vidrosExistentes = vidrosWrapper.querySelectorAll('.space-y-2');
+            const vidrosExistentes = vidrosWrapper.querySelectorAll('.space-y-2');
             window.vidroIndex = vidrosExistentes.length;
-            console.log('Vidros existentes:', window.vidroIndex);
         }
 
-        // Recalcular vidros existentes na inicialização
+        // Adicionar campos necessários aos produtos originais
+        const tbody = document.getElementById('produtos-originais');
+        if (tbody) {
+            const rows = tbody.querySelectorAll('tr');
+            rows.forEach((row, index) => {
+                const produtoId = row.querySelector('input[name="produtos[' + index + '][produto_id]"]')?.value;
+                if (!produtoId) return;
+
+                // Buscar dados do produto para verificar liberar_desconto
+                // Por enquanto, assume que todos permitem desconto por padrão
+                const valorUnitarioInput = row.querySelector('.valor-unitario-hidden');
+                const valorUnitario = valorUnitarioInput ? parseFloat(valorUnitarioInput.value) : 0;
+
+                // Adicionar campo preco_original se não existir
+                if (!row.querySelector('input[name="produtos[' + index + '][preco_original]"]')) {
+                    const precoOriginalInput = document.createElement('input');
+                    precoOriginalInput.type = 'hidden';
+                    precoOriginalInput.name = 'produtos[' + index + '][preco_original]';
+                    precoOriginalInput.value = valorUnitario;
+                    row.appendChild(precoOriginalInput);
+                }
+
+                // Adicionar campo liberar_desconto se não existir
+                if (!row.querySelector('input[name="produtos[' + index + '][liberar_desconto]"]')) {
+                    const liberarDescontoInput = document.createElement('input');
+                    liberarDescontoInput.type = 'hidden';
+                    liberarDescontoInput.name = 'produtos[' + index + '][liberar_desconto]';
+                    liberarDescontoInput.value = '1'; // Assume que permite desconto
+                    row.appendChild(liberarDescontoInput);
+                }
+
+                // Adicionar campo desconto_produto se não existir
+                if (!row.querySelector('input[name="produtos[' + index + '][desconto_produto]"]')) {
+                    const descontoProdutoInput = document.createElement('input');
+                    descontoProdutoInput.type = 'hidden';
+                    descontoProdutoInput.name = 'produtos[' + index + '][desconto_produto]';
+                    descontoProdutoInput.value = '0';
+                    row.appendChild(descontoProdutoInput);
+                }
+
+                // Adicionar campo tipo_desconto se não existir
+                if (!row.querySelector('input[name="produtos[' + index + '][tipo_desconto]"]')) {
+                    const tipoDescontoInput = document.createElement('input');
+                    tipoDescontoInput.type = 'hidden';
+                    tipoDescontoInput.name = 'produtos[' + index + '][tipo_desconto]';
+                    tipoDescontoInput.value = 'percentual';
+                    row.appendChild(tipoDescontoInput);
+                }
+
+                // Tornar o preço editável
+                const cells = row.querySelectorAll('td');
+                if (cells[5]) { // Coluna do preço
+                    const liberarDesconto = parseInt(row.querySelector('input[name="produtos[' + index +
+                        '][liberar_desconto]"]')?.value) || 1;
+
+                    if (liberarDesconto === 1) {
+                        const precoAtual = valorUnitario.toFixed(2);
+                        cells[5].innerHTML = `
+                        <div class="flex flex-col gap-1">
+                            <input type="number" step="0.01" value="${precoAtual}" 
+                                onchange="alterarPrecoProdutoOriginal(${index}, this.value)"
+                                class="w-24 border rounded px-2 py-1 text-sm" />
+                        </div>
+                        <input type="hidden" class="valor-unitario-hidden" name="produtos[${index}][valor_unitario]" value="${valorUnitario}">
+                    `;
+                    }
+                }
+            });
+        }
+
+        // Recalcular vidros existentes
         recalcularTodosVidros();
 
-        // Recalcular tudo na inicialização
+        // Recalcular tudo
         recalcularTotais();
 
-        var camposDesconto = [
+        // Event listeners
+        const camposDesconto = [
             '[name="desconto"]',
             '[name="desconto_especifico"]',
             '[name="guia_recolhimento"]'
         ];
 
-        camposDesconto.forEach(function(selector) {
-            var campo = document.querySelector(selector);
+        camposDesconto.forEach(selector => {
+            const campo = document.querySelector(selector);
             if (campo) {
                 campo.addEventListener('input', function() {
                     recalcularTodosVidros();
@@ -1040,6 +1344,46 @@
                 });
             }
         });
+
+        // Listener para condição de pagamento
+        const condicaoPagamentoSelect = document.getElementById('condicao_pagamento');
+        const outrosMeiosInput = document.getElementById('outros_meios_pagamento');
+
+        if (condicaoPagamentoSelect && outrosMeiosInput) {
+            function toggleOutrosMeios() {
+                if (condicaoPagamentoSelect.value == 20) {
+                    outrosMeiosInput.disabled = false;
+                    outrosMeiosInput.required = true;
+                } else {
+                    outrosMeiosInput.disabled = true;
+                    outrosMeiosInput.required = false;
+                    outrosMeiosInput.value = '';
+                }
+            }
+
+            condicaoPagamentoSelect.addEventListener('change', toggleOutrosMeios);
+            toggleOutrosMeios();
+        }
+
+        // Listener para venda triangular
+        const vendaTriangularSelect = document.getElementById('venda_triangular');
+        const cnpjTriangularInput = document.getElementById('cnpj_triangular');
+
+        if (vendaTriangularSelect && cnpjTriangularInput) {
+            function toggleVendaTriangular() {
+                if (vendaTriangularSelect.value === '1') {
+                    cnpjTriangularInput.disabled = false;
+                    cnpjTriangularInput.required = true;
+                } else {
+                    cnpjTriangularInput.disabled = true;
+                    cnpjTriangularInput.required = false;
+                    cnpjTriangularInput.value = '';
+                }
+            }
+
+            vendaTriangularSelect.addEventListener('change', toggleVendaTriangular);
+            toggleVendaTriangular();
+        }
 
         console.log('Sistema inicializado com sucesso!');
     }
@@ -1049,4 +1393,44 @@
     } else {
         inicializar();
     }
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const vendaTriangular = document.getElementById('venda_triangular');
+        const cnpj_triangular = document.getElementById('cnpj_triangular');
+        const condicaoPagamento = document.getElementById('condicao_pagamento');
+        const outrosMeios = document.getElementById('outros_meios_pagamento');
+
+        function toggleVendaTriangular() {
+            if (vendaTriangular.value === '1') {
+                cnpj_triangular.disabled = false;
+                cnpj_triangular.required = true;
+            } else {
+                cnpj_triangular.disabled = true;
+                cnpj_triangular.required = false;
+                cnpj_triangular.value = '';
+            }
+        }
+
+        function toggleOutrosMeios() {
+            if (condicaoPagamento.value == 20) {
+                outrosMeios.disabled = false;
+                outrosMeios.required = true;
+            } else {
+                outrosMeios.disabled = true;
+                outrosMeios.required = false;
+                outrosMeios.value = '';
+            }
+        }
+
+        if (vendaTriangular) {
+            vendaTriangular.addEventListener('change', toggleVendaTriangular);
+            toggleVendaTriangular();
+        }
+
+        if (condicaoPagamento) {
+            condicaoPagamento.addEventListener('change', toggleOutrosMeios);
+            toggleOutrosMeios();
+        }
+    });
 </script>
