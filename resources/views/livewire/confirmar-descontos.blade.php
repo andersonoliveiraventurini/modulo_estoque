@@ -58,12 +58,33 @@
                     </div>
                 @endif
 
-                <!-- Informações do Orçamento -->
+                <!-- SUBSTITUIR A SEÇÃO "Informações do Orçamento" (~linha 40-80) -->
+
                 <div class="space-y-4 mb-6">
                     <h3 class="text-lg font-medium flex items-center gap-2">
                         <x-heroicon-o-document-text class="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         Informações do Orçamento
                     </h3>
+
+                    @php
+                        // LÓGICA CORRIGIDA PARA CALCULAR VALORES DO ORÇAMENTO
+                        $valorAtualOrcamento = $orcamento->valor_total_itens ?? 0; // Valor JÁ com descontos de produto
+
+                        // Buscar descontos aprovados por tipo
+                        $descontosAprovados = $orcamento->descontos()->whereNotNull('aprovado_em')->get();
+
+                        $descontosProdutoAprovados = $descontosAprovados->where('tipo', 'produto');
+                        $descontosOutrosAprovados = $descontosAprovados->whereIn('tipo', ['percentual', 'fixo']);
+
+                        $totalDescontosProduto = $descontosProdutoAprovados->sum('valor');
+                        $totalDescontosOutros = $descontosOutrosAprovados->sum('valor');
+
+                        // Calcular valor original (antes de QUALQUER desconto)
+                        $valorOriginalEstimado = $valorAtualOrcamento + $totalDescontosProduto;
+
+                        // Calcular valor final (após TODOS os descontos)
+                        $valorFinalComDescontos = $valorAtualOrcamento - $totalDescontosOutros;
+                    @endphp
 
                     <div
                         class="ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10 rounded-lg overflow-hidden">
@@ -73,46 +94,165 @@
                         </div>
                         <div class="bg-white dark:bg-zinc-900 p-4">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                                <!-- Cliente -->
                                 <div class="flex items-start gap-2">
                                     <x-heroicon-o-user class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
                                     <div class="flex-1">
                                         <p class="text-xs text-gray-500 dark:text-gray-400">Cliente</p>
                                         <p class="font-medium text-gray-900 dark:text-gray-100">
-                                            {{ $orcamento->cliente->nome ?? 'N/A' }}</p>
+                                            {{ $orcamento->cliente->nome ?? ($orcamento->cliente->nome_fantasia ?? 'N/A') }}
+                                        </p>
                                     </div>
                                 </div>
+
+                                <!-- Vendedor -->
                                 <div class="flex items-start gap-2">
                                     <x-heroicon-o-user-circle class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
                                     <div class="flex-1">
                                         <p class="text-xs text-gray-500 dark:text-gray-400">Vendedor</p>
                                         <p class="font-medium text-gray-900 dark:text-gray-100">
-                                            {{ $orcamento->vendedor->name ?? 'N/A' }}</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start gap-2">
-                                    <x-heroicon-o-currency-dollar class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
-                                    <div class="flex-1">
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">Valor Total Original</p>
-                                        <p class="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                            R$ {{ number_format($orcamento->valor_total_itens ?? 0, 2, ',', '.') }}
+                                            {{ $orcamento->vendedor->name ?? 'N/A' }}
                                         </p>
                                     </div>
                                 </div>
-                                @if ($orcamento->totalDescontosAprovados() > 0)
+
+                                <!-- Valor Total Original (ANTES de qualquer desconto) -->
+                                @if ($totalDescontosProduto > 0)
                                     <div class="flex items-start gap-2">
                                         <x-heroicon-o-currency-dollar
                                             class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
                                         <div class="flex-1">
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">Valor Total Com
-                                                Descontos</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                                Valor Original (antes dos descontos)
+                                            </p>
                                             <p class="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                                R$
-                                                {{ number_format($orcamento->valor_total_itens - $orcamento->totalDescontosAprovados() ?? 0, 2, ',', '.') }}
+                                                R$ {{ number_format($valorOriginalEstimado, 2, ',', '.') }}
+                                            </p>
+                                            <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                                <x-heroicon-o-information-circle class="w-3 h-3 inline" />
+                                                Inclui {{ $descontosProdutoAprovados->count() }} desconto(s) por produto
                                             </p>
                                         </div>
                                     </div>
                                 @endif
+
+                                <!-- Valor Atual (com descontos de produto, sem outros) -->
+                                <div class="flex items-start gap-2">
+                                    <x-heroicon-o-currency-dollar class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                                    <div class="flex-1">
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                                            @if ($totalDescontosProduto > 0)
+                                                Valor Base (com desc. produto)
+                                            @else
+                                                Valor Total Original
+                                            @endif
+                                        </p>
+                                        <p class="text-lg font-bold text-gray-900 dark:text-gray-100">
+                                            R$ {{ number_format($valorAtualOrcamento, 2, ',', '.') }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Valor Final (se houver outros descontos aprovados) -->
+                                @if ($totalDescontosOutros > 0 || ($descontosAprovados->count() > 0 && $totalDescontosProduto > 0))
+                                    <div class="flex items-start gap-2">
+                                        <x-heroicon-o-currency-dollar
+                                            class="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                                        <div class="flex-1">
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                                Valor Final com Descontos
+                                            </p>
+                                            <p class="text-lg font-bold text-green-700 dark:text-green-300">
+                                                R$ {{ number_format($valorFinalComDescontos, 2, ',', '.') }}
+                                            </p>
+                                            @if ($totalDescontosOutros > 0)
+                                                <p class="text-xs text-green-600 dark:text-green-400 mt-1">
+                                                    -R$ {{ number_format($totalDescontosOutros, 2, ',', '.') }}
+                                                    em desc. percentual/fixo
+                                                </p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
+
+                            <!-- Breakdown de Descontos (se houver descontos aprovados) -->
+                            @if ($descontosAprovados->count() > 0)
+                                <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                                        💰 Composição dos Descontos Aprovados
+                                    </p>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+
+                                        <!-- Descontos por Produto -->
+                                        @if ($totalDescontosProduto > 0)
+                                            <div
+                                                class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <x-heroicon-o-cube
+                                                        class="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                                    <span class="text-xs font-medium text-blue-900 dark:text-blue-200">
+                                                        Desconto por Produto
+                                                    </span>
+                                                </div>
+                                                <p class="text-lg font-bold text-blue-700 dark:text-blue-300">
+                                                    -R$ {{ number_format($totalDescontosProduto, 2, ',', '.') }}
+                                                </p>
+                                                <p class="text-xs text-blue-600 dark:text-blue-400">
+                                                    {{ $descontosProdutoAprovados->count() }} item(ns)
+                                                </p>
+                                            </div>
+                                        @endif
+
+                                        <!-- Descontos Percentuais/Fixos -->
+                                        @if ($totalDescontosOutros > 0)
+                                            <div
+                                                class="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3">
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <x-heroicon-o-tag
+                                                        class="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                                                    <span
+                                                        class="text-xs font-medium text-orange-900 dark:text-orange-200">
+                                                        Outros Descontos
+                                                    </span>
+                                                </div>
+                                                <p class="text-lg font-bold text-orange-700 dark:text-orange-300">
+                                                    -R$ {{ number_format($totalDescontosOutros, 2, ',', '.') }}
+                                                </p>
+                                                <p class="text-xs text-orange-600 dark:text-orange-400">
+                                                    {{ $descontosOutrosAprovados->count() }} desconto(s)
+                                                </p>
+                                            </div>
+                                        @endif
+
+                                        <!-- Total de Economia -->
+                                        @if ($descontosAprovados->count() > 0)
+                                            <div
+                                                class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <x-heroicon-o-arrow-trending-down
+                                                        class="w-4 h-4 text-green-600 dark:text-green-400" />
+                                                    <span
+                                                        class="text-xs font-medium text-green-900 dark:text-green-200">
+                                                        Economia Total
+                                                    </span>
+                                                </div>
+                                                <p class="text-lg font-bold text-green-700 dark:text-green-300">
+                                                    -R$
+                                                    {{ number_format($totalDescontosProduto + $totalDescontosOutros, 2, ',', '.') }}
+                                                </p>
+                                                @if ($valorOriginalEstimado > 0)
+                                                    <p class="text-xs text-green-600 dark:text-green-400">
+                                                        {{ number_format((($totalDescontosProduto + $totalDescontosOutros) / $valorOriginalEstimado) * 100, 1) }}%
+                                                        de desconto
+                                                    </p>
+                                                @endif
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -133,6 +273,8 @@
                             </span>
                         </div>
                     </div>
+
+                    <!-- SUBSTITUIR A SEÇÃO DE LISTA DE DESCONTOS (aproximadamente linha 100-250) -->
 
                     <div class="space-y-3">
                         @forelse($descontos as $index => $desconto)
@@ -162,17 +304,63 @@
                                         <!-- Badge do Tipo -->
                                         <span
                                             class="px-3 py-1 text-xs font-semibold rounded-full
-                                            {{ $desconto->tipo === 'fixo'
-                                                ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300'
-                                                : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' }}">
-                                            {{ $desconto->tipo === 'fixo' ? 'Valor Fixo' : 'Percentual' }}
+                        @if ($desconto->tipo === 'fixo') bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300
+                        @elseif($desconto->tipo === 'produto')
+                            bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300
+                        @else
+                            bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 @endif">
+                                            @if ($desconto->tipo === 'fixo')
+                                                Valor Fixo
+                                            @elseif($desconto->tipo === 'produto')
+                                                Desconto por Produto
+                                            @else
+                                                Percentual
+                                            @endif
                                         </span>
                                     </div>
                                 </div>
 
                                 <!-- Corpo do Desconto -->
+                                <!-- SUBSTITUIR A SEÇÃO DE EXIBIÇÃO DO DESCONTO POR PRODUTO -->
+
                                 <div class="bg-white dark:bg-zinc-900 p-4">
+                                    @php
+                                        // LÓGICA CORRIGIDA PARA DESCONTO POR PRODUTO
+                                        if ($desconto->tipo === 'produto' && $desconto->produto_id) {
+                                            // Para desconto por produto, o valor_total_itens JÁ está com desconto
+                                            // Precisamos ADICIONAR o desconto de volta para obter o valor original
+                                            $valorComDesconto = $orcamento->valor_total_itens ?? 0;
+                                            $valorDesconto = $desconto->valor;
+                                            $valorOriginalProduto = $valorComDesconto + $valorDesconto;
+                                        } else {
+                                            // Para desconto percentual ou fixo, calcula normalmente
+                                            $valorOriginalProduto = $orcamento->valor_total_itens ?? 0;
+                                            $descontosJaAprovados = $orcamento->totalDescontosAprovados();
+                                            $valorAposDesconto =
+                                                $valorOriginalProduto - $descontosJaAprovados - $desconto->valor;
+                                        }
+                                    @endphp
+
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+
+                                        <!-- Valor ORIGINAL do Produto (antes do desconto) -->
+                                        @if ($desconto->tipo === 'produto')
+                                            <div
+                                                class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-800 rounded-lg">
+                                                <div
+                                                    class="flex items-center justify-center w-10 h-10 bg-gray-100 dark:bg-gray-900/40 rounded-full">
+                                                    <x-heroicon-o-tag
+                                                        class="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                                                </div>
+                                                <div class="flex-1">
+                                                    <p class="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                                                        Preço Original</p>
+                                                    <p class="text-lg font-bold text-gray-700 dark:text-gray-300">
+                                                        R$ {{ number_format($valorOriginalProduto, 2, ',', '.') }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        @endif
 
                                         <!-- Valor do Desconto -->
                                         <div
@@ -183,10 +371,15 @@
                                                     class="w-5 h-5 text-red-600 dark:text-red-400" />
                                             </div>
                                             <div class="flex-1">
-                                                <p class="text-xs text-red-600 dark:text-red-400 font-medium">Valor do
-                                                    Desconto</p>
+                                                <p class="text-xs text-red-600 dark:text-red-400 font-medium">
+                                                    @if ($desconto->tipo === 'produto')
+                                                        Desconto Aplicado
+                                                    @else
+                                                        Valor do Desconto
+                                                    @endif
+                                                </p>
                                                 <p class="text-lg font-bold text-red-700 dark:text-red-300">
-                                                    R$ {{ number_format($desconto->valor, 2, ',', '.') }}
+                                                    - R$ {{ number_format($desconto->valor, 2, ',', '.') }}
                                                 </p>
                                             </div>
                                         </div>
@@ -210,7 +403,27 @@
                                             </div>
                                         @endif
 
-                                        <!-- Valor com Desconto Aplicado -->
+                                        <!-- Produto (se aplicável) -->
+                                        @if ($desconto->tipo === 'produto' && $desconto->produto_id)
+                                            <div
+                                                class="flex items-center gap-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg">
+                                                <div
+                                                    class="flex items-center justify-center w-10 h-10 bg-indigo-100 dark:bg-indigo-900/40 rounded-full">
+                                                    <x-heroicon-o-cube
+                                                        class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                                                </div>
+                                                <div class="flex-1">
+                                                    <p
+                                                        class="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
+                                                        Produto</p>
+                                                    <p class="text-sm font-bold text-indigo-700 dark:text-indigo-300">
+                                                        {{ $desconto->produto->nome ?? "ID: {$desconto->produto_id}" }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        @endif
+
+                                        <!-- Valor COM Desconto (Preço Final) -->
                                         <div
                                             class="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                                             <div
@@ -219,15 +432,74 @@
                                                     class="w-5 h-5 text-green-600 dark:text-green-400" />
                                             </div>
                                             <div class="flex-1">
-                                                <p class="text-xs text-green-600 dark:text-green-400 font-medium">Novo
-                                                    Valor Total</p>
+                                                <p class="text-xs text-green-600 dark:text-green-400 font-medium">
+                                                    @if ($desconto->tipo === 'produto')
+                                                        Preço com Desconto
+                                                    @else
+                                                        Valor Após Desconto
+                                                    @endif
+                                                </p>
                                                 <p class="text-lg font-bold text-green-700 dark:text-green-300">
-                                                    R$
-                                                    {{ number_format(($orcamento->valor_total_itens ?? 0) - $orcamento->totalDescontosAprovados() - $desconto->valor, 2, ',', '.') }}
+                                                    @if ($desconto->tipo === 'produto')
+                                                        R$ {{ number_format($valorComDesconto, 2, ',', '.') }}
+                                                    @else
+                                                        R$ {{ number_format($valorAposDesconto, 2, ',', '.') }}
+                                                    @endif
                                                 </p>
                                             </div>
                                         </div>
                                     </div>
+
+                                    <!-- Detalhamento visual para desconto por produto -->
+                                    @if ($desconto->tipo === 'produto' && $desconto->produto)
+                                        <div
+                                            class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+                                            <div class="flex items-start gap-3">
+                                                <div
+                                                    class="flex items-center justify-center w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-full flex-shrink-0">
+                                                    <x-heroicon-o-information-circle
+                                                        class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                                </div>
+                                                <div class="flex-1">
+                                                    <p
+                                                        class="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-2">
+                                                        💰 Cálculo do Desconto por Produto
+                                                    </p>
+                                                    <div class="space-y-2 text-sm text-blue-800 dark:text-blue-300">
+                                                        <div class="flex justify-between items-center py-1">
+                                                            <span>Preço Original:</span>
+                                                            <span class="font-semibold">R$
+                                                                {{ number_format($valorOriginalProduto, 2, ',', '.') }}</span>
+                                                        </div>
+                                                        <div
+                                                            class="flex justify-between items-center py-1 border-t border-blue-200 dark:border-blue-700">
+                                                            <span>Desconto Unitário:</span>
+                                                            <span
+                                                                class="font-semibold text-red-600 dark:text-red-400">-
+                                                                R$
+                                                                {{ number_format($desconto->valor, 2, ',', '.') }}</span>
+                                                        </div>
+                                                        <div
+                                                            class="flex justify-between items-center py-2 border-t-2 border-blue-300 dark:border-blue-600">
+                                                            <span class="font-bold">Preço Final:</span>
+                                                            <span
+                                                                class="font-bold text-green-600 dark:text-green-400">R$
+                                                                {{ number_format($valorComDesconto, 2, ',', '.') }}</span>
+                                                        </div>
+                                                        <div class="bg-blue-100 dark:bg-blue-900/40 rounded p-2 mt-2">
+                                                            <p class="text-xs">
+                                                                <strong>Percentual:</strong>
+                                                                {{ $valorOriginalProduto > 0 ? number_format(($desconto->valor / $valorOriginalProduto) * 100, 2, ',', '.') : '0,00' }}%
+                                                                de desconto aplicado
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <!-- Resto do formulário permanece igual -->
                                     <form method="POST" action="{{ route('descontos.avaliar', $desconto->id) }}"
                                         class="flex items-center gap-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                                         @csrf
@@ -261,23 +533,20 @@
                                     <!-- Informações Adicionais -->
                                     @if ($desconto->observacao)
                                         <div
-                                            class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 mb-4">
+                                            class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 mt-3">
                                             <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                                                 Observação:</p>
                                             <p class="text-sm text-gray-900 dark:text-gray-100">
                                                 {{ $desconto->observacao }}</p>
                                         </div>
                                     @endif
-
-
                                 </div>
                             </div>
-
 
                         @empty
                             <div
                                 class="text-center py-12 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                                <x-heroicon-o-check-circle class="w-4 h-4 mx-auto mb-3 opacity-50 text-green-500" />
+                                <x-heroicon-o-check-circle class="w-12 h-12 mx-auto mb-3 opacity-50 text-green-500" />
                                 <p class="text-lg font-medium mb-1">Nenhum desconto pendente</p>
                                 <p class="text-sm">Todos os descontos foram avaliados ou não há descontos aplicados.
                                 </p>

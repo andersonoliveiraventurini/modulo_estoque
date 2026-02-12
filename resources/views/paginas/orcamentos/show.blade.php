@@ -506,9 +506,10 @@
                     {{-- Desconto Percentual --}}
                     @if ($percentual > 0)
                         <div class="flex items-center justify-between mb-2">
-                            <span><strong>Desconto Percentual:</strong> {{ number_format($percentual, 2, ',', '.') }}%@php
-                                $descontoPercentual = $orcamento->descontos->where('tipo', 'percentual')->first();
-                            @endphp
+                            <span><strong>Desconto Percentual:</strong>
+                                {{ number_format($percentual, 2, ',', '.') }}%@php
+                                    $descontoPercentual = $orcamento->descontos->where('tipo', 'percentual')->first();
+                                @endphp
                                 @if ($descontoPercentual)
                                     @if ($descontoPercentual->aprovado_em)
                                         <span
@@ -524,12 +525,8 @@
                                         </span>
                                     @endif
                                 @endif
-                                
                             </span>
-
                         </div>
-                    @else
-                        <p><strong>Desconto Percentual:</strong> {{ number_format($percentual, 2, ',', '.') }}%</p>
                     @endif
 
                     {{-- Descontos Fixos --}}
@@ -537,21 +534,23 @@
                         <div class="flex items-center justify-between mb-2">
                             <span>
                                 <strong>{{ $desc->motivo ?: 'Desconto Fixo' }}:</strong>
-                                -R$ {{ number_format($desc->valor, 2, ',', '.') }} @if ($desc->aprovado_em)
-                                <span
-                                    class="inline-flex items-center px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200">
-                                    <x-heroicon-o-check-circle class="w-3 h-3 mr-1" />
-                                    Aprovado
-                                </span>
-                            @else
-                                <span
-                                    class="inline-flex items-center px-2 py-1 rounded text-xs bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200">
-                                    <x-heroicon-o-clock class="w-3 h-3 mr-1" />
-                                    Pendente
-                                </span>
-                            @endif
+                                -R$ {{ number_format($desc->valor, 2, ',', '.') }}
+                                
+                                @if ($desc->aprovado_em || $desc->aprovado_por)
+                                    <span
+                                        class="inline-flex items-center px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200">
+                                        <x-heroicon-o-check-circle class="w-3 h-3 mr-1" />
+                                        Aprovado
+                                    </span>
+                                @else
+                                    <span
+                                        class="inline-flex items-center px-2 py-1 rounded text-xs bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200">
+                                        <x-heroicon-o-clock class="w-3 h-3 mr-1" />
+                                        Pendente
+                                    </span>
+                                @endif
                             </span>
-                            
+
                         </div>
                     @endforeach
 
@@ -560,21 +559,23 @@
                         <div class="flex items-center justify-between mb-2">
                             <span>
                                 <strong>{{ $desc->motivo ?: 'Desconto em Produto' }}:</strong>
-                                -R$ {{ number_format($desc->valor, 2, ',', '.') }} @if ($desc->aprovado_em)
-                                <span
-                                    class="inline-flex items-center px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200">
-                                    <x-heroicon-o-check-circle class="w-3 h-3 mr-1" />
-                                    Aprovado
-                                </span>
-                            @else
-                                <span
-                                    class="inline-flex items-center px-2 py-1 rounded text-xs bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200">
-                                    <x-heroicon-o-clock class="w-3 h-3 mr-1" />
-                                    Pendente
-                                </span>
-                            @endif
+                                -R$ {{ number_format($desc->valor, 2, ',', '.') }} 
+
+                                @if ($desc->aprovado_em || $desc->aprovado_por)
+                                    <span
+                                        class="inline-flex items-center px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200">
+                                        <x-heroicon-o-check-circle class="w-3 h-3 mr-1" />
+                                        Aprovado
+                                    </span>
+                                @else
+                                    <span
+                                        class="inline-flex items-center px-2 py-1 rounded text-xs bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200">
+                                        <x-heroicon-o-clock class="w-3 h-3 mr-1" />
+                                        Pendente
+                                    </span>
+                                @endif
                             </span>
-                            
+
                         </div>
                     @endforeach
 
