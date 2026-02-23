@@ -9,9 +9,29 @@ use App\Models\ConferenciaItem;
 use App\Services\EstoqueService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\ConferenciaPdfService;  
+use Illuminate\Support\Facades\Storage;
 
 class ConferenciaController extends Controller
 {
+    public function index()
+    {
+        return view('paginas.conferencia.index');
+    }
+   public function downloadPdf(Orcamento $orcamento)
+{
+    $service = new \App\Services\ConferenciaPdfService();
+    
+    $path = $service->gerarRelatorioPdf($orcamento);
+
+    if (!$path) {
+        return back()->with('error', 'Não foi possível gerar o PDF. Verifique se há conferências registradas para este orçamento.');
+    }
+
+    $nomeArquivo = "conferencia_orcamento_{$orcamento->id}.pdf";
+
+    return \Illuminate\Support\Facades\Storage::disk('public')->download($path, $nomeArquivo);
+}
     public function show(int $orcamentoId)
     {
         $orcamento = Orcamento::findOrFail($orcamentoId);

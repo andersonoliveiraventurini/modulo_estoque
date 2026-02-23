@@ -145,12 +145,23 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/picking/{batch}/item/{item}/separar', [SeparacaoController::class, 'separarItem'])->name('picking.item.separar');
     Route::post('/picking/{batch}/concluir', [SeparacaoController::class, 'concluir'])->name('picking.concluir');
 
-    Route::get('/orcamentos/{id}/conferencia', [ConferenciaController::class, 'show'])->name('orcamentos.conferencia.show');
+   /*  Route::get('/orcamentos/{id}/conferencia', [ConferenciaController::class, 'show'])->name('orcamentos.conferencia.show');
     Route::post('/orcamentos/{id}/conferencia/iniciar', [ConferenciaController::class, 'iniciar'])->name('orcamentos.conferencia.iniciar');
     Route::patch('/conferencia/{conf}/item/{item}/conferir', [ConferenciaController::class, 'conferirItem'])->name('conferencia.item.conferir');
     Route::post('/conferencia/{conf}/concluir', [ConferenciaController::class, 'concluir'])->name('conferencia.concluir');
 
+// Lista geral de orçamentos em conferência
+Route::get('/conferencia', [ConferenciaController::class, 'index'])
+    ->name('conferencia.index');
+    */
 
+// Tela de conferência de um orçamento específico
+Route::get('/orcamentos/{orcamento}/conferencia', [ConferenciaController::class, 'show'])
+    ->name('orcamentos.conferencia.show');
+
+// Download do relatório PDF de conferência
+Route::get('/orcamentos/{orcamento}/conferencia/pdf', [ConferenciaController::class, 'downloadPdf'])
+    ->name('orcamentos.conferencia.pdf');
 
     // fim rotas separação e conferência
 
