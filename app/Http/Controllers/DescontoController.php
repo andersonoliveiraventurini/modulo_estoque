@@ -36,70 +36,98 @@ class DescontoController extends Controller
     }
 
 
+    private function aplicarAprovacaoNoItem(Desconto $desconto): void
+    {
+        // Desconto por produto: mantém os valores já salvos no item (não faz nada)
+        // Os campos já foram gravados corretamente no store/duplicar
+        // Apenas garante que o item reflita os valores com desconto
+        if ($desconto->tipo === 'produto' && $desconto->produto_id) {
+            $item = OrcamentoItens::where('orcamento_id', $desconto->orcamento_id)
+                ->where('produto_id', $desconto->produto_id)
+                ->first();
+
+            if ($item) {
+                // Recalcula valor_com_desconto = (valor_unitario - desconto_unitario) * quantidade
+                $valorUnitarioOriginal    = (float) $item->valor_unitario;
+                $quantidade               = (float) $item->quantidade;
+                $valorDesconto            = (float) $desconto->valor; // total do desconto
+                $valorUnitarioComDesconto = $valorUnitarioOriginal - ($valorDesconto / max($quantidade, 1));
+                $valorComDesconto         = $valorUnitarioComDesconto * $quantidade;
+
+                $item->update([
+                    'valor_unitario_com_desconto' => round($valorUnitarioComDesconto, 2),
+                    'valor_com_desconto'          => round($valorComDesconto, 2),
+                    'desconto'                    => round($desconto->valor, 2),
+                ]);
+            }
+        }
+        // Desconto percentual/fixo não altera orcamento_itens diretamente
+        // pois impacta o total do orçamento, não os itens individualmente
+    }
+
+     private function reverterItemAoOriginal(Desconto $desconto): void
+    {
+        if ($desconto->tipo === 'produto' && $desconto->produto_id) {
+            // Reverte apenas o item específico do produto rejeitado
+            $item = OrcamentoItens::where('orcamento_id', $desconto->orcamento_id)
+                ->where('produto_id', $desconto->produto_id)
+                ->first();
+
+            if ($item) {
+                $valorUnitarioOriginal = (float) $item->valor_unitario;
+                $quantidade            = (float) $item->quantidade;
+
+                $item->update([
+                    'valor_unitario_com_desconto' => $valorUnitarioOriginal,
+                    'valor_com_desconto'          => round($valorUnitarioOriginal * $quantidade, 2),
+                    'desconto'                    => null,
+                ]);
+            }
+        }
+
+        // Desconto percentual/fixo: não há campo direto no item para reverter.
+        // O impacto é no total do orçamento, calculado em gerarpdfeAtualizarOrcamento.
+    }
+
     private function verificarEAtualizarOrcamento($orcamentoId)
     {
         if (!$orcamentoId) {
             return;
         }
 
-        // Busca o orçamento
         $orcamento = Orcamento::find($orcamentoId);
-
         if (!$orcamento) {
             return;
         }
 
-        // Verifica se ainda existem descontos pendentes
         $descontosPendentes = Desconto::where('orcamento_id', $orcamentoId)
             ->whereNull('aprovado_em')
+            ->whereNull('rejeitado_em')
             ->count();
 
-        // Se não houver mais descontos pendentes, atualiza o orçamento
+        $totalDescontosAprovados = Desconto::where('orcamento_id', $orcamentoId)
+            ->whereNotNull('aprovado_em')
+            ->sum('valor');
+
+        $valorOriginal = $orcamento->valor_total_itens ?? 0;
+        $valorFinal    = $valorOriginal - $totalDescontosAprovados;
+
         if ($descontosPendentes > 0) {
-            // Calcula o total de descontos aprovados
-            $totalDescontosAprovados = Desconto::where('orcamento_id', $orcamentoId)
-                ->whereNotNull('aprovado_em')
-                ->sum('valor');
-
-            // Calcula o novo valor total do orçamento
-            $valorOriginal = $orcamento->valor_total_itens ?? 0;
-            $valorFinal = $valorOriginal - $totalDescontosAprovados;
-
-            // Atualiza o orçamento
             $orcamento->update([
-                'desconto_total' => $totalDescontosAprovados,
+                'desconto_total'     => $totalDescontosAprovados,
                 'valor_com_desconto' => $valorFinal,
             ]);
         } else {
-            // Calcula o total de descontos aprovados
-            $totalDescontosAprovados = Desconto::where('orcamento_id', $orcamentoId)
-                ->whereNotNull('aprovado_em')
-                ->sum('valor');
-
-            // Calcula o novo valor total do orçamento
-            $valorOriginal = $orcamento->valor_total_itens ?? 0;
-            $valorFinal = $valorOriginal - $totalDescontosAprovados;
-
-            // Atualiza o orçamento
             $orcamento->update([
-                'status' => 'Pendente',
-                'desconto_total' => $totalDescontosAprovados,
+                'status'             => 'Pendente',
+                'desconto_total'     => $totalDescontosAprovados,
                 'valor_com_desconto' => $valorFinal,
             ]);
 
             $orcamento = Orcamento::find($orcamentoId);
             $pdfService = new OrcamentoPdfService();
-            $pdfGeradoComSucesso = $pdfService->gerarOrcamentoPdf($orcamento);
+            $pdfService->gerarOrcamentoPdf($orcamento);
         }
-
-        /** Log da atualização (opcional)
-         *\Log::info("Orçamento #{$orcamentoId} atualizado após aprovação de descontos", [
-         *    'valor_original' => $valorOriginal,
-         *    'total_descontos' => $totalDescontosAprovados,
-         *    'valor_final' => $valorFinal,
-         *    'usuario' => Auth::id(),
-         *]);
-         */
     }
 
     public function aprovar(Request $request, $id)
@@ -113,7 +141,6 @@ class DescontoController extends Controller
 
             $desconto = Desconto::findOrFail($id);
 
-            // Verifica se o desconto já foi aprovado ou rejeitado
             if ($desconto->aprovado_em) {
                 return back()->with('error', 'Este desconto já foi aprovado anteriormente.');
             }
@@ -122,14 +149,15 @@ class DescontoController extends Controller
                 return back()->with('error', 'Este desconto já foi rejeitado anteriormente.');
             }
 
-            // Atualiza os dados de aprovação
             $desconto->update([
-                'aprovado_em' => now(),
-                'aprovado_por' => Auth::id(),
+                'aprovado_em'             => now(),
+                'aprovado_por'            => Auth::id(),
                 'justificativa_aprovacao' => $request->justificativa,
             ]);
 
-            // Verifica e atualiza o orçamento se não houver mais descontos pendentes
+            // Atualiza o item do orçamento refletindo o desconto aprovado
+            $this->aplicarAprovacaoNoItem($desconto);
+
             $this->verificarEAtualizarOrcamento($desconto->orcamento_id);
 
             DB::commit();
@@ -141,9 +169,6 @@ class DescontoController extends Controller
         }
     }
 
-    /**
-     * Rejeita um desconto e o remove do sistema
-     */
     public function rejeitar(Request $request, $id)
     {
         $request->validate([
@@ -155,7 +180,6 @@ class DescontoController extends Controller
 
             $desconto = Desconto::findOrFail($id);
 
-            // Verifica se o desconto já foi aprovado ou rejeitado
             if ($desconto->aprovado_em) {
                 return back()->with('error', 'Este desconto já foi aprovado e não pode ser rejeitado.');
             }
@@ -164,27 +188,17 @@ class DescontoController extends Controller
                 return back()->with('error', 'Este desconto já foi rejeitado anteriormente.');
             }
 
-            // Atualiza os dados de rejeição antes de deletar
             $desconto->update([
-                'rejeitado_em' => now(),
-                'rejeitado_por' => Auth::id(),
-                'justificativa_rejeicao' => $request->justificativa,
+                'rejeitado_em'            => now(),
+                'rejeitado_por'           => Auth::id(),
+                'justificativa_rejeicao'  => $request->justificativa,
             ]);
 
-            // remove o desconto dos itens do orçamento
-            $itens_sem_desconto = OrcamentoItens::where('orcamento_id', $desconto->orcamento_id)->get();
-            foreach ($itens_sem_desconto as $item) {
-                $item->update([
-                    'valor_unitario_com_desconto' => $item->valor_unitario,
-                    'valor_com_desconto' => $item->valor_unitario * $item->quantidade,
-                    'desconto' => 0,
-                ]);
-            }
+            // Reverte apenas o item específico ao valor original
+            $this->reverterItemAoOriginal($desconto);
 
-            // Soft delete do desconto
             $desconto->delete();
 
-            // Verifica e atualiza o orçamento se não houver mais descontos pendentes
             $this->verificarEAtualizarOrcamento($desconto->orcamento_id);
 
             DB::commit();
@@ -196,13 +210,10 @@ class DescontoController extends Controller
         }
     }
 
-    /**
-     * Avalia um desconto (aprovar ou rejeitar) - rota única
-     */
     public function avaliar(Request $request, $id)
     {
         $request->validate([
-            'acao' => 'required|in:aprovar,rejeitar',
+            'acao'          => 'required|in:aprovar,rejeitar',
             'justificativa' => 'nullable|string|max:1000',
         ]);
 
@@ -213,51 +224,66 @@ class DescontoController extends Controller
         }
     }
 
-    /**
-     * Aprova todos os descontos de um orçamento
-     */
     public function aprovarTodos(Request $request, $orcamentoId)
     {
         $request->validate([
             'justificativa' => 'nullable|string|max:1000',
         ]);
 
-        try {
-            DB::beginTransaction();
+        $descontos = Desconto::where('orcamento_id', $orcamentoId)
+            ->whereNull('aprovado_em')
+            ->whereNull('rejeitado_em')
+            ->get();
 
-            $descontos = Desconto::where('orcamento_id', $orcamentoId)
-                ->whereNull('aprovado_em')
-                ->whereNull('rejeitado_em')
-                ->get();
-
-            if ($descontos->isEmpty()) {
-                return back()->with('warning', 'Não há descontos pendentes para aprovar.');
-            }
-
-            $count = 0;
-            foreach ($descontos as $desconto) {
-                $desconto->update([
-                    'aprovado_em' => now(),
-                    'aprovado_por' => Auth::id(),
-                    'justificativa_aprovacao' => $request->justificativa ?? 'Aprovação em lote',
-                ]);
-                $count++;
-            }
-
-            $this->gerarpdfeAtualizarOrcamento($orcamentoId);
-
-            DB::commit();
-
-            return back()->with('success', "Total de {$count} desconto(s) aprovado(s) com sucesso!");
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Erro ao aprovar descontos: ' . $e->getMessage());
+        if ($descontos->isEmpty()) {
+            return back()->with('warning', 'Não há descontos pendentes para aprovar.');
         }
+
+        foreach ($descontos as $desconto) {
+            $desconto->update([
+                'aprovado_em'             => now(),
+                'aprovado_por'            => Auth::id(),
+                'justificativa_aprovacao' => $request->justificativa ?? 'Aprovação em lote',
+            ]);
+
+            $this->aplicarAprovacaoNoItem($desconto);
+        }
+
+        $totalDescontosAprovados = Desconto::where('orcamento_id', $orcamentoId)
+            ->whereNotNull('aprovado_em')
+            ->sum('valor');
+
+        $orcamento     = Orcamento::findOrFail($orcamentoId);
+        $valorOriginal = (float) ($orcamento->valor_total_itens ?? 0);
+        $valorFinal    = $valorOriginal - (float) $totalDescontosAprovados;
+
+        $temPagamentoPendente = $orcamento->condicao_id == 20
+            && SolicitacaoPagamento::where('orcamento_id', $orcamentoId)
+                ->pendentes()
+                ->exists();
+
+        $novoStatus = $temPagamentoPendente ? 'Aprovar pagamento' : 'Pendente';
+
+        $orcamento->update([
+            'status'             => $novoStatus,
+            'desconto_total'     => $totalDescontosAprovados,
+            'valor_com_desconto' => $valorFinal,
+            'updated_at'         => now(),
+        ]);
+        
+        if ($novoStatus === 'Pendente') {
+            try {
+                $orcamento = Orcamento::find($orcamentoId);
+                $pdfService = new OrcamentoPdfService();
+                $pdfService->gerarOrcamentoPdf($orcamento);
+            } catch (\Exception $pdfEx) {
+                return back()->with('warning', "Descontos aprovados com sucesso, mas ocorreu um erro ao gerar o PDF: " . $pdfEx->getMessage());
+            }
+        }
+
+        return back()->with('success', "Total de {$descontos->count()} desconto(s) aprovado(s) com sucesso! Status atualizado para: {$novoStatus}");
     }
 
-    /**
-     * Rejeita todos os descontos de um orçamento
-     */
     public function rejeitarTodos(Request $request, $orcamentoId)
     {
         $request->validate([
@@ -276,33 +302,24 @@ class DescontoController extends Controller
                 return back()->with('warning', 'Não há descontos pendentes para rejeitar.');
             }
 
-            $count = 0;
             foreach ($descontos as $desconto) {
                 $desconto->update([
-                    'rejeitado_em' => now(),
-                    'rejeitado_por' => Auth::id(),
+                    'rejeitado_em'           => now(),
+                    'rejeitado_por'          => Auth::id(),
                     'justificativa_rejeicao' => $request->justificativa ?? 'Rejeição em lote',
                 ]);
+
+                // Reverte apenas o item específico ao valor original
+                $this->reverterItemAoOriginal($desconto);
+
                 $desconto->delete();
-                $count++;
             }
 
-            // remove o desconto dos itens do orçamento
-            $itens_sem_desconto = OrcamentoItens::where('orcamento_id', $desconto->orcamento_id)->get();
-            foreach ($itens_sem_desconto as $item) {
-                $item->update([
-                    'valor_unitario_com_desconto' => $item->valor_unitario,
-                    'valor_com_desconto' => $item->valor_unitario * $item->quantidade,
-                    'desconto' => 0,
-                ]);
-            }
-
-            // Verifica e atualiza o orçamento se não houver mais descontos pendentes
             $this->gerarpdfeAtualizarOrcamento($orcamentoId);
 
             DB::commit();
 
-            return back()->with('success', "Total de {$count} desconto(s) rejeitado(s) com sucesso!");
+            return back()->with('success', "Total de {$descontos->count()} desconto(s) rejeitado(s) com sucesso!");
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Erro ao rejeitar descontos: ' . $e->getMessage());
@@ -315,30 +332,24 @@ class DescontoController extends Controller
             ->whereNotNull('aprovado_em')
             ->sum('valor');
 
-        $orcamento = Orcamento::find($orcamentoId);
-
-        // Calcula o novo valor total do orçamento
+        $orcamento     = Orcamento::find($orcamentoId);
         $valorOriginal = $orcamento->valor_total_itens ?? 0;
-        $valorFinal = $valorOriginal - $totalDescontosAprovados;
+        $valorFinal    = $valorOriginal - $totalDescontosAprovados;
 
-        // ✅ VERIFICA SE HÁ DESCONTOS PENDENTES
         $temDescontosPendentes = Desconto::where('orcamento_id', $orcamentoId)
-            ->whereNull('aprovado_em')
-            ->whereNull('rejeitado_em')
+            ->where('aprovado_em', null)
+            ->where('rejeitado_em', null)
             ->exists();
 
-        // ✅ VERIFICA SE HÁ SOLICITAÇÃO DE PAGAMENTO PENDENTE
         $temSolicitacaoPagamentoPendente = SolicitacaoPagamento::where('orcamento_id', $orcamentoId)
             ->pendentes()
             ->exists();
 
-        // Atualiza valores base
         $dadosAtualizacao = [
-            'desconto_total' => $totalDescontosAprovados,
+            'desconto_total'     => $totalDescontosAprovados,
             'valor_com_desconto' => $valorFinal,
         ];
 
-        // Define o status baseado nas pendências
         if ($temDescontosPendentes) {
             $dadosAtualizacao['status'] = 'Aprovar desconto';
             Log::info("Ainda há descontos pendentes no orçamento #{$orcamentoId}");
@@ -346,12 +357,9 @@ class DescontoController extends Controller
             $dadosAtualizacao['status'] = 'Aprovar pagamento';
             Log::info("Descontos aprovados, mas ainda há solicitação de pagamento pendente no orçamento #{$orcamentoId}");
         } else {
-            // Não há mais nada pendente - gera o PDF
             $dadosAtualizacao['status'] = 'Pendente';
-
             $pdfService = new OrcamentoPdfService();
             $pdfService->gerarOrcamentoPdf($orcamento);
-
             Log::info("Descontos e pagamentos aprovados. PDF gerado para orçamento #{$orcamentoId}");
         }
 

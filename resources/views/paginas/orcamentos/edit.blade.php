@@ -12,6 +12,36 @@
                     </svg>
                     Editar Orçamento para Cliente {{ $cliente->id }} - {{ $cliente->nome ?? $cliente->nome_fantasia }}
                 </h2>
+                {{-- Erros de validação --}}
+                @if ($errors->any())
+                    <div class="bg-red-50 border border-red-300 text-red-800 rounded-lg p-4 mb-4">
+                        <strong>Erros de validação:</strong>
+                        <ul class="list-disc ml-5 mt-1 text-sm">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                {{-- Erro geral (ex: exceção capturada) --}}
+                @if (session('error'))
+                    <div class="bg-red-50 border border-red-300 text-red-800 rounded-lg p-4 mb-4">
+                        <strong>Erro:</strong> {{ session('error') }}
+                    </div>
+                @endif
+
+                @if (session('warning'))
+                    <div class="bg-yellow-50 border border-yellow-300 text-yellow-800 rounded-lg p-4 mb-4">
+                        <strong>Atenção:</strong> {{ session('warning') }}
+                    </div>
+                @endif
+
+                @if (session('success'))
+                    <div class="bg-green-50 border border-green-300 text-green-800 rounded-lg p-4 mb-4">
+                        <strong>Sucesso:</strong> {{ session('success') }}
+                    </div>
+                @endif
                 @if (!$ativo)
                     <script>
                         document.addEventListener('DOMContentLoaded', function() {
@@ -382,8 +412,9 @@
                                     size="18" maxlength="18" onkeypress="mascara(this, '##.###.###/####-##')"
                                     placeholder="00.000.000/0000-00" label="CNPJ venda triangular"
                                     :value="$orcamento->cnpj_triangular" />
-                            </div> </div>
-                            <div class="flex gap-4 min-w-max">
+                            </div>
+                        </div>
+                        <div class="flex gap-4 min-w-max">
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Desconto na vendedor %</label>
                                 <input type="text" name="desconto"

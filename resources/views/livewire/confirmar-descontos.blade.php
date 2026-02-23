@@ -279,6 +279,17 @@
                                                     Solicitado por: {{ $desconto->user->name ?? 'Sistema' }} •
                                                     {{ $desconto->created_at->format('d/m/Y H:i') }}
                                                 </p>
+                                                @if ($desconto->tipo === 'produto' && $desconto->produto_id)
+                                                    @php
+                                                        $produtoHeader = $desconto->produto ?? \App\Models\Produto::find($desconto->produto_id);
+                                                    @endphp
+                                                    @if ($produtoHeader)
+                                                        <p class="text-xs mt-1 inline-flex items-center gap-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full font-medium">
+                                                            <x-heroicon-o-cube class="w-3 h-3" />
+                                                            {{ $produtoHeader->nome ?? $produtoHeader->descricao ?? "Produto #{$desconto->produto_id}" }}
+                                                        </p>
+                                                    @endif
+                                                @endif
                                             </div>
                                         </div>
 
@@ -313,13 +324,21 @@
                                         $todosDescontosOrcamento = $orcamento->descontos()->get();
 
                                         // IDs dos produtos com desconto tipo 'produto' ATIVO (não rejeitado)
-                                        // Busca direta no banco para garantir que pega inclusive os aprovados
+                                        // Quando produto_id está NULL (bug de fillable em duplicações),
+                                        // extrai o ID do campo motivo para garantir filtragem correta.
                                         $produtosComDescontoProduto = \App\Models\Desconto::where('orcamento_id', $orcamento->id)
                                             ->where('tipo', 'produto')
                                             ->whereNull('rejeitado_em')
-                                            ->whereNotNull('produto_id')
-                                            ->pluck('produto_id')
-                                            ->map(fn($id) => (int) $id)
+                                            ->get(['produto_id', 'motivo'])
+                                            ->map(function ($d) {
+                                                if ($d->produto_id) {
+                                                    return (int) $d->produto_id;
+                                                }
+                                                // Fallback: extrai do motivo "...produto ID 9969..."
+                                                preg_match('/produto ID\s+(\d+)/i', $d->motivo ?? '', $m);
+                                                return isset($m[1]) ? (int) $m[1] : null;
+                                            })
+                                            ->filter(fn($id) => !is_null($id) && $id > 0)
                                             ->unique()
                                             ->values()
                                             ->toArray();
@@ -327,24 +346,48 @@
                                         // Carrega todos os itens do orçamento com o produto relacionado
                                         $todosItensOrcamento = $orcamento->itens()->with('produto')->get();
 
-                                        if ($desconto->tipo === 'produto' && $desconto->produto_id) {
+                                        if ($desconto->tipo === 'produto') {
                                             // --------------------------------------------------
                                             // DESCONTO POR PRODUTO
-                                            // Busca o item na collection já carregada.
+                                            // produto_id pode estar NULL em descontos duplicados
+                                            // com bug de fillable. Nesse caso, extrai do motivo.
                                             // --------------------------------------------------
-                                            $itemOrcamento = $todosItensOrcamento
-                                                ->firstWhere('produto_id', $desconto->produto_id);
+                                            $produtoIdReal = $desconto->produto_id;
+
+                                            if (!$produtoIdReal) {
+                                                // Extrai ID do motivo: "Desconto individual X em unidades do produto ID 9969"
+                                                preg_match('/produto ID\s+(\d+)/i', $desconto->motivo, $matches);
+                                                $produtoIdReal = isset($matches[1]) ? (int) $matches[1] : null;
+                                            }
+
+                                            $itemOrcamento = $produtoIdReal
+                                                ? $todosItensOrcamento->firstWhere('produto_id', $produtoIdReal)
+                                                : null;
+
+                                            $valorDesconto = (float) $desconto->valor;
 
                                             if ($itemOrcamento) {
                                                 $quantidade           = (float) ($itemOrcamento->quantidade ?? 1);
                                                 $valorOriginalProduto = (float) $itemOrcamento->valor_unitario * $quantidade;
-                                                $valorComDesconto     = (float) $itemOrcamento->valor_com_desconto;
-                                                $valorDesconto        = $valorOriginalProduto - $valorComDesconto;
+
+                                                // valor_com_desconto confiável somente se > 0 e < original
+                                                $valorComDescontoItem = (float) $itemOrcamento->valor_com_desconto;
+                                                if ($valorComDescontoItem > 0 && $valorComDescontoItem < $valorOriginalProduto) {
+                                                    $valorComDesconto = $valorComDescontoItem;
+                                                } else {
+                                                    // Reconstrói: original - desconto registrado
+                                                    $valorComDesconto = $valorOriginalProduto - $valorDesconto;
+                                                }
                                             } else {
-                                                // Fallback
-                                                $valorDesconto        = (float) $desconto->valor;
-                                                $valorComDesconto     = (float) $orcamento->valor_total_itens;
-                                                $valorOriginalProduto = $valorComDesconto + $valorDesconto;
+                                                // Fallback total
+                                                $valorOriginalProduto = $valorDesconto; // mínimo coerente
+                                                $valorComDesconto     = 0;
+                                            }
+
+                                            // Enriquece o produto_id no desconto para uso no template
+                                            // (ex: exibição do nome do produto no header)
+                                            if (!$desconto->produto_id && $produtoIdReal) {
+                                                $desconto->produto_id = $produtoIdReal;
                                             }
 
                                             // Garante que variáveis do branch percentual não fiquem indefinidas

@@ -35,7 +35,9 @@ class Orcamento extends Model
         'outros_meios_pagamento',
         'venda_triangular',
         'cnpj_triangular',
-        'homologacao'
+        'homologacao',
+        'desconto_total',
+        'valor_com_desconto',
     ];
 
     // Model Orcamento
@@ -82,8 +84,7 @@ class Orcamento extends Model
      */
     public function descontos()
     {
-        return $this->hasMany(Desconto::class)
-            ->select('id', 'valor', 'tipo', 'porcentagem', 'cliente_id', 'user_id', 'orcamento_id', 'aprovado_em', 'aprovado_por', 'rejeitado_em', 'rejeitado_por', 'motivo');
+        return $this->hasMany(Desconto::class);
     }
 
 

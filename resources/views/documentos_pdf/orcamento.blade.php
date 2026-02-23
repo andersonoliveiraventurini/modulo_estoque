@@ -169,6 +169,13 @@
         td {
             page-break-inside: avoid;
         }
+
+        .desconto-produto-label {
+            font-size: 9px;
+            color: #c00;
+            display: block;
+            margin-top: 2px;
+        }
     </style>
 </head>
 
@@ -176,7 +183,6 @@
     <!-- ===========================
          CABEÇALHO
     =========================== -->
-
     <table
         style="width:100%; font-family: Arial, sans-serif; font-size:12px; color:#333; border-collapse:collapse; margin-bottom:15px;">
         <tr>
@@ -185,9 +191,6 @@
             </td>
             <td style="padding:5px; border:1px solid #ccc; background-color:#f9f9f9;">
                 <div style="text-align:center; margin-bottom:15px;">
-                    <!-- <p style="margin:0; font-size:12px;">
-                        Data: { { $orcamento->created_at->format('d/m/Y') }} - Validade: { { \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }} | Vendedor: { { $usuario->name }}
-                    </p>-->
                     <p style="margin:2px 0;"><strong>ACAV</strong> - Comércio de Acessórios LTDA<br /><br />
                         R. São Luís do Paraitinga, 1338 - Jardim do Trevo - Campinas - SP - CEP: 13030-105
                         <br /> (19) 3273-3783 (19) 3274-1717
@@ -201,25 +204,26 @@
             </td>
         </tr>
     </table>
+
     <h2 style="margin:0; font-size:20px; text-transform:uppercase;">ORÇAMENTO n° {{ $orcamento->id }}
         @if ($orcamento->versao > 1)
-            - Revisão:
-            {{ $orcamento->versao }}
+            - Revisão: {{ $orcamento->versao }}
         @endif
         @if ($orcamento->complemento > 'Sim')
             <br /> Complemento
         @endif
         @if ($orcamento->transportes->count() > 0)
-            <br />Transporte:
-            {{ $orcamento->transportes->pluck('nome')->join(', ') }}
+            <br />Transporte: {{ $orcamento->transportes->pluck('nome')->join(', ') }}
         @endif
     </h2>
+
     <!-- ===========================
          DADOS DO CLIENTE
     =========================== -->
     @php
         $usuario = \App\Models\User::find($orcamento->vendedor_id);
     @endphp
+
     <table class="cliente-info">
         <tr>
             <td class="label">Cliente:</td>
@@ -238,14 +242,19 @@
             <td class="value">{{ $usuario->name }}</td>
             <td class="label">Prazo de Entrega:</td>
             <td class="value">{{ $orcamento->prazo_entrega ?? '---' }}</td>
-        </tr>        
+        </tr>
         <tr>
             <td class="label">Condição pagamento:</td>
-            <td class="value">{{ $orcamento->condicaoPagamento->nome }} @if($orcamento->condicao_id == 20) {{$orcamento->outros_meios_pagamento}} @endif</td>
+            <td class="value">
+                {{ $orcamento->condicaoPagamento->nome }}
+                @if ($orcamento->condicao_id == 20)
+                    {{ $orcamento->outros_meios_pagamento }}
+                @endif
+            </td>
             <td class="label">Tipo de frete:</td>
             <td class="value">{{ $orcamento->frete ?? 'Não registrado' }}</td>
         </tr>
-        @if($orcamento->guia_recolhimento != null)
+        @if ($orcamento->guia_recolhimento != null)
             <tr>
                 <td class="label">Guia de recolhimento:</td>
                 <td class="value" colspan="3">{{ $orcamento->guia_recolhimento }}</td>
@@ -265,12 +274,17 @@
                 <td class="value" colspan="3">{{ $orcamento->observacoes }}</td>
             </tr>
         @endif
-
     </table>
 
     @php
-        $percentualAplicado = $orcamento->descontos()->where('tipo', 'percentual')->first();
+        $percentualAplicado = $orcamento->descontos->where('tipo', 'percentual')->first();
         $percentualAplicado = $percentualAplicado ? $percentualAplicado->porcentagem : 0;
+
+        // Descontos por produto aprovados — indexados por produto_id para lookup rápido
+        $descontosPorProduto = $orcamento->descontos
+            ->where('tipo', 'produto')
+            ->filter(fn($d) => !is_null($d->aprovado_em))
+            ->keyBy('produto_id');
     @endphp
 
     <!-- ===========================
@@ -290,12 +304,21 @@
             </thead>
             <tbody>
                 @foreach ($orcamento->itens as $item)
+                    @php
+                        $descontoProduto = $descontosPorProduto->get($item->produto_id);
+                    @endphp
                     <tr>
                         <td align="center">{{ $item->quantidade }}</td>
-                        <td>{{ $item->produto->nome ?? '---' }}</td>
-                        <td class="valor">R$ {{ number_format($item->valor_unitario, 2, ',', '.') }}</td>
-                        <td class="valor">R$ {{ number_format($item->valor_unitario_com_desconto, 2, ',', '.') }}
+                        <td>
+                            {{ $item->produto->nome ?? '---' }}
+                            @if ($descontoProduto)
+                                <span class="desconto-produto-label">
+                                    ✔ Desconto especial: -R$ {{ number_format($descontoProduto->valor, 2, ',', '.') }}
+                                </span>
+                            @endif
                         </td>
+                        <td class="valor">R$ {{ number_format($item->valor_unitario, 2, ',', '.') }}</td>
+                        <td class="valor">R$ {{ number_format($item->valor_unitario_com_desconto, 2, ',', '.') }}</td>
                         <td class="valor">R$ {{ number_format($item->valor_com_desconto, 2, ',', '.') }}</td>
                     </tr>
                 @endforeach
@@ -346,15 +369,17 @@
          TOTAIS E DESCONTOS
     =========================== -->
     @php
-        $totalProdutos = $orcamento->itens->sum(fn($item) => $item->quantidade * $item->valor_unitario);
-        $totalItensComDesconto = $orcamento->itens->sum('valor_com_desconto');
-        $totalVidros = $orcamento->vidros->sum(fn($v) => $v->valor_com_desconto);
-        $totalComDescontos = $totalItensComDesconto + $totalVidros;
-        $descontosPercentuais = $orcamento->descontos->where('tipo', 'percentual');
-        $descontosFixos = $orcamento->descontos->where('tipo', 'fixo');
-        $valorDescontosFixos = $descontosFixos->sum('valor');
-        $percentualAplicado = $descontosPercentuais->max('porcentagem') ?? 0;
-        $valorFinal = $totalComDescontos - $valorDescontosFixos;
+        $totalItensComDesconto  = $orcamento->itens->sum('valor_com_desconto');
+        $totalVidros            = $orcamento->vidros->sum(fn($v) => $v->valor_com_desconto);
+        $totalComDescontos      = $totalItensComDesconto + $totalVidros;
+        $descontosPercentuais   = $orcamento->descontos->where('tipo', 'percentual');
+        $descontosFixos         = $orcamento->descontos->where('tipo', 'fixo');
+        $descontosProdutoAprov  = $orcamento->descontos
+                                    ->where('tipo', 'produto')
+                                    ->filter(fn($d) => !is_null($d->aprovado_em));
+        $valorDescontosFixos    = $descontosFixos->sum('valor');
+        $percentualAplicado     = $descontosPercentuais->max('porcentagem') ?? 0;
+        $valorFinal             = $totalComDescontos - $valorDescontosFixos;
     @endphp
 
     <h3>Totais e Descontos</h3>
@@ -389,17 +414,23 @@
                 <td class="valor">{{ number_format($percentualAplicado, 2, ',', '.') }}%</td>
             </tr>
         @endif
-
         @foreach ($descontosFixos as $desc)
             <tr>
                 <td>{{ $desc->motivo }}</td>
                 <td class="valor">- R$ {{ number_format($desc->valor, 2, ',', '.') }}</td>
             </tr>
         @endforeach
+        @foreach ($descontosProdutoAprov as $desc)
+            <tr>
+                <td>Desconto especial: {{ $desc->produto->nome ?? ('Produto #' . $desc->produto_id) }}</td>
+                <td class="valor">- R$ {{ number_format($desc->valor, 2, ',', '.') }}</td>
+            </tr>
+        @endforeach
         <tr>
             <td>Valor Final do Orçamento</td>
             <td class="valor">R$
-                {{ number_format($valorFinal + $orcamento->frete + $orcamento->guia_recolhimento, 2, ',', '.') }}</td>
+                {{ number_format($valorFinal + $orcamento->frete + $orcamento->guia_recolhimento, 2, ',', '.') }}
+            </td>
         </tr>
     </table>
 
@@ -407,7 +438,7 @@
          RODAPÉ
     =========================== -->
     <div class="footer"
-        style="position: fixed; bottom: 10px;left: 0; right: 0; text-align: center;font-size: 11px;color: #666;">
+        style="position: fixed; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 11px; color: #666;">
         <p>Este orçamento é válido até {{ \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }}. ©
             {{ date('Y') }} {{ config('app.name') }} - Todos os direitos reservados.</p>
     </div>

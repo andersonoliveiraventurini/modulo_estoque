@@ -352,10 +352,50 @@ class ConfirmarDescontos extends Component
             ->whereNotNull('aprovado_em')
             ->sum('valor');
 
-        $this->orcamento->update([
-            'desconto_total' => $totalDescontosAprovados,
+        $temDescontosPendentes = Desconto::where('orcamento_id', $this->orcamentoId)
+            ->whereNull('aprovado_em')
+            ->whereNull('rejeitado_em')
+            ->exists();
+
+        $dadosAtualizacao = [
+            'desconto_total'     => $totalDescontosAprovados,
             'valor_com_desconto' => $this->orcamento->valor_total_itens - $totalDescontosAprovados,
-        ]);
+        ];
+
+        if (!$temDescontosPendentes) {
+            $temPagamentoPendente = $this->orcamento->condicao_id == 20
+                && $this->orcamento->solicitacoesPagamento()
+                    ->where('status', 'Pendente')
+                    ->whereNull('aprovado_em')
+                    ->whereNull('rejeitado_em')
+                    ->exists();
+
+            $novoStatus = $temPagamentoPendente ? 'Aprovar pagamento' : 'Pendente';
+            $dadosAtualizacao['status'] = $novoStatus;
+
+            DB::table('orcamentos')
+                ->where('id', $this->orcamentoId)
+                ->whereNull('deleted_at')
+                ->update(array_merge($dadosAtualizacao, ['updated_at' => now()]));
+
+            // Gera PDF apenas quando status vai para Pendente
+            if ($novoStatus === 'Pendente') {
+                try {
+                    $orcamentoAtualizado = $this->orcamento->fresh();
+                    $pdfService = new \App\Services\OrcamentoPdfService();
+                    $pdfService->gerarOrcamentoPdf($orcamentoAtualizado);
+                } catch (\Exception $e) {
+                    Log::error("Erro ao gerar PDF após aprovar descontos (Livewire) orçamento #{$this->orcamentoId}: " . $e->getMessage());
+                }
+            }
+        } else {
+            DB::table('orcamentos')
+                ->where('id', $this->orcamentoId)
+                ->whereNull('deleted_at')
+                ->update(array_merge($dadosAtualizacao, ['updated_at' => now()]));
+        }
+
+        $this->orcamento = $this->orcamento->fresh();
     }
 
     public function render()
