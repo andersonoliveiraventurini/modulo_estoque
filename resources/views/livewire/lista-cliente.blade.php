@@ -30,6 +30,34 @@
             </div>
         </div>
     </div>
+    {{-- Cole este bloco logo após o div de cabeçalho (após o fechamento do primeiro div.flex) --}}
+   <div class="flex items-end gap-4" style="padding: 0.5rem 1.5rem 1rem;">
+
+        <!-- Vendedor -->
+        <div class="flex flex-col flex-[2] min-w-[180px]">
+            <label for="vendedor" class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                Vendedor
+            </label>
+            <x-input id="vendedor" wire:model.live.debounce.300ms="vendedor" placeholder="Nome do vendedor..." />
+        </div>
+
+        <!-- Cidade -->
+        <div class="flex flex-col flex-[2] min-w-[180px]">
+            <label for="cidade" class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                Cidade
+            </label>
+            <x-input id="cidade" wire:model.live.debounce.300ms="cidade" placeholder="Nome da cidade..." />
+        </div>
+
+        <!-- Botão limpar filtros -->
+        <div class="flex flex-col">
+            <label class="text-sm text-transparent select-none mb-1">.</label>
+            <x-button wire:click="limparFiltros" variant="secondary">
+                <x-heroicon-o-x-mark class="w-4 h-4" />
+                Limpar filtros
+            </x-button>
+        </div>
+    </div>
 
     <!-- Tabela -->
     <div class="overflow-x-auto">
@@ -69,7 +97,7 @@
                             class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             CNPJ
                         </button>
-                    </th>                    
+                    </th>
                     <th class="px-6 py-3 text-left">
                         <button wire:click="sortBy('vendedor_id')"
                             class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
@@ -81,7 +109,7 @@
                             class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Vendedor externo
                         </button>
-                    </th>   
+                    </th>
                     <th class="px-6 py-3 text-left">
                         <button wire:click="sortBy('limite')"
                             class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
@@ -124,8 +152,10 @@
                         <td class="px-6 py-4 font-mono text-zinc-800 dark:text-zinc-200"><a
                                 href="/clientes/{{ $c->id }}"
                                 class="hover:underline">{{ $c->cnpj_formatado }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->vendedor_interno->name ?? '-' }}</td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->vendedor_externo->name ?? '-' }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->vendedor_interno->name ?? '-' }}
+                        </td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->vendedor_externo->name ?? '-' }}
+                        </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->limite ?? '-' }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $c->desconto ?? '-' }}</td>
                         <td class="px-6 py-4 flex gap-2">
