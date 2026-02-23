@@ -106,7 +106,7 @@
                                 @else
                                     <span class="mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
                                                  bg-yellow-100 text-yellow-800 dark:bg-yellow-900/60 dark:text-yellow-200">
-                                        ⏳ Não conferido
+                                        Não conferido
                                     </span>
                                 @endif
                             </div>
@@ -119,7 +119,7 @@
                                     <div class="flex flex-wrap gap-2">
                                         <div>
                                             <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                                Qty conferida
+                                                Quantidade conferida
                                             </label>
                                             <input type="number" step="any" min="0"
                                                 wire:model.defer="inputs.{{ $it->id }}.qty"
@@ -458,7 +458,7 @@
                                 </p>
                                 @if ($cConf->qtd_caixas || $cConf->qtd_sacos || $cConf->qtd_sacolas || $cConf->outros_embalagem)
                                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                                        📦 Embalagem:
+                                        Embalagem:
                                         @php $emb = []; @endphp
                                         @if ($cConf->qtd_caixas)       @php $emb[] = $cConf->qtd_caixas  . ' caixa(s)';     @endphp @endif
                                         @if ($cConf->qtd_sacos)        @php $emb[] = $cConf->qtd_sacos   . ' saco(s)';      @endphp @endif
@@ -515,7 +515,7 @@
                                                 @else
                                                     <span class="inline-flex items-center ml-1 px-2 py-0.5 rounded text-xs
                                                                  bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200">
-                                                        ⏳ Não conferido
+                                                        Não conferido
                                                     </span>
                                                 @endif
 

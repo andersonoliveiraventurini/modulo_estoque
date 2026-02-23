@@ -351,10 +351,8 @@
     @foreach ($conferencias as $conf)
         @php
             $totalItens = $conf->itens->count();
-            // Só conta como OK itens que foram efetivamente conferidos (conferido_por_id preenchido) e sem divergência
             $totalOk    = $conf->itens->filter(fn($i) => $i->conferido_por_id && $i->status === 'ok')->count();
             $totalDiv   = $conf->itens->where('status', 'divergente')->count();
-            // Itens sem conferente = não conferidos / pendentes
             $totalPend  = $conf->itens->whereNull('conferido_por_id')->count();
             $totalFotos = $conf->itens->sum(fn($i) => $i->fotos->count());
         @endphp
@@ -554,12 +552,35 @@
     {{-- ═══ RESUMO FINAL (todas as conferências) ══════════════════════════════ --}}
     @php
         $todosItens  = $conferencias->flatMap(fn($c) => $c->itens);
-        $sumOk       = $todosItens->filter(fn($i) => $i->conferido_por_id && $i->status === 'ok')->count();
-        $sumDiv      = $todosItens->where('status', 'divergente')->count();
-        $sumPend     = $todosItens->whereNull('conferido_por_id')->count();
         $sumFotos    = $todosItens->sum(fn($i) => $i->fotos->count());
         $confConcl   = $conferencias->where('status', 'concluida')->count();
         $confAndando = $conferencias->whereNotIn('status', ['concluida','cancelada'])->count();
+
+        /*
+         * O resumo deve refletir o estado FINAL de cada produto do orçamento,
+         * considerando a última vez que cada produto foi conferido em qualquer conferência.
+         *
+         * Lógica: para cada produto_id único, pega o registro mais recente
+         * (maior id) entre todas as conferências e avalia seu status real.
+         */
+        $ultimaOcorrenciaPorProduto = $todosItens
+            ->sortByDesc('id')                      // mais recente primeiro
+            ->unique('produto_id');                  // mantém só a primeira (= mais recente) de cada produto
+
+        $sumOk    = $ultimaOcorrenciaPorProduto
+            ->filter(fn($i) => $i->conferido_por_id && $i->status === 'ok')
+            ->count();
+
+        $sumDiv   = $ultimaOcorrenciaPorProduto
+            ->filter(fn($i) => $i->status === 'divergente')
+            ->count();
+
+        // Pendente = produto que, na sua ocorrência mais recente, nunca foi conferido
+        $sumPend  = $ultimaOcorrenciaPorProduto
+            ->filter(fn($i) => is_null($i->conferido_por_id))
+            ->count();
+
+        $totalProdutosUnicos = $ultimaOcorrenciaPorProduto->count();
     @endphp
 
     <div class="resumo-final">
@@ -568,24 +589,24 @@
             <tr>
                 <td class="r-label">Total de conferências</td>
                 <td class="r-val">{{ $conferencias->count() }}</td>
-                <td class="r-label">Concluídas</td>
+                <td class="r-label">Conferências realizadas</td>
                 <td class="r-val">{{ $confConcl }}</td>
             </tr>
             <tr>
                 <td class="r-label">Em andamento</td>
                 <td class="r-val">{{ $confAndando }}</td>
-                <td class="r-label">Total de itens conferidos</td>
-                <td class="r-val">{{ $todosItens->count() }}</td>
+                <td class="r-label">Produtos distintos no orçamento</td>
+                <td class="r-val">{{ $totalProdutosUnicos }}</td>
             </tr>
             <tr>
-                <td class="r-label"><span class="badge-ok">Itens OK</span></td>
+                <td class="r-label"><span class="badge-ok">Produtos OK (última conferência)</span></td>
                 <td class="r-val"><span class="badge-ok">{{ $sumOk }}</span></td>
-                <td class="r-label"><span class="badge-div">Itens com divergência</span></td>
+                <td class="r-label"><span class="badge-div">Produtos com divergência</span></td>
                 <td class="r-val"><span class="badge-div">{{ $sumDiv }}</span></td>
             </tr>
             @if ($sumPend > 0)
                 <tr>
-                    <td class="r-label"><span class="badge-pend">Itens pendentes</span></td>
+                    <td class="r-label"><span class="badge-pend">Produtos não conferidos</span></td>
                     <td class="r-val"><span class="badge-pend">{{ $sumPend }}</span></td>
                     <td class="r-label"></td>
                     <td class="r-val"></td>
