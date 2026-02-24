@@ -2,205 +2,314 @@
     <div class="flex flex-col gap-6">
 
         {{-- Cabeçalho --}}
-        <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
-            <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
-                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Gerenciar Orçamento #{{ $orcamento->id }}
+        <div
+            class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-sm overflow-hidden">
 
-                {{-- ✅ VALIDAÇÃO ATUALIZADA: Só mostra PDF se não tiver desconto OU pagamento pendente --}}
-                @if ($orcamento->status != 'Aprovar desconto' && $orcamento->status != 'Aprovar pagamento')
-                    @if ($orcamento->pdf_path)
-                        -
-                        <a href="{{ asset('storage/' . $orcamento->pdf_path) }}" target="_blank" rel="noopener">
-                            <x-button size="sm" variant="primary">
-                                <x-heroicon-o-document-arrow-down class="w-4 h-4" />
-                                PDF
-                            </x-button>
-                        </a>
-                    @endif
-                @endif
+            {{-- ══════════════════════════════════════
+         HEADER DO CARD
+    ══════════════════════════════════════ --}}
+            <div
+                class="px-5 py-4 border-b border-neutral-100 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-3">
 
-                @if (
-                    $orcamento->status == 'Aprovar desconto' ||
-                        $orcamento->status == 'Aprovar pagamento' ||
-                        $orcamento->status == 'Pendente')
-                    <a href="{{ route('orcamentos.edit', $orcamento->id) }}">
-                        <x-button size="sm" variant="secondary">
-                            <x-heroicon-o-pencil-square class="w-4 h-4" />
-                            Editar
-                        </x-button>
-                    </a>
-                @endif
-
-                {{-- Botão Atualizar Preços --}}
-                <form action="{{ route('orcamentos.atualizar-precos', $orcamento->id) }}" method="POST"
-                    onsubmit="return confirm('Tem certeza? Isso irá atualizar todos os preços com os valores atuais dos produtos e remover os descontos aplicados.')">
-                    @csrf
-                    <button type="submit">
-                        <x-button size="sm" variant="danger" tag="span">
-                            <x-heroicon-o-arrow-path class="w-4 h-4" />
-                            Atualizar Preços
-                        </x-button>
-                    </button>
-                </form>
-            </h2>
-
-            <div class="flex flex-wrap justify-between items-start gap-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <p><strong>Cliente:</strong> {{ $orcamento->cliente->nome ?? '---' }}</p>
-                        <p><strong>Telefone:</strong> {{ $orcamento->cliente->telefone ?? '---' }}</p>
-                        <p><strong>Endereço:</strong> {{ $orcamento->cliente->endereco ?? '---' }}</p>
-                        <p><strong>Obra:</strong> {{ $orcamento->obra ?? '---' }}</p>
+                {{-- Título --}}
+                <div class="flex items-center gap-2 min-w-0">
+                    <div
+                        class="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
                     </div>
-                    <div>
-                        <p><strong>Data do Orçamento:</strong> {{ $orcamento->created_at->format('d/m/Y') }}</p>
-                        <p><strong>Validade:</strong>
-                            {{ \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }}
-                        </p>
-                        <p><strong>Prazo de Entrega:</strong> {{ $orcamento->prazo_entrega ?? '---' }}</p>
-                        <p><strong>Vendedor:</strong> {{ $orcamento->vendedor->name ?? '---' }}</p>
-                        <p><strong>Condição de pagamento:</strong> {{ $orcamento->condicaoPagamento->nome ?? '---' }}
-                        </p>
-
-                        {{-- ✅ EXIBE DESCRIÇÃO DO MEIO DE PAGAMENTO SE EXISTIR --}}
-                        @if ($orcamento->outros_meios_pagamento)
-                            <p><strong>Meio de Pagamento Especial:</strong> {{ $orcamento->outros_meios_pagamento }}
-                            </p>
-                        @endif
+                    <div class="min-w-0">
+                        <p
+                            class="text-xs text-neutral-400 dark:text-neutral-500 font-medium uppercase tracking-wider leading-none mb-0.5">
+                            Orçamento</p>
+                        <h2 class="text-lg font-bold text-neutral-900 dark:text-white leading-tight truncate">
+                            #{{ $orcamento->id }}
+                        </h2>
                     </div>
                 </div>
 
-                @if ($orcamento->validade >= now() || in_array($orcamento->status, ['Aprovado']))
-                    {{-- Status Comercial + Atualização --}}
-                    <div class="text-right min-w-[280px]">
-                        {{-- ✅ BOTÃO PARA APROVAR DESCONTO --}}
-                        @if ($orcamento->status === 'Aprovar desconto')
-                            <span
-                                class="inline-block bg-yellow-200 text-yellow-800 text-sm px-3 py-1 rounded-full font-medium mb-2">
-                                Aguardando aprovação de desconto
-                            </span>
-                            <a href="/descontos/orcamento/{{ $orcamento->id }}">
-                                <x-button size="sm" variant="primary">
-                                    <x-heroicon-o-receipt-percent class="w-4 h-4" />
-                                    Validar desconto
-                                </x-button>
-                            </a>
+                {{-- Ações do Header --}}
+                <div class="flex items-center flex-wrap gap-2">
 
-                            {{-- ✅ BOTÃO PARA APROVAR MEIO DE PAGAMENTO --}}
-                        @elseif ($orcamento->status === 'Aprovar pagamento')
-                            <span
-                                class="inline-block bg-orange-200 text-orange-800 text-sm px-3 py-1 rounded-full font-medium mb-2">
-                                Aguardando aprovação de meio de pagamento
-                            </span>
-                            <a href="{{ route('solicitacoes-pagamento.aprovar', $orcamento->id) }}">
-                                <x-button size="sm" variant="primary">
-                                    <x-heroicon-o-credit-card class="w-4 h-4" />
-                                    Validar meio de pagamento
-                                </x-button>
-                            </a>
+                    {{-- PDF removido do header, exibido no painel de status --}}
 
-                            {{-- ✅ STATUS REJEITADO --}}
-                        @elseif ($orcamento->status === 'Rejeitado')
-                            <span
-                                class="inline-block bg-red-200 text-red-800 text-sm px-3 py-1 rounded-full font-medium mb-2">
-                                Orçamento Rejeitado
-                            </span>
-                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                                Este orçamento foi rejeitado durante a aprovação de meio de pagamento.
-                            </p>
-                            {{-- ✅ NÃO MOSTRA BOTÕES DE SEPARAÇÃO/CONFERÊNCIA --}}
+                    {{-- Editar --}}
+                    @if (in_array($orcamento->status, ['Aprovar desconto', 'Aprovar pagamento', 'Pendente','Aprovado']))
+                        <a href="{{ route('orcamentos.edit', $orcamento->id) }}">
+                            <x-button size="sm" variant="secondary">
+                                <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                <span class="hidden sm:inline">Editar</span>
+                            </x-button>
+                        </a>
+                    @endif
 
-                            {{-- ✅ STATUS NORMAL --}}
-                        @else
-                            <span
-                                class="inline-block bg-yellow-200 text-yellow-800 text-sm px-3 py-1 rounded-full font-medium mb-2">
-                                Status
-                            </span>
-                            <form id="form-status-{{ $orcamento->id }}" class="inline-flex flex-wrap gap-2"
-                                data-id="{{ $orcamento->id }}"
-                                data-url="{{ route('orcamentos.atualizar-status', $orcamento->id) }}">
-                                @csrf
-                                @method('PUT')
-                                <select name="status"
-                                    class="border border-gray-300 rounded px-2 py-1 text-sm status-select"
-                                    data-id="{{ $orcamento->id }}">
-                                    @foreach (['Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'] as $s)
-                                        <option value="{{ $s }}" @selected($orcamento->status === $s)>
-                                            {{ $s }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                    {{-- Atualizar Preços --}}
+                    <form action="{{ route('orcamentos.atualizar-precos', $orcamento->id) }}" method="POST"
+                        onsubmit="return confirm('Tem certeza? Isso irá atualizar todos os preços com os valores atuais dos produtos e remover os descontos aplicados.')">
+                        @csrf
+                        <button type="submit">
+                            <x-button size="sm" variant="orange" tag="span">
+                                <x-heroicon-o-arrow-path class="w-4 h-4" />
+                                <span class="hidden sm:inline">Atualizar Preços</span>
+                            </x-button>
+                        </button>
+                    </form>
 
-                                <button type="button"
-                                    class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 atualizar-status"
-                                    data-id="{{ $orcamento->id }}" data-prev-text="Atualizar">
-                                    Atualizar
-                                </button>
-                            </form>
+                </div>
+            </div>
 
-                            {{-- ✅ WORKFLOW OPERACIONAL - APENAS SE NÃO FOR REJEITADO --}}
-                            <div class="mt-4">
-                                @php
-                                    $wf = $orcamento->workflow_status;
-                                    $map = [
-                                        'aguardando_separacao' => [
-                                            'label' => 'Aguardando Separação',
-                                            'class' =>
-                                                'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
-                                        ],
-                                        'em_separacao' => [
-                                            'label' => 'Em Separação',
-                                            'class' =>
-                                                'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
-                                        ],
-                                        'aguardando_conferencia' => [
-                                            'label' => 'Aguardando Conferência',
-                                            'class' =>
-                                                'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
-                                        ],
-                                        'em_conferencia' => [
-                                            'label' => 'Em Conferência',
-                                            'class' => 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200',
-                                        ],
-                                        'conferido' => [
-                                            'label' => 'Conferido',
-                                            'class' =>
-                                                'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
-                                        ],
-                                        'finalizado' => [
-                                            'label' => 'Conferido e Finalizado',
-                                            'class' =>
-                                                'bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-100',
-                                        ],
-                                    ];
-                                    $badge = $map[$wf] ?? null;
-                                @endphp
+            {{-- ══════════════════════════════════════
+         CORPO DO CARD
+    ══════════════════════════════════════ --}}
+            <div class="px-5 py-4">
+                <div class="flex flex-col lg:flex-row lg:items-start gap-5">
 
-                                @if ($badge)
+                    {{-- ──────── INFORMAÇÕES COMPACTAS ──────── --}}
+                    <div class="flex-1 grid grid-cols-2 gap-x-6 gap-y-0 min-w-0">
+
+                        {{-- helper macro: cada linha é label + valor inline --}}
+                        @php
+                            $campos = [
+                                ['label' => 'Cliente', 'value' => $orcamento->cliente->nome ?? null, 'bold' => true],
+                                ['label' => 'Telefone', 'value' => $orcamento->cliente->telefone ?? null],
+                                ['label' => 'Endereço', 'value' => $orcamento->cliente->endereco ?? null],
+                                ['label' => 'Obra', 'value' => $orcamento->obra ?? null],
+                            ];
+                            $campos2 = [
+                                ['label' => 'Data', 'value' => $orcamento->created_at->format('d/m/Y')],
+                                [
+                                    'label' => 'Validade',
+                                    'value' => \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y'),
+                                ],
+                                ['label' => 'Entrega', 'value' => $orcamento->prazo_entrega ?? null],
+                                ['label' => 'Vendedor', 'value' => $orcamento->vendedor->name ?? null],
+                                ['label' => 'Pagamento', 'value' => $orcamento->condicaoPagamento->nome ?? null],
+                            ];
+                        @endphp
+
+                        {{-- Coluna 1 --}}
+                        <div class="space-y-1.5">
+                            @foreach ($campos as $c)
+                                <div class="flex items-baseline gap-1.5 min-w-0">
                                     <span
-                                        class="inline-block px-3 py-1 rounded-full text-xs font-medium {{ $badge['class'] }}">
-                                        {{ $badge['label'] }}
+                                        class="text-xs text-neutral-500 dark:text-neutral-400 font-medium flex-shrink-0">{{ $c['label'] }}:</span>
+                                    <span
+                                        class="text-sm truncate {{ $c['bold'] ?? false ? 'text-white font-semibold' : 'text-neutral-200' }}">
+                                        {{ $c['value'] ?: '---' }}
                                     </span>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        {{-- Coluna 2 --}}
+                        <div class="space-y-1.5">
+                            @foreach ($campos2 as $c)
+                                <div class="flex items-baseline gap-1.5 min-w-0">
+                                    <span
+                                        class="text-xs text-neutral-500 dark:text-neutral-400 font-medium flex-shrink-0">{{ $c['label'] }}:</span>
+                                    <span class="text-sm truncate text-neutral-200">{{ $c['value'] ?: '---' }}</span>
+                                </div>
+                            @endforeach
+
+                            @if ($orcamento->outros_meios_pagamento)
+                                <div class="flex items-baseline gap-1.5 min-w-0">
+                                    <span class="text-xs text-blue-400 font-medium flex-shrink-0">Meio especial:</span>
+                                    <span
+                                        class="text-sm truncate text-blue-400 font-semibold">{{ $orcamento->outros_meios_pagamento }}</span>
+                                </div>
+                            @endif
+                        </div>
+
+                    </div>
+
+                    {{-- ──────── PAINEL DE STATUS ──────── --}}
+                    @if ($orcamento->validade >= now() || in_array($orcamento->status, ['Aprovado']))
+                        <div class="lg:w-72 flex-shrink-0">
+                            <div class="space-y-4">
+
+                                {{-- ── APROVAR DESCONTO ── --}}
+                                @if ($orcamento->status === 'Aprovar desconto')
+                                    <div class="space-y-3">
+                                        <div class="flex items-center gap-2">
+                                            <span
+                                                class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse flex-shrink-0"></span>
+                                            <p class="text-sm font-semibold text-yellow-700 dark:text-yellow-400">
+                                                Aguardando aprovação de desconto</p>
+                                        </div>
+                                        <a href="/descontos/orcamento/{{ $orcamento->id }}" class="block">
+                                            <x-button size="sm" variant="primary" class="w-full justify-center">
+                                                <x-heroicon-o-receipt-percent class="w-4 h-4" />
+                                                Validar Desconto
+                                            </x-button>
+                                        </a>
+                                    </div>
+
+                                    {{-- ── APROVAR PAGAMENTO ── --}}
+                                @elseif ($orcamento->status === 'Aprovar pagamento')
+                                    <div class="space-y-3">
+                                        <div class="flex items-center gap-2">
+                                            <span
+                                                class="w-2 h-2 rounded-full bg-orange-400 animate-pulse flex-shrink-0"></span>
+                                            <p class="text-sm font-semibold text-orange-700 dark:text-orange-400">
+                                                Aguardando aprovação de pagamento</p>
+                                        </div>
+                                        <a href="{{ route('solicitacoes-pagamento.aprovar', $orcamento->id) }}"
+                                            class="block">
+                                            <x-button size="sm" variant="primary" class="w-full justify-center">
+                                                <x-heroicon-o-credit-card class="w-4 h-4" />
+                                                Validar Pagamento
+                                            </x-button>
+                                        </a>
+                                    </div>
+
+                                    {{-- ── REJEITADO ── --}}
+                                @elseif ($orcamento->status === 'Rejeitado')
+                                    <div class="space-y-2">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
+                                            <p class="text-sm font-semibold text-red-700 dark:text-red-400">Orçamento
+                                                Rejeitado</p>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                                            Este orçamento foi rejeitado durante a aprovação do meio de pagamento.
+                                        </p>
+                                    </div>
+
+                                    {{-- ── STATUS NORMAL ── --}}
+                                @else
+                                    {{-- Seletor de Status --}}
+                                    <div class="space-y-2">
+                                        <p
+                                            class="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                            Status Comercial</p>
+                                        <form id="form-status-{{ $orcamento->id }}" class="flex gap-2"
+                                            data-id="{{ $orcamento->id }}"
+                                            data-url="{{ route('orcamentos.atualizar-status', $orcamento->id) }}">
+                                            @csrf
+                                            @method('PUT')
+                                            <select name="status"
+                                                class="flex-1 border border-gray-300 dark:border-neutral-600 dark:bg-zinc-700 dark:text-white rounded-lg px-2 py-1.5 text-sm status-select focus:ring-2 focus:ring-blue-300 focus:outline-none"
+                                                data-id="{{ $orcamento->id }}">
+                                                @foreach (['Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'] as $s)
+                                                    <option value="{{ $s }}" @selected($orcamento->status === $s)>
+                                                        {{ $s }}</option>
+                                                @endforeach
+                                            </select>
+                                            <button type="button"
+                                                class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors atualizar-status"
+                                                data-id="{{ $orcamento->id }}">
+                                                Salvar
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    {{-- Badge Workflow --}}
+                                    @php
+                                        $wf = $orcamento->workflow_status;
+                                        $map = [
+                                            'aguardando_separacao' => [
+                                                'label' => 'Aguardando Separação',
+                                                'class' =>
+                                                    'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
+                                            ],
+                                            'em_separacao' => [
+                                                'label' => 'Em Separação',
+                                                'class' =>
+                                                    'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
+                                            ],
+                                            'aguardando_conferencia' => [
+                                                'label' => 'Aguardando Conferência',
+                                                'class' =>
+                                                    'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
+                                            ],
+                                            'em_conferencia' => [
+                                                'label' => 'Em Conferência',
+                                                'class' =>
+                                                    'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200',
+                                            ],
+                                            'conferido' => [
+                                                'label' => 'Conferido',
+                                                'class' =>
+                                                    'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
+                                            ],
+                                            'finalizado' => [
+                                                'label' => 'Conferido e Finalizado',
+                                                'class' =>
+                                                    'bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-100',
+                                            ],
+                                        ];
+                                        $badge = $map[$wf] ?? null;
+                                    @endphp
+
+                                    @if ($badge)
+                                        <div>
+                                            <p
+                                                class="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1.5">
+                                                Logística</p>
+                                            <span
+                                                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium {{ $badge['class'] }}">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-current opacity-70"></span>
+                                                {{ $badge['label'] }}
+                                            </span>
+                                        </div>
+                                    @endif
+
+                                    {{-- Botões Operacionais --}}
+                                    <div class="space-y-2">
+                                        <p
+                                            class="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                            Operacional</p>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <a href="{{ route('orcamentos.separacao.show', $orcamento->id) }}"
+                                                class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                                </svg>
+                                                Separação
+                                            </a>
+                                            <a href="{{ route('orcamentos.conferencia.show', $orcamento->id) }}"
+                                                class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium transition-colors">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                                </svg>
+                                                Conferência
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    {{-- ── BOTÃO PDF DESTACADO ── --}}
+                                    @if ($orcamento->pdf_path)
+                                        <a href="{{ asset('storage/' . $orcamento->pdf_path) }}" target="_blank"
+                                            rel="noopener"
+                                            class="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg
+                                           bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700
+                                           text-white text-sm font-semibold tracking-wide
+                                           shadow-md shadow-emerald-900/40
+                                           transition-all duration-150 group">
+                                            <svg class="w-4 h-4 transition-transform group-hover:-translate-y-0.5 group-hover:scale-110"
+                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h4a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                                            </svg>
+                                            Baixar PDF do Orçamento
+                                        </a>
+                                    @endif
                                 @endif
 
-                                <div class="mt-2 flex flex-wrap gap-2 justify-end">
-                                    <a href="{{ route('orcamentos.separacao.show', $orcamento->id) }}"
-                                        class="inline-flex items-center px-3 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-sm">
-                                        Separação
-                                    </a>
-                                    <a href="{{ route('orcamentos.conferencia.show', $orcamento->id) }}"
-                                        class="inline-flex items-center px-3 py-2 rounded bg-sky-600 hover:bg-sky-700 text-white text-sm">
-                                        Conferência
-                                    </a>
-                                </div>
                             </div>
-                        @endif
-                    </div>
-                @endif
+                        </div>
+                    @endif
+
+                </div>
             </div>
         </div>
 

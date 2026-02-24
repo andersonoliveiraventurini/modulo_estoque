@@ -226,7 +226,7 @@ class OrcamentoController extends Controller
         return redirect()->back()->with('error', 'Ação inválida.');
     }
 
-    public function store(StoreOrcamentoRequest $request)
+   public function store(StoreOrcamentoRequest $request)
     {
         $itenscomdesconto = false;
         $necessitaAprovacaoPagamento = false;
@@ -295,7 +295,7 @@ class OrcamentoController extends Controller
             'valor_total_itens'   => $request->valor_total,
             'guia_recolhimento'   => $request->guia_recolhimento,
             'observacoes'         => $request->observacoes,
-            'condicao_id'         => $request->condicao_pagamento,
+            'condicao_id'         => $request->condicao_id,
             'tipo_documento'      => $request->tipo_documento,
             'venda_triangular'    => $request->venda_triangular,
             'homologacao'         => $request->homologacao,
@@ -308,31 +308,31 @@ class OrcamentoController extends Controller
             ]);
         }
 
-        // ✅ NOVO: CRIA SOLICITAÇÃO DE PAGAMENTO SE CONDIÇÃO FOR "OUTROS" (ID 20)
-        if ($request->condicao_pagamento == 20) {
+        // ✅ CRIA SOLICITAÇÃO DE PAGAMENTO SE CONDIÇÃO FOR "OUTROS" (ID 20)
+        if ($request->condicao_id == 20) {
             $orcamento->update([
                 'outros_meios_pagamento' => $request->outros_meios_pagamento,
             ]);
 
             // Cria a solicitação de pagamento para aprovação
             $orcamento->solicitacoesPagamento()->create([
-                'descricao_pagamento' => $request->outros_meios_pagamento,
+                'descricao_pagamento'       => $request->outros_meios_pagamento,
                 'justificativa_solicitacao' => $request->justificativa_pagamento ?? 'Solicitação de meio de pagamento especial conforme necessidade do cliente.',
-                'numero_parcelas' => $request->numero_parcelas ?? null,
-                'valor_entrada' => $request->valor_entrada ? $brToDecimal($request->valor_entrada) : null,
-                'data_primeiro_vencimento' => $request->data_primeiro_vencimento ?? null,
-                'intervalo_dias' => $request->intervalo_dias ?? null,
-                'solicitado_por' => Auth()->id(),
-                'observacoes' => $request->observacoes_pagamento ?? null,
-                'status' => 'Pendente',
+                'numero_parcelas'           => $request->numero_parcelas ?? null,
+                'valor_entrada'             => $request->valor_entrada ? $brToDecimal($request->valor_entrada) : null,
+                'data_primeiro_vencimento'  => $request->data_primeiro_vencimento ?? null,
+                'intervalo_dias'            => $request->intervalo_dias ?? null,
+                'solicitado_por'            => Auth()->id(),
+                'observacoes'               => $request->observacoes_pagamento ?? null,
+                'status'                    => 'Pendente',
             ]);
 
             $necessitaAprovacaoPagamento = true;
 
             Log::info("Solicitação de pagamento criada para orçamento #{$orcamento->id}", [
                 'orcamento_id' => $orcamento->id,
-                'descricao' => $request->outros_meios_pagamento,
-                'vendedor_id' => Auth()->id(),
+                'descricao'    => $request->outros_meios_pagamento,
+                'vendedor_id'  => Auth()->id(),
             ]);
         }
 
@@ -348,20 +348,20 @@ class OrcamentoController extends Controller
                 $quantidade    = (float) ($item['quantidade'] ?? 0);
 
                 $liberarDesconto = isset($item['liberar_desconto']) ? (int) $item['liberar_desconto'] : 1;
-                $tipoDesconto = $item['tipo_desconto'] ?? 'nenhum';
+                $tipoDesconto    = $item['tipo_desconto'] ?? 'nenhum';
                 $descontoProduto = (float) ($item['desconto_produto'] ?? 0);
 
                 $subtotalOriginal = $precoOriginal * $quantidade;
-                $subtotal = $precoUnitario * $quantidade;
+                $subtotal         = $precoUnitario * $quantidade;
 
-                $valorComDesconto = $subtotal;
+                $valorComDesconto         = $subtotal;
                 $valorUnitarioComDesconto = $precoUnitario;
-                $descontoAplicadoItem = 0;
+                $descontoAplicadoItem     = 0;
 
                 // ✅ LÓGICA DE DESCONTO
                 if ($liberarDesconto === 1) {
                     if ($tipoDesconto === 'produto' && $descontoProduto > 0) {
-                        $valorComDesconto = $subtotal;
+                        $valorComDesconto         = $subtotal;
                         $valorUnitarioComDesconto = $precoUnitario;
 
                         $orcamento->descontos()->create([
@@ -376,9 +376,9 @@ class OrcamentoController extends Controller
 
                         $itenscomdesconto = true;
                     } elseif ($tipoDesconto === 'percentual' && $descontoPercentual > 0) {
-                        $valorComDesconto = $subtotal - ($subtotal * ($descontoPercentual / 100));
+                        $valorComDesconto         = $subtotal - ($subtotal * ($descontoPercentual / 100));
                         $valorUnitarioComDesconto = $valorComDesconto / $quantidade;
-                        $descontoAplicadoItem = $descontoPercentual;
+                        $descontoAplicadoItem     = $descontoPercentual;
                     }
                 }
 
@@ -420,12 +420,12 @@ class OrcamentoController extends Controller
             if ($request->has('itens')) {
                 foreach ($request->itens as $item) {
                     $liberarDesconto = isset($item['liberar_desconto']) ? (int) $item['liberar_desconto'] : 1;
-                    $tipoDesconto = $item['tipo_desconto'] ?? 'nenhum';
+                    $tipoDesconto    = $item['tipo_desconto'] ?? 'nenhum';
 
                     if ($liberarDesconto === 1 && $tipoDesconto === 'percentual') {
                         $precoUnitario = (float) ($item['preco_unitario'] ?? 0);
-                        $quantidade = (float) ($item['quantidade'] ?? 0);
-                        $subtotal = $precoUnitario * $quantidade;
+                        $quantidade    = (float) ($item['quantidade'] ?? 0);
+                        $subtotal      = $precoUnitario * $quantidade;
                         $totalDescontoPercentual += $subtotal * ($descontoPercentual / 100);
                     }
                 }
@@ -471,36 +471,44 @@ class OrcamentoController extends Controller
                     'cliente_id' => $request->cliente_id,
                 ],
                 array_filter([
-                    'cep'        => $request->endereco_cep,
-                    'logradouro' => $request->endereco_logradouro,
-                    'numero'     => $request->endereco_numero,
+                    'cep'         => $request->endereco_cep,
+                    'logradouro'  => $request->endereco_logradouro,
+                    'numero'      => $request->endereco_numero,
                     'complemento' => $request->endereco_compl,
-                    'bairro'     => $request->endereco_bairro,
-                    'cidade'     => $request->endereco_cidade,
-                    'estado'     => $request->endereco_estado,
-                    'tipo'       => 'entrega',
+                    'bairro'      => $request->endereco_bairro,
+                    'cidade'      => $request->endereco_cidade,
+                    'estado'      => $request->endereco_estado,
+                    'tipo'        => 'entrega',
                 ])
             );
         } elseif ($request->enderecos_cadastrados != "") {
             $orcamento->update(['endereco_id' => $request->enderecos_cadastrados]);
         }
 
-        //  VALIDAÇÃO FINAL: VERIFICA SE PRECISA APROVAÇÃO
-        $necessitaAprovacaoDesconto = (
-            $descontoPercentual > $request->desconto_aprovado ||
+        // ✅ VALIDAÇÃO FINAL: VERIFICA SE PRECISA APROVAÇÃO
+        $temDescontoPercentual = $descontoPercentual > 0;
+        $temDescontoEspecifico = $descontoEspecifico > 0;
+        $temQualquerDesconto   = $temDescontoPercentual || $temDescontoEspecifico || $itenscomdesconto;
+
+        $necessitaAprovacaoDesconto = $temQualquerDesconto && (
+            $descontoPercentual > (float) ($request->desconto_aprovado ?? 0) ||
             (Auth()->user()->vendedor->desconto ?? 0) < $descontoPercentual ||
             $itenscomdesconto
         );
 
-        //  DETERMINA O STATUS FINAL DO ORÇAMENTO
-        if ($necessitaAprovacaoDesconto && $necessitaAprovacaoPagamento) {
-            // Ambos precisam de aprovação - prioriza desconto
+        // ✅ DETERMINA O STATUS FINAL DO ORÇAMENTO
+        if (!$temQualquerDesconto && !$necessitaAprovacaoPagamento) {
+            // Nenhuma aprovação necessária — aprova direto
+            $orcamento->status = 'Aprovado';
+            $orcamento->save();
+        } elseif ($necessitaAprovacaoDesconto && $necessitaAprovacaoPagamento) {
+            // Ambos precisam de aprovação — prioriza desconto
             $orcamento->status = 'Aprovar desconto';
             $orcamento->save();
 
             Log::info("Orçamento #{$orcamento->id} aguardando aprovação de desconto E pagamento", [
                 'orcamento_id' => $orcamento->id,
-                'status' => $orcamento->status,
+                'status'       => $orcamento->status,
             ]);
 
             return redirect()
@@ -521,7 +529,7 @@ class OrcamentoController extends Controller
 
             Log::info("Orçamento #{$orcamento->id} aguardando aprovação de pagamento", [
                 'orcamento_id' => $orcamento->id,
-                'status' => $orcamento->status,
+                'status'       => $orcamento->status,
             ]);
 
             return redirect()
@@ -529,7 +537,7 @@ class OrcamentoController extends Controller
                 ->with('info', 'Orçamento criado com sucesso! Aguardando aprovação do meio de pagamento especial para gerar o PDF.');
         }
 
-        // ✅ NÃO PRECISA DE APROVAÇÃO - GERA O PDF NORMALMENTE
+        // ✅ NÃO PRECISA DE APROVAÇÃO — GERA O PDF NORMALMENTE
         $pdfService = new OrcamentoPdfService();
         $pdfGeradoComSucesso = $pdfService->gerarOrcamentoPdf($orcamento);
 
@@ -543,6 +551,7 @@ class OrcamentoController extends Controller
             ->route('orcamentos.show', $orcamento->id)
             ->with('error', 'Orçamento criado com sucesso, mas ocorreu uma falha ao gerar o PDF. Por favor, contate o suporte.');
     }
+
 
 
     /*
@@ -589,7 +598,7 @@ class OrcamentoController extends Controller
             'valor_total_itens'  => $request->valor_total,
             'guia_recolhimento'  => $request->guia_recolhimento,
             'observacoes'  => $request->observacoes,
-            'condicao_id' => $request->condicao_pagamento,
+            'condicao_id' => $request->condicao_id,
             'validade'     => Carbon::now()->addDays(2), // sempre +2 dias
         ]);
 
@@ -1332,7 +1341,7 @@ class OrcamentoController extends Controller
         DB::beginTransaction();
 
         try {
-            $itenscomdesconto          = false;
+            $itenscomdesconto            = false;
             $necessitaAprovacaoPagamento = false;
 
             // ----------------------------------------------------------------
@@ -1409,7 +1418,6 @@ class OrcamentoController extends Controller
 
             // ----------------------------------------------------------------
             // Atualizar dados básicos do orçamento
-            // CORREÇÃO: Carbon::now()->addDays(1) — addDay() precisa de ()
             // ----------------------------------------------------------------
             $orcamento->update([
                 'obra'                => $request->obra,
@@ -1420,11 +1428,11 @@ class OrcamentoController extends Controller
                 'guia_recolhimento'   => $guiaRecolhimento,
                 'observacoes'         => $request->observacoes,
                 'versao'              => $novaVersao,
-                'condicao_id'         => $request->condicao_pagamento,
+                'condicao_id'         => $request->condicao_id,
                 'tipo_documento'      => $request->tipo_documento,
                 'venda_triangular'    => $request->venda_triangular,
                 'homologacao'         => $request->homologacao,
-                'validade'            => Carbon::now()->addDays(1), // CORRIGIDO: era addDay (sem parênteses)
+                'validade'            => Carbon::now()->addDays(1),
             ]);
 
             if ($request->venda_triangular == 1) {
@@ -1436,7 +1444,7 @@ class OrcamentoController extends Controller
             // ----------------------------------------------------------------
             // Condição de pagamento especial (ID 20)
             // ----------------------------------------------------------------
-            if ($request->condicao_pagamento == 20) {
+            if ($request->condicao_id == 20) {
                 $orcamento->update([
                     'outros_meios_pagamento' => $request->outros_meios_pagamento,
                 ]);
@@ -1555,12 +1563,12 @@ class OrcamentoController extends Controller
                             : (float) ($produtoData['valor_unitario'] ?? 0);
                     }
 
-                    $quantidade        = (float) ($produtoData['quantidade'] ?? 0);
-                    $liberarDesconto   = isset($produtoData['liberar_desconto'])
+                    $quantidade      = (float) ($produtoData['quantidade'] ?? 0);
+                    $liberarDesconto = isset($produtoData['liberar_desconto'])
                         ? (int) $produtoData['liberar_desconto']
                         : 1;
-                    $tipoDesconto      = $produtoData['tipo_desconto'] ?? 'nenhum';
-                    $descontoProduto   = (float) ($produtoData['desconto_produto'] ?? 0);
+                    $tipoDesconto    = $produtoData['tipo_desconto'] ?? 'nenhum';
+                    $descontoProduto = (float) ($produtoData['desconto_produto'] ?? 0);
 
                     // Valores padrão (sem desconto)
                     $valorUnitarioComDesconto = $precoOriginalSemDesconto;
@@ -1568,11 +1576,11 @@ class OrcamentoController extends Controller
                     $descontoAplicadoItem     = 0;
 
                     Log::info("Processando produto existente na edição", [
-                        'produto_id'        => $produtoData['produto_id'],
-                        'preco_original'    => $precoOriginalSemDesconto,
-                        'tipo_desconto'     => $tipoDesconto,
-                        'desconto_produto'  => $descontoProduto,
-                        'quantidade'        => $quantidade,
+                        'produto_id'       => $produtoData['produto_id'],
+                        'preco_original'   => $precoOriginalSemDesconto,
+                        'tipo_desconto'    => $tipoDesconto,
+                        'desconto_produto' => $descontoProduto,
+                        'quantidade'       => $quantidade,
                     ]);
 
                     // Aplicar desconto conforme tipo
@@ -1582,15 +1590,15 @@ class OrcamentoController extends Controller
                             $valorComDesconto         = $valorUnitarioComDesconto * $quantidade;
 
                             $orcamento->descontos()->create([
-                                'motivo'     => "Desconto individual de R$ "
+                                'motivo'      => "Desconto individual de R$ "
                                     . number_format($descontoProduto, 2, ',', '.')
                                     . " por unidade do produto ID {$produtoData['produto_id']}",
-                                'valor'      => $descontoProduto * $quantidade,
+                                'valor'       => $descontoProduto * $quantidade,
                                 'porcentagem' => null,
-                                'tipo'       => 'produto',
-                                'produto_id' => $produtoData['produto_id'],
-                                'cliente_id' => $orcamento->cliente_id,
-                                'user_id'    => auth()->id(),
+                                'tipo'        => 'produto',
+                                'produto_id'  => $produtoData['produto_id'],
+                                'cliente_id'  => $orcamento->cliente_id,
+                                'user_id'     => auth()->id(),
                             ]);
 
                             $itenscomdesconto = true;
@@ -1632,15 +1640,15 @@ class OrcamentoController extends Controller
                     // Item de consulta de preço (sem preco_unitario)
                     if (empty($item['preco_unitario'])) {
                         $dadosItem = [
-                            'descricao'    => $item['nome'] ?? null,
-                            'quantidade'   => $item['quantidade'] ?? null,
-                            'cor'          => $item['cor'] ?? null,
+                            'descricao'     => $item['nome'] ?? null,
+                            'quantidade'    => $item['quantidade'] ?? null,
+                            'cor'           => $item['cor'] ?? null,
                             'fornecedor_id' => !empty($item['fornecedor_id']) ? $item['fornecedor_id'] : null,
-                            'observacao'   => $item['observacoes'] ?? null,
-                            'orcamento_id' => $orcamento->id,
-                            'usuario_id'   => auth()->id(),
-                            'comprador_id' => auth()->id(),
-                            'status'       => 'Pendente',
+                            'observacao'    => $item['observacoes'] ?? null,
+                            'orcamento_id'  => $orcamento->id,
+                            'usuario_id'    => auth()->id(),
+                            'comprador_id'  => auth()->id(),
+                            'status'        => 'Pendente',
                         ];
 
                         $consultaPreco = ConsultaPreco::where('id', $item['id'])
@@ -1651,7 +1659,7 @@ class OrcamentoController extends Controller
                             $consultaPreco->update($dadosItem);
                             $idsRecebidos[] = $consultaPreco->id;
                         } else {
-                            $novoItem      = ConsultaPreco::create($dadosItem);
+                            $novoItem       = ConsultaPreco::create($dadosItem);
                             $idsRecebidos[] = $novoItem->id;
                         }
 
@@ -1847,10 +1855,14 @@ class OrcamentoController extends Controller
             // ----------------------------------------------------------------
             // Verificar necessidade de aprovações
             // ----------------------------------------------------------------
+            $temDescontoPercentual = $descontoPercentual > 0;
+            $temDescontoEspecifico = $descontoEspecifico > 0;
+            $temQualquerDesconto   = $temDescontoPercentual || $temDescontoEspecifico || $itenscomdesconto;
+
             $descontoAprovadoCliente = (float) ($request->desconto_aprovado ?? 0);
             $descontoVendedor        = (float) (auth()->user()->vendedor->desconto ?? 0);
 
-            $necessitaAprovacaoDesconto = (
+            $necessitaAprovacaoDesconto = $temQualquerDesconto && (
                 $descontoPercentual > $descontoAprovadoCliente ||
                 $descontoVendedor < $descontoPercentual         ||
                 $itenscomdesconto
@@ -1859,25 +1871,25 @@ class OrcamentoController extends Controller
             // ----------------------------------------------------------------
             // Definir status e redirecionar
             // ----------------------------------------------------------------
-            if ($necessitaAprovacaoDesconto && $necessitaAprovacaoPagamento) {
+            if (!$temQualquerDesconto && !$necessitaAprovacaoPagamento) {
+                // Nenhuma aprovação necessária — aprova direto
+                $orcamento->status = 'Aprovado';
+                $orcamento->save();
+            } elseif ($necessitaAprovacaoDesconto && $necessitaAprovacaoPagamento) {
                 $orcamento->status = 'Aprovar desconto';
                 $orcamento->save();
 
                 return redirect()
                     ->route('orcamentos.show', $orcamento->id)
                     ->with('warning', "Orçamento atualizado (Revisão {$novaVersao}), mas é necessária a aprovação do desconto e do meio de pagamento.");
-            }
-
-            if ($necessitaAprovacaoDesconto) {
+            } elseif ($necessitaAprovacaoDesconto) {
                 $orcamento->status = 'Aprovar desconto';
                 $orcamento->save();
 
                 return redirect()
                     ->route('orcamentos.show', $orcamento->id)
                     ->with('warning', "Orçamento atualizado (Revisão {$novaVersao}), mas é necessária a aprovação do desconto.");
-            }
-
-            if ($necessitaAprovacaoPagamento) {
+            } elseif ($necessitaAprovacaoPagamento) {
                 $orcamento->status = 'Aprovar pagamento';
                 $orcamento->save();
 
@@ -1886,7 +1898,9 @@ class OrcamentoController extends Controller
                     ->with('info', "Orçamento atualizado (Revisão {$novaVersao})! Aguardando aprovação do meio de pagamento especial.");
             }
 
-            // Gerar PDF
+            // ----------------------------------------------------------------
+            // Nenhuma aprovação necessária — gera PDF normalmente
+            // ----------------------------------------------------------------
             $pdfService          = new OrcamentoPdfService();
             $pdfGeradoComSucesso = $pdfService->gerarOrcamentoPdf($orcamento);
 
@@ -1920,7 +1934,6 @@ class OrcamentoController extends Controller
             Log::error("Erro ao atualizar orçamento #{$orcamento->id}: " . $e->getMessage());
             Log::error("Stack trace: " . $e->getTraceAsString());
 
-            // Em desenvolvimento exibe mensagem completa; em produção, mensagem genérica
             $mensagemErro = app()->environment('production')
                 ? 'Erro interno ao atualizar o orçamento. Contate o suporte.'
                 : '[' . class_basename($e) . '] '
@@ -1934,6 +1947,7 @@ class OrcamentoController extends Controller
                 ->with('error', $mensagemErro);
         }
     }
+
 
     /**
      * Remove the specified resource from storage.

@@ -40,12 +40,11 @@ class StoreOrcamentoRequest extends FormRequest
             'endereco_numero' => 'nullable|string|max:20',
             'tipo_documento' => 'required',
             'tipos_transporte' => 'required|integer|exists:tipos_transportes,id',
-            'condicao_pagamento' => 'required|exists:condicoes_pagamento,id',
+            'condicao_id' => 'required|exists:condicoes_pagamento,id',
             'venda_triangular' => 'required|boolean',
             'cnpj_triangular' => 'required_if:venda_triangular,1|nullable|string|max:18',
 
-            'condicao_pagamento' => 'required',
-            'outros_meios_pagamento' => 'required_if:condicao_pagamento,20|nullable|string|max:255',
+            'outros_meios_pagamento' => 'required_if:condicao_id,20|nullable|string|max:255',
         ];
     }
 
@@ -55,8 +54,8 @@ class StoreOrcamentoRequest extends FormRequest
             'cliente_id.required' => 'O cliente é obrigatório.',
             'nome_obra.required' => 'O nome da obra é obrigatório.',
             'cliente_id.exists' => 'Cliente selecionado não existe.',
-            'condicao_pagamento.required' => 'Por favor, selecione uma condição de pagamento.',
-            'condicao_pagamento.exists' => 'A condição de pagamento selecionada é inválida.',
+            'condicao_id.required' => 'Por favor, selecione uma condição de pagamento.',
+            'condicao_id.exists' => 'A condição de pagamento selecionada é inválida.',
         ];
     }
 
