@@ -176,10 +176,17 @@
             display: block;
             margin-top: 2px;
         }
+
+        .badge-revisao {
+            font-size: 13px;
+            color: #555;
+            font-weight: normal;
+        }
     </style>
 </head>
 
 <body>
+
     <!-- ===========================
          CABEÇALHO
     =========================== -->
@@ -205,15 +212,19 @@
         </tr>
     </table>
 
-    <h2 style="margin:0; font-size:20px; text-transform:uppercase;">ORÇAMENTO n° {{ $orcamento->id }}
-        @if ($orcamento->versao > 1)
-            - Revisão: {{ $orcamento->versao }}
+    {{-- ===========================
+         TÍTULO: versão só aparece se versao > 1
+    =========================== --}}
+    <h2 style="margin:0; font-size:20px; text-transform:uppercase;">
+        ORÇAMENTO n° {{ $orcamento->id }}
+        @if (!is_null($orcamento->versao) && $orcamento->versao > 1)
+            <span class="badge-revisao">— Revisão {{ $orcamento->versao - 1 }}</span>
         @endif
-        @if ($orcamento->complemento > 'Sim')
-            <br /> Complemento
+        @if ($orcamento->complemento === 'Sim')
+            <br /><span style="font-size:14px;">Complemento</span>
         @endif
-        @if ($orcamento->transportes->count() > 0)
-            <br />Transporte: {{ $orcamento->transportes->pluck('nome')->join(', ') }}
+        @if ($orcamento->relationLoaded('transportes') && $orcamento->transportes->count() > 0)
+            <br /><span style="font-size:13px;">Transporte: {{ $orcamento->transportes->pluck('nome')->join(', ') }}</span>
         @endif
     </h2>
 
@@ -235,40 +246,48 @@
             <td class="label"><strong>Data do Orçamento:</strong></td>
             <td class="value">{{ $orcamento->created_at->format('d/m/Y') }}</td>
             <td class="label"><strong>Validade Orçamento:</strong></td>
-            <td class="value">{{ \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }}</td>
+            <td class="value">
+                {{ $orcamento->validade ? \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') : '---' }}
+            </td>
         </tr>
         <tr>
             <td class="label">Atendido por:</td>
-            <td class="value">{{ $usuario->name }}</td>
+            <td class="value">{{ $usuario->name ?? '---' }}</td>
             <td class="label">Prazo de Entrega:</td>
             <td class="value">{{ $orcamento->prazo_entrega ?? '---' }}</td>
         </tr>
         <tr>
             <td class="label">Condição pagamento:</td>
             <td class="value">
-                {{ $orcamento->condicaoPagamento->nome }}
-                @if ($orcamento->condicao_id == 20)
-                    {{ $orcamento->outros_meios_pagamento }}
+                @if ($orcamento->relationLoaded('condicaoPagamento') && $orcamento->condicaoPagamento)
+                    {{ $orcamento->condicaoPagamento->nome }}
+                    @if ($orcamento->condicao_id == 20)
+                        — {{ $orcamento->outros_meios_pagamento }}
+                    @endif
+                @else
+                    ---
                 @endif
             </td>
             <td class="label">Tipo de frete:</td>
             <td class="value">{{ $orcamento->frete ?? 'Não registrado' }}</td>
         </tr>
-        @if ($orcamento->guia_recolhimento != null)
+        @if (!is_null($orcamento->guia_recolhimento) && $orcamento->guia_recolhimento > 0)
             <tr>
                 <td class="label">Guia de recolhimento:</td>
-                <td class="value" colspan="3">{{ $orcamento->guia_recolhimento }}</td>
+                <td class="value" colspan="3">
+                    R$ {{ number_format($orcamento->guia_recolhimento, 2, ',', '.') }}
+                </td>
             </tr>
         @endif
         <tr>
             <td class="label">Obra:</td>
-            <td class="value" colspan="3">{{ $orcamento->obra }}</td>
+            <td class="value" colspan="3">{{ $orcamento->obra ?? '---' }}</td>
         </tr>
         <tr>
             <td class="label">Endereço:</td>
             <td class="value" colspan="3">{{ $orcamento->cliente->endereco ?? '---' }}</td>
         </tr>
-        @if ($orcamento->observacoes != null)
+        @if (!is_null($orcamento->observacoes))
             <tr>
                 <td class="label">Observações:</td>
                 <td class="value" colspan="3">{{ $orcamento->observacoes }}</td>
@@ -276,12 +295,18 @@
         @endif
     </table>
 
+    {{-- ===========================
+         PRÉ-PROCESSAMENTO DE DESCONTOS
+         ✅ Busca direto do banco (whereNull deleted_at) para ignorar soft deletes
+    =========================== --}}
     @php
-        $percentualAplicado = $orcamento->descontos->where('tipo', 'percentual')->first();
-        $percentualAplicado = $percentualAplicado ? $percentualAplicado->porcentagem : 0;
+        // Query fresca — ignora qualquer cache em memória e respeita soft delete
+        $descontosAtivos = $orcamento->descontos()->whereNull('deleted_at')->get();
+
+        $percentualAplicado = $descontosAtivos->where('tipo', 'percentual')->max('porcentagem') ?? 0;
 
         // Descontos por produto aprovados — indexados por produto_id para lookup rápido
-        $descontosPorProduto = $orcamento->descontos
+        $descontosPorProduto = $descontosAtivos
             ->where('tipo', 'produto')
             ->filter(fn($d) => !is_null($d->aprovado_em))
             ->keyBy('produto_id');
@@ -329,7 +354,7 @@
     <!-- ===========================
          VIDROS E ESTEIRAS
     =========================== -->
-    @if ($orcamento->vidros->count() > 0)
+    @if ($orcamento->relationLoaded('vidros') && $orcamento->vidros->count() > 0)
         <h4>Vidros e Esteiras</h4>
         <table>
             <thead>
@@ -354,8 +379,11 @@
                         <td class="valor">{{ $vidro->largura }}</td>
                         <td class="valor">R$ {{ number_format($vidro->preco_metro_quadrado, 2, ',', '.') }}</td>
                         @if ($percentualAplicado > 0)
-                            <td class="valor">R$
-                                {{ number_format($vidro->preco_metro_quadrado - $vidro->preco_metro_quadrado * ($percentualAplicado / 100), 2, ',', '.') }}
+                            <td class="valor">
+                                R$ {{ number_format(
+                                    $vidro->preco_metro_quadrado - $vidro->preco_metro_quadrado * ($percentualAplicado / 100),
+                                    2, ',', '.'
+                                ) }}
                             </td>
                         @endif
                         <td class="valor">R$ {{ number_format($vidro->valor_com_desconto, 2, ',', '.') }}</td>
@@ -369,17 +397,26 @@
          TOTAIS E DESCONTOS
     =========================== -->
     @php
-        $totalItensComDesconto  = $orcamento->itens->sum('valor_com_desconto');
-        $totalVidros            = $orcamento->vidros->sum(fn($v) => $v->valor_com_desconto);
-        $totalComDescontos      = $totalItensComDesconto + $totalVidros;
-        $descontosPercentuais   = $orcamento->descontos->where('tipo', 'percentual');
-        $descontosFixos         = $orcamento->descontos->where('tipo', 'fixo');
-        $descontosProdutoAprov  = $orcamento->descontos
+        $totalItensComDesconto = $orcamento->itens->sum('valor_com_desconto');
+        $totalVidros           = ($orcamento->relationLoaded('vidros'))
+                                    ? $orcamento->vidros->sum(fn($v) => $v->valor_com_desconto)
+                                    : 0;
+        $totalComDescontos     = $totalItensComDesconto + $totalVidros;
+
+        // ✅ Usa a mesma collection já filtrada (sem soft deletes)
+        $descontosPercentuais  = $descontosAtivos->where('tipo', 'percentual');
+        $descontosFixos        = $descontosAtivos->where('tipo', 'fixo');
+        $descontosProdutoAprov = $descontosAtivos
                                     ->where('tipo', 'produto')
                                     ->filter(fn($d) => !is_null($d->aprovado_em));
-        $valorDescontosFixos    = $descontosFixos->sum('valor');
-        $percentualAplicado     = $descontosPercentuais->max('porcentagem') ?? 0;
-        $valorFinal             = $totalComDescontos - $valorDescontosFixos;
+
+        $valorDescontosFixos   = $descontosFixos->sum('valor');
+        $percentualAplicado    = $descontosPercentuais->max('porcentagem') ?? 0;
+
+        $freteNumerico         = is_numeric($orcamento->frete) ? (float) $orcamento->frete : 0;
+        $guiaNumerico          = is_numeric($orcamento->guia_recolhimento) ? (float) $orcamento->guia_recolhimento : 0;
+
+        $valorFinal            = $totalComDescontos - $valorDescontosFixos + $freteNumerico + $guiaNumerico;
     @endphp
 
     <h3>Totais e Descontos</h3>
@@ -390,47 +427,52 @@
                 <td class="valor">R$ {{ number_format($totalItensComDesconto, 2, ',', '.') }}</td>
             </tr>
         @endif
-        @if ($orcamento->vidros->count() > 0)
+
+        @if ($orcamento->relationLoaded('vidros') && $orcamento->vidros->count() > 0)
             <tr>
                 <td>Valor Total em Vidros</td>
                 <td class="valor">R$ {{ number_format($totalVidros, 2, ',', '.') }}</td>
             </tr>
         @endif
-        @if ($orcamento->guia_recolhimento > 0)
+
+        @if ($guiaNumerico > 0)
             <tr>
                 <td>Guia de Recolhimento</td>
-                <td class="valor">R$ {{ number_format($orcamento->guia_recolhimento, 2, ',', '.') }}</td>
+                <td class="valor">R$ {{ number_format($guiaNumerico, 2, ',', '.') }}</td>
             </tr>
         @endif
-        @if ($orcamento->frete > 0)
+
+        @if ($freteNumerico > 0)
             <tr>
                 <td>Frete</td>
-                <td class="valor">R$ {{ number_format($orcamento->frete, 2, ',', '.') }}</td>
+                <td class="valor">R$ {{ number_format($freteNumerico, 2, ',', '.') }}</td>
             </tr>
         @endif
+
         @if ($percentualAplicado > 0)
             <tr>
                 <td>Desconto Percentual</td>
                 <td class="valor">{{ number_format($percentualAplicado, 2, ',', '.') }}%</td>
             </tr>
         @endif
+
         @foreach ($descontosFixos as $desc)
             <tr>
                 <td>{{ $desc->motivo }}</td>
                 <td class="valor">- R$ {{ number_format($desc->valor, 2, ',', '.') }}</td>
             </tr>
         @endforeach
+
         @foreach ($descontosProdutoAprov as $desc)
             <tr>
                 <td>Desconto especial: {{ $desc->produto->nome ?? ('Produto #' . $desc->produto_id) }}</td>
                 <td class="valor">- R$ {{ number_format($desc->valor, 2, ',', '.') }}</td>
             </tr>
         @endforeach
+
         <tr>
-            <td>Valor Final do Orçamento</td>
-            <td class="valor">R$
-                {{ number_format($valorFinal + $orcamento->frete + $orcamento->guia_recolhimento, 2, ',', '.') }}
-            </td>
+            <td><strong>Valor Final do Orçamento</strong></td>
+            <td class="valor"><strong>R$ {{ number_format($valorFinal, 2, ',', '.') }}</strong></td>
         </tr>
     </table>
 
@@ -439,8 +481,11 @@
     =========================== -->
     <div class="footer"
         style="position: fixed; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 11px; color: #666;">
-        <p>Este orçamento é válido até {{ \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }}. ©
-            {{ date('Y') }} {{ config('app.name') }} - Todos os direitos reservados.</p>
+        <p>
+            Este orçamento é válido até
+            {{ $orcamento->validade ? \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') : 'data não definida' }}.
+            © {{ date('Y') }} {{ config('app.name') }} - Todos os direitos reservados.
+        </p>
     </div>
 
 </body>

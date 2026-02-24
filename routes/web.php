@@ -155,13 +155,16 @@ Route::get('/conferencia', [ConferenciaController::class, 'index'])
     ->name('conferencia.index');
     */
 
-// Tela de conferência de um orçamento específico
-Route::get('/orcamentos/{orcamento}/conferencia', [ConferenciaController::class, 'show'])
-    ->name('orcamentos.conferencia.show');
+    Route::post('/orcamentos/{orcamento}/atualizar-precos', [OrcamentoController::class, 'atualizarPrecos'])
+        ->name('orcamentos.atualizar-precos');
 
-// Download do relatório PDF de conferência
-Route::get('/orcamentos/{orcamento}/conferencia/pdf', [ConferenciaController::class, 'downloadPdf'])
-    ->name('orcamentos.conferencia.pdf');
+    // Tela de conferência de um orçamento específico
+    Route::get('/orcamentos/{orcamento}/conferencia', [ConferenciaController::class, 'show'])
+        ->name('orcamentos.conferencia.show');
+
+    // Download do relatório PDF de conferência
+    Route::get('/orcamentos/{orcamento}/conferencia/pdf', [ConferenciaController::class, 'downloadPdf'])
+        ->name('orcamentos.conferencia.pdf');
 
     // fim rotas separação e conferência
 

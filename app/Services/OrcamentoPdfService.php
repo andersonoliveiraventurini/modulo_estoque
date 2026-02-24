@@ -44,8 +44,8 @@ class OrcamentoPdfService
                 $canvas->text(270, 820, $text, $font, 10);
             });
 
-            // 5. SALVAR PDF
-            $path = "orcamentos/orcamento_{$orcamento->id}.pdf";
+            // 5. SALVAR PDF -  Nome com versão garante que o browser sempre baixa o arquivo novo
+            $path = "orcamentos/orcamento_{$orcamento->id}_v{$orcamento->versao}.pdf";
             Storage::disk('public')->put($path, $pdf->output());
 
             // 6. ATUALIZA ORÇAMENTO

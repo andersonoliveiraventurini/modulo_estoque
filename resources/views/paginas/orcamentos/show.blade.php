@@ -35,6 +35,17 @@
                     </a>
                 @endif
 
+                {{-- Botão Atualizar Preços --}}
+                <form action="{{ route('orcamentos.atualizar-precos', $orcamento->id) }}" method="POST"
+                    onsubmit="return confirm('Tem certeza? Isso irá atualizar todos os preços com os valores atuais dos produtos e remover os descontos aplicados.')">
+                    @csrf
+                    <button type="submit">
+                        <x-button size="sm" variant="danger" tag="span">
+                            <x-heroicon-o-arrow-path class="w-4 h-4" />
+                            Atualizar Preços
+                        </x-button>
+                    </button>
+                </form>
             </h2>
 
             <div class="flex flex-wrap justify-between items-start gap-4">
@@ -47,7 +58,8 @@
                     </div>
                     <div>
                         <p><strong>Data do Orçamento:</strong> {{ $orcamento->created_at->format('d/m/Y') }}</p>
-                        <p><strong>Validade:</strong> {{ \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }}
+                        <p><strong>Validade:</strong>
+                            {{ \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y') }}
                         </p>
                         <p><strong>Prazo de Entrega:</strong> {{ $orcamento->prazo_entrega ?? '---' }}</p>
                         <p><strong>Vendedor:</strong> {{ $orcamento->vendedor->name ?? '---' }}</p>
@@ -535,7 +547,7 @@
                             <span>
                                 <strong>{{ $desc->motivo ?: 'Desconto Fixo' }}:</strong>
                                 -R$ {{ number_format($desc->valor, 2, ',', '.') }}
-                                
+
                                 @if ($desc->aprovado_em || $desc->aprovado_por)
                                     <span
                                         class="inline-flex items-center px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200">
@@ -559,7 +571,7 @@
                         <div class="flex items-center justify-between mb-2">
                             <span>
                                 <strong>{{ $desc->motivo ?: 'Desconto em Produto' }}:</strong>
-                                -R$ {{ number_format($desc->valor, 2, ',', '.') }} 
+                                -R$ {{ number_format($desc->valor, 2, ',', '.') }}
 
                                 @if ($desc->aprovado_em || $desc->aprovado_por)
                                     <span

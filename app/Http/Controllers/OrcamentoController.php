@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateOrcamentoRequest;
 use App\Models\Cliente;
 use App\Models\CondicoesPagamento;
 use App\Models\ConsultaPreco;
+use App\Models\Desconto;
 use App\Models\Cor;
 use App\Models\Endereco;
 use App\Models\Fornecedor;
@@ -1160,6 +1161,67 @@ class OrcamentoController extends Controller
                 'message' => 'Orçamento aprovado e Separação iniciada!',
                 'redirect' => route('orcamentos.separacao.show', $orcamento->id)
             ]);
+        }
+    }
+
+    public function atualizarPrecos(Orcamento $orcamento)
+    {
+        try {
+            DB::transaction(function () use ($orcamento) {
+
+                // 1. Deletar descontos relacionados ao orçamento
+                Desconto::where('orcamento_id', $orcamento->id)->delete();
+
+                // 2. Atualizar cada item do orçamento com o preço atual do produto
+                foreach ($orcamento->itens as $item) {
+                    $produto = Produto::find($item->produto_id);
+
+                    if (!$produto || is_null($produto->preco_venda)) {
+                        throw new \Exception("Produto ID {$item->produto_id} não encontrado ou sem preço de venda definido.");
+                    }
+
+                    $precoAtual       = $produto->preco_venda;
+                    $valorComDesconto = $item->quantidade * $precoAtual;
+
+                    $item->update([
+                        'valor_unitario'              => $precoAtual,
+                        'valor_unitario_com_desconto' => $precoAtual,
+                        'desconto'                    => 0,
+                        'valor_com_desconto'          => $valorComDesconto,
+                    ]);
+                }
+
+                // 3. Recalcular totais
+                $totalItens = $orcamento->itens()->sum(DB::raw('quantidade * valor_unitario'));
+
+                // 4. Atualizar orçamento — já incrementa a versão aqui
+                $orcamento->update([
+                    'status'             => 'Pendente',
+                    'valor_total_itens'  => $totalItens,
+                    'desconto_total'     => 0,
+                    'valor_com_desconto' => $totalItens,
+                    'versao'             => $orcamento->versao + 1, // ✅ incrementa versão
+                    'updated_at'         => now(),
+                ]);
+                
+                // Logo antes de chamar o serviço de PDF:
+                if ($orcamento->pdf_path && Storage::disk('public')->exists($orcamento->pdf_path)) {
+                    Storage::disk('public')->delete($orcamento->pdf_path);
+                }
+                // 5.  Recarrega o orçamento FRESCO do banco com os relacionamentos necessários
+                $orcamentoAtualizado = Orcamento::with(['itens.produto', 'cliente', 'vendedor'])
+                    ->find($orcamento->id);
+
+                $pdfService = new OrcamentoPdfService();
+                $pdfService->gerarOrcamentoPdf($orcamentoAtualizado);
+            });
+
+            return redirect()->route('orcamentos.show', $orcamento->id)
+                ->with('success', 'Preços atualizados com sucesso! Nova versão gerada, descontos removidos e PDF atualizado.');
+
+        } catch (\Exception $e) {
+            return redirect()->route('orcamentos.show', $orcamento->id)
+                ->with('error', 'Erro ao atualizar preços: ' . $e->getMessage());
         }
     }
 
