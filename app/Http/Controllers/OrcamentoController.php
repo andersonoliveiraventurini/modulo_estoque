@@ -485,14 +485,14 @@ class OrcamentoController extends Controller
             $orcamento->update(['endereco_id' => $request->enderecos_cadastrados]);
         }
 
-        // ✅ VALIDAÇÃO FINAL: VERIFICA SE PRECISA APROVAÇÃO
+        //  VALIDAÇÃO FINAL: VERIFICA SE PRECISA APROVAÇÃO
         $necessitaAprovacaoDesconto = (
             $descontoPercentual > $request->desconto_aprovado ||
-            Auth()->user()->vendedor->desconto < $descontoPercentual ||
+            (Auth()->user()->vendedor->desconto ?? 0) < $descontoPercentual ||
             $itenscomdesconto
         );
 
-        // ✅ DETERMINA O STATUS FINAL DO ORÇAMENTO
+        //  DETERMINA O STATUS FINAL DO ORÇAMENTO
         if ($necessitaAprovacaoDesconto && $necessitaAprovacaoPagamento) {
             // Ambos precisam de aprovação - prioriza desconto
             $orcamento->status = 'Aprovar desconto';
