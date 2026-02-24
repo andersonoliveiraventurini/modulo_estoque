@@ -399,75 +399,80 @@
             </div>
         @endif
 
-        {{-- Progresso da Expedição --}}
-        {{-- ✅ SÓ MOSTRA SE NÃO FOR REJEITADO --}}
-        @if ($orcamento->status !== 'Rejeitado')
-            <div
-                class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
-                <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    Progresso da Expedição
-                </h3>
-                @php
-                    $s = $orcamento->workflow_status;
-                    $done = 'text-emerald-600';
-                    $todo = 'text-gray-400 dark:text-gray-500';
-                    $active = 'text-indigo-600';
-                    $step = function (string $label, bool $isActive, bool $isDone) use ($done, $todo, $active) {
-                        $cl = $isDone ? $done : ($isActive ? $active : $todo);
-                        return "<div class='flex items-center gap-2 {$cl}'>
+        @if (in_array($orcamento->status, ['Aprovado']))
+            {{-- Progresso da Expedição --}}
+            {{-- ✅ SÓ MOSTRA SE NÃO FOR REJEITADO --}}
+            @if ($orcamento->status !== 'Rejeitado')
+                <div
+                    class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M5 13l4 4L19 7" />
+                        </svg>
+                        Progresso da Expedição
+                    </h3>
+                    @php
+                        $s = $orcamento->workflow_status;
+                        $done = 'text-emerald-600';
+                        $todo = 'text-gray-400 dark:text-gray-500';
+                        $active = 'text-indigo-600';
+                        $step = function (string $label, bool $isActive, bool $isDone) use ($done, $todo, $active) {
+                            $cl = $isDone ? $done : ($isActive ? $active : $todo);
+                            return "<div class='flex items-center gap-2 {$cl}'>
                                     <span class='text-sm'>{$label}</span>
                                 </div>";
-                    };
-                    $is = fn($arr) => in_array($s, $arr, true);
-                @endphp
+                        };
+                        $is = fn($arr) => in_array($s, $arr, true);
+                    @endphp
 
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                    {!! $step(
-                        'Aguardando Separação',
-                        $s === 'aguardando_separacao',
-                        $is(['em_separacao', 'aguardando_conferencia', 'em_conferencia', 'conferido', 'finalizado']),
-                    ) !!}
-                    {!! $step(
-                        'Em Separação',
-                        $s === 'em_separacao',
-                        $is(['aguardando_conferencia', 'em_conferencia', 'conferido', 'finalizado']),
-                    ) !!}
-                    {!! $step(
-                        'Aguardando Conferência',
-                        $s === 'aguardando_conferencia',
-                        $is(['em_conferencia', 'conferido', 'finalizado']),
-                    ) !!}
-                    {!! $step('Em Conferência / Finalização', $is(['em_conferencia']), $is(['conferido', 'finalizado'])) !!}
-                </div>
-            </div>
-        @endif
-
-        {{-- Card de chamada para Separação quando aprovado e sem lote ativo --}}
-        @php
-            $temBatchAtivo = \App\Models\PickingBatch::where('orcamento_id', $orcamento->id)
-                ->whereIn('status', ['aberto', 'em_separacao'])
-                ->exists();
-        @endphp
-        {{-- ✅ SÓ MOSTRA SE STATUS FOR APROVADO E NÃO FOR REJEITADO --}}
-        @if ($orcamento->status === 'Aprovado' && $temBatchAtivo && $orcamento->status !== 'Rejeitado')
-            <div
-                class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100">Pronto para Separação</h4>
-                        <p class="text-sm text-gray-600 dark:text-gray-300">Inicie a separação para este orçamento.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        {!! $step(
+                            'Aguardando Separação',
+                            $s === 'aguardando_separacao',
+                            $is(['em_separacao', 'aguardando_conferencia', 'em_conferencia', 'conferido', 'finalizado']),
+                        ) !!}
+                        {!! $step(
+                            'Em Separação',
+                            $s === 'em_separacao',
+                            $is(['aguardando_conferencia', 'em_conferencia', 'conferido', 'finalizado']),
+                        ) !!}
+                        {!! $step(
+                            'Aguardando Conferência',
+                            $s === 'aguardando_conferencia',
+                            $is(['em_conferencia', 'conferido', 'finalizado']),
+                        ) !!}
+                        {!! $step('Em Conferência / Finalização', $is(['em_conferencia']), $is(['conferido', 'finalizado'])) !!}
                     </div>
-                    <a href="{{ route('orcamentos.separacao.show', $orcamento->id) }}"
-                        class="inline-flex items-center px-3 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-sm">
-                        Ir para Separação
-                    </a>
                 </div>
-            </div>
-        @endif
+            @endif
 
+            {{-- Card de chamada para Separação quando aprovado e sem lote ativo --}}
+            @php
+                $temBatchAtivo = \App\Models\PickingBatch::where('orcamento_id', $orcamento->id)
+                    ->whereIn('status', ['aberto', 'em_separacao'])
+                    ->exists();
+            @endphp
+            {{-- ✅ SÓ MOSTRA SE STATUS FOR APROVADO E NÃO FOR REJEITADO --}}
+            @if ($orcamento->status === 'Aprovado' && $temBatchAtivo && $orcamento->status !== 'Rejeitado')
+                <div
+                    class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100">Pronto para Separação
+                            </h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Inicie a separação para este orçamento.
+                            </p>
+                        </div>
+                        <a href="{{ route('orcamentos.separacao.show', $orcamento->id) }}"
+                            class="inline-flex items-center px-3 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-sm">
+                            Ir para Separação
+                        </a>
+                    </div>
+                </div>
+            @endif
+        @endif
         {{-- Itens do Orçamento --}}
         @if ($orcamento->itens->count() > 0)
             <div

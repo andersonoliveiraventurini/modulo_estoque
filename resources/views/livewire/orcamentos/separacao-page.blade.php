@@ -2,7 +2,7 @@
     {{-- CABEÇALHO DA PÁGINA --}}
     <div class="mb-6">
         <h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-            Separação do Orçamento #{{ $orcamento->id }} - <a href="{{ asset('storage/' . $orcamento->pdf_path) }}" target="_blank" rel="noopener">
+            Separação do <a href="{{ route('orcamentos.show', $orcamento->id) }}" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">Orçamento #{{ $orcamento->id }}</a> - <a href="{{ asset('storage/' . $orcamento->pdf_path) }}" target="_blank" rel="noopener">
                             <x-button size="sm" variant="primary">
                                 <x-heroicon-o-document-arrow-down class="w-4 h-4" />
                                 PDF
