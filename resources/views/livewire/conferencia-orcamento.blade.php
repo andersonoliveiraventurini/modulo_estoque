@@ -20,7 +20,7 @@
     {{-- CABEÇALHO --}}
     <div class="mb-6">
         <h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-            Conferência do Orçamento #{{ $orcamento->id }}
+            Conferência do <a href="{{ route('orcamentos.show', $orcamento->id) }}">Orçamento #{{ $orcamento->id }}</a>
         </h1>
         <p class="text-sm text-gray-600 dark:text-gray-300">
             Cliente: {{ optional($orcamento->cliente)->nome }}
