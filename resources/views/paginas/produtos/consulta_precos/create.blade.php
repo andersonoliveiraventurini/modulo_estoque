@@ -24,14 +24,14 @@
                                 <option value="{{ $cor->id }}">{{ $cor->nome }}</option>
                                 @endforeach
                             </x-select>
+                            <x-input name="part_number" label="Part Number" placeholder="Digite o part number"
+                                class="col-span-2" value="{{ old('part_number') }}" />
                             <x-select name="fornecedor_id" label="Fornecedor">
                                 <option value="">Selecione...</option>
                                 @foreach ($fornecedores as $fornecedor)
                                 <option value="{{ $fornecedor->id }}">{{ $fornecedor->nome_fantasia }}</option>
                                 @endforeach
                             </x-select>
-                            <x-input name="part_number" label="Part Number" placeholder="Digite o part number"
-                                class="col-span-2" value="{{ old('part_number') }}" />
                         </div>
                         <x-textarea name="observacao" label="Observações"
                             placeholder="Digite os detalhes adicionais..." rows="4" value="{{ old('observacao') }}"></x-textarea>

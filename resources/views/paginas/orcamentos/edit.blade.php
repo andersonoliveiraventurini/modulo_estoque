@@ -368,7 +368,7 @@
                         <div class="flex gap-4 min-w-max">
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Condição de pagamento</label>
-                                <x-select name="condicao_pagamento" id="condicao_pagamento" required
+                                <x-select name="condicao_id" id="condicao_id" required
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
                                     <option value="">Selecione...</option>
                                     @foreach ($condicao as $c)
@@ -1377,7 +1377,7 @@
         });
 
         // Listener para condição de pagamento
-        const condicaoPagamentoSelect = document.getElementById('condicao_pagamento');
+        const condicaoPagamentoSelect = document.getElementById('condicao_id');
         const outrosMeiosInput = document.getElementById('outros_meios_pagamento');
 
         if (condicaoPagamentoSelect && outrosMeiosInput) {
@@ -1429,7 +1429,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         const vendaTriangular = document.getElementById('venda_triangular');
         const cnpj_triangular = document.getElementById('cnpj_triangular');
-        const condicaoPagamento = document.getElementById('condicao_pagamento');
+        const condicaoPagamento = document.getElementById('condicao_id');
         const outrosMeios = document.getElementById('outros_meios_pagamento');
 
         function toggleVendaTriangular() {

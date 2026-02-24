@@ -2,7 +2,12 @@
     {{-- CABEÇALHO DA PÁGINA --}}
     <div class="mb-6">
         <h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-            Separação do Orçamento #{{ $orcamento->id }}
+            Separação do Orçamento #{{ $orcamento->id }} - <a href="{{ asset('storage/' . $orcamento->pdf_path) }}" target="_blank" rel="noopener">
+                            <x-button size="sm" variant="primary">
+                                <x-heroicon-o-document-arrow-down class="w-4 h-4" />
+                                PDF
+                            </x-button>
+                        </a>
         </h1>
         <p class="text-sm text-gray-600 dark:text-gray-300">
             Cliente: {{ optional($orcamento->cliente)->nome }} • Workflow: <span

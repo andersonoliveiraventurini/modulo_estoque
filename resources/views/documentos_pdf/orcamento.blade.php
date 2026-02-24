@@ -259,13 +259,10 @@
         <tr>
             <td class="label">Condição pagamento:</td>
             <td class="value">
-                @if ($orcamento->relationLoaded('condicaoPagamento') && $orcamento->condicaoPagamento)
+                @if ($orcamento->condicao_id == 20)
+                    {{ $orcamento->outros_meios_pagamento }}
+                @else 
                     {{ $orcamento->condicaoPagamento->nome }}
-                    @if ($orcamento->condicao_id == 20)
-                        — {{ $orcamento->outros_meios_pagamento }}
-                    @endif
-                @else
-                    ---
                 @endif
             </td>
             <td class="label">Tipo de frete:</td>

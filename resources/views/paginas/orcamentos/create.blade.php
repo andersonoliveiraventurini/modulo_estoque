@@ -144,7 +144,7 @@
                             </x-select>
                             <x-input type="text" name="prazo_entrega" placeholder="Ex: 15 dias úteis"
                                 label="Prazo de Entrega" />
-                            <x-select name="tipo_frete" label="Tipo de Frete" required>
+                            <x-select name="frete" label="Tipo de Frete" required>
                                 <option value="">Selecione...</option>
                                 <option value="cif">CIF - entrega por conta do fornecedor
                                 </option>
@@ -238,7 +238,7 @@
                         <div class="flex gap-4 min-w-max">
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700">Condição de pagamento</label>
-                                <x-select name="condicao_pagamento" id="condicao_pagamento" required
+                                <x-select name="condicao_id" id="condicao_id" required
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
                                     <option value="">Selecione...</option>
                                     @foreach ($condicao as $c)
@@ -382,7 +382,7 @@
             const vendaTriangular = document.getElementById('venda_triangular');
             const cnpj_triangular = document.getElementById('cnpj_triangular');
 
-            const condicaoPagamento = document.getElementById('condicao_pagamento');
+            const condicaoPagamento = document.getElementById('condicao_id');
             const outrosMeios = document.getElementById('outros_meios_pagamento');
 
             function toggleVendaTriangular() {
