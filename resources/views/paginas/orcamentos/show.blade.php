@@ -37,7 +37,7 @@
                     {{-- PDF removido do header, exibido no painel de status --}}
 
                     {{-- Editar --}}
-                    @if (in_array($orcamento->status, ['Aprovar desconto', 'Aprovar pagamento', 'Pendente','Aprovado']))
+                    @if (in_array($orcamento->status, ['Aprovar desconto', 'Aprovar pagamento', 'Pendente', 'Aprovado']))
                         <a href="{{ route('orcamentos.edit', $orcamento->id) }}">
                             <x-button size="sm" variant="secondary">
                                 <x-heroicon-o-pencil-square class="w-4 h-4" />
@@ -639,11 +639,12 @@
                                             Aprovado
                                         </span>
                                     @else
-                                        <span
-                                            class="inline-flex items-center px-2 py-1 rounded text-xs bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200">
-                                            <x-heroicon-o-clock class="w-3 h-3 mr-1" />
-                                            Pendente
-                                        </span>
+                                        <a href="/descontos/orcamento/{{ $orcamento->id }}">
+                                            <span
+                                                class="inline-flex items-center px-2 py-1 rounded text-xs bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200">
+                                                <x-heroicon-o-clock class="w-3 h-3 mr-1" />
+                                                Pendente
+                                            </span></a>
                                     @endif
                                 @endif
                             </span>
@@ -664,11 +665,13 @@
                                         Aprovado
                                     </span>
                                 @else
-                                    <span
-                                        class="inline-flex items-center px-2 py-1 rounded text-xs bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200">
-                                        <x-heroicon-o-clock class="w-3 h-3 mr-1" />
-                                        Pendente
-                                    </span>
+                                    <a href="/descontos/orcamento/{{ $orcamento->id }}">
+                                        <span
+                                            class="inline-flex items-center px-2 py-1 rounded text-xs bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200">
+                                            <x-heroicon-o-clock class="w-3 h-3 mr-1" />
+                                            Pendente
+                                        </span>
+                                    </a>
                                 @endif
                             </span>
 
@@ -689,11 +692,13 @@
                                         Aprovado
                                     </span>
                                 @else
-                                    <span
-                                        class="inline-flex items-center px-2 py-1 rounded text-xs bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200">
-                                        <x-heroicon-o-clock class="w-3 h-3 mr-1" />
-                                        Pendente
-                                    </span>
+                                    <a href="/descontos/orcamento/{{ $orcamento->id }}">
+                                        <span
+                                            class="inline-flex items-center px-2 py-1 rounded text-xs bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200">
+                                            <x-heroicon-o-clock class="w-3 h-3 mr-1" />
+                                            Pendente
+                                        </span>
+                                    </a>
                                 @endif
                             </span>
 
