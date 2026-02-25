@@ -11,6 +11,9 @@
         <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
             <x-app-logo />
         </a>
+        <flux:navlist.item icon="home" :href="route('clientes.index')"
+                :current="request()->routeIs('clientes.index')" wire:navigate>{{ __('Criar orçamento') }}
+            </flux:navlist.item>
         <flux:navlist.item icon="calculator" :href="route('orcamentos.index')"
             :current="request()->routeIs('orcamentos.index')" wire:navigate>{{ __('Orçamentos') }}
         </flux:navlist.item>

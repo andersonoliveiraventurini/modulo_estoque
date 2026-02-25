@@ -90,28 +90,39 @@
                 @forelse($descontos as $d)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            @if($d->aprovado_por)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                            @if ($d->aprovado_por)
+                                <a href="/descontos/orcamento/{{ $d->orcamento_id }}">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                     bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                    Aprovado
-                                </span>
-                            @elseif($d->aprovado_por == null && $d->rejeitado_por==null)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                        Aprovado
+                                    </span>
+                                </a>
+                            @elseif($d->aprovado_por == null && $d->rejeitado_por == null)
+                                <a href="/descontos/orcamento/{{ $d->orcamento_id }}">
+
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                     bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                                    Pendente
-                                </span>
+                                        Pendente
+                                    </span>
+                                </a>
                             @elseif($d->rejeitado_por)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                <a href="/descontos/orcamento/{{ $d->orcamento_id }}">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                     bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                                    Rejeitado
-                                </span>
+                                        Rejeitado
+                                    </span>
+                                </a>
                             @endif
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             {{ $d->motivo }}
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                 {{ $d->tipo === 'fixo' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' }}">
                                 {{ ucfirst($d->tipo) }}
                             </span>
@@ -123,8 +134,9 @@
                             {{ $d->porcentagem ? number_format($d->porcentagem, 2, ',', '.') . '%' : '-' }}
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            @if($d->cliente)
-                                <a href="/clientes/{{ $d->cliente->id }}" class="text-secondary-600 " class="hover:underline">
+                            @if ($d->cliente)
+                                <a href="/clientes/{{ $d->cliente->id }}" class="text-secondary-600 "
+                                    class="hover:underline">
                                     {{ $d->cliente->nome_fantasia ?? $d->cliente->nome }}
                                 </a>
                             @else
@@ -132,8 +144,9 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            @if($d->orcamento_id)
-                                <a href="/orcamentos/{{ $d->orcamento_id }}" class="text-secondary-600 " class="hover:underline">
+                            @if ($d->orcamento_id)
+                                <a href="/orcamentos/{{ $d->orcamento_id }}" class="text-secondary-600 "
+                                    class="hover:underline">
                                     #{{ $d->orcamento_id }}
                                 </a>
                             @else

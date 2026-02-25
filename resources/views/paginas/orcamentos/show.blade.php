@@ -287,21 +287,25 @@
                                     </div>
 
                                     {{-- ── BOTÃO PDF DESTACADO ── --}}
-                                    @if ($orcamento->pdf_path)
-                                        <a href="{{ asset('storage/' . $orcamento->pdf_path) }}" target="_blank"
-                                            rel="noopener"
-                                            class="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg
+                                    @if (in_array($orcamento->status, ['Aprovar desconto', 'Aprovar pagamento', 'Pendente', 'Aprovado']))
+
+                                        @if ($orcamento->pdf_path)
+                                            <a href="{{ asset('storage/' . $orcamento->pdf_path) }}" target="_blank"
+                                                rel="noopener"
+                                                class="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg
                                            bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700
                                            text-white text-sm font-semibold tracking-wide
                                            shadow-md shadow-emerald-900/40
                                            transition-all duration-150 group">
-                                            <svg class="w-4 h-4 transition-transform group-hover:-translate-y-0.5 group-hover:scale-110"
-                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h4a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                                            </svg>
-                                            Baixar PDF do Orçamento
-                                        </a>
+                                                <svg class="w-4 h-4 transition-transform group-hover:-translate-y-0.5 group-hover:scale-110"
+                                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h4a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                                                </svg>
+                                                Baixar PDF do Orçamento
+                                            </a>
+                                        @endif
                                     @endif
                                 @endif
 
