@@ -24,9 +24,9 @@
                             <x-input id="razao_social" name="razao_social" label="Razão social"
                                 placeholder="Digite a razão social" required />
                             <x-input id="nome_fantasia" name="nome_fantasia" label="Nome Fantasia"
-                                placeholder="Digite o nome fantasia" required />
+                                placeholder="Digite o nome fantasia"  />
                             <x-input type="text" name="tratamento" label="Tratamento *" placeholder="Apelido"
-                                required />
+                                 />
                             <x-input name="inscricao_estadual" label="Inscrição Estadual" /> <x-input
                                 name="inscricao_municipal" label="Inscrição Municipal" />
                             <x-input type="date" name="data_abertura" label="Data de Abertura" />
