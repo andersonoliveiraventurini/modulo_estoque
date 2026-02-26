@@ -23,7 +23,7 @@ class StoreClienteRequest extends FormRequest
     {
        return [
             // Pessoa Jurídica
-            'cnpj'           => ['required', 'string', 'max:18'],
+            'cnpj'           => ['required', 'string', 'max:18', 'unique:clientes,cnpj'], 
             'razao_social'   => ['nullable', 'string', 'max:255'],
             'nome_fantasia'  => ['nullable', 'string', 'max:255'],
             'tratamento'     => ['nullable', 'string', 'max:100'],
