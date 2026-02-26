@@ -118,15 +118,26 @@ class DescontoController extends Controller
                 'valor_com_desconto' => $valorFinal,
             ]);
         } else {
+            // ✅ Verifica condicao_id antes de definir o status
+            $temPagamentoPendente = $orcamento->condicao_id == 20
+                && SolicitacaoPagamento::where('orcamento_id', $orcamentoId)
+                    ->pendentes()
+                    ->exists();
+
+            $novoStatus = $temPagamentoPendente ? 'Aprovar pagamento' : 'Pendente';
+
             $orcamento->update([
-                'status'             => 'Pendente',
+                'status'             => $novoStatus,
                 'desconto_total'     => $totalDescontosAprovados,
                 'valor_com_desconto' => $valorFinal,
             ]);
 
-            $orcamento = Orcamento::find($orcamentoId);
-            $pdfService = new OrcamentoPdfService();
-            $pdfService->gerarOrcamentoPdf($orcamento);
+            // Gera PDF apenas quando vai para Pendente
+            if ($novoStatus === 'Pendente') {
+                $orcamento = Orcamento::find($orcamentoId);
+                $pdfService = new OrcamentoPdfService();
+                $pdfService->gerarOrcamentoPdf($orcamento);
+            }
         }
     }
 
@@ -337,12 +348,8 @@ class DescontoController extends Controller
         $valorFinal    = $valorOriginal - $totalDescontosAprovados;
 
         $temDescontosPendentes = Desconto::where('orcamento_id', $orcamentoId)
-            ->where('aprovado_em', null)
-            ->where('rejeitado_em', null)
-            ->exists();
-
-        $temSolicitacaoPagamentoPendente = SolicitacaoPagamento::where('orcamento_id', $orcamentoId)
-            ->pendentes()
+            ->whereNull('aprovado_em')
+            ->whereNull('rejeitado_em')
             ->exists();
 
         $dadosAtualizacao = [
@@ -352,15 +359,14 @@ class DescontoController extends Controller
 
         if ($temDescontosPendentes) {
             $dadosAtualizacao['status'] = 'Aprovar desconto';
-            Log::info("Ainda há descontos pendentes no orçamento #{$orcamentoId}");
-        } elseif ($temSolicitacaoPagamentoPendente) {
+        } elseif ($orcamento->condicao_id == 20) {
+            // ✅ condicao_id 20 sempre vai para Aprovar pagamento,
+            // independente de ter solicitação pendente
             $dadosAtualizacao['status'] = 'Aprovar pagamento';
-            Log::info("Descontos aprovados, mas ainda há solicitação de pagamento pendente no orçamento #{$orcamentoId}");
         } else {
             $dadosAtualizacao['status'] = 'Pendente';
             $pdfService = new OrcamentoPdfService();
             $pdfService->gerarOrcamentoPdf($orcamento);
-            Log::info("Descontos e pagamentos aprovados. PDF gerado para orçamento #{$orcamentoId}");
         }
 
         $orcamento->update($dadosAtualizacao);

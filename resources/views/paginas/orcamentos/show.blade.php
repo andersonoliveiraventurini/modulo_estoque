@@ -372,7 +372,7 @@
                         </div>
                         <div class="mt-4">
                             <a href="{{ route('solicitacoes-pagamento.aprovar', $orcamento->id) }}"
-                                class="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                 class="inline-flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-lg transition-colors">
                                 <x-heroicon-o-credit-card class="w-4 h-4" />
                                 Ir para Aprovação de Meio de Pagamento
                             </a>

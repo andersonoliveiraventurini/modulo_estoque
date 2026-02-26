@@ -75,7 +75,7 @@ class ConfirmarDescontos extends Component
             $this->descontos = Desconto::where('orcamento_id', $this->orcamentoId)
                 ->whereNull('aprovado_em')
                 ->whereNull('rejeitado_em')
-                ->with('user')
+                ->with('user', 'produto') 
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -193,6 +193,8 @@ class ConfirmarDescontos extends Component
                 'justificativa_rejeicao' => $this->justificativas[$descontoId] ?? null,
             ]);
 
+            $this->atualizarValorOrcamento();
+
             DB::commit();
 
             $this->dispatch('alert', [
@@ -290,6 +292,7 @@ class ConfirmarDescontos extends Component
 
                 $totalRejeitados++;
             }
+            $this->atualizarValorOrcamento();
 
             DB::commit();
 
@@ -363,14 +366,8 @@ class ConfirmarDescontos extends Component
         ];
 
         if (!$temDescontosPendentes) {
-            $temPagamentoPendente = $this->orcamento->condicao_id == 20
-                && $this->orcamento->solicitacoesPagamento()
-                    ->where('status', 'Pendente')
-                    ->whereNull('aprovado_em')
-                    ->whereNull('rejeitado_em')
-                    ->exists();
-
-            $novoStatus = $temPagamentoPendente ? 'Aprovar pagamento' : 'Pendente';
+            $novoStatus = $this->orcamento->condicao_id == 20 ? 'Aprovar pagamento' : 'Pendente';
+            
             $dadosAtualizacao['status'] = $novoStatus;
 
             DB::table('orcamentos')

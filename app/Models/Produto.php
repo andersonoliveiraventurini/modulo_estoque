@@ -50,4 +50,5 @@ class Produto extends Model
     {
         return $this->belongsTo(Cor::class, 'cor_id');
     }
+    
 }

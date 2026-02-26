@@ -38,6 +38,12 @@ class Desconto extends Model
         'deleted_at' => 'datetime',
     ];
 
+
+    public function produto()
+    {
+        return $this->belongsTo(Produto::class);
+    }
+
     public function cliente()
     {
         return $this->belongsTo(Cliente::class);
