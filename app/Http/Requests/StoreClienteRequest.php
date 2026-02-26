@@ -14,6 +14,15 @@ class StoreClienteRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->filled('cnpj')) {
+            $this->merge([
+                'cnpj' => preg_replace('/\D/', '', $this->cnpj)
+            ]);
+        }
+    }
+    
     /**
      * Get the validation rules that apply to the request.
      *
@@ -23,7 +32,7 @@ class StoreClienteRequest extends FormRequest
     {
        return [
             // Pessoa Jurídica
-            'cnpj'           => ['required', 'string', 'max:18', 'unique:clientes,cnpj'], 
+            'cnpj'           => ['required', 'string', 'max:14', 'unique:clientes,cnpj'], 
             'razao_social'   => ['nullable', 'string', 'max:255'],
             'nome_fantasia'  => ['nullable', 'string', 'max:255'],
             'tratamento'     => ['nullable', 'string', 'max:100'],

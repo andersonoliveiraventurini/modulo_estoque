@@ -52,7 +52,7 @@ class ListaCliente extends Component
         $clientes = Cliente::query()
             ->with(['vendedor.user', 'vendedorExterno.user', 'enderecos'])
 
-            // 🔎 Busca geral
+            //  Busca geral
             ->when($this->search, function ($query) {
                 $terms = preg_split('/\s+/', trim($this->search));
                 foreach ($terms as $term) {
