@@ -198,16 +198,32 @@ class SolicitacaoPagamentoController extends Controller
 
                 Log::info("Pagamento aprovado, mas ainda há descontos pendentes no orçamento #{$orcamentoId}");
             } else {
-                // Não tem mais nada pendente - gera o PDF
-                $orcamento->update([
-                    'status' => 'Pendente',
-                ]);
+                //  Verifica estoque antes de definir status final
+                $temItensSemEstoque = false;
 
-                // Gera o PDF atualizado
-                $pdfService = new OrcamentoPdfService();
-                $pdfService->gerarOrcamentoPdf($orcamento);
+                foreach ($orcamento->itens as $item) {
+                    $produto = \App\Models\Produto::find($item->produto_id);
+                    if ($produto && $produto->estoque_atual !== null) {
+                        if ((float) $item->quantidade > (float) $produto->estoque_atual) {
+                            $temItensSemEstoque = true;
+                            break;
+                        }
+                    }
+                }
 
-                Log::info("Pagamento aprovado e PDF gerado para orçamento #{$orcamentoId}");
+                if ($temItensSemEstoque) {
+                    $orcamento->update(['status' => 'Sem estoque']);
+
+                    Log::info("Pagamento aprovado, mas orçamento #{$orcamentoId} ficou como 'Sem estoque'");
+                } else {
+                    $orcamento->update(['status' => 'Pendente']);
+
+                    // Gera o PDF atualizado
+                    $pdfService = new OrcamentoPdfService();
+                    $pdfService->gerarOrcamentoPdf($orcamento);
+
+                    Log::info("Pagamento aprovado e PDF gerado para orçamento #{$orcamentoId}");
+                }
             }
         } else {
             Log::info("Pagamento aprovado, mas ainda há {$solicitacoesPendentes} solicitações pendentes no orçamento #{$orcamentoId}");

@@ -37,7 +37,7 @@
                     {{-- PDF removido do header, exibido no painel de status --}}
 
                     {{-- Editar --}}
-                    @if (in_array($orcamento->status, ['Aprovar desconto', 'Aprovar pagamento', 'Pendente', 'Aprovado']))
+                    @if (in_array($orcamento->status, ['Aprovar desconto', 'Aprovar pagamento', 'Pendente', 'Aprovado', 'Sem estoque']))
                         <a href="{{ route('orcamentos.edit', $orcamento->id) }}">
                             <x-button size="sm" variant="secondary">
                                 <x-heroicon-o-pencil-square class="w-4 h-4" />
@@ -175,6 +175,17 @@
                                         </div>
                                         <p class="text-xs text-neutral-500 dark:text-neutral-400">
                                             Este orçamento foi rejeitado durante a aprovação do meio de pagamento.
+                                        </p>
+                                    </div>
+                                @elseif ($orcamento->status === 'Sem estoque')
+                                    <div class="space-y-2">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
+                                            <p class="text-sm font-semibold text-red-700 dark:text-red-400">
+                                                Sem Estoque</p>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                                            Este orçamento não poder seguir por falta de estoque.
                                         </p>
                                     </div>
 
@@ -372,7 +383,7 @@
                         </div>
                         <div class="mt-4">
                             <a href="{{ route('solicitacoes-pagamento.aprovar', $orcamento->id) }}"
-                                 class="inline-flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-lg transition-colors">
                                 <x-heroicon-o-credit-card class="w-4 h-4" />
                                 Ir para Aprovação de Meio de Pagamento
                             </a>
@@ -512,7 +523,9 @@
                             @foreach ($orcamento->itens as $item)
                                 @php
                                     $prod = $item->produto;
-                                    if (!$prod) continue;
+                                    if (!$prod) {
+                                        continue;
+                                    }
                                     $reservado = (float) \App\Models\EstoqueReserva::where('produto_id', $prod->id ?? 0)
                                         ->where('status', 'ativa')
                                         ->sum('quantidade');
@@ -520,8 +533,9 @@
                                     $disponivel = $estoqueAtual - $reservado;
                                     $min = (float) ($prod->estoque_minimo ?? 0);
                                     $risco = $disponivel - (float) $item->quantidade < $min;
+                                    $semEstoque = (float) $item->quantidade > $disponivel; // ✅ NOVO
                                 @endphp
-                                <tr>
+                                <tr class="{{ $semEstoque ? 'bg-red-50 dark:bg-red-900/20' : '' }}">
                                     <td class="px-3 py-2 border">{{ $prod->codigo ?? $item->produto_id }}</td>
                                     <td class="px-3 py-2 border">{{ $prod->nome ?? '—' }}</td>
                                     <td class="px-3 py-2 border">{{ $item->produto->part_number ?? '—' }}</td>
@@ -531,7 +545,17 @@
                                             style="background-color: {{ $prod->cor->codigo_hex ?? '' }}">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
                                         {{ $prod->cor->nome ?? '—' }}
                                     </td>
-                                    <td class="px-3 py-2 border text-center">{{ $item->quantidade }}</td>
+                                    <td
+                                        class="px-3 py-2 border text-center font-semibold {{ $semEstoque ? 'text-red-600 dark:text-red-400' : '' }}">
+                                        {{ $item->quantidade }}
+                                        @if ($semEstoque)
+                                            <div class="text-xs font-normal text-red-500 mt-0.5">
+                                                Faltam
+                                                {{ number_format((float) $item->quantidade - $disponivel, 0, ',', '.') }}
+                                                un.
+                                            </div>
+                                        @endif
+                                    </td>
                                     <td class="px-3 py-2 border text-center">
                                         {{ ($prod->liberar_desconto ?? 0) == 0 ? 'Não' : 'Sim' }}</td>
                                     <td class="px-3 py-2 border text-right">R$
@@ -544,17 +568,41 @@
                                         {{ number_format($estoqueAtual, 2, ',', '.') }}</td>
                                     <td class="px-3 py-2 border text-right">
                                         {{ number_format($reservado, 2, ',', '.') }}</td>
-                                    <td class="px-3 py-2 border text-right">
-                                        {{ number_format($disponivel, 2, ',', '.') }}</td>
+                                    <td
+                                        class="px-3 py-2 border text-right font-semibold {{ $semEstoque ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' }}">
+                                        {{ number_format($disponivel, 2, ',', '.') }}
+                                    </td>
                                     <td class="px-3 py-2 border text-center">
-                                        @if ($risco)
+                                        @if ($semEstoque)
                                             <span
-                                                class="inline-flex items-center px-2 py-1 rounded text-xs bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+                                                class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200 border border-red-300">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                                                </svg>
+                                                Sem estoque
+                                            </span>
+                                        @elseif ($risco)
+                                            <span
+                                                class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                                                </svg>
                                                 Abaixo do mínimo
                                             </span>
                                         @else
                                             <span
-                                                class="inline-flex items-center px-2 py-1 rounded text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
+                                                class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M5 13l4 4L19 7" />
+                                                </svg>
                                                 OK
                                             </span>
                                         @endif
@@ -613,20 +661,18 @@
             </div>
         @endif
 
-
-
         {{-- Totais e Descontos --}}
         @php
-            $totalItens = $orcamento->itens->sum('valor_com_desconto');
-            $totalVidros = $orcamento->vidros->sum('valor_com_desconto');
-            $totalFixos = $orcamento->descontos->where('tipo', 'fixo')->sum('valor');
+            $totalItens = (float) $orcamento->itens->sum('valor_com_desconto');
+            $totalVidros = (float) $orcamento->vidros->sum('valor_com_desconto');
+            $totalFixos = (float) $orcamento->descontos->where('tipo', 'fixo')->sum('valor');
             $percentual = $orcamento->descontos->where('tipo', 'percentual')->max('porcentagem') ?? 0;
             $valorFinal =
                 $totalItens +
                 $totalVidros -
                 $totalFixos +
-                ($orcamento->frete ?? 0) +
-                ($orcamento->guia_recolhimento ?? 0);
+                (float) ($orcamento->frete ?? 0) +
+                (float) ($orcamento->guia_recolhimento ?? 0);
         @endphp
 
         <div
@@ -718,12 +764,12 @@
                     {{-- Guia de Recolhimento --}}
                     @if ($orcamento->guia_recolhimento > 0)
                         <p class="mt-2"><strong>Guia de Recolhimento:</strong> R$
-                            {{ number_format($orcamento->guia_recolhimento, 2, ',', '.') }}</p>
+                            {{ number_format((float) $orcamento->guia_recolhimento, 2, ',', '.') }}</p>
                     @endif
 
                     {{-- Frete --}}
-                    @if ($orcamento->frete > 0)
-                        <p><strong>Frete:</strong> R$ {{ number_format($orcamento->frete, 2, ',', '.') }}</p>
+                    @if ((float) $orcamento->frete > 0)
+                        <p><strong>Frete:</strong> R$ {{ number_format((float) $orcamento->frete, 2, ',', '.') }}</p>
                     @endif
                 </div>
                 <div>

@@ -307,9 +307,25 @@ class ConfirmarDescontos extends Component
             'valor_com_desconto' => $this->orcamento->valor_total_itens - $totalDescontosAprovados,
         ];
 
+        // DEPOIS
         if (!$temDescontosPendentes) {
-            $novoStatus = $this->orcamento->condicao_id == 20 ? 'Aprovar pagamento' : 'Pendente';
-            
+            if ($this->orcamento->condicao_id == 20) {
+                $novoStatus = 'Aprovar pagamento';
+            } else {
+                // ✅ Verifica estoque antes de definir Pendente
+                $temItensSemEstoque = false;
+                foreach ($this->orcamento->itens as $item) {
+                    $produto = \App\Models\Produto::find($item->produto_id);
+                    if ($produto && $produto->estoque_atual !== null) {
+                        if ((float) $item->quantidade > (float) $produto->estoque_atual) {
+                            $temItensSemEstoque = true;
+                            break;
+                        }
+                    }
+                }
+                $novoStatus = $temItensSemEstoque ? 'Sem estoque' : 'Pendente';
+            }
+
             $dadosAtualizacao['status'] = $novoStatus;
 
             DB::table('orcamentos')
@@ -317,7 +333,6 @@ class ConfirmarDescontos extends Component
                 ->whereNull('deleted_at')
                 ->update(array_merge($dadosAtualizacao, ['updated_at' => now()]));
 
-            // Gera PDF apenas quando status vai para Pendente
             if ($novoStatus === 'Pendente') {
                 try {
                     $orcamentoAtualizado = $this->orcamento->fresh();
@@ -327,7 +342,8 @@ class ConfirmarDescontos extends Component
                     Log::error("Erro ao gerar PDF após aprovar descontos (Livewire) orçamento #{$this->orcamentoId}: " . $e->getMessage());
                 }
             }
-        } else {
+        }
+         else {
             DB::table('orcamentos')
                 ->where('id', $this->orcamentoId)
                 ->whereNull('deleted_at')

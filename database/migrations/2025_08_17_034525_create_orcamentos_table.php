@@ -57,7 +57,7 @@ return new class extends Migration
                         ->comment('Valor final do orçamento após aplicação dos descontos aprovados.');
 
                   $table->enum('status', ['Aprovar desconto','Aprovar pagamento', 'Pendente', 'Aprovado',
-                   'Finalizado', 'Cancelado', 'Rejeitado', 'Expirado', 'Pago', 'Estornado'])
+                   'Finalizado', 'Cancelado', 'Rejeitado', 'Expirado', 'Pago', 'Estornado', 'Sem estoque'])
                         ->default('Pendente')
                         ->comment('Status do orçamento, como pendente, aprovado, cancelado, etc.');
 

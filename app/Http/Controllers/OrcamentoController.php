@@ -452,7 +452,7 @@ class OrcamentoController extends Controller
             }
         }
 
-        // ✅ DESCONTO ESPECÍFICO
+        //  DESCONTO ESPECÍFICO
         if ($descontoEspecifico) {
             $orcamento->descontos()->create([
                 'motivo'      => 'Desconto específico em reais',
@@ -463,6 +463,25 @@ class OrcamentoController extends Controller
                 'user_id'     => Auth()->id(),
             ]);
         }
+
+        // fim desconto especifico
+
+        // validação sem estoque
+        $temItensSemEstoque = false;
+
+        if ($request->has('itens')) {
+            foreach ($request->itens as $item) {
+                $produto = \App\Models\Produto::find($item['id']);
+                if ($produto && $produto->estoque_atual !== null) {
+                    $quantidadeSolicitada = (float) ($item['quantidade'] ?? 0);
+                    if ($quantidadeSolicitada > $produto->estoque_atual) {
+                        $temItensSemEstoque = true;
+                        break;
+                    }
+                }
+            }
+        }
+        // fim validação sem estoque
 
         if ($request->filled('endereco_cep')) {
             $endereco = Endereco::updateOrCreate(
@@ -498,9 +517,14 @@ class OrcamentoController extends Controller
 
         // ✅ DETERMINA O STATUS FINAL DO ORÇAMENTO
         if (!$temQualquerDesconto && !$necessitaAprovacaoPagamento) {
-            // Nenhuma aprovação necessária — aprova direto
-            $orcamento->status = 'Aprovado';
-            $orcamento->save();
+            // Nenhuma aprovação necessária — verifica estoque antes de aprovar
+            if ($temItensSemEstoque) {
+                $orcamento->status = 'Sem estoque';
+                $orcamento->save();
+            } else {
+                $orcamento->status = 'Aprovado';
+                $orcamento->save();
+            }
         } elseif ($necessitaAprovacaoDesconto && $necessitaAprovacaoPagamento) {
             // Ambos precisam de aprovação — prioriza desconto
             $orcamento->status = 'Aprovar desconto';
@@ -551,179 +575,6 @@ class OrcamentoController extends Controller
             ->route('orcamentos.show', $orcamento->id)
             ->with('error', 'Orçamento criado com sucesso, mas ocorreu uma falha ao gerar o PDF. Por favor, contate o suporte.');
     }
-
-
-
-    /*
-     * Store a newly created resource in storage.
-     * 
-         public function store(StoreOrcamentoRequest $request)
-    {
-        // 1) Definir desconto percentual (cliente x vendedor)
-        $descontoPercentual = null;
-
-        if ($request->guia_recolhimento != null) {
-            $request->merge([
-                'guia_recolhimento' => str_replace(',', '.', str_replace('.', '', $request->guia_recolhimento)),
-            ]);
-        }
-
-        $request->merge([
-            'desconto_especifico' => str_replace(',', '.', str_replace('.', '', $request->desconto_especifico)),
-            'desconto_aprovado' => str_replace(',', '.', str_replace('.', '', $request->desconto_aprovado)),
-        ]);
-
-        if ($request->filled('desconto_aprovado') || $request->filled('desconto')) {
-            $descontoPercentual = max(
-                (float) $request->desconto_aprovado ?? 0,
-                (float) $request->desconto ?? 0
-            );
-        }
-
-        // 2) Definir desconto específico em valor (reais)
-        $descontoEspecifico = $request->filled('desconto_especifico')
-            ? (float) $request->desconto_especifico
-            : null;
-
-        if ($request->valor_total == "0,00") {
-            $request->merge(['valor_total' => 0]);
-        }
-
-        // Criação do orçamento (sem endereço ainda)
-        $orcamento = Orcamento::create([
-            'cliente_id'   => $request->cliente_id,
-            'vendedor_id'  =>  Auth()->user()->id,
-            'usuario_logado_id'  => Auth()->user()->id,
-            'obra'         => $request->nome_obra,
-            'valor_total_itens'  => $request->valor_total,
-            'guia_recolhimento'  => $request->guia_recolhimento,
-            'observacoes'  => $request->observacoes,
-            'condicao_id' => $request->condicao_id,
-            'validade'     => Carbon::now()->addDays(2), // sempre +2 dias
-        ]);
-
-        if ($request->tipos_transporte) {
-            $orcamento->transportes()->sync($request->tipos_transporte);
-        }
-
-        if ($request->has('itens')) {
-            foreach ($request->itens as $item) {
-                $valorUnitario = $item['preco_unitario'] ?? 0;
-                $quantidade    = $item['quantidade'] ?? 0;
-                $subtotal      = $valorUnitario * $quantidade;
-                $valornitariodesconto = $item['preco_unitario_com_desconto'] ?? null;
-
-                // Aplica desconto percentual no item (se existir)
-                $valorComDesconto = $subtotal;
-                if ($descontoPercentual) {
-                    $valorComDesconto = $subtotal - ($subtotal * ($descontoPercentual / 100));
-                }
-
-                $orcamento->itens()->create([
-                    'produto_id'         => $item['id'],
-                    'quantidade'         => $quantidade,
-                    'valor_unitario'     => $valorUnitario,
-                    'valor_unitario_com_desconto' => $valornitariodesconto,
-                    'desconto'           => $descontoPercentual ?? 0,
-                    'valor_com_desconto' => $valorComDesconto,
-                    'user_id'            => $request->user()->id ?? null,
-                ]);
-            }
-        }
-
-        // 5) Criar vidros
-        if ($request->has('vidros')) {
-            foreach ($request->vidros as $vidro) {
-                if ($vidro['preco_m2'] && $vidro['quantidade'] && $vidro['altura'] && $vidro['largura']) {
-                    $orcamento->vidros()->create([
-                        'descricao'            => $vidro['descricao'] ?? null,
-                        'quantidade'           => $vidro['quantidade'] ?? 0,
-                        'altura'               => $vidro['altura'] ?? 0,
-                        'largura'              => $vidro['largura'] ?? 0,
-                        'preco_metro_quadrado' => $vidro['preco_m2'] ?? 0,
-                        'desconto'             => $descontoPercentual ?? 0,
-                        'valor_total'         => $vidro['valor_total'] ?? 0,
-                        'valor_com_desconto'   => $vidro['valor_com_desconto'] ?? 0,
-                        'user_id'              => $request->user()->id ?? null,
-                    ]);
-                }
-            }
-        }
-
-        // 6) Salvar descontos na tabela "descontos"
-        if ($descontoPercentual) {
-            $orcamento->descontos()->create([
-                'motivo'      => 'Desconto percentual aplicado (cliente ou vendedor)',
-                'valor'       => 0,
-                'porcentagem' => $descontoPercentual,
-                'tipo'        => 'percentual',
-                'cliente_id'  => $request->cliente_id,
-                'user_id'     => Auth()->id(),
-            ]);
-        }
-
-        if ($descontoEspecifico) {
-            $orcamento->descontos()->create([
-                'motivo'      => 'Desconto específico em reais',
-                'valor'       => $descontoEspecifico,
-                'porcentagem' => null,
-                'tipo'        => 'fixo',
-                'cliente_id'  => $request->cliente_id,
-                'user_id'     => Auth()->id(),
-            ]);
-        }
-
-        // Se o request trouxe endereço de entrega → cria/atualiza
-        if ($request->filled('endereco_cep')) {
-            $endereco = Endereco::updateOrCreate(
-                [
-                    'tipo'       => 'entrega',
-                    'cliente_id' => $request->cliente_id,
-                ],
-                array_filter([
-                    'cep'        => $request->endereco_cep,
-                    'logradouro' => $request->endereco_logradouro,
-                    'numero'     => $request->endereco_numero,
-                    'complemento' => $request->endereco_compl,
-                    'bairro'     => $request->endereco_bairro,
-                    'cidade'     => $request->endereco_cidade,
-                    'estado'     => $request->endereco_estado,
-                    'tipo'       => 'entrega',
-                ])
-            );
-
-            // vincula o endereço ao orçamento;
-        } elseif ($request->enderecos_cadastrados != "") {
-            // caso tenha selecioando um endereço existente
-            $orcamento->update(['endereco_id' => $request->enderecos_cadastrados]);
-        }
-
-        // se o desconto for menor que o autorizado para o cliente e o para o vendedor não precisa ser aprovado
-        if ($descontoPercentual > $request->desconto_aprovado && Auth()->user()->vendedor->desconto < $descontoPercentual) {
-            $orcamento->status = 'aprovar desconto';
-            $orcamento->save();
-
-            return redirect()
-                ->route('orcamentos.index')
-                ->with('error', 'Orçamento criado, mas é necessária a aprovação do desconto.');
-        } else {
-            // Chama a nova função para gerar o PDF e verifica o resultado
-            $pdfGeradoComSucesso = $this->gerarOrcamentoPdf($orcamento);
-
-            if ($pdfGeradoComSucesso) {
-                // SUCESSO: Redireciona para a página de visualização do orçamento com uma mensagem de sucesso.
-                return redirect()
-                    ->route('orcamentos.show', $orcamento->id)
-                    ->with('success', 'Orçamento criado e PDF gerado com sucesso!');
-            } else {
-                // FALHA NO PDF: O orçamento foi criado, mas o PDF não.
-                // Redireciona para a mesma página, mas com uma mensagem de erro clara.
-                return redirect()
-                    ->route('orcamentos.show', $orcamento->id)
-                    ->with('error', 'Orçamento criado com sucesso, mas ocorreu uma falha ao gerar o PDF. Por favor, contate o suporte.');
-            }
-        }
-    }*/
 
     public function visualizarPublico($token)
     {
@@ -1864,6 +1715,23 @@ class OrcamentoController extends Controller
                 ]);
             }
 
+            // ----------------------------------------------------------------
+            // VERIFICAR ITENS SEM ESTOQUE SUFICIENTE
+            // ----------------------------------------------------------------
+            $temItensSemEstoque = false;
+
+            $orcamento->load('itens'); // garante dados frescos após todas as alterações
+
+            foreach ($orcamento->itens as $item) {
+                $produto = \App\Models\Produto::find($item->produto_id);
+                if ($produto && $produto->estoque_atual !== null) {
+                    if ((float) $item->quantidade > (float) $produto->estoque_atual) {
+                        $temItensSemEstoque = true;
+                        break;
+                    }
+                }
+            }
+
             DB::commit();
 
             // ----------------------------------------------------------------
@@ -1886,9 +1754,14 @@ class OrcamentoController extends Controller
             // Definir status e redirecionar
             // ----------------------------------------------------------------
             if (!$temQualquerDesconto && !$necessitaAprovacaoPagamento) {
-                // Nenhuma aprovação necessária — aprova direto
-                $orcamento->status = 'Aprovado';
-                $orcamento->save();
+                //  Sem desconto e sem pagamento especial — verifica estoque antes de aprovar
+                if ($temItensSemEstoque) {
+                    $orcamento->status = 'Sem estoque';
+                    $orcamento->save();
+                } else {
+                    $orcamento->status = 'Aprovado';
+                    $orcamento->save();
+                }
             } elseif ($necessitaAprovacaoDesconto && $necessitaAprovacaoPagamento) {
                 $orcamento->status = 'Aprovar desconto';
                 $orcamento->save();

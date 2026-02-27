@@ -134,14 +134,29 @@ class DescontoController extends Controller
                 'desconto_total'     => $totalDescontosAprovados,
                 'valor_com_desconto' => $valorFinal,
             ]);
+        
         } else {
-            // ✅ Verifica condicao_id antes de definir o status
             $temPagamentoPendente = $orcamento->condicao_id == 20
                 && SolicitacaoPagamento::where('orcamento_id', $orcamentoId)
                     ->pendentes()
                     ->exists();
 
-            $novoStatus = $temPagamentoPendente ? 'Aprovar pagamento' : 'Pendente';
+            if ($temPagamentoPendente) {
+                $novoStatus = 'Aprovar pagamento';
+            } else {
+                //  Verifica estoque antes de definir Pendente
+                $temItensSemEstoque = false;
+                foreach ($orcamento->itens as $item) {
+                    $produto = \App\Models\Produto::find($item->produto_id);
+                    if ($produto && $produto->estoque_atual !== null) {
+                        if ((float) $item->quantidade > (float) $produto->estoque_atual) {
+                            $temItensSemEstoque = true;
+                            break;
+                        }
+                    }
+                }
+                $novoStatus = $temItensSemEstoque ? 'Sem estoque' : 'Pendente';
+            }
 
             $orcamento->update([
                 'status'             => $novoStatus,
@@ -149,7 +164,6 @@ class DescontoController extends Controller
                 'valor_com_desconto' => $valorFinal,
             ]);
 
-            // Gera PDF apenas quando vai para Pendente
             if ($novoStatus === 'Pendente') {
                 $orcamento = Orcamento::find($orcamentoId);
                 $pdfService = new OrcamentoPdfService();
@@ -292,7 +306,23 @@ class DescontoController extends Controller
                 ->pendentes()
                 ->exists();
 
-        $novoStatus = $temPagamentoPendente ? 'Aprovar pagamento' : 'Pendente';
+        // DEPOIS
+        if ($temPagamentoPendente) {
+            $novoStatus = 'Aprovar pagamento';
+        } else {
+            //  Verifica estoque antes de definir Pendente
+            $temItensSemEstoque = false;
+            foreach ($orcamento->itens as $item) {
+                $produto = \App\Models\Produto::find($item->produto_id);
+                if ($produto && $produto->estoque_atual !== null) {
+                    if ((float) $item->quantidade > (float) $produto->estoque_atual) {
+                        $temItensSemEstoque = true;
+                        break;
+                    }
+                }
+            }
+            $novoStatus = $temItensSemEstoque ? 'Sem estoque' : 'Pendente';
+        }
 
         $orcamento->update([
             'status'             => $novoStatus,
@@ -300,7 +330,7 @@ class DescontoController extends Controller
             'valor_com_desconto' => $valorFinal,
             'updated_at'         => now(),
         ]);
-        
+
         if ($novoStatus === 'Pendente') {
             try {
                 $orcamento = Orcamento::find($orcamentoId);

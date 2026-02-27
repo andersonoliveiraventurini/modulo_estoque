@@ -412,19 +412,39 @@ class ConfirmarSolicitacaoPagamento extends Component
                 'novo_status' => 'Aprovar desconto'
             ]);
         } else {
-            // Não tem mais nada pendente - muda para Pendente e gera PDF
-            $this->orcamento->update([
-                'status' => 'Pendente',
-            ]);
+            // Verifica estoque antes de definir status final
+            $temItensSemEstoque = false;
+
+            foreach ($this->orcamento->itens as $item) {
+                $produto = \App\Models\Produto::find($item->produto_id);
+                if ($produto && $produto->estoque_atual !== null) {
+                    if ((float) $item->quantidade > (float) $produto->estoque_atual) {
+                        $temItensSemEstoque = true;
+                        break;
+                    }
+                }
+            }
+
+            if ($temItensSemEstoque) {
+                $this->orcamento->update(['status' => 'Sem estoque']);
+
+                Log::info("Orçamento #{$this->orcamentoId} ficou como 'Sem estoque' após aprovação de pagamento", [
+                    'novo_status' => 'Sem estoque'
+                ]);
+
+                return; // ← não gera PDF
+            }
+
+            // Não tem mais nada pendente e tem estoque — muda para Pendente e gera PDF
+            $this->orcamento->update(['status' => 'Pendente']);
 
             Log::info("Orçamento #{$this->orcamentoId} aprovado - gerando PDF", [
                 'novo_status' => 'Pendente'
             ]);
 
-            // Gera o PDF
             try {
                 $pdfService = new OrcamentoPdfService();
-                $pdfGerado = $pdfService->gerarOrcamentoPdf($this->orcamento);
+                $pdfGerado  = $pdfService->gerarOrcamentoPdf($this->orcamento);
 
                 if ($pdfGerado) {
                     Log::info("PDF gerado com sucesso para orçamento #{$this->orcamentoId}");
@@ -433,7 +453,7 @@ class ConfirmarSolicitacaoPagamento extends Component
                 }
             } catch (\Exception $e) {
                 Log::error("Erro ao gerar PDF para orçamento #{$this->orcamentoId}", [
-                    'erro' => $e->getMessage(),
+                    'erro'  => $e->getMessage(),
                     'trace' => $e->getTraceAsString()
                 ]);
             }

@@ -129,7 +129,7 @@
                                 </thead>
                                 <tbody id="produtos-originais" class="divide-y">
                                     @foreach ($orcamento->itens as $item)
-                                        <tr>
+                                        <tr data-estoque="{{ $item->produto->estoque_atual ?? 'null' }}">
                                             <input type="hidden" name="produtos[{{ $loop->index }}][produto_id]"
                                                 value="{{ $item->produto->id }}">
                                             <input type="hidden" name="produtos[{{ $loop->index }}][valor_unitario]"
@@ -157,7 +157,8 @@
                                                 {{ number_format($item->valor_unitario, 2, ',', '.') }}
                                             </td>
                                             <td class="px-3 py-2 border">
-                                                <input type="number" name="produtos[{{ $loop->index }}][quantidade]"
+                                                <input type="number"
+                                                    name="produtos[{{ $loop->index }}][quantidade]"
                                                     value="{{ $item->quantidade }}" min="1"
                                                     onchange="alterarQuantidadeOriginal({{ $loop->index }}, this.value)"
                                                     class="w-12 border rounded px-2 py-1 text-center"
@@ -490,6 +491,7 @@
     </div>
 
     <!-- Modal Quantidade Produto -->
+    <!-- Modal Quantidade Produto -->
     <div id="modal-quantidade"
         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
         <div class="bg-white dark:bg-zinc-900 rounded-lg p-6 w-80 shadow-lg relative">
@@ -497,10 +499,26 @@
                 class="absolute top-2 right-2 text-gray-500 hover:text-red-600">&times;</button>
             <h3 class="text-lg font-semibold mb-4">Quantidade do Produto</h3>
             <p id="produto-nome" class="mb-2 font-medium"></p>
+
+            {{-- ✅ NOVO: aviso de estoque --}}
+            <div id="aviso-estoque"
+                class="hidden bg-amber-50 border border-amber-300 rounded-lg p-3 mb-3 text-sm text-amber-800 flex items-start gap-2">
+                <svg class="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+                <div>
+                    <strong>Estoque insuficiente!</strong>
+                    <p id="aviso-estoque-texto" class="mt-0.5"></p>
+                </div>
+            </div>
+
             <input id="quantidade-produto" type="number" min="1" value="1"
                 class="w-full border rounded px-3 py-2 mb-4" />
-            <button onclick="confirmarQuantidade()"
-                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full">
+            {{-- ✅ id adicionado no botão --}}
+            <button id="btn-confirmar-quantidade" onclick="confirmarQuantidade()"
+                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full transition-colors">
                 Adicionar
             </button>
         </div>
@@ -623,7 +641,8 @@
     window.produtoSelecionado = null;
 
     // ==================== MODAL ====================
-    window.selecionarProdutoComQuantidade = function(id, nome, preco, fornecedor, cor, partNumber, liberarDesconto) {
+    window.selecionarProdutoComQuantidade = function(id, nome, preco, fornecedor, cor, partNumber, liberarDesconto,
+        estoqueDisponivel = null) {
         window.produtoSelecionado = {
             id: id,
             nome: nome,
@@ -634,26 +653,29 @@
             partNumber: partNumber || '',
             liberarDesconto: parseInt(liberarDesconto || 1),
             quantidade: 1,
-            descontoProduto: 0
+            descontoProduto: 0,
+            estoqueDisponivel: estoqueDisponivel !== null ? parseInt(estoqueDisponivel) : null // ✅
         };
 
         document.getElementById('produto-nome').textContent = nome;
         document.getElementById('quantidade-produto').value = 1;
 
-        // Aviso se não permitir desconto
+        // Reset visual do modal
+        document.getElementById('aviso-estoque').classList.add('hidden');
+        const btnConfirmar = document.getElementById('btn-confirmar-quantidade');
+        btnConfirmar.textContent = 'Adicionar';
+        btnConfirmar.classList.add('bg-blue-500', 'hover:bg-blue-600');
+        btnConfirmar.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+
         const modalBody = document.getElementById('modal-quantidade').querySelector('.bg-white');
         const avisoExistente = modalBody.querySelector('.aviso-desconto-modal');
-
-        if (avisoExistente) {
-            avisoExistente.remove();
-        }
+        if (avisoExistente) avisoExistente.remove();
 
         if (parseInt(liberarDesconto) === 0) {
             const aviso = document.createElement('div');
             aviso.className =
                 'aviso-desconto-modal bg-red-50 border border-red-200 rounded p-2 mb-3 text-sm text-red-700';
             aviso.innerHTML = '⚠️ Este produto não permite desconto';
-
             const inputQuantidade = document.getElementById('quantidade-produto');
             inputQuantidade.parentNode.insertBefore(aviso, inputQuantidade);
         }
@@ -663,13 +685,51 @@
 
     window.fecharModal = function() {
         document.getElementById('modal-quantidade').classList.add('hidden');
+        document.getElementById('aviso-estoque').classList.add('hidden');
+
+        const btnConfirmar = document.getElementById('btn-confirmar-quantidade');
+        btnConfirmar.textContent = 'Adicionar';
+        btnConfirmar.classList.add('bg-blue-500', 'hover:bg-blue-600');
+        btnConfirmar.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+
         window.produtoSelecionado = null;
     };
 
     window.confirmarQuantidade = function() {
         if (!window.produtoSelecionado) return;
 
+        // ✅ Se já confirmou o aviso, adiciona direto
+        if (window.produtoSelecionado._pendente) {
+            _adicionarProdutoConfirmado(window.produtoSelecionado._pendente);
+            return;
+        }
+
         const quantidade = parseInt(document.getElementById('quantidade-produto').value) || 1;
+        const estoque = window.produtoSelecionado.estoqueDisponivel;
+
+        document.getElementById('aviso-estoque').classList.add('hidden');
+
+        // ✅ Verifica estoque
+        if (estoque !== null && estoque !== undefined && quantidade > estoque) {
+            document.getElementById('aviso-estoque-texto').textContent =
+                `Você solicitou ${quantidade} unidade(s), mas há apenas ${estoque} em estoque. ` +
+                `O pedido será gerado, mas pode haver indisponibilidade na entrega.`;
+
+            document.getElementById('aviso-estoque').classList.remove('hidden');
+
+            const btnConfirmar = document.getElementById('btn-confirmar-quantidade');
+            btnConfirmar.textContent = '⚠️ Estou ciente, adicionar mesmo assim';
+            btnConfirmar.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+            btnConfirmar.classList.add('bg-amber-500', 'hover:bg-amber-600');
+
+            window.produtoSelecionado._pendente = quantidade;
+            return;
+        }
+
+        _adicionarProdutoConfirmado(quantidade);
+    };
+
+    function _adicionarProdutoConfirmado(quantidade) {
         window.produtoSelecionado.quantidade = quantidade;
 
         window.adicionarProduto(
@@ -679,15 +739,16 @@
             window.produtoSelecionado.fornecedor,
             window.produtoSelecionado.cor,
             window.produtoSelecionado.partNumber,
-            quantidade,
-            window.produtoSelecionado.liberarDesconto
+            window.produtoSelecionado.quantidade,
+            window.produtoSelecionado.liberarDesconto,
+            window.produtoSelecionado.estoqueDisponivel // ✅ passa estoque
         );
 
         window.fecharModal();
-    };
-
+    }
     // ==================== PRODUTOS NOVOS ====================
-    window.adicionarProduto = function(id, nome, preco, fornecedor, cor, partNumber, quantidade, liberarDesconto) {
+    window.adicionarProduto = function(id, nome, preco, fornecedor, cor, partNumber, quantidade, liberarDesconto,
+        estoqueDisponivel = null) {
         // Verificar duplicados
         const produtosOriginais = document.getElementById('produtos-originais');
         if (produtosOriginais) {
@@ -717,7 +778,8 @@
             cor: cor || '',
             partNumber: partNumber || '',
             liberarDesconto: parseInt(liberarDesconto || 1),
-            descontoProduto: 0
+            descontoProduto: 0,
+            estoqueDisponivel: estoqueDisponivel !== null ? parseInt(estoqueDisponivel) : null // ✅
         });
 
         renderProdutosNovos();
@@ -743,10 +805,31 @@
     };
 
     window.alterarQuantidade = function(index, valor) {
-        if (window.produtos[index]) {
-            window.produtos[index].quantidade = parseInt(valor) || 1;
-            renderProdutosNovos();
+        if (!window.produtos[index]) return;
+
+        const novaQuantidade = parseInt(valor) || 1;
+        const produto = window.produtos[index];
+
+        // ✅ Valida estoque
+        if (
+            produto.estoqueDisponivel !== null &&
+            produto.estoqueDisponivel !== undefined &&
+            novaQuantidade > produto.estoqueDisponivel
+        ) {
+            const confirmado = confirm(
+                `⚠️ Estoque insuficiente!\n\n` +
+                `Você solicitou ${novaQuantidade} unidade(s) de "${produto.nome}", ` +
+                `mas há apenas ${produto.estoqueDisponivel} em estoque.\n\n` +
+                `Deseja adicionar mesmo assim?`
+            );
+            if (!confirmado) {
+                renderProdutosNovos(); // Reverte o input
+                return;
+            }
         }
+
+        window.produtos[index].quantidade = novaQuantidade;
+        renderProdutosNovos();
     };
 
     window.removerProduto = function(index) {
@@ -921,15 +1004,40 @@
 
         const quantidade = parseInt(novaQuantidade) || 1;
 
-        const quantidadeInput = row.querySelector('input[name="produtos[' + index + '][quantidade]"]');
+        // ✅ Verifica estoque via data-attribute da row
+        const estoqueAttr = row.getAttribute('data-estoque');
+        const estoque = estoqueAttr !== 'null' && estoqueAttr !== null ? parseInt(estoqueAttr) : null;
+
+        if (estoque !== null && quantidade > estoque) {
+            const nomeProduto = row.querySelectorAll('td')[1]?.textContent?.trim() || 'este produto';
+            const confirmado = confirm(
+                `⚠️ Estoque insuficiente!\n\n` +
+                `Você solicitou ${quantidade} unidade(s) de "${nomeProduto}", ` +
+                `mas há apenas ${estoque} em estoque.\n\n` +
+                `Deseja salvar mesmo assim?`
+            );
+            if (!confirmado) {
+                // Reverte o input para o valor anterior
+                const quantidadeInput = row.querySelector(`input[name="produtos[${index}][quantidade]"]`);
+                if (quantidadeInput) {
+                    quantidadeInput.value = window.produtos[index]?.quantidade ||
+                        quantidadeInput.getAttribute('data-valor-anterior') || 1;
+                }
+                return;
+            }
+        }
+
+        // Guarda o valor atual antes de alterar (para reverter se necessário)
+        const quantidadeInput = row.querySelector(`input[name="produtos[${index}][quantidade]"]`);
         if (quantidadeInput) {
+            quantidadeInput.setAttribute('data-valor-anterior', quantidade);
             quantidadeInput.value = quantidade;
         }
 
         const valorUnitarioInput = row.querySelector('.valor-unitario-hidden');
         const valorUnitario = valorUnitarioInput ? parseFloat(valorUnitarioInput.value) : 0;
 
-        const descontoProdutoInput = row.querySelector('input[name="produtos[' + index + '][desconto_produto]"]');
+        const descontoProdutoInput = row.querySelector(`input[name="produtos[${index}][desconto_produto]"]`);
         const descontoProduto = descontoProdutoInput ? parseFloat(descontoProdutoInput.value) : 0;
 
         recalcularProdutoOriginal(row, index, quantidade, valorUnitario, descontoProduto);

@@ -51,7 +51,8 @@
                                         '{{ $produto->preco_venda }}',
                                         '{{ $produto->fornecedor?->nome_fantasia ?? 'Sem fornecedor' }}',
                                         '{{ $produto->cor?->nome ?? 'Sem cor' }}',
-                                        '{{ addslashes($produto->part_number ?? '') }}'
+                                        '{{ addslashes($produto->part_number ?? '') }}',
+                                        '{{ $produto->estoque_atual ?? 'null'}}'
                                     )">
                                 <x-heroicon-o-plus class="w-4 h-4" />
                                 Selecionar
