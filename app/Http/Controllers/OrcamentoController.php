@@ -1231,10 +1231,15 @@ class OrcamentoController extends Controller
             // 4. Recalcular totais
             $totalItens = $orcamento->itens()->sum(DB::raw('quantidade * valor_unitario'));
 
+            $status = 'Pendente';
+            if($orcamento->condicao_id == 20){
+                $status = 'Aprovar pagamento';
+            }
+
             // 5. Atualizar orçamento — incrementa versão e limpa workflow_status
             $orcamento->update([
-                'status'          => 'Pendente',
-                'workflow_status' => null,  // ✅ limpa o workflow
+                'status'          => $status,
+                'workflow_status' => null,  //  limpa o workflow
                 'valor_total_itens'  => $totalItens,
                 'desconto_total'     => 0,
                 'valor_com_desconto' => $totalItens,
@@ -1252,14 +1257,21 @@ class OrcamentoController extends Controller
             // 7. Recarrega orçamento fresco e gera novo PDF
             $orcamentoAtualizado = Orcamento::with(['itens.produto', 'cliente', 'vendedor'])
                 ->find($orcamento->id);
-
-            $pdfService = new OrcamentoPdfService();
-            $pdfService->gerarOrcamentoPdf($orcamentoAtualizado);
+            
+            if($orcamento->condicao_id != 20){
+                $pdfService = new OrcamentoPdfService();
+                $pdfService->gerarOrcamentoPdf($orcamentoAtualizado);
+            }
         });
 
-        return redirect()->route('orcamentos.show', $orcamento->id)
-            ->with('success', 'Preços atualizados com sucesso! Workflow de separação destruído, nova versão gerada e PDF atualizado.');
+        if($orcamento->condicao_id == 20){
+            return redirect()->route('orcamentos.show', $orcamento->id)
+                ->with('success', 'Preços atualizados com sucesso! Orçamento aguardando aprovação de meio de pagamento especial para gerar novo PDF.');
+        }else{
 
+            return redirect()->route('orcamentos.show', $orcamento->id)
+                ->with('success', 'Preços atualizados com sucesso! Workflow de separação reiniciado, nova versão gerada e PDF atualizado.');
+        }
     } catch (\Exception $e) {
         return redirect()->route('orcamentos.show', $orcamento->id)
             ->with('error', 'Erro ao atualizar preços: ' . $e->getMessage());

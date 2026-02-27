@@ -38,7 +38,6 @@ class ListaDesconto extends Component
         $this->resetPage();
     }
 
-    // Funções específicas de ordenação
     public function sortByMotivo()
     {
         $this->sortBy('motivo');
@@ -74,11 +73,9 @@ class ListaDesconto extends Component
         $descontos = Desconto::query()
             ->with(['cliente', 'orcamento', 'pedido', 'user'])
             ->when($this->search, function ($query) {
-                // Divide a busca em palavras (tokens)
                 $terms = preg_split('/\s+/', trim($this->search));
 
                 foreach ($terms as $term) {
-                    // Normaliza números no formato brasileiro (ex: 19,55 → 19.55)
                     $normalizedTerm = str_replace(',', '.', $term);
 
                     $query->where(function ($q) use ($normalizedTerm, $term) {
@@ -86,28 +83,35 @@ class ListaDesconto extends Component
                             ->orWhere('valor', 'like', "%{$normalizedTerm}%")
                             ->orWhere('porcentagem', 'like', "%{$normalizedTerm}%")
                             ->orWhere('tipo', 'like', "%{$term}%")
-                            // Busca por nome do cliente
                             ->orWhereHas('cliente', function ($clienteQuery) use ($term) {
                                 $clienteQuery->where('nome_fantasia', 'like', "%{$term}%")
                                     ->orWhere('razao_social', 'like', "%{$term}%")
                                     ->orWhere('nome', 'like', "%{$term}%");
                             })
-                            // Busca por ID do orçamento
                             ->orWhereHas('orcamento', function ($orcamentoQuery) use ($term) {
                                 $orcamentoQuery->where('id', 'like', "%{$term}%");
                             })
-                            // Busca por ID do pedido
                             ->orWhereHas('pedido', function ($pedidoQuery) use ($term) {
                                 $pedidoQuery->where('id', 'like', "%{$term}%");
                             })
-                            // Busca por nome do usuário
                             ->orWhereHas('user', function ($userQuery) use ($term) {
                                 $userQuery->where('name', 'like', "%{$term}%");
                             });
                     });
                 }
             })
-            ->orderBy($this->sortField, $this->sortDirection)
+            ->when($this->sortField === 'status', function ($query) {
+                // Pendente = 1, Aprovado = 2, Rejeitado = 3
+                $query->orderByRaw("
+                    CASE
+                        WHEN aprovado_por IS NULL AND rejeitado_por IS NULL THEN 1
+                        WHEN aprovado_por IS NOT NULL THEN 2
+                        WHEN rejeitado_por IS NOT NULL THEN 3
+                    END {$this->sortDirection}
+                ");
+            }, function ($query) {
+                $query->orderBy($this->sortField, $this->sortDirection);
+            })
             ->paginate($this->perPage);
 
         return view('livewire.lista-desconto', [
