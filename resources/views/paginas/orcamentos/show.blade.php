@@ -512,6 +512,7 @@
                             @foreach ($orcamento->itens as $item)
                                 @php
                                     $prod = $item->produto;
+                                    if (!$prod) continue;
                                     $reservado = (float) \App\Models\EstoqueReserva::where('produto_id', $prod->id ?? 0)
                                         ->where('status', 'ativa')
                                         ->sum('quantidade');
@@ -532,7 +533,7 @@
                                     </td>
                                     <td class="px-3 py-2 border text-center">{{ $item->quantidade }}</td>
                                     <td class="px-3 py-2 border text-center">
-                                        {{ $item->produto->liberar_desconto == 0 ? 'Não' : 'Sim' }}</td>
+                                        {{ ($prod->liberar_desconto ?? 0) == 0 ? 'Não' : 'Sim' }}</td>
                                     <td class="px-3 py-2 border text-right">R$
                                         {{ number_format($item->valor_unitario, 2, ',', '.') }}</td>
                                     <td class="px-3 py-2 border text-right text-green-600 font-medium">R$

@@ -156,63 +156,6 @@ class ConfirmarDescontos extends Component
         }
     }
 
-    public function rejeitarDesconto($descontoId)
-    {
-        if (!$this->orcamento) {
-            $this->dispatch('alert', [
-                'type' => 'error',
-                'message' => 'Orçamento não encontrado!'
-            ]);
-            return;
-        }
-
-        try {
-            DB::beginTransaction();
-
-            $desconto = Desconto::findOrFail($descontoId);
-
-            if ($desconto->orcamento_id != $this->orcamentoId) {
-                $this->dispatch('alert', [
-                    'type' => 'error',
-                    'message' => 'Desconto não pertence a este orçamento!'
-                ]);
-                return;
-            }
-
-            if ($desconto->aprovado_em || $desconto->rejeitado_em) {
-                $this->dispatch('alert', [
-                    'type' => 'error',
-                    'message' => 'Este desconto já foi avaliado!'
-                ]);
-                return;
-            }
-
-            $desconto->update([
-                'rejeitado_em' => now(),
-                'rejeitado_por' => Auth::id(),
-                'justificativa_rejeicao' => $this->justificativas[$descontoId] ?? null,
-            ]);
-
-            $this->atualizarValorOrcamento();
-
-            DB::commit();
-
-            $this->dispatch('alert', [
-                'type' => 'success',
-                'message' => 'Desconto rejeitado!'
-            ]);
-
-            $this->carregarDados();
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
-            $this->dispatch('alert', [
-                'type' => 'error',
-                'message' => 'Erro ao rejeitar desconto: ' . $e->getMessage()
-            ]);
-        }
-    }
 
     public function aprovarTodos()
     {
@@ -263,53 +206,52 @@ class ConfirmarDescontos extends Component
             ]);
         }
     }
-
-    public function rejeitarTodos()
+    
+   public function rejeitarTodos()
     {
         if (!$this->orcamento) {
-            $this->dispatch('alert', [
-                'type' => 'error',
-                'message' => 'Orçamento não encontrado!'
-            ]);
+            $this->dispatch('alert', ['type' => 'error', 'message' => 'Orçamento não encontrado!']);
             return;
         }
 
         try {
             DB::beginTransaction();
 
+            $descontosPendentes = Desconto::where('orcamento_id', $this->orcamentoId)
+                ->whereNull('aprovado_em')
+                ->whereNull('rejeitado_em')
+                ->get();
+
+            if ($descontosPendentes->isEmpty()) {
+                $this->dispatch('alert', ['type' => 'warning', 'message' => 'Nenhum desconto pendente!']);
+                return;
+            }
+
             $totalRejeitados = 0;
 
-            foreach ($this->descontos as $desconto) {
-                if ($desconto->aprovado_em || $desconto->rejeitado_em) {
-                    continue;
-                }
+            foreach ($descontosPendentes as $desconto) {
+                $this->reverterItemAoOriginal($desconto);
 
                 $desconto->update([
                     'rejeitado_em' => now(),
                     'rejeitado_por' => Auth::id(),
                     'justificativa_rejeicao' => 'Rejeição em lote',
                 ]);
-
+                $desconto->delete();
                 $totalRejeitados++;
             }
+
             $this->atualizarValorOrcamento();
 
             DB::commit();
 
-            $this->dispatch('alert', [
-                'type' => 'success',
-                'message' => "{$totalRejeitados} desconto(s) rejeitado(s)!"
-            ]);
-
+            $this->dispatch('alert', ['type' => 'success', 'message' => "{$totalRejeitados} desconto(s) rejeitado(s)!"]);
             $this->carregarDados();
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
-            $this->dispatch('alert', [
-                'type' => 'error',
-                'message' => 'Erro ao rejeitar descontos: ' . $e->getMessage()
-            ]);
+            Log::error('Erro rejeitarTodos: ' . $e->getMessage() . ' | ' . $e->getTraceAsString());
+            $this->dispatch('alert', ['type' => 'error', 'message' => 'Erro ao rejeitar descontos: ' . $e->getMessage()]);
         }
     }
 
@@ -393,6 +335,95 @@ class ConfirmarDescontos extends Component
         }
 
         $this->orcamento = $this->orcamento->fresh();
+    }
+    
+    public function rejeitarDesconto($descontoId)
+    {
+        if (!$this->orcamento) {
+            $this->dispatch('alert', ['type' => 'error', 'message' => 'Orçamento não encontrado!']);
+            return;
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $desconto = Desconto::findOrFail($descontoId);
+
+            if ($desconto->orcamento_id != $this->orcamentoId) {
+                $this->dispatch('alert', ['type' => 'error', 'message' => 'Desconto não pertence a este orçamento!']);
+                return;
+            }
+
+            if ($desconto->aprovado_em || $desconto->rejeitado_em) {
+                $this->dispatch('alert', ['type' => 'error', 'message' => 'Este desconto já foi avaliado!']);
+                return;
+            }
+
+            // ✅ 1º reverte os itens
+            $this->reverterItemAoOriginal($desconto);
+
+            // ✅ 2º marca como rejeitado
+            $desconto->update([
+                'rejeitado_em'           => now(),
+                'rejeitado_por'          => Auth::id(),
+                'justificativa_rejeicao' => $this->justificativas[$descontoId] ?? null,
+            ]);
+
+            // ✅ 3º deleta
+            $desconto->delete();
+
+            $this->atualizarValorOrcamento();
+
+            DB::commit();
+
+            $this->dispatch('alert', ['type' => 'success', 'message' => 'Desconto rejeitado!']);
+            $this->carregarDados();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->dispatch('alert', ['type' => 'error', 'message' => 'Erro ao rejeitar desconto: ' . $e->getMessage()]);
+        }
+}
+
+    private function reverterItemAoOriginal(Desconto $desconto): void
+    {
+        if ($desconto->tipo === 'produto' && $desconto->produto_id) {
+            $item = \App\Models\OrcamentoItens::where('orcamento_id', $desconto->orcamento_id)
+                ->where('produto_id', $desconto->produto_id)
+                ->first();
+
+            if ($item) {
+                $valorUnitario = (float) $item->valor_unitario;
+                $item->update([
+                    'valor_unitario_com_desconto' => $valorUnitario,
+                    'valor_com_desconto'          => round($valorUnitario * (float) $item->quantidade, 2),
+                    'desconto'                    => null,
+                ]);
+            }
+        }
+
+        if (in_array($desconto->tipo, ['percentual', 'fixo'])) {
+            $produtosComDescontoIndividual = Desconto::where('orcamento_id', $desconto->orcamento_id)
+                ->where('tipo', 'produto')
+                ->whereNull('rejeitado_em')
+                ->pluck('produto_id')
+                ->filter()
+                ->unique()
+                ->toArray();
+
+            $itens = \App\Models\OrcamentoItens::where('orcamento_id', $desconto->orcamento_id)
+                ->whereNotIn('produto_id', $produtosComDescontoIndividual)
+                ->get();
+
+            foreach ($itens as $item) {
+                $valorUnitario = (float) $item->valor_unitario;
+                $item->update([
+                    'valor_unitario_com_desconto' => $valorUnitario,
+                    'valor_com_desconto'          => round($valorUnitario * (float) $item->quantidade, 2),
+                    'desconto'                    => null,
+                ]);
+            }
+        }
     }
 
     public function render()

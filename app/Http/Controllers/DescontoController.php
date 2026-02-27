@@ -65,28 +65,45 @@ class DescontoController extends Controller
         // pois impacta o total do orçamento, não os itens individualmente
     }
 
-     private function reverterItemAoOriginal(Desconto $desconto): void
+    private function reverterItemAoOriginal(Desconto $desconto): void
     {
         if ($desconto->tipo === 'produto' && $desconto->produto_id) {
-            // Reverte apenas o item específico do produto rejeitado
-            $item = OrcamentoItens::where('orcamento_id', $desconto->orcamento_id)
+            $item = \App\Models\OrcamentoItens::where('orcamento_id', $desconto->orcamento_id)
                 ->where('produto_id', $desconto->produto_id)
                 ->first();
 
             if ($item) {
-                $valorUnitarioOriginal = (float) $item->valor_unitario;
-                $quantidade            = (float) $item->quantidade;
-
+                $valorUnitario = (float) $item->valor_unitario;
                 $item->update([
-                    'valor_unitario_com_desconto' => $valorUnitarioOriginal,
-                    'valor_com_desconto'          => round($valorUnitarioOriginal * $quantidade, 2),
+                    'valor_unitario_com_desconto' => $valorUnitario,
+                    'valor_com_desconto'          => round($valorUnitario * (float) $item->quantidade, 2),
                     'desconto'                    => null,
                 ]);
             }
         }
 
-        // Desconto percentual/fixo: não há campo direto no item para reverter.
-        // O impacto é no total do orçamento, calculado em gerarpdfeAtualizarOrcamento.
+        if (in_array($desconto->tipo, ['percentual', 'fixo'])) {
+            $produtosComDescontoIndividual = Desconto::where('orcamento_id', $desconto->orcamento_id)
+                ->where('tipo', 'produto')
+                ->whereNull('rejeitado_em')
+                ->pluck('produto_id')
+                ->filter()
+                ->unique()
+                ->toArray();
+
+            $itens = \App\Models\OrcamentoItens::where('orcamento_id', $desconto->orcamento_id)
+                ->whereNotIn('produto_id', $produtosComDescontoIndividual)
+                ->get();
+
+            foreach ($itens as $item) {
+                $valorUnitario = (float) $item->valor_unitario;
+                $item->update([
+                    'valor_unitario_com_desconto' => $valorUnitario,
+                    'valor_com_desconto'          => round($valorUnitario * (float) $item->quantidade, 2),
+                    'desconto'                    => null,
+                ]);
+            }
+        }
     }
 
     private function verificarEAtualizarOrcamento($orcamentoId)
@@ -199,15 +216,17 @@ class DescontoController extends Controller
                 return back()->with('error', 'Este desconto já foi rejeitado anteriormente.');
             }
 
-            $desconto->update([
-                'rejeitado_em'            => now(),
-                'rejeitado_por'           => Auth::id(),
-                'justificativa_rejeicao'  => $request->justificativa,
-            ]);
-
-            // Reverte apenas o item específico ao valor original
+            // ✅ 1º reverte o item ANTES de qualquer alteração no desconto
             $this->reverterItemAoOriginal($desconto);
 
+            // ✅ 2º marca como rejeitado
+            $desconto->update([
+                'rejeitado_em'           => now(),
+                'rejeitado_por'          => Auth::id(),
+                'justificativa_rejeicao' => $request->justificativa,
+            ]);
+
+            // ✅ 3º deleta por último
             $desconto->delete();
 
             $this->verificarEAtualizarOrcamento($desconto->orcamento_id);
@@ -314,15 +333,17 @@ class DescontoController extends Controller
             }
 
             foreach ($descontos as $desconto) {
+                // ✅ 1º reverte o item ANTES de marcar como rejeitado/deletar
+                $this->reverterItemAoOriginal($desconto);
+
+                // ✅ 2º marca como rejeitado
                 $desconto->update([
                     'rejeitado_em'           => now(),
                     'rejeitado_por'          => Auth::id(),
                     'justificativa_rejeicao' => $request->justificativa ?? 'Rejeição em lote',
                 ]);
 
-                // Reverte apenas o item específico ao valor original
-                $this->reverterItemAoOriginal($desconto);
-
+                // ✅ 3º deleta por último
                 $desconto->delete();
             }
 

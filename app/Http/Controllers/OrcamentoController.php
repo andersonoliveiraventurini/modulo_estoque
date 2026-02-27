@@ -1239,7 +1239,9 @@ class OrcamentoController extends Controller
                 'desconto_total'     => 0,
                 'valor_com_desconto' => $totalItens,
                 'versao'             => $orcamento->versao + 1,
-                'updated_at'         => now(),
+                'updated_at'         => now(),   
+                // atualiza a validade desse orçamento para 2 dias a partir da data de atualização             
+                'validade'            => Carbon::now()->addDays(2),
             ]);
 
             // 6. Remove PDF antigo

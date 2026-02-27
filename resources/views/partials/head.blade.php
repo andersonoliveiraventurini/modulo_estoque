@@ -12,3 +12,13 @@
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 @fluxAppearance
+<script>
+    document.addEventListener('livewire:navigated', function () {
+        const appearance = localStorage.getItem('flux.appearance') ?? 'system';
+        if (appearance === 'dark' || (appearance === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    });
+</script>
