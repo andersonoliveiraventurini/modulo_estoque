@@ -73,10 +73,37 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('subcategorias', SubCategoriaController::class)->names('subcategorias');
 
     Route::resource('movimentacao', MovimentacaoController::class)->names('movimentacao');
-    Route::resource('consulta_preco', ConsultaPrecoController::class)->names('consulta_preco');
-    Route::get('criar_cotacao/{cliente_id}', [ConsultaPrecoController::class, 'criar_cotacao'])->name('consulta_preco.criar_cotacao');
-    Route::get('/cotacoes/view/{token}', [CotacaoController::class, 'visualizarCotacao'])
-        ->name('cotacoes.view');
+
+    // cotação de produto
+    // Grupo de cotação
+    Route::get('/cotacoes', [ConsultaPrecoController::class, 'index'])->name('consulta_preco.index');
+    Route::get('/cotacoes/criar/{cliente_id}', [ConsultaPrecoController::class, 'criar_cotacao'])->name('consulta_preco.criar');
+    Route::post('/cotacoes', [ConsultaPrecoController::class, 'store'])->name('consulta_preco.store');
+    Route::get('/cotacoes/grupo/{grupoId}', [ConsultaPrecoController::class, 'showGrupo'])->name('consulta_preco.show_grupo');
+    Route::post('/cotacoes/grupo/{grupoId}/aprovar', [ConsultaPrecoController::class, 'aprovarGrupo'])->name('consulta_preco.aprovar_grupo');
+    Route::post('/cotacoes/grupo/{grupoId}/gerar-orcamento', [ConsultaPrecoController::class, 'gerarOrcamento'])->name('consulta_preco.gerar_orcamento');
+    Route::delete('/cotacoes/grupo/{grupoId}', [ConsultaPrecoController::class, 'destroyGrupo'])->name('consulta_preco.destroy_grupo');
+
+// Item individual
+    Route::get('/cotacoes/item/{consulta}', [ConsultaPrecoController::class, 'show'])->name('consulta_preco.show');
+    Route::get('/cotacoes/item/{consult_id}/editar', [ConsultaPrecoController::class, 'edit'])->name('consulta_preco.edit');
+    Route::put('/cotacoes/item/{consulta_id}', [ConsultaPrecoController::class, 'update'])->name('consulta_preco.update');
+    Route::delete('/cotacoes/item/{consulta_id}', [ConsultaPrecoController::class, 'destroy'])->name('consulta_preco.destroy');
+
+// Adicionar fornecedor a item
+    Route::post('/cotacoes/item/{consultaId}/fornecedor', [ConsultaPrecoController::class, 'adicionarFornecedor'])->name('consulta_preco.add_fornecedor');
+
+// PDF via token
+    Route::get('/cotacoes/visualizar/{token}', [ConsultaPrecoController::class, 'visualizarCotacao'])->name('cotacoes.view');
+
+
+    // fim cotações de produto
+
+
+    //Route::resource('consulta_preco', ConsultaPrecoController::class)->names('consulta_preco');
+    //Route::get('criar_cotacao/{cliente_id}', [ConsultaPrecoController::class, 'criar_cotacao'])->name('consulta_preco.criar_cotacao');
+    //Route::get('/cotacoes/view/{token}', [CotacaoController::class, 'visualizarCotacao'])
+    //    ->name('cotacoes.view');
     Route::resource('ncm', NcmController::class)->names('ncm');
 
     Route::resource('blocok/descartes', BlocokDescartesController::class)->names('blocok.descartes');
@@ -129,7 +156,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('descontos', DescontoController::class)->names('descontos');
     // fim descontos
-    
+
     Route::get('balcao', [OrcamentoController::class, 'balcao'])->name('orcamentos.balcao');
     Route::get('orcamentos_concluidos', [OrcamentoController::class, 'orcamentos_concluidos'])->name('orcamentos.concluidos');
     Route::get('balcao_concluidos', [OrcamentoController::class, 'balcao_concluidos'])->name('orcamentos.balcao_concluidos');
@@ -145,15 +172,15 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/picking/{batch}/item/{item}/separar', [SeparacaoController::class, 'separarItem'])->name('picking.item.separar');
     Route::post('/picking/{batch}/concluir', [SeparacaoController::class, 'concluir'])->name('picking.concluir');
 
-   /*  Route::get('/orcamentos/{id}/conferencia', [ConferenciaController::class, 'show'])->name('orcamentos.conferencia.show');
-    Route::post('/orcamentos/{id}/conferencia/iniciar', [ConferenciaController::class, 'iniciar'])->name('orcamentos.conferencia.iniciar');
-    Route::patch('/conferencia/{conf}/item/{item}/conferir', [ConferenciaController::class, 'conferirItem'])->name('conferencia.item.conferir');
-    Route::post('/conferencia/{conf}/concluir', [ConferenciaController::class, 'concluir'])->name('conferencia.concluir');
+    /*  Route::get('/orcamentos/{id}/conferencia', [ConferenciaController::class, 'show'])->name('orcamentos.conferencia.show');
+     Route::post('/orcamentos/{id}/conferencia/iniciar', [ConferenciaController::class, 'iniciar'])->name('orcamentos.conferencia.iniciar');
+     Route::patch('/conferencia/{conf}/item/{item}/conferir', [ConferenciaController::class, 'conferirItem'])->name('conferencia.item.conferir');
+     Route::post('/conferencia/{conf}/concluir', [ConferenciaController::class, 'concluir'])->name('conferencia.concluir');
 
-// Lista geral de orçamentos em conferência
-Route::get('/conferencia', [ConferenciaController::class, 'index'])
-    ->name('conferencia.index');
-    */
+ // Lista geral de orçamentos em conferência
+ Route::get('/conferencia', [ConferenciaController::class, 'index'])
+     ->name('conferencia.index');
+     */
 
     Route::post('/orcamentos/{orcamento}/atualizar-precos', [OrcamentoController::class, 'atualizarPrecos'])
         ->name('orcamentos.atualizar-precos');
@@ -193,13 +220,13 @@ Route::get('/conferencia', [ConferenciaController::class, 'index'])
 
     Route::get('/solicitacoes-pagamento', [SolicitacaoPagamentoController::class, 'index'])
         ->name('solicitacoes-pagamento.index');
-    
+
     Route::get('/solicitacoes-pagamento/aprovadas', [SolicitacaoPagamentoController::class, 'aprovadas'])
         ->name('solicitacoes-pagamento.aprovadas');
-    
+
     Route::get('/solicitacoes-pagamento/{orcamento_id}/aprovar', [SolicitacaoPagamentoController::class, 'solicitacao_orcamento'])
         ->name('solicitacoes-pagamento.aprovar');
-    
+
     Route::post('/solicitacoes-pagamento/{id}/avaliar', [SolicitacaoPagamentoController::class, 'avaliar'])
         ->name('solicitacoes-pagamento.avaliar');
 

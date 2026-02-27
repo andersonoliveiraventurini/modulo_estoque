@@ -12,13 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('consulta_precos', function (Blueprint $table) {
-            $table->unsignedBigInteger('orcamento_id')->nullable()->after('id');
+            // Vincula o item ao grupo de cotação
+            $table->unsignedBigInteger('grupo_id')->nullable()->after('id')
+                ->comment('Grupo de cotação ao qual este item pertence.');
+            $table->foreign('grupo_id')->references('id')->on('consulta_preco_grupos');
 
-            $table->foreign('orcamento_id')
-                ->references('id')
-                ->on('orcamentos')
-                ->onDelete('cascade');
-            });
+            // orcamento_id já existe mas aceita null — garante o foreign se ainda não existir
+            // $table->foreign('orcamento_id')->references('id')->on('orcamentos');
+        });
     }
 
     /**

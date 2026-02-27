@@ -48,7 +48,7 @@
                     <x-tab name="basico" label="Básico">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <x-show-field label="Descrição" :value="$consulta->descricao" />
-                            <x-show-field label="Cor" :value="$consulta->cor->nome" />
+                            <x-show-field label="Cor" :value="$consulta->cor?->nome ?? '-'" />
                             <x-show-field label="Quantidade" :value="$consulta->quantidade" />
                         </div>
                     </x-tab>
@@ -69,7 +69,7 @@
                     </x-tab>
 
                     <x-tab name="fornecedor" label="Fornecedor">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">                            
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <x-show-field label="Prazo entrega" :value="$consulta->prazo_entrega" />
                             <x-show-field label="Fornecedor" :value="$consulta->fornecedor?->nome_fantasia" />
                         </div>
@@ -86,7 +86,7 @@
 
                 <!-- Botões -->
                 <div class="flex gap-4 mt-6">
-                    <a href="{{ route('consulta_preco.edit', $consulta) }}">
+                    <a href="{{ route('consulta_preco.edit', ['consulta_preco' => $consulta->id]) }}">
                         <x-button size="sm" variant="secondary">
                             <x-heroicon-o-pencil-square class="w-4 h-4" />
                             Editar

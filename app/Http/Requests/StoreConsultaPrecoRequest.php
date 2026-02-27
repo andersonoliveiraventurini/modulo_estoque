@@ -22,8 +22,16 @@ class StoreConsultaPrecoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'descricao' => 'required|string|max:255',
-            'quantidade' => 'required|integer|min:1'
+            'cliente_id'               => 'required|exists:clientes,id',
+            'observacao_geral'         => 'nullable|string|max:1000',
+            'itens'                    => 'required|array|min:1',
+            'itens.*.descricao'        => 'required|string|max:255',
+            'itens.*.quantidade'       => 'required|integer|min:1',
+            'itens.*.cor_id'           => 'nullable|exists:cores,id',
+            'itens.*.part_number'      => 'nullable|string|max:100',
+            'itens.*.observacao'       => 'nullable|string|max:500',
+            'itens.*.fornecedor_ids'   => 'nullable|array',
+            'itens.*.fornecedor_ids.*' => 'nullable|exists:fornecedores,id', // ← era required, agora nullable
         ];
     }
 }

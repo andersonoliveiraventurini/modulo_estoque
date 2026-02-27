@@ -34,104 +34,106 @@
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="bg-zinc-50 dark:bg-zinc-800">
-                <tr>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('ususario_id')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Solicitado por
-                        </button>
-                    </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('descricao')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Descrição
-                        </button>
-                    </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('cor')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Cor
-                        </button>
-                    </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('preco_venda')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Preço venda
-                        </button>
-                    </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('preco_custo')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Preço custo
-                        </button>
-                    </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('responsavel_id')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Orçado por
-                        </button>
-                    </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('observacao')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Observação
-                        </button>
-                    </th>
-                    <th class="px-6 py-3 text-left">Ações</th>
-                </tr>
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Solicitado por</th>
+                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Itens</th>
+                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Cliente</th>
+                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Validade</th>
+                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Criado em</th>
+                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Ações</th>
+            </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                @forelse($precos as $p)
-                    <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="/users/{{ $p->usuario_id }}">{{ $p->usuario?->name }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="/consulta_preco/{{ $p->id }}">{{ $p->descricao }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $p->cor }}</td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">R$
-                            {{ number_format($p->preco_venda, 2, ',', '.') }}</td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">R$
-                            {{ number_format($p->preco_custo, 2, ',', '.') }}</td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="/users/{{ $p->comprador_id }}">{{ $p->comprador?->name }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $p->observacao }}</td>
-                        <td class="px-6 py-4 flex gap-2">
-                            <a href="{{ route('consulta_preco.edit', $p->id) }}">
-                                <x-button size="sm" variant="secondary">
-                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
-                                    Editar
+            @forelse($grupos as $grupo)
+                <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
+                    <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
+                        <a href="{{ route('usuarios.show', $grupo->usuario_id) }}" class="hover:underline">
+                            {{ $grupo->usuario?->name }}
+                        </a>
+                    </td>
+                    <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
+                        <a href="{{ route('consulta_preco.show_grupo', $grupo->id) }}" class="hover:underline font-medium">
+                            {{ $grupo->itens->count() }} item(s)
+                            <span class="block text-xs text-zinc-400 font-normal">
+                        {{ $grupo->itens->pluck('descricao')->implode(', ') }}
+                    </span>
+                        </a>
+                    </td>
+                    <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
+                        {{ $grupo->cliente->nome_fantasia ?? $grupo->cliente->nome ?? '—' }}
+                    </td>
+                    <td class="px-6 py-4">
+                        @php
+                            $statusMap = [
+                                'Pendente'              => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200',
+                                'Aguardando fornecedor' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
+                                'Disponível'            => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
+                                'Aprovado'              => 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200',
+                                'Expirado'              => 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200',
+                                'Cancelado'             => 'bg-zinc-100 text-zinc-600',
+                            ];
+                        @endphp
+                        <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold {{ $statusMap[$grupo->status] ?? 'bg-zinc-100 text-zinc-600' }}">
+                    {{ $grupo->status }}
+                </span>
+                    </td>
+                    <td class="px-6 py-4 text-zinc-500 dark:text-zinc-400 text-xs">
+                        @if ($grupo->validade)
+                            <span class="{{ $grupo->estaExpirado() ? 'text-red-500 font-semibold' : '' }}">
+                        {{ $grupo->validade->format('d/m/Y H:i') }}
+                    </span>
+                        @else
+                            —
+                        @endif
+                    </td>
+                    <td class="px-6 py-4 text-zinc-500 dark:text-zinc-400 text-xs">
+                        {{ $grupo->created_at->format('d/m/Y') }}
+                    </td>
+                    <td class="px-6 py-4 flex gap-2 flex-wrap">
+                        <a href="{{ route('consulta_preco.show_grupo', $grupo->id) }}">
+                            <x-button size="sm" variant="secondary">
+                                <x-heroicon-o-eye class="w-4 h-4" />
+                                Ver
+                            </x-button>
+                        </a>
+
+                        @if (in_array($grupo->status, ['Pendente', 'Aguardando fornecedor']) && $grupo->itens->count() > 0)
+                            <a href="{{ route('consulta_preco.show_grupo', $grupo->id) }}">
+                                <x-button size="sm" variant="primary">
+                                    <x-heroicon-o-currency-dollar class="w-4 h-4" />
+                                    Preencher Preços
                                 </x-button>
                             </a>
+                        @endif
 
-                            <form action="{{ route('consulta_preco.destroy', $p->id) }}" method="POST"
-                                onsubmit="return confirm('Deseja excluir esta encomenda?');">
-                                @csrf
-                                @method('DELETE')
-                                <x-button size="sm" variant="danger">
-                                    <x-heroicon-o-trash class="w-4 h-4" />
-                                    Excluir
-                                </x-button>
-                            </form>
-                        </td>
-
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
-                            Nenhuma encomenda encontrada.
-                        </td>
-                    </tr>
-                @endforelse
+                        <form action="{{ route('consulta_preco.destroy_grupo', $grupo->id) }}" method="POST"
+                              onsubmit="return confirm('Excluir esta cotação e todos os itens?');">
+                            @csrf
+                            @method('DELETE')
+                            <x-button size="sm" variant="danger" type="submit">
+                                <x-heroicon-o-trash class="w-4 h-4" />
+                                Excluir
+                            </x-button>
+                        </form>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="8" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
+                        Nenhuma cotação encontrada.
+                    </td>
+                </tr>
+            @endforelse
             </tbody>
         </table>
     </div>
 
     <!-- Paginação -->
-    @if ($precos->hasPages())
-        <div
-            class="p-6 border-t border-zinc-200 dark:border-zinc-700 flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-300">
+    @if ($grupos->hasPages())
+        <div class="p-6 border-t border-zinc-200 dark:border-zinc-700 flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-300">
             <div>
-                {{ $precos->links() }}
+                {{ $grupos->links() }}
             </div>
         </div>
     @endif

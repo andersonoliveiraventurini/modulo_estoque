@@ -10,12 +10,14 @@ class ConsultaPreco extends Model
 {
     /** @use HasFactory<\Database\Factories\ConsultaPrecoFactory> */
     use HasFactory, SoftDeletes;
+
     protected $table = 'consulta_precos';
 
     protected $fillable = [
         'status',
         'descricao',
         'cor_id',
+        'grupo_id',
         'quantidade',
         'usuario_id',
         'cliente_id',
@@ -33,7 +35,7 @@ class ConsultaPreco extends Model
     {
         return $this->belongsTo(User::class, 'usuario_id');
     }
-    
+
     public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'cliente_id');
@@ -50,19 +52,35 @@ class ConsultaPreco extends Model
     }
 
     public function setPrecoVendaAttribute($value)
-    { {
+    {
+        {
             $this->attributes['preco_venda'] = str_replace(',', '.', $value);
         }
     }
-    
+
     public function cor()
     {
         return $this->belongsTo(Cor::class, 'cor_id');
     }
-    
+
     public function orcamento()
     {
         return $this->belongsTo(Orcamento::class);
     }
 
+    public function grupo()
+    {
+        return $this->belongsTo(ConsultaPrecoGrupo::class, 'grupo_id');
+    }
+
+    public function fornecedores()
+    {
+        return $this->hasMany(ConsultaPrecoFornecedor::class, 'consulta_preco_id');
+    }
+
+    public function fornecedorSelecionado()
+    {
+        return $this->hasOne(ConsultaPrecoFornecedor::class, 'consulta_preco_id')
+            ->where('selecionado', true);
+    }
 }

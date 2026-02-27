@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Models\ConsultaPreco;
+use App\Models\ConsultaPrecoGrupo;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -16,8 +16,8 @@ class ListaConsultaPreco extends Component
     public $perPage = 10;
 
     protected $queryString = [
-        'search' => ['except' => ''],
-        'sortField' => ['except' => 'created_at'],
+        'search'        => ['except' => ''],
+        'sortField'     => ['except' => 'created_at'],
         'sortDirection' => ['except' => 'desc'],
     ];
 
@@ -40,29 +40,38 @@ class ListaConsultaPreco extends Component
 
     public function render()
     {
-        $precos = ConsultaPreco::query()
-        ->when($this->search, function ($query) {
-            // Divide a string em palavras (tokens)
-            $terms = preg_split('/\s+/', trim($this->search));
+        // Expira automaticamente grupos vencidos
+        ConsultaPrecoGrupo::where('status', 'Disponível')
+            ->where('validade', '<', now())
+            ->update(['status' => 'Expirado']);
 
-            foreach ($terms as $term) {
-                // Normaliza números no formato brasileiro (ex: 19,55 → 19.55)
-                $normalizedTerm = str_replace(',', '.', $term);
-
-                $query->where(function ($q) use ($normalizedTerm) {
-                    $q->where('descricao', 'like', "%{$normalizedTerm}%")
-                      ->orWhere('cor', 'like', "%{$normalizedTerm}%")
-                      ->orWhere('preco', 'like', "%{$normalizedTerm}%")
-                      ->orWhere('preco_venda', 'like', "%{$normalizedTerm}%")
-                      ->orWhere('observacao', 'like', "%{$normalizedTerm}%");
-                });
-            }
-        })
-        ->orderBy($this->sortField, $this->sortDirection)
-        ->paginate($this->perPage);
+        $grupos = ConsultaPrecoGrupo::with(['cliente', 'usuario', 'itens'])
+            ->withCount('itens')
+            ->when($this->search, function ($query) {
+                $terms = preg_split('/\s+/', trim($this->search));
+                foreach ($terms as $term) {
+                    $normalizedTerm = str_replace(',', '.', $term);
+                    $query->where(function ($q) use ($normalizedTerm) {
+                        $q->whereHas('cliente', fn($qc) =>
+                        $qc->where('nome_fantasia', 'like', "%{$normalizedTerm}%")
+                            ->orWhere('nome', 'like', "%{$normalizedTerm}%")
+                        )
+                            ->orWhereHas('usuario', fn($qu) =>
+                            $qu->where('name', 'like', "%{$normalizedTerm}%")
+                            )
+                            ->orWhereHas('itens', fn($qi) =>
+                            $qi->where('descricao', 'like', "%{$normalizedTerm}%")
+                                ->orWhere('part_number', 'like', "%{$normalizedTerm}%")
+                            )
+                            ->orWhere('status', 'like', "%{$normalizedTerm}%");
+                    });
+                }
+            })
+            ->orderBy($this->sortField, $this->sortDirection)
+            ->paginate($this->perPage);
 
         return view('livewire.lista-consulta-preco', [
-            'precos' => $precos,
+            'grupos' => $grupos,
         ]);
     }
 }

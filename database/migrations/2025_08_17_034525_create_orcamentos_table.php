@@ -65,7 +65,7 @@ return new class extends Migration
                         ->comment('Prazo de entrega do orçamento.');
                   $table->enum('tipo_documento', ['Nota fiscal', 'Cupom Fiscal', 'Homologação'])->default('Nota fiscal')
                         ->comment('Tipo de documento associado ao orçamento.');
-$table->integer('homologacao')->nullable();                      
+$table->integer('homologacao')->nullable();
                   $table->boolean('venda_triangular')->default(false)
                         ->comment('Indica se a venda é triangular.');
                   $table->string('cnpj_triangular')->nullable()
@@ -77,6 +77,9 @@ $table->integer('homologacao')->nullable();
                   $table->unsignedBigInteger('usuario_logado_id')->nullable()
                         ->comment('Referência ao usuário que está logado e criando o orçamento.');
                   $table->foreign('usuario_logado_id')->references('id')->on('users');
+
+                  $table->integer('encomenda')->nullable();
+
                   $table->timestamps();
                   $table->softDeletes();
             });
