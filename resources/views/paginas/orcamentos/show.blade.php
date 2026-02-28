@@ -54,7 +54,7 @@
                         @if ($grupoId)
                             <a href="{{ route('consulta_preco.show_grupo', $grupoId) }}">
                                 <x-button size="sm" variant="purple">
-                                    <x-heroicon-o-magnifying-glass class="w-4 h-4" />
+                                    <x-heroicon-o-magnifying-glass class="w-4 h-4"/>
                                     <span class="hidden sm:inline">Ver Cotação</span>
                                 </x-button>
                             </a>
@@ -65,7 +65,7 @@
                             @csrf
                             <button type="submit">
                                 <x-button size="sm" variant="orange" tag="span">
-                                    <x-heroicon-o-arrow-path class="w-4 h-4" />
+                                    <x-heroicon-o-arrow-path class="w-4 h-4"/>
                                     <span class="hidden sm:inline">Atualizar Preços</span>
                                 </x-button>
                             </button>
@@ -503,7 +503,7 @@
             @endif
         @endif
         {{-- Itens do Orçamento --}}
-        @if ($orcamento->itens->count() > 0)
+        @if ($orcamento->itens->count() > 0 && $orcamento->itens->whereNotNull('produto_id')->count() > 0)
             <div
                 class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
                 <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -629,6 +629,92 @@
             </div>
         @endif
 
+        {{-- Itens da Encomenda (cotação de preço) --}}
+        @if ($orcamento->encomenda ?? null)
+            @php
+                $grupo = \App\Models\ConsultaPrecoGrupo::with(['itens.cor', 'itens.fornecedorSelecionado.fornecedor'])
+                    ->where('orcamento_id', $orcamento->id)
+                    ->first();
+            @endphp
+            @if ($grupo && $grupo->itens->count() > 0)
+                <div
+                    class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <x-heroicon-o-shopping-cart class="w-5 h-5 text-purple-600"/>
+                        Itens da Encomenda
+                        <span
+                            class="text-xs font-normal text-zinc-400">(gerado a partir da cotação #{{ $grupo->id }})</span>
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm border">
+                            <thead class="bg-gray-100 dark:bg-zinc-800">
+                            <tr>
+                                <th class="px-3 py-2 border text-left">Descrição</th>
+                                <th class="px-3 py-2 border text-left">Cor</th>
+                                <th class="px-3 py-2 border text-left">Part Number</th>
+                                <th class="px-3 py-2 border text-center">Qtd</th>
+                                <th class="px-3 py-2 border text-left">Fornecedor Selecionado</th>
+                                <th class="px-3 py-2 border text-right">Preço Compra</th>
+                                <th class="px-3 py-2 border text-right">Preço Venda</th>
+                                <th class="px-3 py-2 border text-left">Prazo Entrega</th>
+                                <th class="px-3 py-2 border border-zinc-200 dark:border-zinc-700 text-right">Preço
+                                    Total
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                            @foreach ($grupo->itens as $item)
+                                @php $forn = $item->fornecedorSelecionado; @endphp
+                                <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors">
+                                    <td class="px-3 py-2 border border-zinc-200 dark:border-zinc-700 font-medium text-zinc-800 dark:text-zinc-200">
+                                        {{ $item->descricao }}
+                                    </td>
+                                    <td class="px-3 py-2 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400">
+                                        {{ $item->cor->nome ?? '—' }}
+                                    </td>
+                                    <td class="px-3 py-2 border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-500">
+                                        {{ $item->part_number ?? '—' }}
+                                    </td>
+                                    <td class="px-3 py-2 border border-zinc-200 dark:border-zinc-700 text-center font-semibold text-zinc-800 dark:text-zinc-200">
+                                        {{ $item->quantidade }}
+                                    </td>
+                                    <td class="px-3 py-2 border border-zinc-200 dark:border-zinc-700">
+                                        @if ($forn)
+                                            <span
+                                                class="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-medium">
+                                                <x-heroicon-o-check-circle class="w-3.5 h-3.5"/>
+                                                {{ $forn->fornecedor->nome_fantasia }}
+                                            </span>
+                                        @else
+                                            <span class="text-zinc-400 text-xs">Não selecionado</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-3 py-2 border border-zinc-200 dark:border-zinc-700 text-right text-zinc-600 dark:text-zinc-400">
+                                        {{ $forn && $forn->preco_compra ? 'R$ ' . number_format($forn->preco_compra, 2, ',', '.') : '—' }}
+                                    </td>
+                                    <td class="px-3 py-2 border border-zinc-200 dark:border-zinc-700 text-right font-semibold text-emerald-600 dark:text-emerald-400">
+                                        {{ $forn && $forn->preco_venda ? 'R$ ' . number_format($forn->preco_venda, 2, ',', '.') : '—' }}
+                                    </td>
+                                    <td class="px-3 py-2 border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400">
+                                        {{ $forn->prazo_entrega ?? '—' }}
+                                    </td>
+                                    {{-- ✅ Preço final por item --}}
+                                    <td class="px-3 py-2 border border-zinc-200 dark:border-zinc-700 text-right font-semibold text-emerald-600 dark:text-emerald-400">
+                                        @if ($forn && $forn->preco_venda)
+                                            R$ {{ number_format((float) $forn->preco_venda * (float) $item->quantidade, 2, ',', '.') }}
+                                        @else
+                                            —
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
+        @endif
+
         {{-- Vidros / Esteiras --}}
         @if ($orcamento->vidros->count() > 0)
             <div
@@ -676,17 +762,33 @@
         @endif
 
         {{-- Totais e Descontos --}}
+        {{-- Totais e Descontos --}}
         @php
-            $totalItens = (float) $orcamento->itens->sum('valor_com_desconto');
+            // Itens normais (com produto cadastrado)
+            $totalItens = (float) $orcamento->itens->whereNotNull('produto_id')->sum('valor_com_desconto');
+
+            // Itens de encomenda (sem produto_id, gerados por cotação)
+            $totalEncomenda = 0;
+            if ($orcamento->encomenda ?? null) {
+                $grupoTotais = \App\Models\ConsultaPrecoGrupo::with(['itens.fornecedorSelecionado'])
+                    ->where('orcamento_id', $orcamento->id)
+                    ->first();
+                if ($grupoTotais) {
+                    foreach ($grupoTotais->itens as $itemCotacao) {
+                        $fornSel = $itemCotacao->fornecedorSelecionado;
+                        if ($fornSel && $fornSel->preco_venda) {
+                            $totalEncomenda += (float) $fornSel->preco_venda * (float) $itemCotacao->quantidade;
+                        }
+                    }
+                }
+            }
+
             $totalVidros = (float) $orcamento->vidros->sum('valor_com_desconto');
-            $totalFixos = (float) $orcamento->descontos->where('tipo', 'fixo')->sum('valor');
-            $percentual = $orcamento->descontos->where('tipo', 'percentual')->max('porcentagem') ?? 0;
-            $valorFinal =
-            $totalItens +
-            $totalVidros -
-            $totalFixos +
-            (float) ($orcamento->frete ?? 0) +
-            (float) ($orcamento->guia_recolhimento ?? 0);
+            $totalFixos  = (float) $orcamento->descontos->where('tipo', 'fixo')->sum('valor');
+            $percentual  = $orcamento->descontos->where('tipo', 'percentual')->max('porcentagem') ?? 0;
+            $valorFinal  = $totalItens + $totalEncomenda + $totalVidros - $totalFixos
+                         + (float) ($orcamento->frete ?? 0)
+                         + (float) ($orcamento->guia_recolhimento ?? 0);
         @endphp
 
         <div
@@ -789,6 +891,9 @@
                 <div>
                     @if ($orcamento->itens->count() > 0)
                         <p><strong>Total Produtos:</strong> R$ {{ number_format($totalItens, 2, ',', '.') }}</p>
+                    @endif
+                    @if ($totalEncomenda > 0)
+                        <p><strong>Total Encomenda:</strong> R$ {{ number_format($totalEncomenda, 2, ',', '.') }}</p>
                     @endif
                     @if ($orcamento->vidros->count() > 0)
                         <p><strong>Total Vidros:</strong> R$ {{ number_format($totalVidros, 2, ',', '.') }}</p>

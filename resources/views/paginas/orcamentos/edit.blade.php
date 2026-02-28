@@ -61,6 +61,18 @@
                 <input type="hidden" name="desconto_aprovado" id="desconto_aprovado"
                     value="{{ $cliente->desconto_aprovado ?? 0 }}" />
 
+                @if ($orcamento->encomenda && $orcamento->itens->whereNotNull('produto_id')->isEmpty())
+                    <tbody>
+                    <tr>
+                        <td colspan="10" class="px-4 py-6 text-center" style="margin-top: 2rem;">
+                            <div class="inline-flex items-center gap-2 px-4 py-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg text-sm text-blue-700 dark:text-blue-300">
+                                <x-heroicon-o-information-circle class="w-5 h-5 flex-shrink-0" />
+                                Este orçamento foi gerado a partir de uma encomenda. Use a busca abaixo para adicionar produtos ao orçamento.
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                @endif
                 <!-- Pesquisa de Produtos -->
                 <div class="space-y-4">
                     <hr />
@@ -73,6 +85,7 @@
                     </h3>
                     <livewire:lista-produto-orcamento />
                 </div>
+
                 <!-- Campos iniciais -->
                 <form action="{{ route('orcamentos.update', $orcamento->id) }}" method="POST" class="space-y-8"
                     enctype="multipart/form-data">
@@ -128,55 +141,52 @@
                                     </tr>
                                 </thead>
                                 <tbody id="produtos-originais" class="divide-y">
-                                    @foreach ($orcamento->itens as $item)
-                                        <tr data-estoque="{{ $item->produto->estoque_atual ?? 'null' }}">
-                                            <input type="hidden" name="produtos[{{ $loop->index }}][produto_id]"
-                                                value="{{ $item->produto->id }}">
-                                            <input type="hidden" name="produtos[{{ $loop->index }}][valor_unitario]"
-                                                class="valor-unitario-hidden" value="{{ $item->valor_unitario }}">
-                                            <input type="hidden" name="produtos[{{ $loop->index }}][part_number]"
-                                                value="{{ $item->produto->part_number ?? '' }}">
-                                            <input type="hidden" name="produtos[{{ $loop->index }}][quantidade]"
-                                                value="{{ $item->quantidade }}">
-                                            <input type="hidden" name="produtos[{{ $loop->index }}][subtotal]"
-                                                value="{{ number_format($item->valor_unitario * $item->quantidade, 2, '.', '') }}">
-                                            <input type="hidden"
-                                                name="produtos[{{ $loop->index }}][subtotal_com_desconto]"
-                                                value="{{ number_format($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0), 2, '.', '') }}">
-                                            <input type="hidden"
-                                                name="produtos[{{ $loop->index }}][preco_unitario_com_desconto]"
-                                                value="{{ number_format(($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0)) / $item->quantidade, 2, '.', '') }}">
+                                @foreach ($orcamento->itens->whereNotNull('produto_id') as $item)
+                                    <tr data-estoque="{{ $item->produto->estoque_atual ?? 'null' }}">
+                                        <input type="hidden" name="produtos[{{ $loop->index }}][produto_id]"
+                                               value="{{ $item->produto->id }}">
+                                        <input type="hidden" name="produtos[{{ $loop->index }}][valor_unitario]"
+                                               class="valor-unitario-hidden" value="{{ $item->valor_unitario }}">
+                                        <input type="hidden" name="produtos[{{ $loop->index }}][part_number]"
+                                               value="{{ $item->produto->part_number ?? '' }}">
+                                        <input type="hidden" name="produtos[{{ $loop->index }}][quantidade]"
+                                               value="{{ $item->quantidade }}">
+                                        <input type="hidden" name="produtos[{{ $loop->index }}][subtotal]"
+                                               value="{{ number_format($item->valor_unitario * $item->quantidade, 2, '.', '') }}">
+                                        <input type="hidden" name="produtos[{{ $loop->index }}][subtotal_com_desconto]"
+                                               value="{{ number_format($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0), 2, '.', '') }}">
+                                        <input type="hidden" name="produtos[{{ $loop->index }}][preco_unitario_com_desconto]"
+                                               value="{{ number_format(($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0)) / $item->quantidade, 2, '.', '') }}">
 
-                                            <td class="px-3 py-2 border">{{ $item->produto->id }}</td>
-                                            <td class="px-3 py-2 border">{{ $item->produto->nome }}</td>
-                                            <td class="px-3 py-2 border">{{ $item->produto->part_number ?? '' }}</td>
-                                            <td class="px-3 py-2 border">{{ $item->produto->fornecedor->nome ?? '' }}
-                                            </td>
-                                            <td class="px-3 py-2 border">{{ $item->produto->cor ?? '' }}</td>
-                                            <td class="px-3 py-2 border">R$
-                                                {{ number_format($item->valor_unitario, 2, ',', '.') }}
-                                            </td>
-                                            <td class="px-3 py-2 border">
-                                                <input type="number"
-                                                    name="produtos[{{ $loop->index }}][quantidade]"
-                                                    value="{{ $item->quantidade }}" min="1"
-                                                    onchange="alterarQuantidadeOriginal({{ $loop->index }}, this.value)"
-                                                    class="w-12 border rounded px-2 py-1 text-center"
-                                                    style="max-width: 4rem;" />
-                                            </td>
-                                            <td class="px-3 py-2 border">R$
-                                                {{ number_format($item->valor_unitario * $item->quantidade, 2, ',', '.') }}
-                                            </td>
-                                            <td class="px-3 py-2 border text-green-600">R$
-                                                {{ number_format($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0), 2, ',', '.') }}
-                                            </td>
-                                            <td class="px-3 py-2 border text-center">
-                                                <button type="button"
+                                        <td class="px-3 py-2 border">{{ $item->produto->id }}</td>
+                                        <td class="px-3 py-2 border">{{ $item->produto->nome }}</td>
+                                        <td class="px-3 py-2 border">{{ $item->produto->part_number ?? '' }}</td>
+                                        <td class="px-3 py-2 border">{{ $item->produto->fornecedor->nome ?? '' }}</td>
+                                        <td class="px-3 py-2 border">{{ $item->produto->cor ?? '' }}</td>
+                                        <td class="px-3 py-2 border">R$
+                                            {{ number_format($item->valor_unitario, 2, ',', '.') }}
+                                        </td>
+                                        <td class="px-3 py-2 border">
+                                            <input type="number"
+                                                   name="produtos[{{ $loop->index }}][quantidade]"
+                                                   value="{{ $item->quantidade }}" min="1"
+                                                   onchange="alterarQuantidadeOriginal({{ $loop->index }}, this.value)"
+                                                   class="w-12 border rounded px-2 py-1 text-center"
+                                                   style="max-width: 4rem;" />
+                                        </td>
+                                        <td class="px-3 py-2 border">R$
+                                            {{ number_format($item->valor_unitario * $item->quantidade, 2, ',', '.') }}
+                                        </td>
+                                        <td class="px-3 py-2 border text-green-600">R$
+                                            {{ number_format($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0), 2, ',', '.') }}
+                                        </td>
+                                        <td class="px-3 py-2 border text-center">
+                                            <button type="button"
                                                     onclick="removerProdutoOriginal({{ $loop->index }})"
                                                     class="text-red-600 hover:text-red-800">🗑</button>
-                                            </td>
-                                        </tr>
-                                    @endforeach
+                                        </td>
+                                    </tr>
+                                @endforeach
                                 </tbody>
                                 <tbody id="produtos-selecionados" class="divide-y">
 
@@ -310,8 +320,33 @@
                                 label="Prazo de Entrega" :value="$orcamento->prazo_entrega" />
                             <x-select name="frete" label="Tipo de Frete">
                                 <option value="">Selecione...</option>
-                                <option value="cif" @selected($orcamento->frete == 'cif')>CIF</option>
-                                <option value="fob" @selected($orcamento->frete == 'fob')>FOB</option>
+                                <option value="cif" @selected($orcamento->frete == 'cif')>CIF - entrega por conta do fornecedor</option>
+                                <option value="fob" @selected($orcamento->frete == 'fob')>FOB - entrega por conta do cliente</option>
+                            </x-select>
+                            <x-select name="enderecos_cadastrados" label="Endereços de cadastrados do cliente">
+                                <option value="">Selecione...</option>
+                                @foreach ($cliente->enderecos as $endereco)
+                                    <option value="{{ $endereco->id }}">
+                                        @if ($endereco->logradouro != null)
+                                            {{ $endereco->logradouro . ' - ' }}
+                                        @endif
+                                        @if ($endereco->numero != null)
+                                            {{ $endereco->numero . ' - ' }}
+                                        @endif
+                                        @if ($endereco->complemento != null)
+                                            {{ $endereco->complemento . ' - ' }}
+                                        @endif
+                                        @if ($endereco->bairro != null)
+                                            {{ $endereco->bairro . ' - ' }}
+                                        @endif
+                                        @if ($endereco->cidade != null)
+                                            {{ $endereco->cidade . ' - ' }}
+                                        @endif
+                                        @if ($endereco->estado != null)
+                                            {{ $endereco->estado . ' - ' }}
+                                        @endif
+                                    </option>
+                                @endforeach
                             </x-select>
                             <x-input id="entrega_cep" name="entrega_cep" label="CEP" placeholder="00000-000"
                                 onblur="pesquisacepentrega(this.value);" onkeypress="mascara(this, '#####-###')"
@@ -566,7 +601,7 @@
             '';
 
         itemDiv.innerHTML = `
-            <button type="button" onclick="removeItem(this)" 
+            <button type="button" onclick="removeItem(this)"
                 class="absolute right-2 top-2 text-red-600 hover:text-red-800 text-lg px-2"
                 title="Remover item">
                 Remover
@@ -575,7 +610,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                 <div class="col-span-2">
                     <label class="block text-sm font-medium text-gray-700">Descrição do item</label>
-                    <input type="text" name="itens[${itemIndex}][nome]" placeholder="Digite a descrição" 
+                    <input type="text" name="itens[${itemIndex}][nome]" placeholder="Digite a descrição"
                            value="${oldData.nome || ''}"
                            class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                 </div>
@@ -902,7 +937,7 @@
             <td class="px-3 py-2 border">
                 ${p.liberarDesconto === 1 ? `
                     <div class="flex flex-col gap-1">
-                        <input type="number" step="0.01" value="${valorUnitarioAtual.toFixed(2)}" 
+                        <input type="number" step="0.01" value="${valorUnitarioAtual.toFixed(2)}"
                             onchange="alterarPrecoProdutoNovo(${i}, this.value)"
                             class="w-24 border rounded px-2 py-1 text-sm" />
                         ${p.descontoProduto > 0 ? `<small class="text-xs text-gray-500">Original: R$ ${p.precoOriginal.toFixed(2)}</small>` : ''}
@@ -1450,7 +1485,7 @@
                         const precoAtual = valorUnitario.toFixed(2);
                         cells[5].innerHTML = `
                         <div class="flex flex-col gap-1">
-                            <input type="number" step="0.01" value="${precoAtual}" 
+                            <input type="number" step="0.01" value="${precoAtual}"
                                 onchange="alterarPrecoProdutoOriginal(${index}, this.value)"
                                 class="w-24 border rounded px-2 py-1 text-sm" />
                         </div>

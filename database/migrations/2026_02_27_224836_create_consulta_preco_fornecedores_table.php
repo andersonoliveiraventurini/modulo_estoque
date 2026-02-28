@@ -24,6 +24,7 @@ return new class extends Migration
                 ->comment('Fornecedor escolhido pelo compras para este item.');
             $table->text('observacao')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

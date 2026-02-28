@@ -220,8 +220,8 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="fornecedor_selecionado_id" value=""
-                               class="fornecedor-radio w-4 h-4 text-emerald-600">
+                        {{-- ✅ CORRETO — value preenchido dinamicamente via JS --}}
+                        <input type="radio" name="fornecedor_selecionado_id" value="0" class="radio-selecionar w-4 h-4 text-emerald-600">
                         <span class="text-xs text-zinc-600 dark:text-zinc-400">Selecionar</span>
                     </label>
                 </div>
@@ -230,7 +230,27 @@
     </template>
 
     <script>
-        // ✅ Recupera novos fornecedores adicionados via JS que foram perdidos na validação
+        document.addEventListener('change', function(e) {
+            if (e.target.matches('select[name*="[fornecedor_id]"]')) {
+                const row = e.target.closest('.fornecedor-row');
+                if (!row) return;
+                const radio = row.querySelector('input[type="radio"][name="fornecedor_selecionado_id"]');
+                if (radio) {
+                    radio.value = e.target.value;
+                }
+            }
+        });
+
+        // ✅ Inicializa os values dos radios já carregados na página
+        document.querySelectorAll('.fornecedor-row').forEach(function(row) {
+            const select = row.querySelector('select[name*="[fornecedor_id]"]');
+            const radio  = row.querySelector('input[type="radio"][name="fornecedor_selecionado_id"]');
+            if (select && radio && !radio.value) {
+                radio.value = select.value;
+            }
+        });
+
+        //  Recupera novos fornecedores adicionados via JS que foram perdidos na validação
         const oldFornecedores = @json(old('fornecedores', []));
         let fornIdx = {{ $fornIdx }};
 

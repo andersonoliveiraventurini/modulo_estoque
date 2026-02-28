@@ -45,9 +45,9 @@ class ConsultaPrecoController extends Controller
     // ──────────────────────────────────────────────────────────
     public function criar_cotacao($cliente_id)
     {
-        $cliente      = Cliente::findOrFail($cliente_id);
+        $cliente = Cliente::findOrFail($cliente_id);
         $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
-        $cores        = Cor::orderBy('nome')->get();
+        $cores = Cor::orderBy('nome')->get();
 
         return view('paginas.produtos.consulta_precos.create', compact(
             'cliente', 'fornecedores', 'cores'
@@ -64,24 +64,24 @@ class ConsultaPrecoController extends Controller
         try {
             // 1. Cria o grupo
             $grupo = ConsultaPrecoGrupo::create([
-                'cliente_id'  => $request->cliente_id,
-                'usuario_id'  => auth()->id(),
-                'status'      => 'Pendente',
-                'observacao'  => $request->observacao_geral ?? null,
+                'cliente_id' => $request->cliente_id,
+                'usuario_id' => auth()->id(),
+                'status' => 'Pendente',
+                'observacao' => $request->observacao_geral ?? null,
             ]);
 
             // 2. Cria cada item do grupo
             foreach ($request->itens as $itemData) {
                 $item = ConsultaPreco::create([
-                    'grupo_id'      => $grupo->id,
-                    'cliente_id'    => $request->cliente_id,
-                    'usuario_id'    => auth()->id(),
-                    'descricao'     => $itemData['descricao'],
-                    'quantidade'    => $itemData['quantidade'],
-                    'cor_id'        => $itemData['cor_id'] ?? null,
-                    'part_number'   => $itemData['part_number'] ?? null,
-                    'observacao'    => $itemData['observacao'] ?? null,
-                    'status'        => 'Pendente',
+                    'grupo_id' => $grupo->id,
+                    'cliente_id' => $request->cliente_id,
+                    'usuario_id' => auth()->id(),
+                    'descricao' => $itemData['descricao'],
+                    'quantidade' => $itemData['quantidade'],
+                    'cor_id' => $itemData['cor_id'] ?? null,
+                    'part_number' => $itemData['part_number'] ?? null,
+                    'observacao' => $itemData['observacao'] ?? null,
+                    'status' => 'Pendente',
                 ]);
 
                 // 3. Vincula fornecedor(es) sugeridos pelo vendedor (opcional)
@@ -90,7 +90,7 @@ class ConsultaPrecoController extends Controller
                         if (empty($fornecedorId)) continue; // ✅ ignora seleção vazia
                         ConsultaPrecoFornecedor::create([
                             'consulta_preco_id' => $item->id,
-                            'fornecedor_id'     => $fornecedorId,
+                            'fornecedor_id' => $fornecedorId,
                         ]);
                     }
                 }
@@ -123,11 +123,13 @@ class ConsultaPrecoController extends Controller
             'itens.fornecedorSelecionado.fornecedor',
         ])->findOrFail($grupoId);
 
-        // Expira se necessário
         $grupo->verificarExpiracao();
         $grupo->refresh();
 
-        return view('paginas.produtos.consulta_precos.show_grupo', compact('grupo'));
+        $cores = Cor::orderBy('nome')->get(); //  precisa estar aqui
+        $fornecedores = Fornecedor::orderBy('nome_fantasia')->get(); //
+
+        return view('paginas.produtos.consulta_precos.show_grupo', compact('grupo', 'cores', 'fornecedores'));
     }
 
     // ──────────────────────────────────────────────────────────
@@ -144,9 +146,9 @@ class ConsultaPrecoController extends Controller
     // ──────────────────────────────────────────────────────────
     public function edit($consult_id)
     {
-        $consulta     = ConsultaPreco::with(['fornecedores.fornecedor', 'cor'])->findOrFail($consult_id);
+        $consulta = ConsultaPreco::with(['fornecedores.fornecedor', 'cor'])->findOrFail($consult_id);
         $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
-        $cores        = Cor::orderBy('nome')->get();
+        $cores = Cor::orderBy('nome')->get();
 
         return view('paginas.produtos.consulta_precos.edit', compact('consulta', 'fornecedores', 'cores'));
     }
@@ -163,11 +165,11 @@ class ConsultaPrecoController extends Controller
         try {
             // Atualiza dados básicos do item
             $consultaPreco->update([
-                'descricao'    => $request->descricao,
-                'quantidade'   => $request->quantidade,
-                'cor_id'       => $request->cor_id ?? null,
-                'part_number'  => $request->part_number ?? null,
-                'observacao'   => $request->observacao ?? null,
+                'descricao' => $request->descricao,
+                'quantidade' => $request->quantidade,
+                'cor_id' => $request->cor_id ?? null,
+                'part_number' => $request->part_number ?? null,
+                'observacao' => $request->observacao ?? null,
                 'comprador_id' => auth()->id(),
                 //  só marca Disponível se houver seleção
                 'status' => $request->filled('fornecedor_selecionado_id') ? 'Disponível' : $consultaPreco->status,
@@ -179,14 +181,14 @@ class ConsultaPrecoController extends Controller
                     ConsultaPrecoFornecedor::updateOrCreate(
                         [
                             'consulta_preco_id' => $consultaPreco->id,
-                            'fornecedor_id'     => $fornData['fornecedor_id'],
+                            'fornecedor_id' => $fornData['fornecedor_id'],
                         ],
                         [
-                            'preco_compra'  => $this->brToDecimal($fornData['preco_compra'] ?? null),
-                            'preco_venda'   => $this->brToDecimal($fornData['preco_venda'] ?? null),
+                            'preco_compra' => $this->brToDecimal($fornData['preco_compra'] ?? null),
+                            'preco_venda' => $this->brToDecimal($fornData['preco_venda'] ?? null),
                             'prazo_entrega' => $fornData['prazo_entrega'] ?? null,
-                            'selecionado'   => false,
-                            'observacao'    => $fornData['observacao'] ?? null,
+                            'selecionado' => false,
+                            'observacao' => $fornData['observacao'] ?? null,
                         ]
                     );
                 }
@@ -209,10 +211,10 @@ class ConsultaPrecoController extends Controller
                 if ($fornSelecionado) {
                     $consultaPreco->update([
                         'fornecedor_id' => $request->fornecedor_selecionado_id,
-                        'preco_compra'  => $fornSelecionado->preco_compra,
-                        'preco_venda'   => $fornSelecionado->preco_venda,
+                        'preco_compra' => $fornSelecionado->preco_compra,
+                        'preco_venda' => $fornSelecionado->preco_venda,
                         'prazo_entrega' => $fornSelecionado->prazo_entrega,
-                        'status'        => 'Disponível',
+                        'status' => 'Disponível',
                     ]);
                 }
             }
@@ -226,7 +228,7 @@ class ConsultaPrecoController extends Controller
                 } else {
                     // Ainda tem itens sem seleção — volta para Pendente
                     $grupo->update([
-                        'status'   => 'Pendente',
+                        'status' => 'Pendente',
                         'validade' => null,
                     ]);
                 }
@@ -266,7 +268,7 @@ class ConsultaPrecoController extends Controller
 
         ConsultaPrecoFornecedor::create([
             'consulta_preco_id' => $consultaId,
-            'fornecedor_id'     => $request->fornecedor_id,
+            'fornecedor_id' => $request->fornecedor_id,
         ]);
 
         return back()->with('success', 'Fornecedor adicionado!');
@@ -328,47 +330,56 @@ class ConsultaPrecoController extends Controller
         DB::beginTransaction();
 
         try {
+            // Calcula total antes de criar o orçamento
+            $totalItens = 0;
+            foreach ($grupo->itens as $item) {
+                $fornSelecionado = $item->fornecedorSelecionado;
+                $precoVenda = $fornSelecionado ? (float)$fornSelecionado->preco_venda : 0;
+                $totalItens += $precoVenda * (float)$item->quantidade;
+            }
+
             // Cria o orçamento
             $orcamento = Orcamento::create([
-                'cliente_id'       => $grupo->cliente_id,
-                'vendedor_id'      => auth()->id(),
-                'usuario_logado_id'=> auth()->id(),
-                'status'           => 'Pendente',
-                'validade'         => Carbon::now()->addDays(2),
-                'observacoes'      => 'Gerado a partir da cotação #' . $grupo->id,
+                'cliente_id' => $grupo->cliente_id,
+                'vendedor_id' => auth()->id(),
+                'usuario_logado_id' => auth()->id(),
+                'status' => 'Pendente',
+                'validade' => Carbon::now()->addDays(2),
+                'observacoes' => 'Gerado a partir da cotação #' . $grupo->id,
+                'encomenda' => true,
+                'valor_total_itens' => $totalItens,
+                'valor_com_desconto' => $totalItens,
             ]);
 
             // Adiciona itens da cotação como itens do orçamento
             foreach ($grupo->itens as $item) {
                 $fornSelecionado = $item->fornecedorSelecionado;
-                $precoVenda      = $fornSelecionado ? (float) $fornSelecionado->preco_venda : 0;
+                $precoVenda = $fornSelecionado ? (float)$fornSelecionado->preco_venda : 0;
+                $subtotal = $precoVenda * (float)$item->quantidade;
 
                 OrcamentoItens::create([
-                    'orcamento_id'                => $orcamento->id,
-                    'produto_id'                  => null, // item cotado, sem produto cadastrado ainda
-                    'quantidade'                  => $item->quantidade,
-                    'valor_unitario'              => $precoVenda,
+                    'orcamento_id' => $orcamento->id,
+                    'produto_id' => null,
+                    'quantidade' => $item->quantidade,
+                    'valor_unitario' => $precoVenda,
                     'valor_unitario_com_desconto' => $precoVenda,
-                    'valor_com_desconto'          => $precoVenda * $item->quantidade,
-                    'user_id'                     => auth()->id(),
+                    'valor_com_desconto' => $subtotal,
+                    'user_id' => auth()->id(),
                 ]);
 
-                // Vincula o item ao orçamento
                 $item->update(['orcamento_id' => $orcamento->id]);
             }
 
             // Vincula grupo ao orçamento
-            // DEPOIS
-// Vincula grupo ao orçamento
             $grupo->update(['orcamento_id' => $orcamento->id]);
 
             DB::commit();
 
-// ✅ Gera o PDF do orçamento
+            // Gera o PDF do orçamento
             $pdfGerado = false;
             try {
                 $pdfService = new \App\Services\OrcamentoPdfService();
-                $pdfGerado  = $pdfService->gerarOrcamentoPdf($orcamento->fresh());
+                $pdfGerado = $pdfService->gerarOrcamentoPdf($orcamento->fresh());
             } catch (\Exception $e) {
                 Log::error('Erro ao gerar PDF do orçamento a partir da cotação: ' . $e->getMessage());
             }
@@ -387,18 +398,104 @@ class ConsultaPrecoController extends Controller
         }
     }
 
+    public function adicionarItem(Request $request, $grupoId)
+    {
+        $grupo = ConsultaPrecoGrupo::findOrFail($grupoId);
+
+        $request->validate([
+            'descricao'       => 'required|string|max:255',
+            'quantidade'      => 'required|integer|min:1',
+            'cor_id'          => 'nullable|exists:cores,id',
+            'part_number'     => 'nullable|string|max:100',
+            'observacao'      => 'nullable|string',
+            'fornecedor_ids'  => 'nullable|array',
+            'fornecedor_ids.*'=> 'nullable|exists:fornecedores,id',
+        ]);
+
+        $item = ConsultaPreco::create([
+            'grupo_id'    => $grupo->id,
+            'cliente_id'  => $grupo->cliente_id,
+            'usuario_id'  => $grupo->usuario_id,
+            'descricao'   => $request->descricao,
+            'quantidade'  => $request->quantidade,
+            'cor_id'      => $request->cor_id,
+            'part_number' => $request->part_number,
+            'observacao'  => $request->observacao,
+            'status'      => 'Pendente',
+        ]);
+
+        // Vincula fornecedor sugerido se informado
+        if (!empty($request->fornecedor_ids)) {
+            foreach ($request->fornecedor_ids as $fornecedorId) {
+                if (empty($fornecedorId)) continue;
+                ConsultaPrecoFornecedor::create([
+                    'consulta_preco_id' => $item->id,
+                    'fornecedor_id'     => $fornecedorId,
+                ]);
+            }
+        }
+
+        // Novo item pendente — grupo volta para Pendente
+        if (in_array($grupo->status, ['Disponível', 'Aprovado'])) {
+            $grupo->update(['status' => 'Pendente', 'validade' => null]);
+        }
+
+        return redirect()
+            ->route('consulta_preco.show_grupo', $grupoId)
+            ->with('success', 'Item adicionado à cotação com sucesso.');
+    }
     // ──────────────────────────────────────────────────────────
     // DESTROY
     // ──────────────────────────────────────────────────────────
     public function destroy($consulta_id)
     {
         $consultaPreco = ConsultaPreco::findOrFail($consulta_id);
-        $grupoId       = $consultaPreco->grupo_id;
+        $grupoId = $consultaPreco->grupo_id;
+
+        // ✅ Remove o item correspondente no orçamento se existir
+        if ($consultaPreco->orcamento_id) {
+            OrcamentoItens::where('orcamento_id', $consultaPreco->orcamento_id)
+                ->whereNull('produto_id')
+                ->where('quantidade', $consultaPreco->quantidade)
+                ->where('valor_unitario', $consultaPreco->preco_venda)
+                ->delete();
+        }
+
         $consultaPreco->delete();
+
+        // Recalcula status do grupo após remoção do item
+        $grupo = ConsultaPrecoGrupo::with('itens')->find($grupoId);
+        if ($grupo) {
+            if ($grupo->itens->isEmpty()) {
+                $grupo->update(['status' => 'Cancelado', 'validade' => null]);
+            } elseif ($grupo->todosItensDisponiveis()) {
+                $grupo->marcarDisponivel();
+            } else {
+                $grupo->update(['status' => 'Pendente', 'validade' => null]);
+            }
+
+            //  Recalcula o total do orçamento se vinculado
+            if ($grupo->orcamento_id) {
+                $orcamento = \App\Models\Orcamento::find($grupo->orcamento_id);
+                if ($orcamento) {
+                    $totalEncomenda = 0;
+                    foreach ($grupo->itens as $itemRestante) {
+                        $fornSel = $itemRestante->fornecedorSelecionado;
+                        if ($fornSel && $fornSel->preco_venda) {
+                            $totalEncomenda += (float)$fornSel->preco_venda * (float)$itemRestante->quantidade;
+                        }
+                    }
+                    $orcamento->update([
+                        'valor_total_itens' => $totalEncomenda,
+                        'valor_com_desconto' => $totalEncomenda,
+                    ]);
+                }
+            }
+        }
 
         return redirect()
             ->route('consulta_preco.show_grupo', $grupoId)
-            ->with('success', 'Item removido com sucesso.');
+            ->with('success', 'Item removido da cotação com sucesso.');
     }
 
     public function destroyGrupo($grupoId)
@@ -422,7 +519,7 @@ class ConsultaPrecoController extends Controller
         }
         $valor = str_replace('.', '', trim($valor));
         $valor = str_replace(',', '.', $valor);
-        return (float) $valor;
+        return (float)$valor;
     }
 
     private function gerarCotacaoPdf(ConsultaPreco $cotacao): bool
@@ -430,22 +527,22 @@ class ConsultaPrecoController extends Controller
         try {
             $cotacao->load(['grupo.cliente', 'fornecedores.fornecedor', 'cor']);
 
-            $token        = Str::uuid();
+            $token = Str::uuid();
             $tokenExpiraEm = Carbon::now()->addDays(2);
-            $linkSeguro   = route('cotacoes.view', ['token' => $token]);
+            $linkSeguro = route('cotacoes.view', ['token' => $token]);
             $qrCodeBase64 = base64_encode(
                 QrCode::format('png')->size(130)->margin(1)->generate($linkSeguro)
             );
 
             $dadosPdf = [
-                'cotacao'    => $cotacao,
-                'qrCode'     => $qrCodeBase64,
+                'cotacao' => $cotacao,
+                'qrCode' => $qrCodeBase64,
                 'linkSeguro' => $linkSeguro,
-                'versao'     => $cotacao->versao ?? 1,
+                'versao' => $cotacao->versao ?? 1,
             ];
 
-            $pdf        = Pdf::loadView('documentos_pdf.cotacao', $dadosPdf)->setPaper('a4');
-            $canvas     = $pdf->getDomPDF()->getCanvas();
+            $pdf = Pdf::loadView('documentos_pdf.cotacao', $dadosPdf)->setPaper('a4');
+            $canvas = $pdf->getDomPDF()->getCanvas();
             $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
                 $text = "Página $pageNumber / $pageCount";
                 $font = $fontMetrics->get_font("Helvetica", "normal");
@@ -453,16 +550,16 @@ class ConsultaPrecoController extends Controller
             });
 
             $nomeArquivo = "cotacao_{$cotacao->id}_v{$cotacao->versao}.pdf";
-            $path        = "cotacoes/{$nomeArquivo}";
+            $path = "cotacoes/{$nomeArquivo}";
 
             Storage::disk('public')->makeDirectory('cotacoes');
             Storage::disk('public')->put($path, $pdf->output());
 
             if (Storage::disk('public')->exists($path)) {
                 $cotacao->update([
-                    'token_acesso'    => $token,
+                    'token_acesso' => $token,
                     'token_expira_em' => $tokenExpiraEm,
-                    'pdf_path'        => $path,
+                    'pdf_path' => $path,
                 ]);
                 return true;
             }
@@ -491,7 +588,7 @@ class ConsultaPrecoController extends Controller
             $pdfPath = Storage::disk('public')->path($cotacao->pdf_path);
 
             return response()->file($pdfPath, [
-                'Content-Type'        => 'application/pdf',
+                'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'inline; filename="cotacao_' . $cotacao->id . '.pdf"',
             ]);
 

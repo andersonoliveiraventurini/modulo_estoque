@@ -75,13 +75,14 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('movimentacao', MovimentacaoController::class)->names('movimentacao');
 
     // cotação de produto
-    // Grupo de cotação
+// Grupo de cotação
     Route::get('/cotacoes', [ConsultaPrecoController::class, 'index'])->name('consulta_preco.index');
     Route::get('/cotacoes/criar/{cliente_id}', [ConsultaPrecoController::class, 'criar_cotacao'])->name('consulta_preco.criar');
     Route::post('/cotacoes', [ConsultaPrecoController::class, 'store'])->name('consulta_preco.store');
     Route::get('/cotacoes/grupo/{grupoId}', [ConsultaPrecoController::class, 'showGrupo'])->name('consulta_preco.show_grupo');
     Route::post('/cotacoes/grupo/{grupoId}/aprovar', [ConsultaPrecoController::class, 'aprovarGrupo'])->name('consulta_preco.aprovar_grupo');
     Route::post('/cotacoes/grupo/{grupoId}/gerar-orcamento', [ConsultaPrecoController::class, 'gerarOrcamento'])->name('consulta_preco.gerar_orcamento');
+    Route::post('/cotacoes/grupo/{grupoId}/adicionar-item', [ConsultaPrecoController::class, 'adicionarItem'])->name('consulta_preco.adicionar_item'); // ✅ movida para cá
     Route::delete('/cotacoes/grupo/{grupoId}', [ConsultaPrecoController::class, 'destroyGrupo'])->name('consulta_preco.destroy_grupo');
 
 // Item individual
@@ -95,9 +96,6 @@ Route::middleware(['auth'])->group(function () {
 
 // PDF via token
     Route::get('/cotacoes/visualizar/{token}', [ConsultaPrecoController::class, 'visualizarCotacao'])->name('cotacoes.view');
-
-
-    // fim cotações de produto
 
 
     //Route::resource('consulta_preco', ConsultaPrecoController::class)->names('consulta_preco');

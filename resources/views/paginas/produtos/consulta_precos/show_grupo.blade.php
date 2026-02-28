@@ -79,6 +79,81 @@
                 </div>
             @endif
         </div>
+        {{-- ✅ Botão adicionar item --}}
+        @if (!in_array($grupo->status, ['Cancelado', 'Expirado']) && !$grupo->orcamento_id)
+            <button onclick="document.getElementById('modal-novo-item').classList.remove('hidden')"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                <x-heroicon-o-plus class="w-4 h-4" />
+                Adicionar Item
+            </button>
+        @endif
+
+        {{-- Modal novo item --}}
+        <div id="modal-novo-item" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl w-full max-w-lg p-6 relative">
+                <button onclick="document.getElementById('modal-novo-item').classList.add('hidden')"
+                        class="absolute top-3 right-3 text-zinc-400 hover:text-zinc-700">
+                    <x-heroicon-o-x-mark class="w-5 h-5" />
+                </button>
+                <h3 class="text-lg font-semibold mb-4 text-zinc-800 dark:text-zinc-200">Adicionar Item à Cotação</h3>
+
+                <form action="{{ route('consulta_preco.adicionar_item', $grupo->id) }}" method="POST" class="space-y-4">
+                    @csrf
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Descrição <span class="text-red-500">*</span></label>
+                        <input type="text" name="descricao" required placeholder="Ex: Perfil de alumínio 3m"
+                               class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Quantidade <span class="text-red-500">*</span></label>
+                            <input type="number" name="quantidade" min="1" value="1" required
+                                   class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Part Number</label>
+                            <input type="text" name="part_number" placeholder="Opcional"
+                                   class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Fabricante / Fornecedor sugerido</label>
+                        <select name="fornecedor_ids[]"
+                                class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            <option value="">Nenhum</option>
+                            @foreach ($fornecedores as $f)
+                                <option value="{{ $f->id }}">{{ $f->nome_fantasia }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Cor</label>
+                        <select name="cor_id"
+                                class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            <option value="">Selecione...</option>
+                            @foreach ($cores as $cor)
+                                <option value="{{ $cor->id }}">{{ $cor->nome }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Observação</label>
+                        <textarea name="observacao" rows="2" placeholder="Detalhes adicionais..."
+                                  class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none"></textarea>
+                    </div>
+                    <div class="flex justify-end gap-3 pt-2">
+                        <button type="button" onclick="document.getElementById('modal-novo-item').classList.add('hidden')"
+                                class="px-4 py-2 text-sm text-zinc-600 hover:text-zinc-800 transition-colors">
+                            Cancelar
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                            Adicionar Item
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
         {{-- ── ITENS DA COTAÇÃO ──────────────────────────────── --}}
         <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
@@ -119,6 +194,18 @@
                                         </x-button>
                                     </a>
                                 @endif
+                                    {{--  Remover item da cotação --}}
+                                    @if (!$grupo->orcamento_id || in_array($grupo->status, ['Aprovado', 'Disponível']))
+                                        <form action="{{ route('consulta_preco.destroy', $item->id) }}" method="POST"
+                                              onsubmit="return confirm('Remover o item \'{{ addslashes($item->descricao) }}\' desta cotação?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <x-button type="submit" size="sm" variant="danger">
+                                                <x-heroicon-o-trash class="w-3.5 h-3.5" />
+                                                Remover
+                                            </x-button>
+                                        </form>
+                                    @endif
                             </div>
                         </div>
 

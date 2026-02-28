@@ -38,12 +38,13 @@ class Orcamento extends Model
         'homologacao',
         'desconto_total',
         'valor_com_desconto',
+        'encomenda'
     ];
 
     // Model Orcamento
-    public function consultaPrecos()
+    public function consultaPrecoGrupo()
     {
-        return $this->hasMany(ConsultaPreco::class, 'orcamento_id');
+        return $this->hasOne(ConsultaPrecoGrupo::class, 'orcamento_id');
     }
 
     public function cliente()
@@ -188,7 +189,7 @@ class Orcamento extends Model
         });
     }
 
-    // solicitações de pagamento 
+    // solicitações de pagamento
 
     public function solicitacoesPagamento()
     {

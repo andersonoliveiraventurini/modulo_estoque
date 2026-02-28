@@ -92,7 +92,7 @@ class OrcamentoController extends Controller
     {
         $cliente = Cliente::with('enderecos')->findOrFail($cliente_id);
 
-        // validação CNPJ ativo na Receita Federal        
+        // validação CNPJ ativo na Receita Federal
         $ativo = Http::get("https://brasilapi.com.br/api/cnpj/v1/" . preg_replace('/\D/', '', $cliente->cnpj))
             ->json('descricao_situacao_cadastral') === 'ATIVA';
 
@@ -1095,8 +1095,8 @@ class OrcamentoController extends Controller
                 'desconto_total'     => 0,
                 'valor_com_desconto' => $totalItens,
                 'versao'             => $orcamento->versao + 1,
-                'updated_at'         => now(),   
-                // atualiza a validade desse orçamento para 2 dias a partir da data de atualização             
+                'updated_at'         => now(),
+                // atualiza a validade desse orçamento para 2 dias a partir da data de atualização
                 'validade'            => Carbon::now()->addDays(2),
             ]);
 
@@ -1108,7 +1108,7 @@ class OrcamentoController extends Controller
             // 7. Recarrega orçamento fresco e gera novo PDF
             $orcamentoAtualizado = Orcamento::with(['itens.produto', 'cliente', 'vendedor'])
                 ->find($orcamento->id);
-            
+
             if($orcamento->condicao_id != 20){
                 $pdfService = new OrcamentoPdfService();
                 $pdfService->gerarOrcamentoPdf($orcamentoAtualizado);
@@ -1140,7 +1140,6 @@ class OrcamentoController extends Controller
             'itens.produto.fornecedor',
             'itens.produto.cor',
             'vidros',
-            'consultaPrecos',
             'descontos'
         ])->findOrFail($id);
 
@@ -1168,16 +1167,7 @@ class OrcamentoController extends Controller
         $desconto_especifico = $orcamento->descontos->where('tipo', 'fixo')->max('valor') ?? 0;
 
         // Prepara os itens de consulta para JavaScript
-        $itensParaJs = old('itens') ?? $orcamento->consultaPrecos->map(function ($item) {
-            return [
-                'id' => $item->id,
-                'nome' => $item->descricao,
-                'quantidade' => $item->quantidade,
-                'cor' => $item->cor,
-                'fornecedor_id' => $item->fornecedor_id,
-                'observacoes' => $item->observacao
-            ];
-        })->toArray();
+        $itensParaJs = old('itens') ?? [];
 
         return view('paginas.orcamentos.edit', compact(
             'orcamento',

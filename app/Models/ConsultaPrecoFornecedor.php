@@ -2,9 +2,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ConsultaPrecoFornecedor extends Model
 {
+    use softDeletes;
     protected $table = 'consulta_preco_fornecedores';
 
     protected $fillable = [
