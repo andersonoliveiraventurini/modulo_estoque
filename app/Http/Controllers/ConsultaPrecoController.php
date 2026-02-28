@@ -403,99 +403,142 @@ class ConsultaPrecoController extends Controller
         $grupo = ConsultaPrecoGrupo::findOrFail($grupoId);
 
         $request->validate([
-            'descricao'       => 'required|string|max:255',
-            'quantidade'      => 'required|integer|min:1',
-            'cor_id'          => 'nullable|exists:cores,id',
-            'part_number'     => 'nullable|string|max:100',
-            'observacao'      => 'nullable|string',
-            'fornecedor_ids'  => 'nullable|array',
-            'fornecedor_ids.*'=> 'nullable|exists:fornecedores,id',
+            'descricao'  => 'required|string|max:255',
+            'quantidade' => 'required|numeric|min:1',
+            'part_number'=> 'nullable|string|max:100',
+            'cor_id'     => 'nullable|exists:cores,id',
+            'observacao' => 'nullable|string|max:500',
         ]);
 
-        $item = ConsultaPreco::create([
-            'grupo_id'    => $grupo->id,
-            'cliente_id'  => $grupo->cliente_id,
-            'usuario_id'  => $grupo->usuario_id,
-            'descricao'   => $request->descricao,
-            'quantidade'  => $request->quantidade,
-            'cor_id'      => $request->cor_id,
-            'part_number' => $request->part_number,
-            'observacao'  => $request->observacao,
-            'status'      => 'Pendente',
-        ]);
+        DB::transaction(function () use ($request, $grupo) {
 
-        // Vincula fornecedor sugerido se informado
-        if (!empty($request->fornecedor_ids)) {
-            foreach ($request->fornecedor_ids as $fornecedorId) {
-                if (empty($fornecedorId)) continue;
-                ConsultaPrecoFornecedor::create([
-                    'consulta_preco_id' => $item->id,
-                    'fornecedor_id'     => $fornecedorId,
-                ]);
+            // Cria o novo item de cotação
+            $item = ConsultaPreco::create([
+                'grupo_id'    => $grupo->id,
+                'descricao'   => $request->descricao,
+                'quantidade'  => $request->quantidade,
+                'part_number' => $request->part_number,
+                'cor_id'      => $request->cor_id,
+                'observacao'  => $request->observacao,
+                'status'      => 'Pendente',
+            ]);
+
+            // Vincula fornecedor se informado
+            if ($request->filled('fornecedor_ids')) {
+                foreach ((array) $request->fornecedor_ids as $fornId) {
+                    if ($fornId) {
+                        ConsultaPrecoFornecedor::create([
+                            'consulta_preco_id' => $item->id,
+                            'fornecedor_id'     => $fornId,
+                        ]);
+                    }
+                }
             }
-        }
 
-        // Novo item pendente — grupo volta para Pendente
-        if (in_array($grupo->status, ['Disponível', 'Aprovado'])) {
-            $grupo->update(['status' => 'Pendente', 'validade' => null]);
-        }
+            // Reseta status do grupo para Pendente (novo item precisa de precificação)
+            $grupo->update(['status' => 'Pendente']);
+
+            // ✅ Se há orçamento vinculado, reseta status e deleta PDF
+            if ($grupo->orcamento_id) {
+                $orcamento = \App\Models\Orcamento::find($grupo->orcamento_id);
+
+                if ($orcamento) {
+                    // Deleta PDF antigo
+                    if ($orcamento->pdf_path) {
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($orcamento->pdf_path);
+                    }
+
+                    $orcamento->status          = 'Pendente';
+                    $orcamento->workflow_status = null;
+                    $orcamento->pdf_path        = null;
+                    $orcamento->save();
+                }
+            }
+        });
 
         return redirect()
-            ->route('consulta_preco.show_grupo', $grupoId)
-            ->with('success', 'Item adicionado à cotação com sucesso.');
+            ->route('consulta_preco.show_grupo', $grupo->id)
+            ->with('success', 'Item adicionado com sucesso! O orçamento foi retornado para Pendente e o PDF foi removido para regeneração.');
     }
     // ──────────────────────────────────────────────────────────
     // DESTROY
     // ──────────────────────────────────────────────────────────
-    public function destroy($consulta_id)
+    public function destroy($id)
     {
-        $consultaPreco = ConsultaPreco::findOrFail($consulta_id);
-        $grupoId = $consultaPreco->grupo_id;
+        $item = ConsultaPreco::findOrFail($id);
+        $grupo = ConsultaPrecoGrupo::findOrFail($item->grupo_id);
 
-        // ✅ Remove o item correspondente no orçamento se existir
-        if ($consultaPreco->orcamento_id) {
-            OrcamentoItens::where('orcamento_id', $consultaPreco->orcamento_id)
-                ->whereNull('produto_id')
-                ->where('quantidade', $consultaPreco->quantidade)
-                ->where('valor_unitario', $consultaPreco->preco_venda)
-                ->delete();
-        }
+        DB::transaction(function () use ($item, $grupo) {
 
-        $consultaPreco->delete();
-
-        // Recalcula status do grupo após remoção do item
-        $grupo = ConsultaPrecoGrupo::with('itens')->find($grupoId);
-        if ($grupo) {
-            if ($grupo->itens->isEmpty()) {
-                $grupo->update(['status' => 'Cancelado', 'validade' => null]);
-            } elseif ($grupo->todosItensDisponiveis()) {
-                $grupo->marcarDisponivel();
-            } else {
-                $grupo->update(['status' => 'Pendente', 'validade' => null]);
-            }
-
-            //  Recalcula o total do orçamento se vinculado
+            // ✅ Se há orçamento vinculado, remove o item correspondente em orcamento_itens
             if ($grupo->orcamento_id) {
+                \App\Models\OrcamentoItem::where('orcamento_id', $grupo->orcamento_id)
+                    ->whereNull('produto_id')
+                    ->where('quantidade', $item->quantidade)
+                    ->where('valor_unitario', function ($query) use ($item) {
+                        $query->select('preco_venda')
+                            ->from('consulta_preco_fornecedores')
+                            ->where('consulta_preco_id', $item->id)
+                            ->where('selecionado', true)
+                            ->limit(1);
+                    })
+                    ->delete();
+
                 $orcamento = \App\Models\Orcamento::find($grupo->orcamento_id);
+
                 if ($orcamento) {
-                    $totalEncomenda = 0;
-                    foreach ($grupo->itens as $itemRestante) {
-                        $fornSel = $itemRestante->fornecedorSelecionado;
-                        if ($fornSel && $fornSel->preco_venda) {
-                            $totalEncomenda += (float)$fornSel->preco_venda * (float)$itemRestante->quantidade;
-                        }
+                    // ✅ Reseta status para Pendente
+                    $orcamento->status          = 'Pendente';
+                    $orcamento->workflow_status = 'pendente';
+                    $orcamento->save();
+
+                    // ✅ Deleta PDF antigo para forçar regeneração
+                    if ($orcamento->pdf_path) {
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($orcamento->pdf_path);
+                        $orcamento->pdf_path = null;
+                        $orcamento->save();
                     }
-                    $orcamento->update([
-                        'valor_total_itens' => $totalEncomenda,
-                        'valor_com_desconto' => $totalEncomenda,
-                    ]);
+
+                    // ✅ Recalcula totais do orçamento
+                    $this->recalcularTotaisOrcamento($orcamento, $grupo);
                 }
             }
+
+            // ✅ Recalcula status do grupo
+            $item->delete();
+            $grupo->refresh();
+            $itensRestantes = $grupo->itens()->count();
+
+            if ($itensRestantes === 0) {
+                $grupo->update(['status' => 'Cancelado']);
+            } elseif ($grupo->itens()->whereDoesntHave('fornecedorSelecionado')->exists()) {
+                $grupo->update(['status' => 'Pendente']);
+            } else {
+                $grupo->marcarDisponivel();
+            }
+        });
+
+        return redirect()->back()->with('success', 'Item removido com sucesso.');
+    }
+
+// ✅ Método auxiliar de recálculo
+    private function recalcularTotaisOrcamento(\App\Models\Orcamento $orcamento, ConsultaPrecoGrupo $grupo): void
+    {
+        $totalProdutos = \App\Models\OrcamentoItem::where('orcamento_id', $orcamento->id)
+            ->whereNotNull('produto_id')
+            ->sum(DB::raw('valor_unitario_com_desconto * quantidade'));
+
+        $totalEncomenda = 0;
+        foreach ($grupo->fresh('itens.fornecedorSelecionado')->itens as $item) {
+            $forn = $item->fornecedorSelecionado;
+            $totalEncomenda += $forn ? (float) $forn->preco_venda * (float) $item->quantidade : 0;
         }
 
-        return redirect()
-            ->route('consulta_preco.show_grupo', $grupoId)
-            ->with('success', 'Item removido da cotação com sucesso.');
+        $total = $totalProdutos + $totalEncomenda;
+
+        $orcamento->valor_total_itens   = $total;
+        $orcamento->valor_com_desconto  = $total; // ajuste se houver descontos
+        $orcamento->save();
     }
 
     public function destroyGrupo($grupoId)

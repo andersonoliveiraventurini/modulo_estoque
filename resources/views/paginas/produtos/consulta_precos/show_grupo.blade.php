@@ -79,14 +79,7 @@
                 </div>
             @endif
         </div>
-        {{-- ✅ Botão adicionar item --}}
-        @if (!in_array($grupo->status, ['Cancelado', 'Expirado']) && !$grupo->orcamento_id)
-            <button onclick="document.getElementById('modal-novo-item').classList.remove('hidden')"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
-                <x-heroicon-o-plus class="w-4 h-4" />
-                Adicionar Item
-            </button>
-        @endif
+
 
         {{-- Modal novo item --}}
         <div id="modal-novo-item" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -142,6 +135,11 @@
                                   class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none"></textarea>
                     </div>
                     <div class="flex justify-end gap-3 pt-2">
+                        @if ($grupo->orcamento_id)
+                            <div class="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg text-sm text-amber-800 dark:text-amber-200">
+                                ⚠️ <strong>Atenção:</strong> Ao adicionar este item, o Orçamento #{{ $grupo->orcamento_id }} voltará para status <strong>Pendente</strong> e o PDF será deletado para regeneração.
+                            </div>
+                        @endif
                         <button type="button" onclick="document.getElementById('modal-novo-item').classList.add('hidden')"
                                 class="px-4 py-2 text-sm text-zinc-600 hover:text-zinc-800 transition-colors">
                             Cancelar
@@ -157,10 +155,23 @@
 
         {{-- ── ITENS DA COTAÇÃO ──────────────────────────────── --}}
         <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
-            <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                <x-heroicon-o-shopping-cart class="w-5 h-5 text-blue-600"/>
-                Itens da Cotação ({{ $grupo->itens->count() }})
-            </h3>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold flex items-center gap-2">
+                    <x-heroicon-o-shopping-cart class="w-5 h-5 text-blue-600"/>
+                    Itens da Cotação ({{ $grupo->itens->count() }})
+                </h3>
+
+                {{-- ✅ Botão no canto superior direito --}}
+                @if (!in_array($grupo->status, ['Cancelado', 'Expirado']))
+                    <button onclick="document.getElementById('modal-novo-item').classList.remove('hidden')"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                        <x-heroicon-o-plus class="w-4 h-4" />
+                        Adicionar Item
+                    </button>
+                @endif
+            </div>
+
+            {{-- conteúdo dos itens continua aqui... --}}
 
             <div class="space-y-4">
                 @foreach ($grupo->itens as $item)

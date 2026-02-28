@@ -1,346 +1,373 @@
 <x-layouts.app :title="__('Gerenciar Orçamento #' . $orcamento->id)">
-    <div class="flex flex-col gap-6">
+            <div class="flex flex-col gap-6">
 
-        {{-- Cabeçalho --}}
-        <div
-            class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-sm overflow-hidden">
+                {{-- Cabeçalho --}}
+                <div
+                    class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-sm overflow-hidden">
 
-            {{-- ══════════════════════════════════════
-         HEADER DO CARD
-    ══════════════════════════════════════ --}}
-            <div
-                class="px-5 py-4 border-b border-neutral-100 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-3">
-
-                {{-- Título --}}
-                <div class="flex items-center gap-2 min-w-0">
-                    <div
-                        class="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                        <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
-                             viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                    </div>
-                    <div class="min-w-0">
-                        <p
-                            class="text-xs text-neutral-400 dark:text-neutral-500 font-medium uppercase tracking-wider leading-none mb-0.5">
-                            Orçamento</p>
-                        <h2 class="text-lg font-bold text-neutral-900 dark:text-white leading-tight truncate">
-                            #{{ $orcamento->id }}
-                        </h2>
-                    </div>
-                </div>
-
-                {{-- Ações do Header --}}
-                <div class="flex items-center flex-wrap gap-2">
-
-                    {{-- PDF removido do header, exibido no painel de status --}}
-
-                    {{-- Editar --}}
-                    @if (in_array($orcamento->status, ['Aprovar desconto', 'Aprovar pagamento', 'Pendente', 'Aprovado', 'Sem estoque']))
-                        <a href="{{ route('orcamentos.edit', $orcamento->id) }}">
-                            <x-button size="sm" variant="secondary">
-                                <x-heroicon-o-pencil-square class="w-4 h-4"/>
-                                <span class="hidden sm:inline">Editar</span>
-                            </x-button>
-                        </a>
-                    @endif
-
-                    @if ($orcamento->encomenda ?? null)
-                        {{-- Orçamento gerado por cotação — exibe link para a cotação --}}
-                        @php
-                            $grupoId = \App\Models\ConsultaPrecoGrupo::where('orcamento_id', $orcamento->id)->value('id');
-                        @endphp
-                        @if ($grupoId)
-                            <a href="{{ route('consulta_preco.show_grupo', $grupoId) }}">
-                                <x-button size="sm" variant="purple">
-                                    <x-heroicon-o-magnifying-glass class="w-4 h-4"/>
-                                    <span class="hidden sm:inline">Ver Cotação</span>
-                                </x-button>
-                            </a>
-                        @endif
-                    @else
-                        <form action="{{ route('orcamentos.atualizar-precos', $orcamento->id) }}" method="POST"
-                              onsubmit="return confirm('Tem certeza? Isso irá atualizar todos os preços com os valores atuais dos produtos e remover os descontos aplicados.')">
-                            @csrf
-                            <button type="submit">
-                                <x-button size="sm" variant="orange" tag="span">
-                                    <x-heroicon-o-arrow-path class="w-4 h-4"/>
-                                    <span class="hidden sm:inline">Atualizar Preços</span>
-                                </x-button>
-                            </button>
-                        </form>
-                    @endif
-                </div>
-            </div>
-
-            {{-- ══════════════════════════════════════
-            CORPO DO CARD
+                    {{-- ══════════════════════════════════════
+                 HEADER DO CARD
             ══════════════════════════════════════ --}}
-            <div class="px-5 py-4">
-                <div class="flex flex-col lg:flex-row lg:items-start gap-5">
+                    <div
+                        class="px-5 py-4 border-b border-neutral-100 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-3">
 
-                    {{-- ──────── INFORMAÇÕES COMPACTAS ──────── --}}
-                    <div class="flex-1 grid grid-cols-2 gap-x-6 gap-y-0 min-w-0">
-
-                        {{-- helper macro: cada linha é label + valor inline --}}
-                        @php
-                            $campos = [
-                                ['label' => 'Cliente', 'value' => $orcamento->cliente->nome ?? null, 'bold' => true],
-                                ['label' => 'Telefone', 'value' => $orcamento->cliente->telefone ?? null],
-                                ['label' => 'Endereço', 'value' => $orcamento->cliente->endereco ?? null],
-                                ['label' => 'Obra', 'value' => $orcamento->obra ?? null],
-                            ];
-                            $campos2 = [
-                                ['label' => 'Data', 'value' => $orcamento->created_at->format('d/m/Y')],
-                                [
-                                    'label' => 'Validade',
-                                    'value' => \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y'),
-                                ],
-                                ['label' => 'Entrega', 'value' => $orcamento->prazo_entrega ?? null],
-                                ['label' => 'Vendedor', 'value' => $orcamento->vendedor->name ?? null],
-                                ['label' => 'Pagamento', 'value' => $orcamento->condicaoPagamento->nome ?? null],
-                            ];
-                        @endphp
-
-                        {{-- Coluna 1 --}}
-                        <div class="space-y-1.5">
-                            @foreach ($campos as $c)
-                                <div class="flex items-baseline gap-1.5 min-w-0">
-                <span
-                    class="text-xs text-neutral-500 dark:text-neutral-400 font-medium flex-shrink-0">{{ $c['label'] }}:</span>
-                                    <span
-                                        class="text-sm truncate {{ $c['bold'] ?? false ? 'text-white font-semibold' : 'text-neutral-200' }}">
-                    {{ $c['value'] ?: '---' }}
-                </span>
-                                </div>
-                            @endforeach
+                        {{-- Título --}}
+                        <div class="flex items-center gap-2 min-w-0">
+                            <div
+                                class="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
+                                     viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                            <div class="min-w-0">
+                                <p
+                                    class="text-xs text-neutral-400 dark:text-neutral-500 font-medium uppercase tracking-wider leading-none mb-0.5">
+                                    Orçamento</p>
+                                <h2 class="text-lg font-bold text-neutral-900 dark:text-white leading-tight truncate">
+                                    #{{ $orcamento->id }}
+                                </h2>
+                            </div>
                         </div>
 
-                        {{-- Coluna 2 --}}
-                        <div class="space-y-1.5">
-                            @foreach ($campos2 as $c)
-                                <div class="flex items-baseline gap-1.5 min-w-0">
-                <span
-                    class="text-xs text-neutral-500 dark:text-neutral-400 font-medium flex-shrink-0">{{ $c['label'] }}:</span>
-                                    <span class="text-sm truncate text-neutral-200">{{ $c['value'] ?: '---' }}</span>
-                                </div>
-                            @endforeach
+                        {{-- Ações do Header --}}
+                        <div class="flex items-center flex-wrap gap-2">
 
-                            @if ($orcamento->outros_meios_pagamento)
-                                <div class="flex items-baseline gap-1.5 min-w-0">
-                                    <span class="text-xs text-blue-400 font-medium flex-shrink-0">Meio especial:</span>
-                                    <span
-                                        class="text-sm truncate text-blue-400 font-semibold">{{ $orcamento->outros_meios_pagamento }}</span>
-                                </div>
+                            {{-- PDF removido do header, exibido no painel de status --}}
+
+                            {{-- Editar --}}
+                            @if (in_array($orcamento->status, ['Aprovar desconto', 'Aprovar pagamento', 'Pendente', 'Aprovado', 'Sem estoque']))
+                                <a href="{{ route('orcamentos.edit', $orcamento->id) }}">
+                                    <x-button size="sm" variant="secondary">
+                                        <x-heroicon-o-pencil-square class="w-4 h-4"/>
+                                        <span class="hidden sm:inline">Editar</span>
+                                    </x-button>
+                                </a>
+                            @endif
+
+                            @if ($orcamento->encomenda ?? null)
+                                {{-- Orçamento gerado por cotação — exibe link para a cotação --}}
+                                @php
+                                    $grupoId = \App\Models\ConsultaPrecoGrupo::where('orcamento_id', $orcamento->id)->value('id');
+                                @endphp
+                                @if ($grupoId)
+                                    <a href="{{ route('consulta_preco.show_grupo', $grupoId) }}">
+                                        <x-button size="sm" variant="purple">
+                                            <x-heroicon-o-magnifying-glass class="w-4 h-4"/>
+                                            <span class="hidden sm:inline">Ver Cotação</span>
+                                        </x-button>
+                                    </a>
+                                @endif
+                            @else
+                                <form action="{{ route('orcamentos.atualizar-precos', $orcamento->id) }}" method="POST"
+                                      onsubmit="return confirm('Tem certeza? Isso irá atualizar todos os preços com os valores atuais dos produtos e remover os descontos aplicados.')">
+                                    @csrf
+                                    <button type="submit">
+                                        <x-button size="sm" variant="orange" tag="span">
+                                            <x-heroicon-o-arrow-path class="w-4 h-4"/>
+                                            <span class="hidden sm:inline">Atualizar Preços</span>
+                                        </x-button>
+                                    </button>
+                                </form>
                             @endif
                         </div>
-
                     </div>
 
-                    {{-- ──────── PAINEL DE STATUS ──────── --}}
-                    @if ($orcamento->validade >= now() || in_array($orcamento->status, ['Aprovado']))
-                        <div class="lg:w-72 flex-shrink-0">
-                            <div class="space-y-4">
+                    {{-- ══════════════════════════════════════
+                    CORPO DO CARD
+                    ══════════════════════════════════════ --}}
+                    <div class="px-5 py-4">
+                        <div class="flex flex-col lg:flex-row lg:items-start gap-5">
 
-                                {{-- ── APROVAR DESCONTO ── --}}
-                                @if ($orcamento->status === 'Aprovar desconto')
-                                    <div class="space-y-3">
-                                        <div class="flex items-center gap-2">
+                            {{-- ──────── INFORMAÇÕES COMPACTAS ──────── --}}
+                            <div class="flex-1 grid grid-cols-2 gap-x-6 gap-y-0 min-w-0">
+
+                                {{-- helper macro: cada linha é label + valor inline --}}
+                                @php
+                                    $campos = [
+                                        ['label' => 'Cliente', 'value' => $orcamento->cliente->nome ?? null, 'bold' => true],
+                                        ['label' => 'Telefone', 'value' => $orcamento->cliente->telefone ?? null],
+                                        ['label' => 'Endereço', 'value' => $orcamento->cliente->endereco ?? null],
+                                        ['label' => 'Obra', 'value' => $orcamento->obra ?? null],
+                                    ];
+                                    $campos2 = [
+                                        ['label' => 'Data', 'value' => $orcamento->created_at->format('d/m/Y')],
+                                        [
+                                            'label' => 'Validade',
+                                            'value' => \Carbon\Carbon::parse($orcamento->validade)->format('d/m/Y'),
+                                        ],
+                                        ['label' => 'Entrega', 'value' => $orcamento->prazo_entrega ?? null],
+                                        ['label' => 'Vendedor', 'value' => $orcamento->vendedor->name ?? null],
+                                        ['label' => 'Pagamento', 'value' => $orcamento->condicaoPagamento->nome ?? null],
+                                    ];
+                                @endphp
+
+                                {{-- Coluna 1 --}}
+                                <div class="space-y-1.5">
+                                    @foreach ($campos as $c)
+                                        <div class="flex items-baseline gap-1.5 min-w-0">
+                <span
+                    class="text-xs text-neutral-500 dark:text-neutral-400 font-medium flex-shrink-0">{{ $c['label'] }}:</span>
+                                            <span
+                                                class="text-sm truncate {{ $c['bold'] ?? false ? 'text-white font-semibold' : 'text-neutral-200' }}">
+                    {{ $c['value'] ?: '---' }}
+                </span>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                {{-- Coluna 2 --}}
+                                <div class="space-y-1.5">
+                                    @foreach ($campos2 as $c)
+                                        <div class="flex items-baseline gap-1.5 min-w-0">
+                <span
+                    class="text-xs text-neutral-500 dark:text-neutral-400 font-medium flex-shrink-0">{{ $c['label'] }}:</span>
+                                            <span class="text-sm truncate text-neutral-200">{{ $c['value'] ?: '---' }}</span>
+                                        </div>
+                                    @endforeach
+
+                                    @if ($orcamento->outros_meios_pagamento)
+                                        <div class="flex items-baseline gap-1.5 min-w-0">
+                                            <span class="text-xs text-blue-400 font-medium flex-shrink-0">Meio especial:</span>
+                                            <span
+                                                class="text-sm truncate text-blue-400 font-semibold">{{ $orcamento->outros_meios_pagamento }}</span>
+                                        </div>
+                                    @endif
+                                </div>
+
+                            </div>
+
+                            {{-- ──────── PAINEL DE STATUS ──────── --}}
+                            @if ($orcamento->validade >= now() || in_array($orcamento->status, ['Aprovado']))
+                                <div class="lg:w-72 flex-shrink-0">
+                                    <div class="space-y-4">
+
+                                        {{-- ── APROVAR DESCONTO ── --}}
+                                        @if ($orcamento->status === 'Aprovar desconto')
+                                            <div class="space-y-3">
+                                                <div class="flex items-center gap-2">
                         <span
                             class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse flex-shrink-0"></span>
-                                            <p class="text-sm font-semibold text-yellow-700 dark:text-yellow-400">
-                                                Aguardando aprovação de desconto</p>
-                                        </div>
-                                        <a href="/descontos/orcamento/{{ $orcamento->id }}" class="block">
-                                            <x-button size="sm" variant="primary" class="w-full justify-center">
-                                                <x-heroicon-o-receipt-percent class="w-4 h-4"/>
-                                                Validar Desconto
-                                            </x-button>
-                                        </a>
-                                    </div>
+                                                    <p class="text-sm font-semibold text-yellow-700 dark:text-yellow-400">
+                                                        Aguardando aprovação de desconto</p>
+                                                </div>
+                                                <a href="/descontos/orcamento/{{ $orcamento->id }}" class="block">
+                                                    <x-button size="sm" variant="primary" class="w-full justify-center">
+                                                        <x-heroicon-o-receipt-percent class="w-4 h-4"/>
+                                                        Validar Desconto
+                                                    </x-button>
+                                                </a>
+                                            </div>
 
-                                    {{-- ── APROVAR PAGAMENTO ── --}}
-                                @elseif ($orcamento->status === 'Aprovar pagamento')
-                                    <div class="space-y-3">
-                                        <div class="flex items-center gap-2">
+                                            {{-- ── APROVAR PAGAMENTO ── --}}
+                                        @elseif ($orcamento->status === 'Aprovar pagamento')
+                                            <div class="space-y-3">
+                                                <div class="flex items-center gap-2">
                         <span
                             class="w-2 h-2 rounded-full bg-orange-400 animate-pulse flex-shrink-0"></span>
-                                            <p class="text-sm font-semibold text-orange-700 dark:text-orange-400">
-                                                Aguardando aprovação de pagamento</p>
-                                        </div>
-                                        <a href="{{ route('solicitacoes-pagamento.aprovar', $orcamento->id) }}"
-                                           class="block">
-                                            <x-button size="sm" variant="primary" class="w-full justify-center">
-                                                <x-heroicon-o-credit-card class="w-4 h-4"/>
-                                                Validar Pagamento
-                                            </x-button>
-                                        </a>
-                                    </div>
+                                                    <p class="text-sm font-semibold text-orange-700 dark:text-orange-400">
+                                                        Aguardando aprovação de pagamento</p>
+                                                </div>
+                                                <a href="{{ route('solicitacoes-pagamento.aprovar', $orcamento->id) }}"
+                                                   class="block">
+                                                    <x-button size="sm" variant="primary" class="w-full justify-center">
+                                                        <x-heroicon-o-credit-card class="w-4 h-4"/>
+                                                        Validar Pagamento
+                                                    </x-button>
+                                                </a>
+                                            </div>
 
-                                    {{-- ── REJEITADO ── --}}
-                                @elseif ($orcamento->status === 'Rejeitado')
-                                    <div class="space-y-2">
-                                        <div class="flex items-center gap-2">
-                                            <span class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
-                                            <p class="text-sm font-semibold text-red-700 dark:text-red-400">Orçamento
-                                                Rejeitado</p>
-                                        </div>
-                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                                            Este orçamento foi rejeitado durante a aprovação do meio de pagamento.
-                                        </p>
-                                    </div>
-                                @elseif ($orcamento->status === 'Sem estoque')
-                                    <div class="space-y-2">
-                                        <div class="flex items-center gap-2">
-                                            <span class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
-                                            <p class="text-sm font-semibold text-red-700 dark:text-red-400">
-                                                Sem Estoque</p>
-                                        </div>
-                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                                            Este orçamento não poder seguir por falta de estoque.
-                                        </p>
-                                    </div>
+                                            {{-- ── REJEITADO ── --}}
+                                        @elseif ($orcamento->status === 'Rejeitado')
+                                            <div class="space-y-2">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
+                                                    <p class="text-sm font-semibold text-red-700 dark:text-red-400">Orçamento
+                                                        Rejeitado</p>
+                                                </div>
+                                                <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                                                    Este orçamento foi rejeitado durante a aprovação do meio de pagamento.
+                                                </p>
+                                            </div>
+                                        @elseif ($orcamento->status === 'Sem estoque')
+                                            <div class="space-y-2">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
+                                                    <p class="text-sm font-semibold text-red-700 dark:text-red-400">
+                                                        Sem Estoque</p>
+                                                </div>
+                                                <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                                                    Este orçamento não poder seguir por falta de estoque.
+                                                </p>
+                                            </div>
 
-                                    {{-- ── STATUS NORMAL ── --}}
-                                @else
-                                    {{-- Seletor de Status --}}
-                                    <div class="space-y-2">
-                                        <p
-                                            class="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
-                                            Status Comercial</p>
-                                        <form id="form-status-{{ $orcamento->id }}" class="flex gap-2"
-                                              data-id="{{ $orcamento->id }}"
-                                              data-url="{{ route('orcamentos.atualizar-status', $orcamento->id) }}">
-                                            @csrf
-                                            @method('PUT')
-                                            <select name="status"
-                                                    class="flex-1 border border-gray-300 dark:border-neutral-600 dark:bg-zinc-700 dark:text-white rounded-lg px-2 py-1.5 text-sm status-select focus:ring-2 focus:ring-blue-300 focus:outline-none"
-                                                    data-id="{{ $orcamento->id }}">
-                                                @foreach (['Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'] as $s)
-                                                    <option value="{{ $s }}" @selected($orcamento->status === $s)>
-                                                        {{ $s }}</option>
-                                                @endforeach
-                                            </select>
-                                            <button type="button"
-                                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors atualizar-status"
-                                                    data-id="{{ $orcamento->id }}">
-                                                Salvar
-                                            </button>
-                                        </form>
-                                    </div>
+                                            {{-- ── STATUS NORMAL ── --}}
+                                        @else
+                                            {{-- Seletor de Status --}}
+                                            {{-- Seletor de Status --}}
+                                            <div class="space-y-2">
+                                                <p class="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                                    Status Comercial
+                                                </p>
 
-                                    {{-- Badge Workflow --}}
-                                    @php
-                                        $wf = $orcamento->workflow_status;
-                                        $map = [
-                                            'aguardando_separacao' => [
-                                                'label' => 'Aguardando Separação',
-                                                'class' =>
-                                                    'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
-                                            ],
-                                            'em_separacao' => [
-                                                'label' => 'Em Separação',
-                                                'class' =>
-                                                    'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
-                                            ],
-                                            'aguardando_conferencia' => [
-                                                'label' => 'Aguardando Conferência',
-                                                'class' =>
-                                                    'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
-                                            ],
-                                            'em_conferencia' => [
-                                                'label' => 'Em Conferência',
-                                                'class' =>
-                                                    'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200',
-                                            ],
-                                            'conferido' => [
-                                                'label' => 'Conferido',
-                                                'class' =>
-                                                    'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
-                                            ],
-                                            'finalizado' => [
-                                                'label' => 'Conferido e Finalizado',
-                                                'class' =>
-                                                    'bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-100',
-                                            ],
-                                        ];
-                                        $badge = $map[$wf] ?? null;
-                                    @endphp
+                                                {{-- ✅ Alerta quando cotação tem itens sem fornecedor --}}
+                                                @if ($cotacaoBloqueada ?? false)
+                                                    <div class="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-lg text-xs text-amber-800 dark:text-amber-200">
+                                                        <div class="flex items-start gap-2">
+                                                            <x-heroicon-o-exclamation-triangle class="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-500"/>
+                                                            <div>
+                                                                <strong>Cotação pendente</strong><br>
+                                                                Há itens da encomenda sem fornecedor selecionado.
+                                                                O status só pode ser alterado após todos os itens serem precificados.
+                                                                <a href="{{ route('consulta_preco.show_grupo', \App\Models\ConsultaPrecoGrupo::where('orcamento_id', $orcamento->id)->value('id')) }}"
+                                                                   class="underline font-semibold block mt-1">
+                                                                    → Ir para a Cotação
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endif
 
-                                    @if ($badge)
-                                        <div>
-                                            <p
-                                                class="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1.5">
-                                                Logística</p>
-                                            <span
-                                                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium {{ $badge['class'] }}">
+                                                <form id="form-status-{{ $orcamento->id }}" class="flex gap-2"
+                                                      data-id="{{ $orcamento->id }}"
+                                                      data-url="{{ route('orcamentos.atualizar-status', $orcamento->id) }}">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <select name="status"
+                                                            {{ ($cotacaoBloqueada ?? false) ? 'disabled' : '' }}
+                                                            class="flex-1 border border-gray-300 dark:border-neutral-600 dark:bg-zinc-700 dark:text-white rounded-lg px-2 py-1.5 text-sm status-select focus:ring-2 focus:ring-blue-300 focus:outline-none
+                       {{ ($cotacaoBloqueada ?? false) ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                            data-id="{{ $orcamento->id }}">
+                                                        @foreach (['Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'] as $s)
+                                                            <option value="{{ $s }}" @selected($orcamento->status === $s)>
+                                                                {{ $s }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    <button type="button"
+                                                            {{ ($cotacaoBloqueada ?? false) ? 'disabled' : '' }}
+                                                            class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors atualizar-status
+                       {{ ($cotacaoBloqueada ?? false) ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                            data-id="{{ $orcamento->id }}">
+                                                        Salvar
+                                                    </button>
+                                                </form>
+                                            </div>
+
+                                            {{-- Badge Workflow --}}
+                                            @php
+                                                $wf = $orcamento->workflow_status;
+                                                $map = [
+                                                    'aguardando_separacao' => [
+                                                        'label' => 'Aguardando Separação',
+                                                        'class' =>
+                                                            'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
+                                                    ],
+                                                    'em_separacao' => [
+                                                        'label' => 'Em Separação',
+                                                        'class' =>
+                                                            'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
+                                                    ],
+                                                    'aguardando_conferencia' => [
+                                                        'label' => 'Aguardando Conferência',
+                                                        'class' =>
+                                                            'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
+                                                    ],
+                                                    'em_conferencia' => [
+                                                        'label' => 'Em Conferência',
+                                                        'class' =>
+                                                            'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200',
+                                                    ],
+                                                    'conferido' => [
+                                                        'label' => 'Conferido',
+                                                        'class' =>
+                                                            'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
+                                                    ],
+                                                    'finalizado' => [
+                                                        'label' => 'Conferido e Finalizado',
+                                                        'class' =>
+                                                            'bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-100',
+                                                    ],
+                                                ];
+                                                $badge = $map[$wf] ?? null;
+                                            @endphp
+
+                                            @if ($badge)
+                                                <div>
+                                                    <p
+                                                        class="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1.5">
+                                                        Logística</p>
+                                                    <span
+                                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium {{ $badge['class'] }}">
                             <span class="w-1.5 h-1.5 rounded-full bg-current opacity-70"></span>
                             {{ $badge['label'] }}
                         </span>
-                                        </div>
-                                    @endif
+                                                </div>
+                                            @endif
 
-                                    {{-- Botões Operacionais --}}
-                                    <div class="space-y-2">
-                                        <p
-                                            class="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
-                                            Operacional</p>
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <a href="{{ route('orcamentos.separacao.show', $orcamento->id) }}"
-                                               class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                                     viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                          stroke-width="2"
-                                                          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                                                </svg>
-                                                Separação
-                                            </a>
-                                            <a href="{{ route('orcamentos.conferencia.show', $orcamento->id) }}"
-                                               class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium transition-colors">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                                     viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                          stroke-width="2"
-                                                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                                                </svg>
-                                                Conferência
-                                            </a>
-                                        </div>
-                                    </div>
+                                            {{-- Botões Operacionais --}}
+                                            @if ($orcamento->status === 'Aprovado')
+                                            <div class="space-y-2">
+                                                <p
+                                                    class="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                                    Operacional</p>
+                                                <div class="grid grid-cols-2 gap-2">
+                                                    <a href="{{ route('orcamentos.separacao.show', $orcamento->id) }}"
+                                                       class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                             viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                  stroke-width="2"
+                                                                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                                        </svg>
+                                                        Separação
+                                                    </a>
+                                                    <a href="{{ route('orcamentos.conferencia.show', $orcamento->id) }}"
+                                                       class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium transition-colors">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                             viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                  stroke-width="2"
+                                                                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                                                        </svg>
+                                                        Conferência
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            @endif
 
-                                    {{-- ── BOTÃO PDF DESTACADO ── --}}
-                                    @if (in_array($orcamento->status, ['Aprovar desconto', 'Aprovar pagamento', 'Pendente', 'Aprovado']))
+                                            {{-- ── BOTÃO PDF DESTACADO ── --}}
+                                            @if (in_array($orcamento->status, ['Aprovar desconto', 'Aprovar pagamento', 'Pendente', 'Aprovado']))
 
-                                        @if ($orcamento->pdf_path)
-                                            <a href="{{ asset('storage/' . $orcamento->pdf_path) }}" target="_blank"
-                                               rel="noopener"
-                                               class="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg
+                                                @if ($orcamento->pdf_path)
+                                                    <a href="{{ asset('storage/' . $orcamento->pdf_path) }}" target="_blank"
+                                                       rel="noopener"
+                                                       class="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg
                        bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700
                        text-white text-sm font-semibold tracking-wide
                        shadow-md shadow-emerald-900/40
                        transition-all duration-150 group">
-                                                <svg
-                                                    class="w-4 h-4 transition-transform group-hover:-translate-y-0.5 group-hover:scale-110"
-                                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                          stroke-width="2"
-                                                          d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h4a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-                                                </svg>
-                                                Baixar PDF do Orçamento
-                                            </a>
+                                                        <svg
+                                                            class="w-4 h-4 transition-transform group-hover:-translate-y-0.5 group-hover:scale-110"
+                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                  stroke-width="2"
+                                                                  d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h4a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                                                        </svg>
+                                                        Baixar PDF do Orçamento
+                                                    </a>
+                                                @endif
+                                            @endif
                                         @endif
-                                    @endif
-                                @endif
 
-                            </div>
+                                    </div>
+                                </div>
+                            @endif
+
                         </div>
-                    @endif
-
+                    </div>
                 </div>
-            </div>
-        </div>
 
         {{-- ✅ ALERTA PARA APROVAÇÕES PENDENTES --}}
         @if ($orcamento->status === 'Aprovar desconto')

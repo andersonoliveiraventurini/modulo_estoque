@@ -942,10 +942,32 @@ class OrcamentoController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($orcamento_id)
+    public function show($id)
     {
-        $orcamento = Orcamento::with(['cliente', 'vendedor', 'endereco', 'itens.produto.fornecedor', 'vidros', 'descontos', 'transportes'])->findOrFail($orcamento_id);
-        return view('paginas.orcamentos.show', compact('orcamento'));
+        $orcamento = Orcamento::with([
+            'itens.produto',
+            'cliente',
+            'vendedor',
+            'descontos',
+            'vidros',
+            'condicaoPagamento',
+        ])->findOrFail($id);
+
+        // ✅ Verifica se há itens de encomenda sem fornecedor selecionado
+        $cotacaoBloqueada = false;
+        if ($orcamento->encomenda) {
+            $grupo = \App\Models\ConsultaPrecoGrupo::with('itens.fornecedorSelecionado')
+                ->where('orcamento_id', $orcamento->id)
+                ->first();
+
+            if ($grupo) {
+                $cotacaoBloqueada = $grupo->itens->contains(
+                    fn($item) => is_null($item->fornecedorSelecionado)
+                );
+            }
+        }
+
+        return view('paginas.orcamentos.show', compact('orcamento', 'cotacaoBloqueada'));
     }
 
     public function atualizarStatus(Request $request, $id)
@@ -960,6 +982,25 @@ class OrcamentoController extends Controller
                 return response()->json(['message' => 'Status inválido!'], 422);
             }
 
+            // ✅ Bloqueia aprovação se houver itens de encomenda sem fornecedor selecionado
+            if ($status === 'Aprovado' && $orcamento->encomenda) {
+                $grupo = \App\Models\ConsultaPrecoGrupo::with('itens.fornecedorSelecionado')
+                    ->where('orcamento_id', $orcamento->id)
+                    ->first();
+
+                if ($grupo) {
+                    $semFornecedor = $grupo->itens->filter(
+                        fn($item) => is_null($item->fornecedorSelecionado)
+                    );
+
+                    if ($semFornecedor->isNotEmpty()) {
+                        return response()->json([
+                            'message' => 'Não é possível aprovar: ' . $semFornecedor->count() . ' item(ns) da encomenda ainda não possui(em) fornecedor selecionado. Acesse a cotação e precifique todos os itens antes de aprovar.',
+                        ], 422);
+                    }
+                }
+            }
+
             $orcamento->status            = $status;
             $orcamento->usuario_logado_id = auth()->id();
 
@@ -969,12 +1010,12 @@ class OrcamentoController extends Controller
 
             $orcamento->save();
 
-            // Pendente — só salva
+            // ── PENDENTE — só salva e retorna ───────────────────────────────────
             if ($status === 'Pendente') {
                 return response()->json(['message' => 'Status atualizado para Pendente com sucesso!']);
             }
 
-            // Cancelado / Rejeitado / Expirado
+            // ── CANCELADO / REJEITADO / EXPIRADO ────────────────────────────────
             if ($status !== 'Aprovado') {
                 $orcamento->cancelarLoteDeSeparacaoAtivo();
                 return response()->json([
@@ -983,13 +1024,25 @@ class OrcamentoController extends Controller
                 ]);
             }
 
-            // ── APROVADO ────────────────────────────────────────────────────────
+            // ── APROVADO: requer separação manual ───────────────────────────────
             if ($orcamento->requer_separacao) {
+                try {
+                    $pdfPath = app(\App\Services\OrcamentoPdfService::class)
+                        ->gerarOrcamentoPdf($orcamento->fresh());
+                    if ($pdfPath && is_string($pdfPath)) {
+                        \App\Models\Orcamento::where('id', $orcamento->id)
+                            ->update(['pdf_path' => $pdfPath]);
+                    }
+                } catch (\Exception $pdfEx) {
+                    \Log::warning("PDF não gerado (requer_separacao) orçamento #{$id}: " . $pdfEx->getMessage());
+                }
+
                 return response()->json([
                     'message' => 'Orçamento aprovado. Separação manual requerida.',
                 ]);
             }
 
+            // ── APROVADO: cria lote de separação automaticamente ────────────────
             \DB::transaction(function () use ($orcamento) {
                 $existe = \App\Models\PickingBatch::where('orcamento_id', $orcamento->id)
                     ->whereIn('status', ['aberto', 'em_separacao'])
@@ -1046,6 +1099,18 @@ class OrcamentoController extends Controller
 
                 $orcamento->update(['workflow_status' => 'em_separacao']);
             });
+
+            // ✅ Gera/regenera PDF após aprovação e criação do lote
+            try {
+                $pdfPath = app(\App\Services\OrcamentoPdfService::class)
+                    ->gerarOrcamentoPdf($orcamento->fresh());
+                if ($pdfPath && is_string($pdfPath)) {
+                    \App\Models\Orcamento::where('id', $orcamento->id)
+                        ->update(['pdf_path' => $pdfPath]);
+                }
+            } catch (\Exception $pdfEx) {
+                \Log::warning("PDF não gerado ao aprovar orçamento #{$id}: " . $pdfEx->getMessage());
+            }
 
             return response()->json([
                 'message'  => 'Orçamento aprovado e separação iniciada!',
