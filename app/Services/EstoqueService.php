@@ -15,20 +15,19 @@ final class EstoqueService
         $orcamento->load('itens.produto');
 
         DB::transaction(function () use ($orcamento) {
-            foreach ($orcamento->itens as $oi) {
-                $produto = $oi->produto;
+            foreach ($orcamento->itens->whereNotNull('produto_id') as $oi) { // ✅ pula encomendas
+                $produto    = $oi->produto;
                 $quantidade = (float) $oi->quantidade;
 
-                // valida mínimo
-                if (!$this->checarEstoqueMinimo($produto, $quantidade)) {
-                    // apenas registra reserva e risco — a decisão de bloquear pode ser tratada na UI
-                }
+                if (!$produto) continue; // ✅ segurança extra
+
+                $this->checarEstoqueMinimo($produto, $quantidade);
 
                 EstoqueReserva::create([
-                    'orcamento_id' => $orcamento->id,
-                    'produto_id' => $produto->id,
-                    'quantidade' => $quantidade,
-                    'status' => 'ativa',
+                    'orcamento_id'  => $orcamento->id,
+                    'produto_id'    => $produto->id,
+                    'quantidade'    => $quantidade,
+                    'status'        => 'ativa',
                     'criado_por_id' => auth()->id(),
                 ]);
             }
@@ -60,16 +59,16 @@ final class EstoqueService
             $consumos = [];
 
             foreach ($conf->itens as $ci) {
+                //  Pula itens de encomenda sem produto físico
+                if ($ci->is_encomenda ?? false) continue;
+                if (!$ci->produto) continue;
+
                 $produto = $ci->produto;
-                $q = (float) $ci->qty_conferida;
+                $q       = (float) $ci->qty_conferida;
 
                 if ($q <= 0) continue;
 
-                // baixa estoque
                 $produto->decrement('estoque_atual', $q);
-
-                // movimentação (seu projeto já tem MovimentacaoController/Model)
-                // aqui você pode criar a linha de saída
 
                 $consumos[$produto->id] = ($consumos[$produto->id] ?? 0) + $q;
             }

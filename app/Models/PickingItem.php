@@ -11,22 +11,49 @@ class PickingItem extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'picking_batch_id','orcamento_item_id','produto_id',
-        'qty_solicitada','qty_separada','status','localizacao',
-        'separado_por_id','separado_em','motivo_nao_separado',
-        'inconsistencia_reportada','inconsistencia_por_id','inconsistencia_obs', 'status'
+        'picking_batch_id', 'orcamento_item_id', 'produto_id',
+        'consulta_preco_id', 'is_encomenda', 'descricao_encomenda', // ✅
+        'qty_solicitada', 'qty_separada', 'status', 'localizacao',
+        'separado_por_id', 'separado_em', 'motivo_nao_separado',
+        'inconsistencia_reportada', 'inconsistencia_por_id', 'inconsistencia_obs',
     ];
 
     protected $casts = [
         'separado_em' => 'datetime',
         'inconsistencia_reportada' => 'bool',
+        'is_encomenda' => 'bool', // ✅
     ];
 
-    public function batch() { return $this->belongsTo(PickingBatch::class, 'picking_batch_id'); }
-    public function produto() { return $this->belongsTo(Produto::class); }
-    public function orcamentoItem() { return $this->belongsTo(OrcamentoItem::class, 'orcamento_item_id'); }
-    public function separador() { return $this->belongsTo(User::class, 'separado_por_id'); }
-    public function autorInconsistencia() { return $this->belongsTo(User::class, 'inconsistencia_por_id'); }
+    //  Relacionamento com item de cotação
+    public function consultaPreco()
+    {
+        return $this->belongsTo(\App\Models\ConsultaPreco::class, 'consulta_preco_id');
+    }
+
+    public function batch()
+    {
+        return $this->belongsTo(PickingBatch::class, 'picking_batch_id');
+    }
+
+    public function produto()
+    {
+        return $this->belongsTo(Produto::class);
+    }
+
+    public function orcamentoItem()
+    {
+        return $this->belongsTo(OrcamentoItem::class, 'orcamento_item_id');
+    }
+
+    public function separador()
+    {
+        return $this->belongsTo(User::class, 'separado_por_id');
+    }
+
+    public function autorInconsistencia()
+    {
+        return $this->belongsTo(User::class, 'inconsistencia_por_id');
+    }
 
     /**
      * Relação para buscar o usuário que separou o item.

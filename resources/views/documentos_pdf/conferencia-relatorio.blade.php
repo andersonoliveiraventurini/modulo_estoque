@@ -436,9 +436,19 @@
                         @foreach ($conf->itens as $item)
                             <tr>
                                 <td>
-                                    {{ $item->produto->nome ?? '—' }}
-                                    @if ($item->produto->sku ?? null)
-                                        <br /><span style="font-size:8.5px; color:#888;">SKU: {{ $item->produto->sku }}</span>
+                                    @if ($item->is_encomenda ?? false)
+                                        {{ $item->descricao_encomenda ?? '—' }}
+                                        <br /><span style="font-size:8.5px; color:#7c3aed;">Encomenda</span>
+                                        @if ($item->consultaPreco?->fornecedorSelecionado?->fornecedor)
+                                            <br /><span style="font-size:8.5px; color:#888;">
+                {{ $item->consultaPreco->fornecedorSelecionado->fornecedor->nome_fantasia }}
+            </span>
+                                        @endif
+                                    @else
+                                        {{ $item->produto->nome ?? '—' }}
+                                        @if ($item->produto->sku ?? null)
+                                            <br /><span style="font-size:8.5px; color:#888;">SKU: {{ $item->produto->sku }}</span>
+                                        @endif
                                     @endif
                                 </td>
                                 <td style="text-align:center;">
@@ -497,8 +507,14 @@
                 @foreach ($conf->itens as $item)
                     @if ($item->fotos->isNotEmpty())
                         <div class="fotos-section" style="margin-top: 8px; page-break-inside: avoid;">
-                            <p>📷 Fotos — {{ $item->produto->nome ?? 'Item #'.$item->id }}
-                               ({{ $item->fotos->count() }} foto{{ $item->fotos->count() > 1 ? 's' : '' }})
+                            <p>Fotos —
+                                @if ($item->is_encomenda ?? false)
+                                    {{ $item->descricao_encomenda ?? 'Item #'.$item->id }}
+                                    <span style="font-size:8.5px; color:#7c3aed;">(Encomenda)</span>
+                                @else
+                                    {{ $item->produto->nome ?? 'Item #'.$item->id }}
+                                @endif
+                                ({{ $item->fotos->count() }} foto{{ $item->fotos->count() > 1 ? 's' : '' }})
                             </p>
 
                             {{-- Grid de fotos: 4 por linha usando tabela --}}
@@ -556,31 +572,34 @@
         $confConcl   = $conferencias->where('status', 'concluida')->count();
         $confAndando = $conferencias->whereNotIn('status', ['concluida','cancelada'])->count();
 
-        /*
-         * O resumo deve refletir o estado FINAL de cada produto do orçamento,
-         * considerando a última vez que cada produto foi conferido em qualquer conferência.
-         *
-         * Lógica: para cada produto_id único, pega o registro mais recente
-         * (maior id) entre todas as conferências e avalia seu status real.
-         */
-        $ultimaOcorrenciaPorProduto = $todosItens
-            ->sortByDesc('id')                      // mais recente primeiro
-            ->unique('produto_id');                  // mantém só a primeira (= mais recente) de cada produto
+        // ✅ Para produtos normais: agrupa por produto_id
+        // ✅ Para encomendas: agrupa por consulta_preco_id (ou picking_item_id como fallback)
+        $ultimaOcorrenciaPorItem = $todosItens
+            ->sortByDesc('id')
+            ->unique(function ($i) {
+                // Chave única: produto normal usa produto_id, encomenda usa consulta_preco_id ou id
+                return ($i->is_encomenda ?? false)
+                    ? 'enc_' . ($i->consulta_preco_id ?? $i->id)
+                    : 'prod_' . $i->produto_id;
+            });
 
-        $sumOk    = $ultimaOcorrenciaPorProduto
+        $sumOk   = $ultimaOcorrenciaPorItem
             ->filter(fn($i) => $i->conferido_por_id && $i->status === 'ok')
             ->count();
 
-        $sumDiv   = $ultimaOcorrenciaPorProduto
+        $sumDiv  = $ultimaOcorrenciaPorItem
             ->filter(fn($i) => $i->status === 'divergente')
             ->count();
 
-        // Pendente = produto que, na sua ocorrência mais recente, nunca foi conferido
-        $sumPend  = $ultimaOcorrenciaPorProduto
+        $sumPend = $ultimaOcorrenciaPorItem
             ->filter(fn($i) => is_null($i->conferido_por_id))
             ->count();
 
-        $totalProdutosUnicos = $ultimaOcorrenciaPorProduto->count();
+        $totalItensUnicos = $ultimaOcorrenciaPorItem->count();
+
+        // ✅ Conta separado para exibir no resumo
+        $totalProdutos  = $ultimaOcorrenciaPorItem->filter(fn($i) => !($i->is_encomenda ?? false))->count();
+        $totalEncomenda = $ultimaOcorrenciaPorItem->filter(fn($i) => $i->is_encomenda ?? false)->count();
     @endphp
 
     <div class="resumo-final">
@@ -595,18 +614,34 @@
             <tr>
                 <td class="r-label">Em andamento</td>
                 <td class="r-val">{{ $confAndando }}</td>
-                <td class="r-label">Produtos distintos no orçamento</td>
-                <td class="r-val">{{ $totalProdutosUnicos }}</td>
+                <td class="r-label">Total de itens únicos</td>
+                <td class="r-val">{{ $totalItensUnicos }}</td>
             </tr>
+            @if ($totalProdutos > 0)
+                <tr>
+                    <td class="r-label">Produtos cadastrados</td>
+                    <td class="r-val">{{ $totalProdutos }}</td>
+                    <td class="r-label"></td>
+                    <td class="r-val"></td>
+                </tr>
+            @endif
+            @if ($totalEncomenda > 0)
+                <tr>
+                    <td class="r-label" style="color:#7c3aed;">Itens de encomenda</td>
+                    <td class="r-val" style="color:#7c3aed;">{{ $totalEncomenda }}</td>
+                    <td class="r-label"></td>
+                    <td class="r-val"></td>
+                </tr>
+            @endif
             <tr>
-                <td class="r-label"><span class="badge-ok">Produtos OK (última conferência)</span></td>
+                <td class="r-label"><span class="badge-ok">Itens OK (última conferência)</span></td>
                 <td class="r-val"><span class="badge-ok">{{ $sumOk }}</span></td>
-                <td class="r-label"><span class="badge-div">Produtos com divergência</span></td>
+                <td class="r-label"><span class="badge-div">Itens com divergência</span></td>
                 <td class="r-val"><span class="badge-div">{{ $sumDiv }}</span></td>
             </tr>
             @if ($sumPend > 0)
                 <tr>
-                    <td class="r-label"><span class="badge-pend">Produtos não conferidos</span></td>
+                    <td class="r-label"><span class="badge-pend">Itens não conferidos</span></td>
                     <td class="r-val"><span class="badge-pend">{{ $sumPend }}</span></td>
                     <td class="r-label"></td>
                     <td class="r-val"></td>

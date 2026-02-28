@@ -76,7 +76,9 @@ class OrcamentoController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create() {}
+    public function create()
+    {
+    }
 
     public function clienteOrcamento($cliente_id)
     {
@@ -94,7 +96,7 @@ class OrcamentoController extends Controller
 
         // validação CNPJ ativo na Receita Federal
         $ativo = Http::get("https://brasilapi.com.br/api/cnpj/v1/" . preg_replace('/\D/', '', $cliente->cnpj))
-            ->json('descricao_situacao_cadastral') === 'ATIVA';
+                ->json('descricao_situacao_cadastral') === 'ATIVA';
 
         $produtos = Produto::all();
         $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
@@ -226,7 +228,7 @@ class OrcamentoController extends Controller
         return redirect()->back()->with('error', 'Ação inválida.');
     }
 
-   public function store(StoreOrcamentoRequest $request)
+    public function store(StoreOrcamentoRequest $request)
     {
         $itenscomdesconto = false;
         $necessitaAprovacaoPagamento = false;
@@ -260,27 +262,27 @@ class OrcamentoController extends Controller
                 $valor = implode('', $parts) . '.' . $decimal;
             }
 
-            $float = (float) $valor;
+            $float = (float)$valor;
             return $negativo ? -$float : $float;
         };
 
         $request->merge([
-            'guia_recolhimento'   => $brToDecimal($request->guia_recolhimento),
+            'guia_recolhimento' => $brToDecimal($request->guia_recolhimento),
             'desconto_especifico' => $brToDecimal($request->desconto_especifico),
-            'desconto_aprovado'   => $brToDecimal($request->desconto_aprovado),
-            'valor_total'         => $brToDecimal($request->valor_total),
+            'desconto_aprovado' => $brToDecimal($request->desconto_aprovado),
+            'valor_total' => $brToDecimal($request->valor_total),
         ]);
 
         $descontoPercentual = 0;
         if ($request->filled('desconto_aprovado') || $request->filled('desconto')) {
             $descontoPercentual = max(
-                (float) ($request->desconto_aprovado ?? 0),
-                (float) ($request->desconto ?? 0)
+                (float)($request->desconto_aprovado ?? 0),
+                (float)($request->desconto ?? 0)
             );
         }
 
         $descontoEspecifico = $request->filled('desconto_especifico')
-            ? (float) $request->desconto_especifico
+            ? (float)$request->desconto_especifico
             : null;
 
         if ($request->valor_total == "0,00" || $request->valor_total == 0) {
@@ -288,18 +290,18 @@ class OrcamentoController extends Controller
         }
 
         $orcamento = Orcamento::create([
-            'cliente_id'          => $request->cliente_id,
-            'vendedor_id'         => Auth()->user()->id,
-            'usuario_logado_id'   => Auth()->user()->id,
-            'obra'                => $request->nome_obra,
-            'valor_total_itens'   => $request->valor_total,
-            'guia_recolhimento'   => $request->guia_recolhimento,
-            'observacoes'         => $request->observacoes,
-            'condicao_id'         => $request->condicao_id,
-            'tipo_documento'      => $request->tipo_documento,
-            'venda_triangular'    => $request->venda_triangular,
-            'homologacao'         => $request->homologacao,
-            'validade'            => Carbon::now()->addDays(2),
+            'cliente_id' => $request->cliente_id,
+            'vendedor_id' => Auth()->user()->id,
+            'usuario_logado_id' => Auth()->user()->id,
+            'obra' => $request->nome_obra,
+            'valor_total_itens' => $request->valor_total,
+            'guia_recolhimento' => $request->guia_recolhimento,
+            'observacoes' => $request->observacoes,
+            'condicao_id' => $request->condicao_id,
+            'tipo_documento' => $request->tipo_documento,
+            'venda_triangular' => $request->venda_triangular,
+            'homologacao' => $request->homologacao,
+            'validade' => Carbon::now()->addDays(2),
         ]);
 
         if ($request->venda_triangular == 1) {
@@ -316,23 +318,23 @@ class OrcamentoController extends Controller
 
             // Cria a solicitação de pagamento para aprovação
             $orcamento->solicitacoesPagamento()->create([
-                'descricao_pagamento'       => $request->outros_meios_pagamento,
+                'descricao_pagamento' => $request->outros_meios_pagamento,
                 'justificativa_solicitacao' => $request->justificativa_pagamento ?? 'Solicitação de meio de pagamento especial conforme necessidade do cliente.',
-                'numero_parcelas'           => $request->numero_parcelas ?? null,
-                'valor_entrada'             => $request->valor_entrada ? $brToDecimal($request->valor_entrada) : null,
-                'data_primeiro_vencimento'  => $request->data_primeiro_vencimento ?? null,
-                'intervalo_dias'            => $request->intervalo_dias ?? null,
-                'solicitado_por'            => Auth()->id(),
-                'observacoes'               => $request->observacoes_pagamento ?? null,
-                'status'                    => 'Pendente',
+                'numero_parcelas' => $request->numero_parcelas ?? null,
+                'valor_entrada' => $request->valor_entrada ? $brToDecimal($request->valor_entrada) : null,
+                'data_primeiro_vencimento' => $request->data_primeiro_vencimento ?? null,
+                'intervalo_dias' => $request->intervalo_dias ?? null,
+                'solicitado_por' => Auth()->id(),
+                'observacoes' => $request->observacoes_pagamento ?? null,
+                'status' => 'Pendente',
             ]);
 
             $necessitaAprovacaoPagamento = true;
 
             Log::info("Solicitação de pagamento criada para orçamento #{$orcamento->id}", [
                 'orcamento_id' => $orcamento->id,
-                'descricao'    => $request->outros_meios_pagamento,
-                'vendedor_id'  => Auth()->id(),
+                'descricao' => $request->outros_meios_pagamento,
+                'vendedor_id' => Auth()->id(),
             ]);
         }
 
@@ -343,53 +345,53 @@ class OrcamentoController extends Controller
         // ✅ ITENS COM SUPORTE A DESCONTO POR PRODUTO
         if ($request->has('itens')) {
             foreach ($request->itens as $item) {
-                $precoOriginal = (float) ($item['preco_original'] ?? $item['preco_unitario'] ?? 0);
-                $precoUnitario = (float) ($item['preco_unitario'] ?? 0);
-                $quantidade    = (float) ($item['quantidade'] ?? 0);
+                $precoOriginal = (float)($item['preco_original'] ?? $item['preco_unitario'] ?? 0);
+                $precoUnitario = (float)($item['preco_unitario'] ?? 0);
+                $quantidade = (float)($item['quantidade'] ?? 0);
 
-                $liberarDesconto = isset($item['liberar_desconto']) ? (int) $item['liberar_desconto'] : 1;
-                $tipoDesconto    = $item['tipo_desconto'] ?? 'nenhum';
-                $descontoProduto = (float) ($item['desconto_produto'] ?? 0);
+                $liberarDesconto = isset($item['liberar_desconto']) ? (int)$item['liberar_desconto'] : 1;
+                $tipoDesconto = $item['tipo_desconto'] ?? 'nenhum';
+                $descontoProduto = (float)($item['desconto_produto'] ?? 0);
 
                 $subtotalOriginal = $precoOriginal * $quantidade;
-                $subtotal         = $precoUnitario * $quantidade;
+                $subtotal = $precoUnitario * $quantidade;
 
-                $valorComDesconto         = $subtotal;
+                $valorComDesconto = $subtotal;
                 $valorUnitarioComDesconto = $precoUnitario;
-                $descontoAplicadoItem     = 0;
+                $descontoAplicadoItem = 0;
 
                 // ✅ LÓGICA DE DESCONTO
                 if ($liberarDesconto === 1) {
                     if ($tipoDesconto === 'produto' && $descontoProduto > 0) {
-                        $valorComDesconto         = $subtotal;
+                        $valorComDesconto = $subtotal;
                         $valorUnitarioComDesconto = $precoUnitario;
 
                         $orcamento->descontos()->create([
-                            'motivo'      => "Desconto individual " . $quantidade . " em unidades do produto ID " . $item['id'],
-                            'valor'       => $descontoProduto * $quantidade,
+                            'motivo' => "Desconto individual " . $quantidade . " em unidades do produto ID " . $item['id'],
+                            'valor' => $descontoProduto * $quantidade,
                             'porcentagem' => null,
-                            'tipo'        => 'produto',
-                            'produto_id'  => $item['id'],
-                            'cliente_id'  => $request->cliente_id,
-                            'user_id'     => Auth()->id(),
+                            'tipo' => 'produto',
+                            'produto_id' => $item['id'],
+                            'cliente_id' => $request->cliente_id,
+                            'user_id' => Auth()->id(),
                         ]);
 
                         $itenscomdesconto = true;
                     } elseif ($tipoDesconto === 'percentual' && $descontoPercentual > 0) {
-                        $valorComDesconto         = $subtotal - ($subtotal * ($descontoPercentual / 100));
+                        $valorComDesconto = $subtotal - ($subtotal * ($descontoPercentual / 100));
                         $valorUnitarioComDesconto = $valorComDesconto / $quantidade;
-                        $descontoAplicadoItem     = $descontoPercentual;
+                        $descontoAplicadoItem = $descontoPercentual;
                     }
                 }
 
                 $orcamento->itens()->create([
-                    'produto_id'                  => $item['id'],
-                    'quantidade'                  => $quantidade,
-                    'valor_unitario'              => $precoOriginal,
+                    'produto_id' => $item['id'],
+                    'quantidade' => $quantidade,
+                    'valor_unitario' => $precoOriginal,
                     'valor_unitario_com_desconto' => $valorUnitarioComDesconto,
-                    'desconto'                    => $descontoAplicadoItem,
-                    'valor_com_desconto'          => $valorComDesconto,
-                    'user_id'                     => $request->user()->id ?? null,
+                    'desconto' => $descontoAplicadoItem,
+                    'valor_com_desconto' => $valorComDesconto,
+                    'user_id' => $request->user()->id ?? null,
                 ]);
             }
         }
@@ -399,15 +401,15 @@ class OrcamentoController extends Controller
             foreach ($request->vidros as $vidro) {
                 if (!empty($vidro['preco_m2']) && !empty($vidro['quantidade']) && !empty($vidro['altura']) && !empty($vidro['largura'])) {
                     $orcamento->vidros()->create([
-                        'descricao'            => $vidro['descricao'] ?? null,
-                        'quantidade'           => (float) $vidro['quantidade'] ?? 0,
-                        'altura'               => (float) $vidro['altura'] ?? 0,
-                        'largura'              => (float) $vidro['largura'] ?? 0,
+                        'descricao' => $vidro['descricao'] ?? null,
+                        'quantidade' => (float)$vidro['quantidade'] ?? 0,
+                        'altura' => (float)$vidro['altura'] ?? 0,
+                        'largura' => (float)$vidro['largura'] ?? 0,
                         'preco_metro_quadrado' => $brToDecimal($vidro['preco_m2']) ?? 0,
-                        'desconto'             => $descontoPercentual ?? 0,
-                        'valor_total'          => $brToDecimal($vidro['valor_total']) ?? 0,
-                        'valor_com_desconto'   => $brToDecimal($vidro['valor_com_desconto']) ?? 0,
-                        'user_id'              => $request->user()->id ?? null,
+                        'desconto' => $descontoPercentual ?? 0,
+                        'valor_total' => $brToDecimal($vidro['valor_total']) ?? 0,
+                        'valor_com_desconto' => $brToDecimal($vidro['valor_com_desconto']) ?? 0,
+                        'user_id' => $request->user()->id ?? null,
                     ]);
                 }
             }
@@ -419,13 +421,13 @@ class OrcamentoController extends Controller
 
             if ($request->has('itens')) {
                 foreach ($request->itens as $item) {
-                    $liberarDesconto = isset($item['liberar_desconto']) ? (int) $item['liberar_desconto'] : 1;
-                    $tipoDesconto    = $item['tipo_desconto'] ?? 'nenhum';
+                    $liberarDesconto = isset($item['liberar_desconto']) ? (int)$item['liberar_desconto'] : 1;
+                    $tipoDesconto = $item['tipo_desconto'] ?? 'nenhum';
 
                     if ($liberarDesconto === 1 && $tipoDesconto === 'percentual') {
-                        $precoUnitario = (float) ($item['preco_unitario'] ?? 0);
-                        $quantidade    = (float) ($item['quantidade'] ?? 0);
-                        $subtotal      = $precoUnitario * $quantidade;
+                        $precoUnitario = (float)($item['preco_unitario'] ?? 0);
+                        $quantidade = (float)($item['quantidade'] ?? 0);
+                        $subtotal = $precoUnitario * $quantidade;
                         $totalDescontoPercentual += $subtotal * ($descontoPercentual / 100);
                     }
                 }
@@ -442,12 +444,12 @@ class OrcamentoController extends Controller
 
             if ($totalDescontoPercentual > 0) {
                 $orcamento->descontos()->create([
-                    'motivo'      => 'Desconto percentual aplicado pelo vendedor',
-                    'valor'       => $totalDescontoPercentual,
+                    'motivo' => 'Desconto percentual aplicado pelo vendedor',
+                    'valor' => $totalDescontoPercentual,
                     'porcentagem' => $descontoPercentual,
-                    'tipo'        => 'percentual',
-                    'cliente_id'  => $request->cliente_id,
-                    'user_id'     => Auth()->id(),
+                    'tipo' => 'percentual',
+                    'cliente_id' => $request->cliente_id,
+                    'user_id' => Auth()->id(),
                 ]);
             }
         }
@@ -455,12 +457,12 @@ class OrcamentoController extends Controller
         //  DESCONTO ESPECÍFICO
         if ($descontoEspecifico) {
             $orcamento->descontos()->create([
-                'motivo'      => 'Desconto específico em reais',
-                'valor'       => $descontoEspecifico,
+                'motivo' => 'Desconto específico em reais',
+                'valor' => $descontoEspecifico,
                 'porcentagem' => null,
-                'tipo'        => 'fixo',
-                'cliente_id'  => $request->cliente_id,
-                'user_id'     => Auth()->id(),
+                'tipo' => 'fixo',
+                'cliente_id' => $request->cliente_id,
+                'user_id' => Auth()->id(),
             ]);
         }
 
@@ -473,7 +475,7 @@ class OrcamentoController extends Controller
             foreach ($request->itens as $item) {
                 $produto = \App\Models\Produto::find($item['id']);
                 if ($produto && $produto->estoque_atual !== null) {
-                    $quantidadeSolicitada = (float) ($item['quantidade'] ?? 0);
+                    $quantidadeSolicitada = (float)($item['quantidade'] ?? 0);
                     if ($quantidadeSolicitada > $produto->estoque_atual) {
                         $temItensSemEstoque = true;
                         break;
@@ -486,18 +488,18 @@ class OrcamentoController extends Controller
         if ($request->filled('endereco_cep')) {
             $endereco = Endereco::updateOrCreate(
                 [
-                    'tipo'       => 'entrega',
+                    'tipo' => 'entrega',
                     'cliente_id' => $request->cliente_id,
                 ],
                 array_filter([
-                    'cep'         => $request->endereco_cep,
-                    'logradouro'  => $request->endereco_logradouro,
-                    'numero'      => $request->endereco_numero,
+                    'cep' => $request->endereco_cep,
+                    'logradouro' => $request->endereco_logradouro,
+                    'numero' => $request->endereco_numero,
                     'complemento' => $request->endereco_compl,
-                    'bairro'      => $request->endereco_bairro,
-                    'cidade'      => $request->endereco_cidade,
-                    'estado'      => $request->endereco_estado,
-                    'tipo'        => 'entrega',
+                    'bairro' => $request->endereco_bairro,
+                    'cidade' => $request->endereco_cidade,
+                    'estado' => $request->endereco_estado,
+                    'tipo' => 'entrega',
                 ])
             );
         } elseif ($request->enderecos_cadastrados != "") {
@@ -507,13 +509,13 @@ class OrcamentoController extends Controller
         // ✅ VALIDAÇÃO FINAL: VERIFICA SE PRECISA APROVAÇÃO
         $temDescontoPercentual = $descontoPercentual > 0;
         $temDescontoEspecifico = $descontoEspecifico > 0;
-        $temQualquerDesconto   = $temDescontoPercentual || $temDescontoEspecifico || $itenscomdesconto;
+        $temQualquerDesconto = $temDescontoPercentual || $temDescontoEspecifico || $itenscomdesconto;
 
         $necessitaAprovacaoDesconto = $temQualquerDesconto && (
-            $descontoPercentual > (float) ($request->desconto_aprovado ?? 0) ||
-            (Auth()->user()->vendedor->desconto ?? 0) < $descontoPercentual ||
-            $itenscomdesconto
-        );
+                $descontoPercentual > (float)($request->desconto_aprovado ?? 0) ||
+                (Auth()->user()->vendedor->desconto ?? 0) < $descontoPercentual ||
+                $itenscomdesconto
+            );
 
         // ✅ DETERMINA O STATUS FINAL DO ORÇAMENTO
         if (!$temQualquerDesconto && !$necessitaAprovacaoPagamento) {
@@ -532,7 +534,7 @@ class OrcamentoController extends Controller
 
             Log::info("Orçamento #{$orcamento->id} aguardando aprovação de desconto E pagamento", [
                 'orcamento_id' => $orcamento->id,
-                'status'       => $orcamento->status,
+                'status' => $orcamento->status,
             ]);
 
             return redirect()
@@ -553,7 +555,7 @@ class OrcamentoController extends Controller
 
             Log::info("Orçamento #{$orcamento->id} aguardando aprovação de pagamento", [
                 'orcamento_id' => $orcamento->id,
-                'status'       => $orcamento->status,
+                'status' => $orcamento->status,
             ]);
 
             return redirect()
@@ -721,18 +723,18 @@ class OrcamentoController extends Controller
 
         // Criar novo orçamento
         $novoOrcamento = Orcamento::create([
-            'cliente_id'          => $clienteID ?? $orcamentoOriginal->cliente_id,
-            'vendedor_id'         => Auth()->user()->id,
-            'obra'                => $novaObra,
-            'valor_total_itens'   => $orcamentoOriginal->valor_total_itens,
-            'status'              => 'Pendente',
-            'observacoes'         => $orcamentoOriginal->observacoes,
-            'frete'               => $orcamentoOriginal->frete,
-            'guia_recolhimento'   => $orcamentoOriginal->guia_recolhimento,
-            'tipo_documento'      => $orcamentoOriginal->tipo_documento,
-            'condicao_id'         => $orcamentoOriginal->condicao_id,
+            'cliente_id' => $clienteID ?? $orcamentoOriginal->cliente_id,
+            'vendedor_id' => Auth()->user()->id,
+            'obra' => $novaObra,
+            'valor_total_itens' => $orcamentoOriginal->valor_total_itens,
+            'status' => 'Pendente',
+            'observacoes' => $orcamentoOriginal->observacoes,
+            'frete' => $orcamentoOriginal->frete,
+            'guia_recolhimento' => $orcamentoOriginal->guia_recolhimento,
+            'tipo_documento' => $orcamentoOriginal->tipo_documento,
+            'condicao_id' => $orcamentoOriginal->condicao_id,
             'outros_meios_pagamento' => $orcamentoOriginal->outros_meios_pagamento,
-            'validade'            => Carbon::now()->addDays(2),
+            'validade' => Carbon::now()->addDays(2),
         ]);
 
         // ✅ PRIORIDADE 1: VERIFICAR SE A CONDIÇÃO É "OUTROS" (ID 20)
@@ -758,7 +760,7 @@ class OrcamentoController extends Controller
         $itensComDesconto = false;
         foreach ($orcamentoOriginal->itens as $item) {
             $produtoAtual = Produto::find($item->produto_id);
-            $precoAtual   = $produtoAtual->preco_venda ?? $item->valor_unitario;
+            $precoAtual = $produtoAtual->preco_venda ?? $item->valor_unitario;
 
             // Verifica se o item original tinha desconto por produto registrado
             $temDescontoProduto = $orcamentoOriginal->descontos
@@ -772,27 +774,27 @@ class OrcamentoController extends Controller
                 // valor_unitario       = preço original (sem desconto)
                 // valor_com_desconto   = preço já com desconto aplicado
                 // valor_unitario_com_desconto = preço unitário com desconto
-                $valorUnitarioOriginal      = (float) $item->valor_unitario;
-                $valorUnitarioComDesconto   = (float) $item->valor_unitario_com_desconto;
-                $valorComDesconto           = (float) $item->valor_com_desconto;
-                $descontoItem               = (float) $item->desconto;
-                $itensComDesconto           = true;
+                $valorUnitarioOriginal = (float)$item->valor_unitario;
+                $valorUnitarioComDesconto = (float)$item->valor_unitario_com_desconto;
+                $valorComDesconto = (float)$item->valor_com_desconto;
+                $descontoItem = (float)$item->desconto;
+                $itensComDesconto = true;
             } else {
                 // Item sem desconto individual: recalcula com preço atual
-                $valorUnitarioOriginal      = $precoAtual;
-                $valorUnitarioComDesconto   = $precoAtual;
-                $valorComDesconto           = $precoAtual * $item->quantidade;
-                $descontoItem               = 0;
+                $valorUnitarioOriginal = $precoAtual;
+                $valorUnitarioComDesconto = $precoAtual;
+                $valorComDesconto = $precoAtual * $item->quantidade;
+                $descontoItem = 0;
             }
 
             $novoOrcamento->itens()->create([
-                'produto_id'                  => $item->produto_id,
-                'quantidade'                  => $item->quantidade,
-                'valor_unitario'              => $valorUnitarioOriginal,
+                'produto_id' => $item->produto_id,
+                'quantidade' => $item->quantidade,
+                'valor_unitario' => $valorUnitarioOriginal,
                 'valor_unitario_com_desconto' => $valorUnitarioComDesconto,
-                'desconto'                    => $descontoItem,
-                'valor_com_desconto'          => $valorComDesconto,
-                'user_id'                     => $item->user_id,
+                'desconto' => $descontoItem,
+                'valor_com_desconto' => $valorComDesconto,
+                'user_id' => $item->user_id,
             ]);
         }
 
@@ -801,13 +803,13 @@ class OrcamentoController extends Controller
             $valor_final = $vidro->preco_metro_quadrado * $vidro->quantidade * ($vidro->altura / 100) * ($vidro->largura / 100);
 
             $novoOrcamento->vidros()->create([
-                'descricao'            => $vidro->descricao,
-                'quantidade'           => $vidro->quantidade,
-                'altura'               => $vidro->altura,
-                'largura'              => $vidro->largura,
+                'descricao' => $vidro->descricao,
+                'quantidade' => $vidro->quantidade,
+                'altura' => $vidro->altura,
+                'largura' => $vidro->largura,
                 'preco_metro_quadrado' => $vidro->preco_metro_quadrado,
-                'valor_total'          => $valor_final,
-                'user_id'              => $vidro->user_id,
+                'valor_total' => $valor_final,
+                'user_id' => $vidro->user_id,
             ]);
         }
 
@@ -819,14 +821,14 @@ class OrcamentoController extends Controller
             $produtoIdOriginal = $descontoOriginal->getAttributes()['produto_id'] ?? $descontoOriginal->produto_id ?? null;
 
             $novoOrcamento->descontos()->create([
-                'motivo'      => $descontoOriginal->motivo . ' (Duplicado)',
-                'valor'       => $descontoOriginal->valor,
+                'motivo' => $descontoOriginal->motivo . ' (Duplicado)',
+                'valor' => $descontoOriginal->valor,
                 'porcentagem' => $descontoOriginal->porcentagem,
-                'tipo'        => $descontoOriginal->tipo,
-                'produto_id'  => $produtoIdOriginal,
-                'cliente_id'  => $clienteID ?? $descontoOriginal->cliente_id,
-                'user_id'     => Auth()->id(),
-                'aprovado_em'  => null,
+                'tipo' => $descontoOriginal->tipo,
+                'produto_id' => $produtoIdOriginal,
+                'cliente_id' => $clienteID ?? $descontoOriginal->cliente_id,
+                'user_id' => Auth()->id(),
+                'aprovado_em' => null,
                 'aprovado_por' => null,
                 'rejeitado_em' => null,
                 'rejeitado_por' => null,
@@ -844,15 +846,15 @@ class OrcamentoController extends Controller
         // 4) Copiar endereço de entrega
         if ($orcamentoOriginal->endereco) {
             $novoEndereco = Endereco::create([
-                'tipo'        => $orcamentoOriginal->endereco->tipo,
-                'cliente_id'  => $clienteID ?? $orcamentoOriginal->endereco->cliente_id,
-                'cep'         => $orcamentoOriginal->endereco->cep,
-                'logradouro'  => $orcamentoOriginal->endereco->logradouro,
-                'numero'      => $orcamentoOriginal->endereco->numero,
+                'tipo' => $orcamentoOriginal->endereco->tipo,
+                'cliente_id' => $clienteID ?? $orcamentoOriginal->endereco->cliente_id,
+                'cep' => $orcamentoOriginal->endereco->cep,
+                'logradouro' => $orcamentoOriginal->endereco->logradouro,
+                'numero' => $orcamentoOriginal->endereco->numero,
                 'complemento' => $orcamentoOriginal->endereco->complemento,
-                'bairro'      => $orcamentoOriginal->endereco->bairro,
-                'cidade'      => $orcamentoOriginal->endereco->cidade,
-                'estado'      => $orcamentoOriginal->endereco->estado,
+                'bairro' => $orcamentoOriginal->endereco->bairro,
+                'cidade' => $orcamentoOriginal->endereco->cidade,
+                'estado' => $orcamentoOriginal->endereco->estado,
             ]);
             $novoOrcamento->update(['endereco_id' => $novoEndereco->id]);
         }
@@ -948,186 +950,224 @@ class OrcamentoController extends Controller
 
     public function atualizarStatus(Request $request, $id)
     {
-        $orcamento = Orcamento::with(['itens'])->findOrFail($id);
+        try {
+            $orcamento = Orcamento::with(['itens'])->findOrFail($id);
 
-        $status = $request->input('status');
-        $validStatus = ['Aprovar desconto', 'Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'];
+            $status      = $request->input('status');
+            $validStatus = ['Aprovar desconto', 'Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'];
 
-        if (!in_array($status, $validStatus)) {
-            return response()->json(['message' => 'Status inválido!'], 422);
-        }
-
-        // Atualiza status comercial
-        $orcamento->status = $status;
-        if ($status == 'Aprovado') {
-            $orcamento->workflow_status = 'aguardando_separacao';
-        }
-        $orcamento->usuario_logado_id = auth()->id();
-        $orcamento->save();
-
-        // Se não foi aprovado, apenas responde
-        if ($status !== 'Aprovado' && $status !== 'Pendente') {
-            // 2. Chame o novo método
-            $loteCancelado = $orcamento->cancelarLoteDeSeparacaoAtivo();
-
-            if ($loteCancelado) {
-                return response()->json([
-                    'message' => 'Status atualizado com sucesso!',
-                    'redirect' => route('orcamentos.index')
-                ]);
-            } else {
-                return response()->json(['message' => 'Nenhum lote de separação ativo foi encontrado para este orçamento.']);
+            if (!in_array($status, $validStatus)) {
+                return response()->json(['message' => 'Status inválido!'], 422);
             }
-        }
 
-        // Se aprovado, aciona separação conforme política
-        if (!$orcamento->requer_separacao) {
-            // Só marca que está aguardando separação (sem criar lote ainda)
-            // Criar lote de separação + itens + reservas imediatamente
-            // Usa transação para consistência
+            $orcamento->status            = $status;
+            $orcamento->usuario_logado_id = auth()->id();
+
+            if ($status === 'Aprovado') {
+                $orcamento->workflow_status = 'aguardando_separacao';
+            }
+
+            $orcamento->save();
+
+            // Pendente — só salva
+            if ($status === 'Pendente') {
+                return response()->json(['message' => 'Status atualizado para Pendente com sucesso!']);
+            }
+
+            // Cancelado / Rejeitado / Expirado
+            if ($status !== 'Aprovado') {
+                $orcamento->cancelarLoteDeSeparacaoAtivo();
+                return response()->json([
+                    'message'  => 'Status atualizado com sucesso!',
+                    'redirect' => route('orcamentos.index'),
+                ]);
+            }
+
+            // ── APROVADO ────────────────────────────────────────────────────────
+            if ($orcamento->requer_separacao) {
+                return response()->json([
+                    'message' => 'Orçamento aprovado. Separação manual requerida.',
+                ]);
+            }
+
             \DB::transaction(function () use ($orcamento) {
-                // Evita duplicar lote se já existir aberto/em_separacao
                 $existe = \App\Models\PickingBatch::where('orcamento_id', $orcamento->id)
                     ->whereIn('status', ['aberto', 'em_separacao'])
                     ->exists();
 
-                if (!$existe) {
-                    $batch = \App\Models\PickingBatch::create([
-                        'orcamento_id' => $orcamento->id,
-                        'status' => 'em_separacao',
-                        'started_at' => now(),
-                        'criado_por_id' => auth()->id(),
-                    ]);
+                if ($existe) return;
 
-                    foreach ($orcamento->itens as $oi) {
+                $batch = \App\Models\PickingBatch::create([
+                    'orcamento_id'  => $orcamento->id,
+                    'status'        => 'em_separacao',
+                    'started_at'    => now(),
+                    'criado_por_id' => auth()->id(),
+                ]);
+
+                // ✅ Produtos físicos
+                $itensProduto = $orcamento->itens->whereNotNull('produto_id');
+                foreach ($itensProduto as $oi) {
+                    \App\Models\PickingItem::create([
+                        'picking_batch_id'  => $batch->id,
+                        'orcamento_item_id' => $oi->id,
+                        'produto_id'        => $oi->produto_id,
+                        'is_encomenda'      => false,
+                        'qty_solicitada'    => $oi->quantidade,
+                        'qty_separada'      => 0,
+                        'status'            => 'pendente',
+                    ]);
+                }
+
+                // ✅ Itens de encomenda
+                $grupo = \App\Models\ConsultaPrecoGrupo::with('itens')
+                    ->where('orcamento_id', $orcamento->id)
+                    ->first();
+
+                if ($grupo) {
+                    foreach ($grupo->itens as $item) {
                         \App\Models\PickingItem::create([
-                            'picking_batch_id' => $batch->id,
-                            'orcamento_item_id' => $oi->id,
-                            'produto_id' => $oi->produto_id,
-                            'qty_solicitada' => $oi->quantidade,
-                            'qty_separada' => 0,
-                            'status' => 'pendente',
+                            'picking_batch_id'    => $batch->id,
+                            'orcamento_item_id'   => null,
+                            'produto_id'          => null,
+                            'consulta_preco_id'   => $item->id,
+                            'is_encomenda'        => true,
+                            'descricao_encomenda' => $item->descricao,
+                            'qty_solicitada'      => $item->quantidade,
+                            'qty_separada'        => 0,
+                            'status'              => 'pendente',
                         ]);
                     }
-
-                    // Reservas de estoque
-                    app(\App\Services\EstoqueService::class)->reservarParaOrcamento($orcamento);
-
-                    // Seta workflow em separação
-                    $orcamento->update(['workflow_status' => 'em_separacao']);
                 }
+
+                // ✅ Reservas só para produtos físicos
+                if ($itensProduto->isNotEmpty()) {
+                    app(\App\Services\EstoqueService::class)->reservarParaOrcamento($orcamento);
+                }
+
+                $orcamento->update(['workflow_status' => 'em_separacao']);
             });
+
             return response()->json([
-                'message' => 'Orçamento aprovado e Separação iniciada!',
-                'redirect' => route('orcamentos.separacao.show', $orcamento->id)
+                'message'  => 'Orçamento aprovado e separação iniciada!',
+                'redirect' => route('orcamentos.separacao.show', $orcamento->id),
             ]);
+
+        } catch (\Exception $e) {
+            \Log::error("Erro ao atualizar status do orçamento #{$id}: " . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+
+            return response()->json([
+                'message' => app()->environment('production')
+                    ? 'Erro interno ao atualizar status.'
+                    : '[' . class_basename($e) . '] ' . $e->getMessage() . ' — Linha: ' . $e->getLine(),
+            ], 500);
         }
     }
 
     public function atualizarPrecos(Orcamento $orcamento)
-{
-    try {
-        DB::transaction(function () use ($orcamento) {
+    {
+        try {
+            DB::transaction(function () use ($orcamento) {
 
-            // 1. Deletar descontos relacionados ao orçamento
-            Desconto::where('orcamento_id', $orcamento->id)->delete();
+                // 1. Deletar descontos relacionados ao orçamento
+                Desconto::where('orcamento_id', $orcamento->id)->delete();
 
-            // =============================================
-            // 2. DESTRUIR WORKFLOW DE SEPARAÇÃO/CONFERÊNCIA
-            // =============================================
+                // =============================================
+                // 2. DESTRUIR WORKFLOW DE SEPARAÇÃO/CONFERÊNCIA
+                // =============================================
 
-            // Busca todos os picking_batches do orçamento
-            $pickingBatches = \App\Models\PickingBatch::where('orcamento_id', $orcamento->id)->get();
+                // Busca todos os picking_batches do orçamento
+                $pickingBatches = \App\Models\PickingBatch::where('orcamento_id', $orcamento->id)->get();
 
-            foreach ($pickingBatches as $batch) {
+                foreach ($pickingBatches as $batch) {
 
-                // Busca conferências vinculadas ao batch
-                $conferencias = \App\Models\Conferencia::where('picking_batch_id', $batch->id)->get();
+                    // Busca conferências vinculadas ao batch
+                    $conferencias = \App\Models\Conferencia::where('picking_batch_id', $batch->id)->get();
 
-                foreach ($conferencias as $conferencia) {
-                    // Deleta itens de conferência (cascade já faz isso, mas explícito por segurança)
-                    \App\Models\ConferenciaItem::where('conferencia_id', $conferencia->id)->delete();
-                    $conferencia->delete();
+                    foreach ($conferencias as $conferencia) {
+                        // Deleta itens de conferência (cascade já faz isso, mas explícito por segurança)
+                        \App\Models\ConferenciaItem::where('conferencia_id', $conferencia->id)->delete();
+                        $conferencia->delete();
+                    }
+
+                    // Deleta picking_items do batch
+                    \App\Models\PickingItem::where('picking_batch_id', $batch->id)->delete();
+
+                    // Deleta o batch
+                    $batch->delete();
                 }
 
-                // Deleta picking_items do batch
-                \App\Models\PickingItem::where('picking_batch_id', $batch->id)->delete();
+                // Deleta reservas de estoque vinculadas ao orçamento
+                // \App\Models\EstoqueReserva::where('orcamento_id', $orcamento->id)->delete();
 
-                // Deleta o batch
-                $batch->delete();
-            }
+                // 3. Atualizar cada item do orçamento com o preço atual do produto
+                foreach ($orcamento->itens as $item) {
+                    $produto = Produto::find($item->produto_id);
 
-            // Deleta reservas de estoque vinculadas ao orçamento
-            // \App\Models\EstoqueReserva::where('orcamento_id', $orcamento->id)->delete();
+                    if (!$produto || is_null($produto->preco_venda)) {
+                        throw new \Exception("Produto ID {$item->produto_id} não encontrado ou sem preço de venda definido.");
+                    }
 
-            // 3. Atualizar cada item do orçamento com o preço atual do produto
-            foreach ($orcamento->itens as $item) {
-                $produto = Produto::find($item->produto_id);
+                    $precoAtual = $produto->preco_venda;
+                    $valorComDesconto = $item->quantidade * $precoAtual;
 
-                if (!$produto || is_null($produto->preco_venda)) {
-                    throw new \Exception("Produto ID {$item->produto_id} não encontrado ou sem preço de venda definido.");
+                    $item->update([
+                        'valor_unitario' => $precoAtual,
+                        'valor_unitario_com_desconto' => $precoAtual,
+                        'desconto' => 0,
+                        'valor_com_desconto' => $valorComDesconto,
+                    ]);
                 }
 
-                $precoAtual       = $produto->preco_venda;
-                $valorComDesconto = $item->quantidade * $precoAtual;
+                // 4. Recalcular totais
+                $totalItens = $orcamento->itens()->sum(DB::raw('quantidade * valor_unitario'));
 
-                $item->update([
-                    'valor_unitario'              => $precoAtual,
-                    'valor_unitario_com_desconto' => $precoAtual,
-                    'desconto'                    => 0,
-                    'valor_com_desconto'          => $valorComDesconto,
+                $status = 'Pendente';
+                if ($orcamento->condicao_id == 20) {
+                    $status = 'Aprovar pagamento';
+                }
+
+                // 5. Atualizar orçamento — incrementa versão e limpa workflow_status
+                $orcamento->update([
+                    'status' => $status,
+                    'workflow_status' => null,  //  limpa o workflow
+                    'valor_total_itens' => $totalItens,
+                    'desconto_total' => 0,
+                    'valor_com_desconto' => $totalItens,
+                    'versao' => $orcamento->versao + 1,
+                    'updated_at' => now(),
+                    // atualiza a validade desse orçamento para 2 dias a partir da data de atualização
+                    'validade' => Carbon::now()->addDays(2),
                 ]);
+
+                // 6. Remove PDF antigo
+                if ($orcamento->pdf_path && Storage::disk('public')->exists($orcamento->pdf_path)) {
+                    Storage::disk('public')->delete($orcamento->pdf_path);
+                }
+
+                // 7. Recarrega orçamento fresco e gera novo PDF
+                $orcamentoAtualizado = Orcamento::with(['itens.produto', 'cliente', 'vendedor'])
+                    ->find($orcamento->id);
+
+                if ($orcamento->condicao_id != 20) {
+                    $pdfService = new OrcamentoPdfService();
+                    $pdfService->gerarOrcamentoPdf($orcamentoAtualizado);
+                }
+            });
+
+            if ($orcamento->condicao_id == 20) {
+                return redirect()->route('orcamentos.show', $orcamento->id)
+                    ->with('success', 'Preços atualizados com sucesso! Orçamento aguardando aprovação de meio de pagamento especial para gerar novo PDF.');
+            } else {
+
+                return redirect()->route('orcamentos.show', $orcamento->id)
+                    ->with('success', 'Preços atualizados com sucesso! Workflow de separação reiniciado, nova versão gerada e PDF atualizado.');
             }
-
-            // 4. Recalcular totais
-            $totalItens = $orcamento->itens()->sum(DB::raw('quantidade * valor_unitario'));
-
-            $status = 'Pendente';
-            if($orcamento->condicao_id == 20){
-                $status = 'Aprovar pagamento';
-            }
-
-            // 5. Atualizar orçamento — incrementa versão e limpa workflow_status
-            $orcamento->update([
-                'status'          => $status,
-                'workflow_status' => null,  //  limpa o workflow
-                'valor_total_itens'  => $totalItens,
-                'desconto_total'     => 0,
-                'valor_com_desconto' => $totalItens,
-                'versao'             => $orcamento->versao + 1,
-                'updated_at'         => now(),
-                // atualiza a validade desse orçamento para 2 dias a partir da data de atualização
-                'validade'            => Carbon::now()->addDays(2),
-            ]);
-
-            // 6. Remove PDF antigo
-            if ($orcamento->pdf_path && Storage::disk('public')->exists($orcamento->pdf_path)) {
-                Storage::disk('public')->delete($orcamento->pdf_path);
-            }
-
-            // 7. Recarrega orçamento fresco e gera novo PDF
-            $orcamentoAtualizado = Orcamento::with(['itens.produto', 'cliente', 'vendedor'])
-                ->find($orcamento->id);
-
-            if($orcamento->condicao_id != 20){
-                $pdfService = new OrcamentoPdfService();
-                $pdfService->gerarOrcamentoPdf($orcamentoAtualizado);
-            }
-        });
-
-        if($orcamento->condicao_id == 20){
+        } catch (\Exception $e) {
             return redirect()->route('orcamentos.show', $orcamento->id)
-                ->with('success', 'Preços atualizados com sucesso! Orçamento aguardando aprovação de meio de pagamento especial para gerar novo PDF.');
-        }else{
-
-            return redirect()->route('orcamentos.show', $orcamento->id)
-                ->with('success', 'Preços atualizados com sucesso! Workflow de separação reiniciado, nova versão gerada e PDF atualizado.');
+                ->with('error', 'Erro ao atualizar preços: ' . $e->getMessage());
         }
-    } catch (\Exception $e) {
-        return redirect()->route('orcamentos.show', $orcamento->id)
-            ->with('error', 'Erro ao atualizar preços: ' . $e->getMessage());
     }
-}
 
 
     /**
@@ -1150,7 +1190,7 @@ class OrcamentoController extends Controller
         if ($cliente->cnpj) {
             try {
                 $ativo = Http::get("https://brasilapi.com.br/api/cnpj/v1/" . preg_replace('/\D/', '', $cliente->cnpj))
-                    ->json('descricao_situacao_cadastral') === 'ATIVA';
+                        ->json('descricao_situacao_cadastral') === 'ATIVA';
             } catch (\Exception $e) {
                 Log::warning("Erro ao validar CNPJ: " . $e->getMessage());
             }
@@ -1196,7 +1236,7 @@ class OrcamentoController extends Controller
         DB::beginTransaction();
 
         try {
-            $itenscomdesconto            = false;
+            $itenscomdesconto = false;
             $necessitaAprovacaoPagamento = false;
 
             // ----------------------------------------------------------------
@@ -1208,11 +1248,11 @@ class OrcamentoController extends Controller
                 }
 
                 $negativo = false;
-                $valor    = trim((string) $valor);
+                $valor = trim((string)$valor);
 
                 if (str_contains($valor, '-')) {
                     $negativo = true;
-                    $valor    = str_replace('-', '', $valor);
+                    $valor = str_replace('-', '', $valor);
                 }
 
                 $valor = str_replace(' ', '', $valor);
@@ -1227,12 +1267,12 @@ class OrcamentoController extends Controller
                 }
 
                 if (substr_count($valor, '.') > 1) {
-                    $parts   = explode('.', $valor);
+                    $parts = explode('.', $valor);
                     $decimal = array_pop($parts);
-                    $valor   = implode('', $parts) . '.' . $decimal;
+                    $valor = implode('', $parts) . '.' . $decimal;
                 }
 
-                $float = (float) $valor;
+                $float = (float)$valor;
                 return $negativo ? -$float : $float;
             };
 
@@ -1240,10 +1280,10 @@ class OrcamentoController extends Controller
             // Normalizar valores monetários vindos do request
             // ----------------------------------------------------------------
             $request->merge([
-                'guia_recolhimento'   => $brToDecimal($request->guia_recolhimento),
+                'guia_recolhimento' => $brToDecimal($request->guia_recolhimento),
                 'desconto_especifico' => $brToDecimal($request->desconto_especifico),
-                'desconto_aprovado'   => $brToDecimal($request->desconto_aprovado),
-                'valor_total'         => $brToDecimal($request->valor_total),
+                'desconto_aprovado' => $brToDecimal($request->desconto_aprovado),
+                'valor_total' => $brToDecimal($request->valor_total),
             ]);
 
             // ----------------------------------------------------------------
@@ -1252,42 +1292,42 @@ class OrcamentoController extends Controller
             $descontoPercentual = 0;
             if ($request->filled('desconto_aprovado') || $request->filled('desconto')) {
                 $descontoPercentual = max(
-                    (float) ($request->desconto_aprovado ?? 0),
-                    (float) ($request->desconto ?? 0)
+                    (float)($request->desconto_aprovado ?? 0),
+                    (float)($request->desconto ?? 0)
                 );
             }
 
             $descontoEspecifico = $request->filled('desconto_especifico')
-                ? (float) $request->desconto_especifico
+                ? (float)$request->desconto_especifico
                 : null;
 
             $guiaRecolhimento = $request->filled('guia_recolhimento')
-                ? (float) $request->guia_recolhimento
+                ? (float)$request->guia_recolhimento
                 : 0;
 
             // ----------------------------------------------------------------
             // Incrementar versão
             // ----------------------------------------------------------------
             $versaoAtual = $orcamento->versao ?? 0;
-            $novaVersao  = $versaoAtual + 1;
+            $novaVersao = $versaoAtual + 1;
 
             // ----------------------------------------------------------------
             // Atualizar dados básicos do orçamento
             // ----------------------------------------------------------------
             $orcamento->update([
-                'obra'                => $request->obra,
-                'prazo_entrega'       => $request->prazo_entrega,
-                'vendedor_id'         => $request->vendedor_id ?? $orcamento->vendedor_id,
-                'frete'               => $request->frete ?? 0,
-                'valor_total_itens'   => $request->valor_total ?? $orcamento->valor_total_itens,
-                'guia_recolhimento'   => $guiaRecolhimento,
-                'observacoes'         => $request->observacoes,
-                'versao'              => $novaVersao,
-                'condicao_id'         => $request->condicao_id,
-                'tipo_documento'      => $request->tipo_documento,
-                'venda_triangular'    => $request->venda_triangular,
-                'homologacao'         => $request->homologacao,
-                'validade'            => Carbon::now()->addDays(1),
+                'obra' => $request->obra,
+                'prazo_entrega' => $request->prazo_entrega,
+                'vendedor_id' => $request->vendedor_id ?? $orcamento->vendedor_id,
+                'frete' => $request->frete ?? 0,
+                'valor_total_itens' => $request->valor_total ?? $orcamento->valor_total_itens,
+                'guia_recolhimento' => $guiaRecolhimento,
+                'observacoes' => $request->observacoes,
+                'versao' => $novaVersao,
+                'condicao_id' => $request->condicao_id,
+                'tipo_documento' => $request->tipo_documento,
+                'venda_triangular' => $request->venda_triangular,
+                'homologacao' => $request->homologacao,
+                'validade' => Carbon::now()->addDays(1),
             ]);
 
             if ($request->venda_triangular == 1) {
@@ -1310,42 +1350,42 @@ class OrcamentoController extends Controller
 
                 if (!$solicitacaoExistente) {
                     $orcamento->solicitacoesPagamento()->create([
-                        'descricao_pagamento'        => $request->outros_meios_pagamento,
-                        'justificativa_solicitacao'  => $request->justificativa_pagamento
+                        'descricao_pagamento' => $request->outros_meios_pagamento,
+                        'justificativa_solicitacao' => $request->justificativa_pagamento
                             ?? 'Solicitação de meio de pagamento especial conforme necessidade do cliente.',
-                        'numero_parcelas'            => $request->numero_parcelas ?? null,
-                        'valor_entrada'              => $request->valor_entrada
+                        'numero_parcelas' => $request->numero_parcelas ?? null,
+                        'valor_entrada' => $request->valor_entrada
                             ? $brToDecimal($request->valor_entrada)
                             : null,
-                        'data_primeiro_vencimento'   => $request->data_primeiro_vencimento ?? null,
-                        'intervalo_dias'             => $request->intervalo_dias ?? null,
-                        'solicitado_por'             => auth()->id(),
-                        'observacoes'                => $request->observacoes_pagamento ?? null,
-                        'status'                     => 'Pendente',
+                        'data_primeiro_vencimento' => $request->data_primeiro_vencimento ?? null,
+                        'intervalo_dias' => $request->intervalo_dias ?? null,
+                        'solicitado_por' => auth()->id(),
+                        'observacoes' => $request->observacoes_pagamento ?? null,
+                        'status' => 'Pendente',
                     ]);
 
                     $necessitaAprovacaoPagamento = true;
 
                     Log::info("Solicitação de pagamento criada para orçamento #{$orcamento->id} na edição", [
                         'orcamento_id' => $orcamento->id,
-                        'descricao'    => $request->outros_meios_pagamento,
-                        'vendedor_id'  => auth()->id(),
+                        'descricao' => $request->outros_meios_pagamento,
+                        'vendedor_id' => auth()->id(),
                     ]);
                 } else {
                     $solicitacaoExistente->update([
-                        'descricao_pagamento'       => $request->outros_meios_pagamento,
+                        'descricao_pagamento' => $request->outros_meios_pagamento,
                         'justificativa_solicitacao' => $request->justificativa_pagamento
                             ?? $solicitacaoExistente->justificativa_solicitacao,
-                        'numero_parcelas'           => $request->numero_parcelas
+                        'numero_parcelas' => $request->numero_parcelas
                             ?? $solicitacaoExistente->numero_parcelas,
-                        'valor_entrada'             => $request->valor_entrada
+                        'valor_entrada' => $request->valor_entrada
                             ? $brToDecimal($request->valor_entrada)
                             : $solicitacaoExistente->valor_entrada,
-                        'data_primeiro_vencimento'  => $request->data_primeiro_vencimento
+                        'data_primeiro_vencimento' => $request->data_primeiro_vencimento
                             ?? $solicitacaoExistente->data_primeiro_vencimento,
-                        'intervalo_dias'            => $request->intervalo_dias
+                        'intervalo_dias' => $request->intervalo_dias
                             ?? $solicitacaoExistente->intervalo_dias,
-                        'observacoes'               => $request->observacoes_pagamento
+                        'observacoes' => $request->observacoes_pagamento
                             ?? $solicitacaoExistente->observacoes,
                     ]);
 
@@ -1358,14 +1398,14 @@ class OrcamentoController extends Controller
             // ----------------------------------------------------------------
             if ($request->filled('entrega_cep')) {
                 $dadosEndereco = array_filter([
-                    'cep'         => $request->entrega_cep,
-                    'cidade'      => $request->entrega_cidade,
-                    'estado'      => $request->entrega_estado,
-                    'bairro'      => $request->entrega_bairro,
-                    'logradouro'  => $request->entrega_logradouro,
-                    'numero'      => $request->entrega_numero,
+                    'cep' => $request->entrega_cep,
+                    'cidade' => $request->entrega_cidade,
+                    'estado' => $request->entrega_estado,
+                    'bairro' => $request->entrega_bairro,
+                    'logradouro' => $request->entrega_logradouro,
+                    'numero' => $request->entrega_numero,
                     'complemento' => $request->entrega_compl,
-                    'tipo'        => 'entrega',
+                    'tipo' => 'entrega',
                 ]);
 
                 if ($orcamento->endereco) {
@@ -1407,74 +1447,74 @@ class OrcamentoController extends Controller
                     }
 
                     // Recuperar preço original sem desconto
-                    $precoOriginalSemDesconto = (float) ($produtoData['preco_original'] ?? 0);
+                    $precoOriginalSemDesconto = (float)($produtoData['preco_original'] ?? 0);
 
                     if ($precoOriginalSemDesconto == 0) {
                         $itemExistente = $orcamento->itens()
                             ->where('produto_id', $produtoData['produto_id'])
                             ->first();
                         $precoOriginalSemDesconto = $itemExistente
-                            ? (float) $itemExistente->valor_unitario
-                            : (float) ($produtoData['valor_unitario'] ?? 0);
+                            ? (float)$itemExistente->valor_unitario
+                            : (float)($produtoData['valor_unitario'] ?? 0);
                     }
 
-                    $quantidade      = (float) ($produtoData['quantidade'] ?? 0);
+                    $quantidade = (float)($produtoData['quantidade'] ?? 0);
                     $liberarDesconto = isset($produtoData['liberar_desconto'])
-                        ? (int) $produtoData['liberar_desconto']
+                        ? (int)$produtoData['liberar_desconto']
                         : 1;
-                    $tipoDesconto    = $produtoData['tipo_desconto'] ?? 'nenhum';
-                    $descontoProduto = (float) ($produtoData['desconto_produto'] ?? 0);
+                    $tipoDesconto = $produtoData['tipo_desconto'] ?? 'nenhum';
+                    $descontoProduto = (float)($produtoData['desconto_produto'] ?? 0);
 
                     // Valores padrão (sem desconto)
                     $valorUnitarioComDesconto = $precoOriginalSemDesconto;
-                    $valorComDesconto         = $precoOriginalSemDesconto * $quantidade;
-                    $descontoAplicadoItem     = 0;
+                    $valorComDesconto = $precoOriginalSemDesconto * $quantidade;
+                    $descontoAplicadoItem = 0;
 
                     Log::info("Processando produto existente na edição", [
-                        'produto_id'       => $produtoData['produto_id'],
-                        'preco_original'   => $precoOriginalSemDesconto,
-                        'tipo_desconto'    => $tipoDesconto,
+                        'produto_id' => $produtoData['produto_id'],
+                        'preco_original' => $precoOriginalSemDesconto,
+                        'tipo_desconto' => $tipoDesconto,
                         'desconto_produto' => $descontoProduto,
-                        'quantidade'       => $quantidade,
+                        'quantidade' => $quantidade,
                     ]);
 
                     // Aplicar desconto conforme tipo
                     if ($liberarDesconto === 1) {
                         if ($tipoDesconto === 'produto' && $descontoProduto > 0) {
                             $valorUnitarioComDesconto = $precoOriginalSemDesconto - $descontoProduto;
-                            $valorComDesconto         = $valorUnitarioComDesconto * $quantidade;
+                            $valorComDesconto = $valorUnitarioComDesconto * $quantidade;
 
                             $orcamento->descontos()->create([
-                                'motivo'      => "Desconto individual de R$ "
+                                'motivo' => "Desconto individual de R$ "
                                     . number_format($descontoProduto, 2, ',', '.')
                                     . " por unidade do produto ID {$produtoData['produto_id']}",
-                                'valor'       => $descontoProduto * $quantidade,
+                                'valor' => $descontoProduto * $quantidade,
                                 'porcentagem' => null,
-                                'tipo'        => 'produto',
-                                'produto_id'  => $produtoData['produto_id'],
-                                'cliente_id'  => $orcamento->cliente_id,
-                                'user_id'     => auth()->id(),
+                                'tipo' => 'produto',
+                                'produto_id' => $produtoData['produto_id'],
+                                'cliente_id' => $orcamento->cliente_id,
+                                'user_id' => auth()->id(),
                             ]);
 
                             $itenscomdesconto = true;
 
                         } elseif ($tipoDesconto === 'percentual' && $descontoPercentual > 0) {
-                            $subtotal                 = $precoOriginalSemDesconto * $quantidade;
-                            $valorComDesconto         = $subtotal - ($subtotal * ($descontoPercentual / 100));
+                            $subtotal = $precoOriginalSemDesconto * $quantidade;
+                            $valorComDesconto = $subtotal - ($subtotal * ($descontoPercentual / 100));
                             $valorUnitarioComDesconto = $valorComDesconto / $quantidade;
-                            $descontoAplicadoItem     = $descontoPercentual;
+                            $descontoAplicadoItem = $descontoPercentual;
                         }
                     }
 
                     $orcamento->itens()->updateOrCreate(
                         ['produto_id' => $produtoData['produto_id']],
                         [
-                            'quantidade'                  => $quantidade,
-                            'valor_unitario'              => $precoOriginalSemDesconto,
+                            'quantidade' => $quantidade,
+                            'valor_unitario' => $precoOriginalSemDesconto,
                             'valor_unitario_com_desconto' => $valorUnitarioComDesconto,
-                            'desconto'                    => $descontoAplicadoItem,
-                            'valor_com_desconto'          => $valorComDesconto,
-                            'user_id'                     => $request->user()->id ?? null,
+                            'desconto' => $descontoAplicadoItem,
+                            'valor_com_desconto' => $valorComDesconto,
+                            'user_id' => $request->user()->id ?? null,
                         ]
                     );
                 }
@@ -1484,7 +1524,7 @@ class OrcamentoController extends Controller
             // Produtos NOVOS adicionados via JavaScript
             // ----------------------------------------------------------------
             if ($request->has('itens')) {
-                $itens        = $request->input('itens');
+                $itens = $request->input('itens');
                 $idsRecebidos = [];
 
                 foreach ($itens as $item) {
@@ -1495,15 +1535,15 @@ class OrcamentoController extends Controller
                     // Item de consulta de preço (sem preco_unitario)
                     if (empty($item['preco_unitario'])) {
                         $dadosItem = [
-                            'descricao'     => $item['nome'] ?? null,
-                            'quantidade'    => $item['quantidade'] ?? null,
-                            'cor'           => $item['cor'] ?? null,
+                            'descricao' => $item['nome'] ?? null,
+                            'quantidade' => $item['quantidade'] ?? null,
+                            'cor' => $item['cor'] ?? null,
                             'fornecedor_id' => !empty($item['fornecedor_id']) ? $item['fornecedor_id'] : null,
-                            'observacao'    => $item['observacoes'] ?? null,
-                            'orcamento_id'  => $orcamento->id,
-                            'usuario_id'    => auth()->id(),
-                            'comprador_id'  => auth()->id(),
-                            'status'        => 'Pendente',
+                            'observacao' => $item['observacoes'] ?? null,
+                            'orcamento_id' => $orcamento->id,
+                            'usuario_id' => auth()->id(),
+                            'comprador_id' => auth()->id(),
+                            'status' => 'Pendente',
                         ];
 
                         $consultaPreco = ConsultaPreco::where('id', $item['id'])
@@ -1514,7 +1554,7 @@ class OrcamentoController extends Controller
                             $consultaPreco->update($dadosItem);
                             $idsRecebidos[] = $consultaPreco->id;
                         } else {
-                            $novoItem       = ConsultaPreco::create($dadosItem);
+                            $novoItem = ConsultaPreco::create($dadosItem);
                             $idsRecebidos[] = $novoItem->id;
                         }
 
@@ -1522,61 +1562,61 @@ class OrcamentoController extends Controller
                     }
 
                     // Produto novo com preço definido
-                    $precoOriginalSemDesconto = (float) ($item['preco_original'] ?? $item['preco_unitario'] ?? 0);
-                    $quantidade               = (float) ($item['quantidade'] ?? 0);
-                    $liberarDesconto          = isset($item['liberar_desconto']) ? (int) $item['liberar_desconto'] : 1;
-                    $tipoDesconto             = $item['tipo_desconto'] ?? 'nenhum';
-                    $descontoProduto          = (float) ($item['desconto_produto'] ?? 0);
+                    $precoOriginalSemDesconto = (float)($item['preco_original'] ?? $item['preco_unitario'] ?? 0);
+                    $quantidade = (float)($item['quantidade'] ?? 0);
+                    $liberarDesconto = isset($item['liberar_desconto']) ? (int)$item['liberar_desconto'] : 1;
+                    $tipoDesconto = $item['tipo_desconto'] ?? 'nenhum';
+                    $descontoProduto = (float)($item['desconto_produto'] ?? 0);
 
                     // Valores padrão (sem desconto)
                     $valorUnitarioComDesconto = $precoOriginalSemDesconto;
-                    $valorComDesconto         = $precoOriginalSemDesconto * $quantidade;
-                    $descontoAplicadoItem     = 0;
+                    $valorComDesconto = $precoOriginalSemDesconto * $quantidade;
+                    $descontoAplicadoItem = 0;
 
                     Log::info("Processando novo produto na edição", [
-                        'produto_id'       => $item['id'],
-                        'preco_original'   => $precoOriginalSemDesconto,
-                        'tipo_desconto'    => $tipoDesconto,
+                        'produto_id' => $item['id'],
+                        'preco_original' => $precoOriginalSemDesconto,
+                        'tipo_desconto' => $tipoDesconto,
                         'desconto_produto' => $descontoProduto,
-                        'quantidade'       => $quantidade,
+                        'quantidade' => $quantidade,
                     ]);
 
                     // Aplicar desconto conforme tipo
                     if ($liberarDesconto === 1) {
                         if ($tipoDesconto === 'produto' && $descontoProduto > 0) {
                             $valorUnitarioComDesconto = $precoOriginalSemDesconto - $descontoProduto;
-                            $valorComDesconto         = $valorUnitarioComDesconto * $quantidade;
+                            $valorComDesconto = $valorUnitarioComDesconto * $quantidade;
 
                             $orcamento->descontos()->create([
-                                'motivo'      => "Desconto individual de R$ "
+                                'motivo' => "Desconto individual de R$ "
                                     . number_format($descontoProduto, 2, ',', '.')
                                     . " por unidade do produto ID {$item['id']}",
-                                'valor'       => $descontoProduto * $quantidade,
+                                'valor' => $descontoProduto * $quantidade,
                                 'porcentagem' => null,
-                                'tipo'        => 'produto',
-                                'produto_id'  => $item['id'],
-                                'cliente_id'  => $orcamento->cliente_id,
-                                'user_id'     => auth()->id(),
+                                'tipo' => 'produto',
+                                'produto_id' => $item['id'],
+                                'cliente_id' => $orcamento->cliente_id,
+                                'user_id' => auth()->id(),
                             ]);
 
                             $itenscomdesconto = true;
 
                         } elseif ($tipoDesconto === 'percentual' && $descontoPercentual > 0) {
-                            $subtotal                 = $precoOriginalSemDesconto * $quantidade;
-                            $valorComDesconto         = $subtotal - ($subtotal * ($descontoPercentual / 100));
+                            $subtotal = $precoOriginalSemDesconto * $quantidade;
+                            $valorComDesconto = $subtotal - ($subtotal * ($descontoPercentual / 100));
                             $valorUnitarioComDesconto = $valorComDesconto / $quantidade;
-                            $descontoAplicadoItem     = $descontoPercentual;
+                            $descontoAplicadoItem = $descontoPercentual;
                         }
                     }
 
                     $orcamento->itens()->create([
-                        'produto_id'                  => $item['id'],
-                        'quantidade'                  => $quantidade,
-                        'valor_unitario'              => $precoOriginalSemDesconto,
+                        'produto_id' => $item['id'],
+                        'quantidade' => $quantidade,
+                        'valor_unitario' => $precoOriginalSemDesconto,
                         'valor_unitario_com_desconto' => $valorUnitarioComDesconto,
-                        'desconto'                    => $descontoAplicadoItem,
-                        'valor_com_desconto'          => $valorComDesconto,
-                        'user_id'                     => $request->user()->id ?? null,
+                        'desconto' => $descontoAplicadoItem,
+                        'valor_com_desconto' => $valorComDesconto,
+                        'user_id' => $request->user()->id ?? null,
                     ]);
                 }
 
@@ -1615,15 +1655,15 @@ class OrcamentoController extends Controller
                     }
 
                     $vidro->update([
-                        'descricao'            => $vidroData['descricao'] ?? '',
-                        'quantidade'           => (float) ($vidroData['quantidade'] ?? 1),
-                        'altura'               => (float) ($vidroData['altura'] ?? 0),
-                        'largura'              => (float) ($vidroData['largura'] ?? 0),
+                        'descricao' => $vidroData['descricao'] ?? '',
+                        'quantidade' => (float)($vidroData['quantidade'] ?? 1),
+                        'altura' => (float)($vidroData['altura'] ?? 0),
+                        'largura' => (float)($vidroData['largura'] ?? 0),
                         'preco_metro_quadrado' => $brToDecimal($vidroData['preco_m2']) ?? 0,
-                        'desconto'             => $descontoPercentual ?? 0,
-                        'valor_total'          => $brToDecimal($vidroData['valor_total']) ?? 0,
-                        'valor_com_desconto'   => $brToDecimal($vidroData['valor_com_desconto']) ?? 0,
-                        'user_id'              => $request->user()->id ?? null,
+                        'desconto' => $descontoPercentual ?? 0,
+                        'valor_total' => $brToDecimal($vidroData['valor_total']) ?? 0,
+                        'valor_com_desconto' => $brToDecimal($vidroData['valor_com_desconto']) ?? 0,
+                        'user_id' => $request->user()->id ?? null,
                     ]);
                 }
             }
@@ -1644,15 +1684,15 @@ class OrcamentoController extends Controller
                     }
 
                     $orcamento->vidros()->create([
-                        'descricao'            => $vidroData['descricao'] ?? null,
-                        'quantidade'           => (float) ($vidroData['quantidade'] ?? 0),
-                        'altura'               => (float) ($vidroData['altura'] ?? 0),
-                        'largura'              => (float) ($vidroData['largura'] ?? 0),
+                        'descricao' => $vidroData['descricao'] ?? null,
+                        'quantidade' => (float)($vidroData['quantidade'] ?? 0),
+                        'altura' => (float)($vidroData['altura'] ?? 0),
+                        'largura' => (float)($vidroData['largura'] ?? 0),
                         'preco_metro_quadrado' => $brToDecimal($vidroData['preco_m2']) ?? 0,
-                        'desconto'             => $descontoPercentual ?? 0,
-                        'valor_total'          => $brToDecimal($vidroData['valor_total']) ?? 0,
-                        'valor_com_desconto'   => $brToDecimal($vidroData['valor_com_desconto']) ?? 0,
-                        'user_id'              => $request->user()->id ?? null,
+                        'desconto' => $descontoPercentual ?? 0,
+                        'valor_total' => $brToDecimal($vidroData['valor_total']) ?? 0,
+                        'valor_com_desconto' => $brToDecimal($vidroData['valor_com_desconto']) ?? 0,
+                        'user_id' => $request->user()->id ?? null,
                     ]);
                 }
             }
@@ -1667,8 +1707,8 @@ class OrcamentoController extends Controller
                 $orcamento->load('itens', 'vidros');
 
                 foreach ($orcamento->itens as $item) {
-                    if ($item->desconto > 0 && (float) $item->desconto === (float) $descontoPercentual) {
-                        $subtotal                 = $item->valor_unitario * $item->quantidade;
+                    if ($item->desconto > 0 && (float)$item->desconto === (float)$descontoPercentual) {
+                        $subtotal = $item->valor_unitario * $item->quantidade;
                         $totalDescontoPercentual += $subtotal * ($descontoPercentual / 100);
                     }
                 }
@@ -1681,12 +1721,12 @@ class OrcamentoController extends Controller
 
                 if ($totalDescontoPercentual > 0) {
                     $orcamento->descontos()->create([
-                        'motivo'      => 'Desconto percentual aplicado pelo vendedor',
-                        'valor'       => $totalDescontoPercentual,
+                        'motivo' => 'Desconto percentual aplicado pelo vendedor',
+                        'valor' => $totalDescontoPercentual,
                         'porcentagem' => $descontoPercentual,
-                        'tipo'        => 'percentual',
-                        'cliente_id'  => $orcamento->cliente_id,
-                        'user_id'     => auth()->id(),
+                        'tipo' => 'percentual',
+                        'cliente_id' => $orcamento->cliente_id,
+                        'user_id' => auth()->id(),
                     ]);
                 }
             }
@@ -1696,12 +1736,12 @@ class OrcamentoController extends Controller
             // ----------------------------------------------------------------
             if ($descontoEspecifico) {
                 $orcamento->descontos()->create([
-                    'motivo'      => 'Desconto específico em reais',
-                    'valor'       => $descontoEspecifico,
+                    'motivo' => 'Desconto específico em reais',
+                    'valor' => $descontoEspecifico,
                     'porcentagem' => null,
-                    'tipo'        => 'fixo',
-                    'cliente_id'  => $orcamento->cliente_id,
-                    'user_id'     => auth()->id(),
+                    'tipo' => 'fixo',
+                    'cliente_id' => $orcamento->cliente_id,
+                    'user_id' => auth()->id(),
                 ]);
             }
 
@@ -1715,7 +1755,7 @@ class OrcamentoController extends Controller
             foreach ($orcamento->itens as $item) {
                 $produto = \App\Models\Produto::find($item->produto_id);
                 if ($produto && $produto->estoque_atual !== null) {
-                    if ((float) $item->quantidade > (float) $produto->estoque_atual) {
+                    if ((float)$item->quantidade > (float)$produto->estoque_atual) {
                         $temItensSemEstoque = true;
                         break;
                     }
@@ -1729,16 +1769,16 @@ class OrcamentoController extends Controller
             // ----------------------------------------------------------------
             $temDescontoPercentual = $descontoPercentual > 0;
             $temDescontoEspecifico = $descontoEspecifico > 0;
-            $temQualquerDesconto   = $temDescontoPercentual || $temDescontoEspecifico || $itenscomdesconto;
+            $temQualquerDesconto = $temDescontoPercentual || $temDescontoEspecifico || $itenscomdesconto;
 
-            $descontoAprovadoCliente = (float) ($request->desconto_aprovado ?? 0);
-            $descontoVendedor        = (float) (auth()->user()->vendedor->desconto ?? 0);
+            $descontoAprovadoCliente = (float)($request->desconto_aprovado ?? 0);
+            $descontoVendedor = (float)(auth()->user()->vendedor->desconto ?? 0);
 
             $necessitaAprovacaoDesconto = $temQualquerDesconto && (
-                $descontoPercentual > $descontoAprovadoCliente ||
-                $descontoVendedor < $descontoPercentual         ||
-                $itenscomdesconto
-            );
+                    $descontoPercentual > $descontoAprovadoCliente ||
+                    $descontoVendedor < $descontoPercentual ||
+                    $itenscomdesconto
+                );
 
             // ----------------------------------------------------------------
             // Definir status e redirecionar
@@ -1778,7 +1818,7 @@ class OrcamentoController extends Controller
             // ----------------------------------------------------------------
             // Nenhuma aprovação necessária — gera PDF normalmente
             // ----------------------------------------------------------------
-            $pdfService          = new OrcamentoPdfService();
+            $pdfService = new OrcamentoPdfService();
             $pdfGeradoComSucesso = $pdfService->gerarOrcamentoPdf($orcamento);
 
             if ($pdfGeradoComSucesso) {
@@ -1814,9 +1854,9 @@ class OrcamentoController extends Controller
             $mensagemErro = app()->environment('production')
                 ? 'Erro interno ao atualizar o orçamento. Contate o suporte.'
                 : '[' . class_basename($e) . '] '
-                    . $e->getMessage()
-                    . ' — Arquivo: ' . $e->getFile()
-                    . ' — Linha: ' . $e->getLine();
+                . $e->getMessage()
+                . ' — Arquivo: ' . $e->getFile()
+                . ' — Linha: ' . $e->getLine();
 
             return redirect()
                 ->back()

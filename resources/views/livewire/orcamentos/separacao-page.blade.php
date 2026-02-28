@@ -70,94 +70,97 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
-                        @forelse ($batch->items as $it)
-                            @php
-                                $p = $it->produto;
+                    @forelse ($batch->items as $it)
+                        @php
+                            $isEncomenda = $it->is_encomenda;
+                            $p           = $isEncomenda ? null : $it->produto;
+
+                            if (!$isEncomenda && $p) {
                                 $reservado = (float) \App\Models\EstoqueReserva::where('produto_id', $p->id)
-                                    ->where('status', 'ativa')
-                                    ->sum('quantidade');
+                                    ->where('status', 'ativa')->sum('quantidade');
                                 $dispo = (float) ($p->estoque_atual ?? 0) - $reservado;
                                 $risco = $dispo < (float) ($p->estoque_minimo ?? 0);
-                            @endphp
-                            <tr wire:key="row-{{ $it->id }}">
-                                <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200 align-top">
+                            }
+                        @endphp
+                        <tr wire:key="row-{{ $it->id }}">
+                            <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200 align-top">
+                                @if ($isEncomenda)
+                                    {{-- ✅ Item de encomenda --}}
+                                    <span class="font-medium">{{ $it->descricao_encomenda }}</span>
+                                    <div class="mt-1">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200">
+                        Encomenda
+                    </span>
+                                    </div>
+                                    @if ($it->consultaPreco?->fornecedorSelecionado?->fornecedor)
+                                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            Fornecedor: {{ $it->consultaPreco->fornecedorSelecionado->fornecedor->nome_fantasia }}
+                                        </div>
+                                    @endif
+                                @else
+                                    {{-- Item normal --}}
                                     <span class="font-medium">{{ $p->nome }}</span>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">SKU: {{ $p->sku ?? '—' }}
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">SKU: {{ $p->sku ?? '—' }}</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Local: {{ $it->localizacao ?? 'Não informado' }}</div>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200 align-top">
+                                {{ rtrim(rtrim(number_format($it->qty_solicitada, 3, ',', '.'), '0'), ',') }}
+                            </td>
+                            <td class="px-4 py-3 align-top">
+                                {{-- Ações de separação (igual para ambos os tipos) --}}
+                                <div class="flex flex-col gap-2">
+                                    <div class="flex flex-wrap items-start gap-2">
+                                        <input type="number" step="any" min="0"
+                                               wire:model.defer="inputs.{{ $it->id }}.qty"
+                                               class="w-24 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500">
+                                        <input type="text" placeholder="Motivo (se não separar)"
+                                               wire:model.defer="inputs.{{ $it->id }}.motivo"
+                                               class="flex-1 min-w-[200px] rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500">
+                                        <button wire:click="salvarItem({{ $it->id }})"
+                                                class="px-3 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm transition-colors">
+                                            Salvar
+                                        </button>
                                     </div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">Local:
-                                        {{ $it->localizacao ?? 'Não informado' }}</div>
-                                </td>
-                                <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200 align-top">
-                                    {{ rtrim(rtrim(number_format($it->qty_solicitada, 3, ',', '.'), '0'), ',') }}
-                                </td>
-                                <td class="px-4 py-3 align-top">
-                                    <div class="flex flex-col gap-2">
-                                        <div class="flex flex-wrap items-start gap-2">
-                                            <input type="number" step="any" min="0"
-                                                wire:model.defer="inputs.{{ $it->id }}.qty"
-                                                class="w-24 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500">
-                                            <input type="text" placeholder="Motivo (se não separar)"
-                                                wire:model.defer="inputs.{{ $it->id }}.motivo"
-                                                class="flex-1 min-w-[200px] rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500 @error('inputs.' . $it->id . '.motivo') border-red-500 @enderror">
-
-                                            @if ($orcamento->validade >= now() || in_array($orcamento->status, ['Aprovado']))
-                                                <button wire:click="salvarItem({{ $it->id }})"
-                                                    wire:loading.attr="disabled"
-                                                    class="px-3 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm transition-colors">Salvar</button>
-                                            @endif
+                                    @if ($it->separado_por_id)
+                                        <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                            Salvo por: {{ optional($it->separadoPor)->name }}
+                                            em {{ optional($it->separado_em)->format('d/m/Y H:i') }}
                                         </div>
-                                        @error('inputs.' . $it->id . '.motivo')
-                                            <div class="text-xs text-red-500">{{ $message }}</div>
-                                        @enderror
-
-                                        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
-                                            <label
-                                                class="inline-flex items-center gap-1 text-xs text-gray-600 dark:text-gray-300">
-                                                <input type="checkbox"
-                                                    wire:model.defer="inputs.{{ $it->id }}.inconsistencia"
-                                                    class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500">
-                                                Reportar Inconsistência
-                                            </label>
-                                            <input type="text" placeholder="Observação da inconsistência"
-                                                wire:model.defer="inputs.{{ $it->id }}.obs"
-                                                class="flex-1 min-w-[250px] rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs focus:ring-indigo-500 focus:border-indigo-500">
+                                    @endif
+                                    @if ($it->motivo_nao_separado)
+                                        <div class="text-xs text-amber-600 dark:text-amber-400">
+                                            Motivo: {{ $it->motivo_nao_separado }}
                                         </div>
-
-                                        @if ($it->separado_por_id)
-                                            <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                                <span class="font-semibold">Salvo por:</span>
-                                                {{ optional($it->separadoPor)->name }} em
-                                                {{ optional($it->separado_em)->format('d/m/Y H:i') }}
-                                            </div>
-                                        @endif
-                                        @if ($it->motivo_nao_separado)
-                                            <div class="text-xs text-amber-600 dark:text-amber-400"><span
-                                                    class="font-semibold">Motivo:</span> {{ $it->motivo_nao_separado }}
-                                            </div>
-                                        @endif
-                                        @if ($it->inconsistencia_reportada)
-                                            <div class="text-xs text-rose-600 dark:text-rose-400"><span
-                                                    class="font-semibold">Inconsistência:</span>
-                                                {{ $it->inconsistencia_obs }}</div>
-                                        @endif
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 align-top">
+                                @if ($isEncomenda)
+                                    {{-- ✅ Encomenda não tem estoque -- exibe status do item --}}
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200">
+                    Aguardando entrega
+                </span>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        Status: <span class="font-semibold">{{ $it->status }}</span>
                                     </div>
-                                </td>
-                                <td class="px-4 py-3 align-top">
-                                    <span
-                                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $risco ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200' }}">
-                                        Disponível: {{ rtrim(rtrim(number_format($dispo, 3, ',', '.'), '0'), ',') }}
-                                    </span>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Status Item: <span
-                                            class="font-semibold">{{ $it->status }}</span></div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4" class="px-4 py-6 text-center text-gray-500 dark:text-gray-400">
-                                    Nenhum item encontrado neste lote de separação.
-                                </td>
-                            </tr>
-                        @endforelse
+                                @else
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $risco ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200' }}">
+                    Disponível: {{ rtrim(rtrim(number_format($dispo, 3, ',', '.'), '0'), ',') }}
+                </span>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        Status Item: <span class="font-semibold">{{ $it->status }}</span>
+                                    </div>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="px-4 py-6 text-center text-gray-500 dark:text-gray-400">
+                                Nenhum item encontrado neste lote de separação.
+                            </td>
+                        </tr>
+                    @endforelse
                     </tbody>
                 </table>
             </div>
@@ -248,7 +251,7 @@
                                     </p>
                                     @if ($cBatch->qtd_caixas || $cBatch->qtd_sacos || $cBatch->qtd_sacolas || $cBatch->outros_embalagem)
                                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                            Embalagem: 
+                                            Embalagem:
                                             @if($cBatch->qtd_caixas) {{ $cBatch->qtd_caixas }} caixas @endif
                                             @if($cBatch->qtd_sacos) {{ $cBatch->qtd_sacos }} sacos @endif
                                             @if($cBatch->qtd_sacolas) {{ $cBatch->qtd_sacolas }} sacolas @endif
@@ -268,14 +271,16 @@
                                 <ul class="space-y-2">
                                     @foreach ($cBatch->items as $cItem)
                                         <li class="text-sm text-gray-700 dark:text-gray-300">
-                                            <span class="font-medium">{{ $cItem->produto->nome }}</span>:
-                                            Separado <span
-                                                class="font-semibold">{{ rtrim(rtrim(number_format($cItem->qty_separada, 3, ',', '.'), '0'), ',') }}</span>
-                                            de <span
-                                                class="font-semibold">{{ rtrim(rtrim(number_format($cItem->qty_solicitada, 3, ',', '.'), '0'), ',') }}</span>.
+                                            @if ($cItem->is_encomenda)
+                                                <span class="font-medium">{{ $cItem->descricao_encomenda }}</span>
+                                                <span class="text-xs text-purple-600 dark:text-purple-400 ml-1">(Encomenda)</span>
+                                            @else
+                                                <span class="font-medium">{{ $cItem->produto->nome ?? '—' }}</span>
+                                            @endif
+                                            : Separado <span class="font-semibold">{{ rtrim(rtrim(number_format($cItem->qty_separada, 3, ',', '.'), '0'), ',') }}</span>
+                                            de <span class="font-semibold">{{ rtrim(rtrim(number_format($cItem->qty_solicitada, 3, ',', '.'), '0'), ',') }}</span>.
                                             @if ($cItem->motivo_nao_separado)
-                                                <span class="text-amber-600 dark:text-amber-500 text-xs"> (Motivo:
-                                                    {{ $cItem->motivo_nao_separado }})</span>
+                                                <span class="text-amber-600 dark:text-amber-500 text-xs">(Motivo: {{ $cItem->motivo_nao_separado }})</span>
                                             @endif
                                         </li>
                                     @endforeach

@@ -21,11 +21,12 @@ class ConferenciaPdfService
         try {
             // 1. Carrega TODAS as conferências do orçamento com relacionamentos necessários
             $conferencias = Conferencia::with([
-                    'conferente',
-                    'itens.produto',
-                    'itens.conferidoPor',
-                    'itens.fotos',
-                ])
+                'conferente',
+                'itens.produto',
+                'itens.conferidoPor',
+                'itens.fotos',
+                'itens.consultaPreco.fornecedorSelecionado.fornecedor', // ✅
+            ])
                 ->where('orcamento_id', $orcamento->id)
                 ->orderBy('created_at')
                 ->get();

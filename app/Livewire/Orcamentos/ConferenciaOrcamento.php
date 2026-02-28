@@ -176,13 +176,16 @@ class ConferenciaOrcamento extends Component
 
             foreach ($batch->items as $pi) {
                 ConferenciaItem::create([
-                    'conferencia_id'  => $conf->id,
-                    'picking_item_id' => $pi->id,
-                    'produto_id'      => $pi->produto_id,
-                    'qty_separada'    => $pi->qty_separada,
-                    'qty_conferida'   => 0,
-                    'status'          => 'pendente',   // ← pendente até ser conferido de verdade
-                    'divergencia'     => 0,
+                    'conferencia_id'     => $conf->id,
+                    'picking_item_id'    => $pi->id,
+                    'produto_id'         => $pi->produto_id,         // null para encomendas
+                    'consulta_preco_id'  => $pi->consulta_preco_id,  // ✅
+                    'is_encomenda'       => $pi->is_encomenda,        // ✅
+                    'descricao_encomenda'=> $pi->descricao_encomenda, // ✅
+                    'qty_separada'       => $pi->qty_separada,
+                    'qty_conferida'      => 0,
+                    'status'             => 'pendente',
+                    'divergencia'        => 0,
                 ]);
             }
         });

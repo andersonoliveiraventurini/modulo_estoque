@@ -15,6 +15,9 @@ class ConferenciaItem extends Model
         'conferencia_id',
         'picking_item_id',
         'produto_id',
+        'consulta_preco_id',  // ✅
+        'is_encomenda',       // ✅
+        'descricao_encomenda', // ✅
         'qty_separada',
         'qty_conferida',
         'status',
@@ -26,7 +29,14 @@ class ConferenciaItem extends Model
 
     protected $casts = [
         'conferido_em' => 'datetime',
+        'is_encomenda' => 'bool', // ✅
     ];
+
+// ✅ Relacionamento com item de cotação
+    public function consultaPreco(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\ConsultaPreco::class, 'consulta_preco_id');
+    }
 
     // ─── Relações ──────────────────────────────────────────────────────────────
 

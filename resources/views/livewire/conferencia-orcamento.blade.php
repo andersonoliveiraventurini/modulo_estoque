@@ -9,9 +9,9 @@
          @keydown.escape.window="lightboxSrc = null"
          class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
         <img :src="lightboxSrc"
-             class="max-w-full max-h-[90vh] rounded-xl shadow-2xl object-contain" />
+             class="max-w-full max-h-[90vh] rounded-xl shadow-2xl object-contain"/>
         <button @click="lightboxSrc = null"
-            class="absolute top-4 right-4 text-white bg-black/50 hover:bg-black/80
+                class="absolute top-4 right-4 text-white bg-black/50 hover:bg-black/80
                    w-10 h-10 rounded-full flex items-center justify-center text-2xl font-bold transition">
             ×
         </button>
@@ -20,7 +20,9 @@
     {{-- CABEÇALHO --}}
     <div class="mb-6">
         <h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-            Conferência do <a href="{{ route('orcamentos.show', $orcamento->id) }}" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">Orçamento #{{ $orcamento->id }}</a>
+            Conferência do <a href="{{ route('orcamentos.show', $orcamento->id) }}"
+                              class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">Orçamento
+                #{{ $orcamento->id }}</a>
         </h1>
         <p class="text-sm text-gray-600 dark:text-gray-300">
             Cliente: {{ optional($orcamento->cliente)->nome }}
@@ -78,36 +80,53 @@
 
                             {{-- ① Info do produto --}}
                             <div class="w-44 shrink-0">
-                                <p class="font-medium text-gray-800 dark:text-gray-200 leading-tight">
-                                    {{ $p->nome }}
-                                </p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                    SKU: {{ $p->sku ?? '—' }}
-                                </p>
+                                @if ($it->is_encomenda)
+                                    <p class="font-medium text-gray-800 dark:text-gray-200 leading-tight">
+                                        {{ $it->descricao_encomenda }}
+                                    </p>
+                                    <span class="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-xs font-medium
+                     bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200">
+            Encomenda
+        </span>
+                                    @if ($it->consultaPreco?->fornecedorSelecionado?->fornecedor)
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                            {{ $it->consultaPreco->fornecedorSelecionado->fornecedor->nome_fantasia }}
+                                        </p>
+                                    @endif
+                                @else
+                                    @php $p = $it->produto; @endphp
+                                    <p class="font-medium text-gray-800 dark:text-gray-200 leading-tight">
+                                        {{ $p->nome }}
+                                    </p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                        SKU: {{ $p->sku ?? '—' }}
+                                    </p>
+                                @endif
+
                                 <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
                                     Separada:
                                     <span class="font-semibold">
-                                        {{ rtrim(rtrim(number_format($it->qty_separada, 3, ',', '.'), '0'), ',') }}
-                                    </span>
+            {{ rtrim(rtrim(number_format($it->qty_separada, 3, ',', '.'), '0'), ',') }}
+        </span>
                                 </p>
 
                                 {{-- Badge status --}}
                                 @if ($it->status === 'divergente')
                                     <span class="mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
-                                                 bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200">
-                                        ⚠ Divergente
-                                        ({{ rtrim(rtrim(number_format($it->divergencia, 3, ',', '.'), '0'), ',') }})
-                                    </span>
+                     bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200">
+            ⚠ Divergente
+            ({{ rtrim(rtrim(number_format($it->divergencia, 3, ',', '.'), '0'), ',') }})
+        </span>
                                 @elseif ($it->status === 'ok')
                                     <span class="mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
-                                                 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">
-                                        ✓ OK
-                                    </span>
+                     bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">
+            ✓ OK
+        </span>
                                 @else
                                     <span class="mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
-                                                 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/60 dark:text-yellow-200">
-                                        Não conferido
-                                    </span>
+                     bg-yellow-100 text-yellow-800 dark:bg-yellow-900/60 dark:text-yellow-200">
+            Não conferido
+        </span>
                                 @endif
                             </div>
 
@@ -122,21 +141,21 @@
                                                 Quantidade conferida
                                             </label>
                                             <input type="number" step="any" min="0"
-                                                wire:model.defer="inputs.{{ $it->id }}.qty"
-                                                class="w-28 rounded-md border-gray-300 dark:border-gray-600
+                                                   wire:model.defer="inputs.{{ $it->id }}.qty"
+                                                   class="w-28 rounded-md border-gray-300 dark:border-gray-600
                                                        bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm" />
+                                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm"/>
                                         </div>
                                         <div class="flex-1 min-w-[180px]">
                                             <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">
                                                 Motivo (se divergir)
                                             </label>
                                             <input type="text"
-                                                wire:model.defer="inputs.{{ $it->id }}.motivo"
-                                                placeholder="Motivo da divergência…"
-                                                class="w-full rounded-md border-gray-300 dark:border-gray-600
+                                                   wire:model.defer="inputs.{{ $it->id }}.motivo"
+                                                   placeholder="Motivo da divergência…"
+                                                   class="w-full rounded-md border-gray-300 dark:border-gray-600
                                                        bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm" />
+                                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm"/>
                                         </div>
                                     </div>
 
@@ -157,38 +176,41 @@
                                                           bg-indigo-50 dark:bg-indigo-900/30
                                                           text-indigo-700 dark:text-indigo-300
                                                           text-xs font-semibold hover:bg-indigo-100 transition">
-                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                                                     stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                          stroke-width="2"
                                                           d="M4 16l4-4m0 0l4 4m-4-4v9M20 12a8 8 0 11-16 0 8 8 0 0116 0z"/>
                                                 </svg>
                                                 Selecionar fotos
                                                 <input type="file"
-                                                    wire:model="novasFotos.{{ $it->id }}"
-                                                    multiple accept="image/jpeg,image/png,image/webp"
-                                                    class="hidden"
-                                                    @change="
+                                                       wire:model="novasFotos.{{ $it->id }}"
+                                                       multiple accept="image/jpeg,image/png,image/webp"
+                                                       class="hidden"
+                                                       @change="
                                                         previews = [];
                                                         Array.from($event.target.files).forEach(f => {
                                                             const r = new FileReader();
                                                             r.onload = e => previews.push(e.target.result);
                                                             r.readAsDataURL(f);
                                                         })
-                                                    " />
+                                                    "/>
                                             </label>
 
                                             <input type="text"
-                                                wire:model.defer="legendas.{{ $it->id }}"
-                                                placeholder="Legenda para as fotos (opcional)"
-                                                class="flex-1 min-w-[160px] rounded-md border-gray-300 dark:border-gray-600
+                                                   wire:model.defer="legendas.{{ $it->id }}"
+                                                   placeholder="Legenda para as fotos (opcional)"
+                                                   class="flex-1 min-w-[160px] rounded-md border-gray-300 dark:border-gray-600
                                                        bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                                                       focus:ring-indigo-500 focus:border-indigo-500 text-xs" />
+                                                       focus:ring-indigo-500 focus:border-indigo-500 text-xs"/>
                                         </div>
 
                                         {{-- Progresso de upload Livewire --}}
                                         <div wire:loading wire:target="novasFotos.{{ $it->id }}"
-                                            class="mt-1 text-xs text-indigo-500 animate-pulse flex items-center gap-1">
+                                             class="mt-1 text-xs text-indigo-500 animate-pulse flex items-center gap-1">
                                             <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                        stroke-width="4"/>
                                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
                                             </svg>
                                             Enviando fotos…
@@ -204,18 +226,21 @@
                                                 <div class="flex flex-wrap gap-2">
                                                     <template x-for="(src, i) in previews" :key="i">
                                                         <button type="button"
-                                                            @click="$dispatch('open-lightbox', { src })"
-                                                            class="w-16 h-16 rounded-lg overflow-hidden border-2
+                                                                @click="$dispatch('open-lightbox', { src })"
+                                                                class="w-16 h-16 rounded-lg overflow-hidden border-2
                                                                    border-indigo-300 dark:border-indigo-600
                                                                    hover:ring-2 hover:ring-indigo-400 transition
                                                                    relative group">
                                                             <img :src="src"
-                                                                 class="w-full h-full object-cover" />
+                                                                 class="w-full h-full object-cover"/>
                                                             <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10
                                                                         transition flex items-center justify-center">
-                                                                <svg class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition"
-                                                                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                <svg
+                                                                    class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition"
+                                                                    fill="none" viewBox="0 0 24 24"
+                                                                    stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                          stroke-width="2"
                                                                           d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z"/>
                                                                 </svg>
                                                             </div>
@@ -232,9 +257,9 @@
                                     {{-- Botão salvar --}}
                                     <div>
                                         <button wire:click="salvarItem({{ $it->id }})"
-                                            wire:loading.attr="disabled"
-                                            wire:target="salvarItem({{ $it->id }})"
-                                            class="px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700
+                                                wire:loading.attr="disabled"
+                                                wire:target="salvarItem({{ $it->id }})"
+                                                class="px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700
                                                    text-white text-sm font-semibold shadow-sm transition-colors
                                                    disabled:opacity-50">
                                             <span wire:loading.remove wire:target="salvarItem({{ $it->id }})">
@@ -258,13 +283,13 @@
                                         @foreach ($it->fotos as $foto)
                                             <div class="relative group" wire:key="foto-{{ $foto->id }}">
                                                 <button type="button"
-                                                    @click="$dispatch('open-lightbox', { src: '{{ $foto->url }}' })"
-                                                    class="block w-20 h-20 rounded-lg overflow-hidden border
+                                                        @click="$dispatch('open-lightbox', { src: '{{ $foto->url }}' })"
+                                                        class="block w-20 h-20 rounded-lg overflow-hidden border
                                                            border-gray-200 dark:border-gray-700 shadow-sm
                                                            hover:ring-2 hover:ring-indigo-400 transition">
                                                     <img src="{{ $foto->url }}"
                                                          alt="{{ $foto->legenda ?? 'Foto' }}"
-                                                         class="w-full h-full object-cover" />
+                                                         class="w-full h-full object-cover"/>
                                                 </button>
 
                                                 @if ($foto->legenda)
@@ -277,9 +302,9 @@
 
                                                 @if ($podeEditar)
                                                     <button type="button"
-                                                        wire:click="removerFoto({{ $foto->id }})"
-                                                        wire:confirm="Remover esta foto permanentemente?"
-                                                        class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full
+                                                            wire:click="removerFoto({{ $foto->id }})"
+                                                            wire:confirm="Remover esta foto permanentemente?"
+                                                            class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full
                                                                bg-rose-600 text-white text-xs font-bold leading-none
                                                                hidden group-hover:flex items-center justify-center
                                                                shadow hover:bg-rose-700 transition">
@@ -339,42 +364,42 @@
                                 Caixas
                             </label>
                             <input type="number" wire:model.live="caixas" min="0"
-                                class="w-full rounded-md border-gray-300 dark:border-gray-600
+                                   class="w-full rounded-md border-gray-300 dark:border-gray-600
                                        bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm" />
+                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm"/>
                         </div>
                         <div class="flex-1 min-w-[100px]">
                             <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Sacos
                             </label>
                             <input type="number" wire:model.live="sacos" min="0"
-                                class="w-full rounded-md border-gray-300 dark:border-gray-600
+                                   class="w-full rounded-md border-gray-300 dark:border-gray-600
                                        bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm" />
+                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm"/>
                         </div>
                         <div class="flex-1 min-w-[100px]">
                             <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Sacolas
                             </label>
                             <input type="number" wire:model.live="sacolas" min="0"
-                                class="w-full rounded-md border-gray-300 dark:border-gray-600
+                                   class="w-full rounded-md border-gray-300 dark:border-gray-600
                                        bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm" />
+                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm"/>
                         </div>
                         <div class="flex-1 min-w-[140px]">
                             <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Outros
                             </label>
                             <input type="text" wire:model.live="outros" placeholder="Ex: 2 Pallets"
-                                class="w-full rounded-md border-gray-300 dark:border-gray-600
+                                   class="w-full rounded-md border-gray-300 dark:border-gray-600
                                        bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm" />
+                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm"/>
                         </div>
 
                         <div class="shrink-0">
                             <button wire:click="concluir" wire:loading.attr="disabled"
-                                @if(!$embalagemOk) disabled title="Preencha ao menos um tipo de embalagem" @endif
-                                class="px-5 py-2 rounded-md font-semibold text-sm shadow-sm transition-colors
+                                    @if(!$embalagemOk) disabled title="Preencha ao menos um tipo de embalagem" @endif
+                                    class="px-5 py-2 rounded-md font-semibold text-sm shadow-sm transition-colors
                                        {{ $embalagemOk
                                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                                            : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' }}
@@ -390,7 +415,9 @@
                     @if(!$embalagemOk)
                         <p class="mt-3 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
                             <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                <path fill-rule="evenodd"
+                                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                      clip-rule="evenodd"/>
                             </svg>
                             Informe ao menos um campo de embalagem para habilitar a conclusão.
                         </p>
@@ -399,7 +426,7 @@
             </div>
         @endif
 
-    {{-- ═══════════════════════ SEM CONFERÊNCIA ATIVA ════════════════════════ --}}
+        {{-- ═══════════════════════ SEM CONFERÊNCIA ATIVA ════════════════════════ --}}
     @else
         <div class="rounded-lg border-2 border-dashed p-8 text-center
                     border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
@@ -412,7 +439,7 @@
                     Clique no botão abaixo para criar uma nova conferência.
                 </p>
                 <button wire:click="iniciarConferencia" wire:loading.attr="disabled"
-                    class="inline-flex items-center px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700
+                        class="inline-flex items-center px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700
                            text-white font-semibold text-sm shadow-sm transition-colors disabled:opacity-50">
                     <span wire:loading.remove wire:target="iniciarConferencia">Iniciar Nova Conferência</span>
                     <span wire:loading wire:target="iniciarConferencia">Iniciando…</span>
@@ -421,7 +448,7 @@
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
                     A conferência só pode ser iniciada quando o orçamento estiver com status
                     <span class="font-semibold">Aprovado</span> e houver um lote de separação concluído.
-                    <br />
+                    <br/>
                     <span class="text-xs mt-1 block">
                         Status atual: <strong>{{ $orcamento->status ?? '—' }}</strong>
                         • Workflow: <strong>{{ $orcamento->workflow_status ?? '—' }}</strong>
@@ -435,35 +462,46 @@
     @if ($concludedConferencias && $concludedConferencias->isNotEmpty())
         <div class="mt-8">
             <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                Histórico de Conferências Concluídas  <a href="{{ route('orcamentos.conferencia.pdf', $orcamento) }}" target="_blank"
-   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md
+                Histórico de Conferências Concluídas <a href="{{ route('orcamentos.conferencia.pdf', $orcamento) }}"
+                                                        target="_blank"
+                                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md
           bg-gray-700 hover:bg-gray-900 text-white text-xs font-semibold shadow-sm transition-colors">
-    📄 Baixar Relatório PDF
-</a>
+                    📄 Baixar Relatório PDF
+                </a>
             </h3>
             <div class="space-y-4" x-data="{ open: null }">
                 @foreach ($concludedConferencias as $cConf)
                     <div class="rounded-lg border border-gray-200 dark:border-gray-700
                                 bg-white dark:bg-gray-900 shadow-sm">
                         <button @click="open = open === {{ $cConf->id }} ? null : {{ $cConf->id }}"
-                            class="w-full flex justify-between items-center p-4 text-left">
+                                class="w-full flex justify-between items-center p-4 text-left">
                             <div class="flex-1">
                                 <p class="font-semibold text-gray-800 dark:text-gray-200">
                                     Conferência #{{ $cConf->id }}
                                 </p>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">
                                     Concluída em: {{ optional($cConf->finished_at)->format('d/m/Y H:i') }}
-                                    @if ($cConf->conferente) por {{ $cConf->conferente->name }} @endif
+                                    @if ($cConf->conferente)
+                                        por {{ $cConf->conferente->name }}
+                                    @endif
                                     • Lote #{{ $cConf->picking_batch_id }}
                                 </p>
                                 @if ($cConf->qtd_caixas || $cConf->qtd_sacos || $cConf->qtd_sacolas || $cConf->outros_embalagem)
                                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                                         Embalagem:
                                         @php $emb = []; @endphp
-                                        @if ($cConf->qtd_caixas)       @php $emb[] = $cConf->qtd_caixas  . ' caixa(s)';     @endphp @endif
-                                        @if ($cConf->qtd_sacos)        @php $emb[] = $cConf->qtd_sacos   . ' saco(s)';      @endphp @endif
-                                        @if ($cConf->qtd_sacolas)      @php $emb[] = $cConf->qtd_sacolas . ' sacola(s)';    @endphp @endif
-                                        @if ($cConf->outros_embalagem) @php $emb[] = 'Outros: ' . $cConf->outros_embalagem; @endphp @endif
+                                        @if ($cConf->qtd_caixas)
+                                            @php $emb[] = $cConf->qtd_caixas  . ' caixa(s)';     @endphp
+                                        @endif
+                                        @if ($cConf->qtd_sacos)
+                                            @php $emb[] = $cConf->qtd_sacos   . ' saco(s)';      @endphp
+                                        @endif
+                                        @if ($cConf->qtd_sacolas)
+                                            @php $emb[] = $cConf->qtd_sacolas . ' sacola(s)';    @endphp
+                                        @endif
+                                        @if ($cConf->outros_embalagem)
+                                            @php $emb[] = 'Outros: ' . $cConf->outros_embalagem; @endphp
+                                        @endif
                                         {{ implode(' • ', $emb) }}
                                     </p>
                                 @endif
@@ -472,7 +510,7 @@
                                  :class="{ 'rotate-180': open === {{ $cConf->id }} }"
                                  fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M19 9l-7 7-7-7" />
+                                      d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
 
@@ -484,7 +522,11 @@
                                     <li class="text-sm text-gray-700 dark:text-gray-300">
                                         <div class="flex flex-wrap items-start gap-3">
                                             <div class="flex-1 min-w-[200px]">
-                                                <span class="font-medium">{{ $cItem->produto->nome }}</span>:
+                                               <span class="font-medium">
+    {{ $cItem->is_encomenda
+        ? $cItem->descricao_encomenda . ' (Encomenda)'
+        : ($cItem->produto->nome ?? '—') }}
+</span>:
                                                 Conferido
                                                 <span class="font-semibold">
                                                     {{ rtrim(rtrim(number_format($cItem->qty_conferida, 3, ',', '.'), '0'), ',') }}
@@ -520,7 +562,8 @@
                                                 @endif
 
                                                 @if ($cItem->motivo_divergencia)
-                                                    <span class="block mt-0.5 text-xs text-amber-600 dark:text-amber-500">
+                                                    <span
+                                                        class="block mt-0.5 text-xs text-amber-600 dark:text-amber-500">
                                                         Motivo: {{ $cItem->motivo_divergencia }}
                                                     </span>
                                                 @endif
@@ -535,20 +578,23 @@
                                                     </p>
                                                     @foreach ($cItem->fotos as $foto)
                                                         <button type="button"
-                                                            @click="$dispatch('open-lightbox', { src: '{{ $foto->url }}' })"
-                                                            class="w-16 h-16 rounded-md overflow-hidden border
+                                                                @click="$dispatch('open-lightbox', { src: '{{ $foto->url }}' })"
+                                                                class="w-16 h-16 rounded-md overflow-hidden border
                                                                    border-gray-200 dark:border-gray-700 shadow-sm
                                                                    hover:ring-2 hover:ring-indigo-400 transition
                                                                    relative group"
-                                                            title="{{ $foto->legenda ?? 'Ver foto' }}">
+                                                                title="{{ $foto->legenda ?? 'Ver foto' }}">
                                                             <img src="{{ $foto->url }}"
                                                                  alt="{{ $foto->legenda ?? 'Foto' }}"
-                                                                 class="w-full h-full object-cover" />
+                                                                 class="w-full h-full object-cover"/>
                                                             <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20
                                                                         transition flex items-center justify-center">
-                                                                <svg class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition"
-                                                                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                <svg
+                                                                    class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition"
+                                                                    fill="none" viewBox="0 0 24 24"
+                                                                    stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                          stroke-width="2"
                                                                           d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z"/>
                                                                 </svg>
                                                             </div>

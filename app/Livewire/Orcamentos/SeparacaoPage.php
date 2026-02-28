@@ -69,7 +69,7 @@ class SeparacaoPage extends Component
                     'obs' => $it->inconsistencia_obs ?? '',
                 ];
             }
-            
+
             // Carrega dados de embalagem se já existirem
             $this->caixas = $this->batch->qtd_caixas ?? 0;
             $this->sacos = $this->batch->qtd_sacos ?? 0;
@@ -78,50 +78,65 @@ class SeparacaoPage extends Component
         }
     }
 
-    public function iniciarSeparacao(EstoqueService $estoque)
+    public function iniciarSeparacao()
     {
-        $existingBatch = PickingBatch::where('orcamento_id', $this->orcamentoId)
-            ->whereIn('status', ['aberto', 'em_separacao'])
-            ->exists();
+        $orcamento = $this->orcamento;
 
-        if ($existingBatch) {
-            session()->flash('error', 'Já existe um lote de separação em andamento para este orçamento.');
-            $this->dispatch('refresh');
-            return;
-        }
+        DB::transaction(function () use ($orcamento) {
+            $existe = PickingBatch::where('orcamento_id', $orcamento->id)
+                ->whereIn('status', ['aberto', 'em_separacao'])
+                ->exists();
 
-        $orcamento = Orcamento::with(['itens.produto'])->findOrFail($this->orcamentoId);
+            if ($existe) return;
 
-        if ($orcamento->itens->count() === 0) {
-            session()->flash('error', 'Este orçamento não possui itens para separar.');
-            return;
-        }
-
-        DB::transaction(function () use ($orcamento, $estoque) {
             $batch = PickingBatch::create([
-                'orcamento_id' => $orcamento->id,
-                'status' => 'em_separacao',
-                'started_at' => now(),
+                'orcamento_id'  => $orcamento->id,
+                'status'        => 'em_separacao',
+                'started_at'    => now(),
                 'criado_por_id' => auth()->id(),
             ]);
 
-            foreach ($orcamento->itens as $oi) {
+            // ✅ Itens com produto cadastrado (estoque normal)
+            foreach ($orcamento->itens->whereNotNull('produto_id') as $oi) {
                 PickingItem::create([
-                    'picking_batch_id' => $batch->id,
+                    'picking_batch_id'  => $batch->id,
                     'orcamento_item_id' => $oi->id,
-                    'produto_id' => $oi->produto_id,
-                    'qty_solicitada' => $oi->quantidade,
-                    'qty_separada' => 0,
-                    'status' => 'pendente',
+                    'produto_id'        => $oi->produto_id,
+                    'is_encomenda'      => false,
+                    'qty_solicitada'    => $oi->quantidade,
+                    'qty_separada'      => 0,
+                    'status'            => 'pendente',
                 ]);
             }
 
-            $estoque->reservarParaOrcamento($orcamento);
+            // ✅ Itens de encomenda (cotação de preço)
+            $grupo = \App\Models\ConsultaPrecoGrupo::with(['itens.fornecedorSelecionado'])
+                ->where('orcamento_id', $orcamento->id)
+                ->first();
+
+            if ($grupo) {
+                foreach ($grupo->itens as $item) {
+                    PickingItem::create([
+                        'picking_batch_id'    => $batch->id,
+                        'orcamento_item_id'   => null,
+                        'produto_id'          => null,
+                        'consulta_preco_id'   => $item->id,
+                        'is_encomenda'        => true,
+                        'descricao_encomenda' => $item->descricao,
+                        'qty_solicitada'      => $item->quantidade,
+                        'qty_separada'        => 0,
+                        'status'              => 'pendente',
+                    ]);
+                }
+            }
+
             $orcamento->update(['workflow_status' => 'em_separacao']);
         });
 
-        $this->dispatch('refresh');
-        session()->flash('success', 'Separação iniciada com sucesso.');
+        $this->batch = PickingBatch::with('items.produto')
+            ->where('orcamento_id', $this->orcamento->id)
+            ->whereIn('status', ['aberto', 'em_separacao'])
+            ->first();
     }
 
     public function salvarItem(int $itemId)
@@ -213,7 +228,7 @@ class SeparacaoPage extends Component
                 'finished_at' => now(),
                 'qtd_caixas' => $this->caixas ? (int) $this->caixas : null,
                 'qtd_sacos' => $this->sacos ? (int) $this->sacos : null,
-                'qtd_sacolas' => $this->sacolas ? (int) $this->sacolas : null,                
+                'qtd_sacolas' => $this->sacolas ? (int) $this->sacolas : null,
                 'outros_embalagem' => !empty($this->outros) ? trim($this->outros) : null,
             ]);
 
