@@ -477,13 +477,6 @@
         </tr>
     @endif
 
-    @if ($totalEncomenda > 0)
-        <tr>
-            <td>Valor Total da Encomenda</td>
-            <td class="valor">R$ {{ number_format($totalEncomenda, 2, ',', '.') }}</td>
-        </tr>
-    @endif
-
     @if ($totalVidros > 0)
         <tr>
             <td>Valor Total em Vidros</td>
@@ -507,7 +500,7 @@
 
     @if ($percentualAplicado > 0)
         <tr>
-            <td>Desconto Percentual</td>
+            <td>Desconto Percentual nos produtos</td>
             <td class="valor">{{ number_format($percentualAplicado, 2, ',', '.') }}%</td>
         </tr>
     @endif
@@ -526,6 +519,12 @@
         </tr>
     @endforeach
 
+    @if ($totalEncomenda > 0)
+        <tr>
+            <td>Valor Total da Encomenda</td>
+            <td class="valor">R$ {{ number_format($totalEncomenda, 2, ',', '.') }}</td>
+        </tr>
+    @endif
     <tr>
         <td><strong>Valor Final do Orçamento</strong></td>
         <td class="valor"><strong>R$ {{ number_format($valorFinal, 2, ',', '.') }}</strong></td>
