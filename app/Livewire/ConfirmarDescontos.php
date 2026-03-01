@@ -75,7 +75,7 @@ class ConfirmarDescontos extends Component
             $this->descontos = Desconto::where('orcamento_id', $this->orcamentoId)
                 ->whereNull('aprovado_em')
                 ->whereNull('rejeitado_em')
-                ->with('user', 'produto') 
+                ->with('user', 'produto')
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -83,14 +83,14 @@ class ConfirmarDescontos extends Component
 
             // Inicializa o array de justificativas
             $this->justificativas = [];
-            
+
         } catch (\Exception $e) {
             Log::error('Erro ao carregar dados', [
                 'orcamento_id' => $this->orcamentoId,
                 'erro' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             $this->dispatch('alert', [
                 'type' => 'error',
                 'message' => 'Erro ao carregar dados: ' . $e->getMessage()
@@ -148,7 +148,7 @@ class ConfirmarDescontos extends Component
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             $this->dispatch('alert', [
                 'type' => 'error',
                 'message' => 'Erro ao aprovar desconto: ' . $e->getMessage()
@@ -199,14 +199,14 @@ class ConfirmarDescontos extends Component
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             $this->dispatch('alert', [
                 'type' => 'error',
                 'message' => 'Erro ao aprovar descontos: ' . $e->getMessage()
             ]);
         }
     }
-    
+
    public function rejeitarTodos()
     {
         if (!$this->orcamento) {
@@ -307,14 +307,13 @@ class ConfirmarDescontos extends Component
             'valor_com_desconto' => $this->orcamento->valor_total_itens - $totalDescontosAprovados,
         ];
 
-        // DEPOIS
         if (!$temDescontosPendentes) {
             if ($this->orcamento->condicao_id == 20) {
                 $novoStatus = 'Aprovar pagamento';
             } else {
-                // ✅ Verifica estoque antes de definir Pendente
+                // ✅ Verifica estoque apenas em itens com produto cadastrado (ignora encomendas)
                 $temItensSemEstoque = false;
-                foreach ($this->orcamento->itens as $item) {
+                foreach ($this->orcamento->itens->whereNotNull('produto_id') as $item) {
                     $produto = \App\Models\Produto::find($item->produto_id);
                     if ($produto && $produto->estoque_atual !== null) {
                         if ((float) $item->quantidade > (float) $produto->estoque_atual) {
@@ -342,8 +341,7 @@ class ConfirmarDescontos extends Component
                     Log::error("Erro ao gerar PDF após aprovar descontos (Livewire) orçamento #{$this->orcamentoId}: " . $e->getMessage());
                 }
             }
-        }
-         else {
+        } else {
             DB::table('orcamentos')
                 ->where('id', $this->orcamentoId)
                 ->whereNull('deleted_at')
@@ -352,7 +350,7 @@ class ConfirmarDescontos extends Component
 
         $this->orcamento = $this->orcamento->fresh();
     }
-    
+
     public function rejeitarDesconto($descontoId)
     {
         if (!$this->orcamento) {
@@ -443,7 +441,7 @@ class ConfirmarDescontos extends Component
     }
 
     public function render()
-    {        
+    {
         return view('livewire.confirmar-descontos');
     }
 }

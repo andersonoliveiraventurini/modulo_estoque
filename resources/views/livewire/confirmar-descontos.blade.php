@@ -9,7 +9,7 @@
                 <div class="text-center py-12">
                     <div
                         class="inline-flex items-center justify-center w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full mb-4">
-                        <x-heroicon-o-exclamation-circle class="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
+                        <x-heroicon-o-exclamation-circle class="w-8 h-8 text-yellow-600 dark:text-yellow-400"/>
                     </div>
                     <p class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Orçamento não encontrado</p>
                     <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
@@ -17,8 +17,8 @@
                         localizado.
                     </p>
                     <button type="button" wire:click="$toggle('showModal')"
-                        class="inline-flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors text-sm">
-                        <x-heroicon-o-arrow-left class="w-4 h-4" />
+                            class="inline-flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                        <x-heroicon-o-arrow-left class="w-4 h-4"/>
                         Voltar
                     </button>
                 </div>
@@ -26,9 +26,9 @@
                 <!-- Header da Aprovação -->
                 <div class="mb-6">
                     <h2 class="text-xl font-semibold flex items-center gap-2 mb-2">
-                        <x-heroicon-o-receipt-percent class="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                        <x-heroicon-o-receipt-percent class="w-6 h-6 text-blue-600 dark:text-blue-400"/>
                         Aprovação de Descontos - <a href="{{ route('orcamentos.show', $orcamento->id) }}"
-                            class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                                    class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
                             Orçamento #{{ $orcamento->id }}
                         </a>
                     </h2>
@@ -43,7 +43,7 @@
                         class="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
                         <div class="flex gap-3">
                             <x-heroicon-o-exclamation-circle
-                                class="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                                class="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5"/>
                             <div class="flex-1">
                                 <h4 class="font-semibold text-red-900 dark:text-red-200 mb-2">Atenção aos seguintes
                                     erros:</h4>
@@ -59,7 +59,7 @@
 
                 <div class="space-y-4 mb-6">
                     <h3 class="text-lg font-medium flex items-center gap-2">
-                        <x-heroicon-o-document-text class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        <x-heroicon-o-document-text class="w-5 h-5 text-blue-600 dark:text-blue-400"/>
                         Informações do Orçamento
                     </h3>
 
@@ -89,7 +89,7 @@
 
                                 <!-- Cliente -->
                                 <div class="flex items-start gap-2">
-                                    <x-heroicon-o-user class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                                    <x-heroicon-o-user class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5"/>
                                     <div class="flex-1">
                                         <p class="text-xs text-gray-500 dark:text-gray-400">Cliente</p>
                                         <p class="font-medium text-gray-900 dark:text-gray-100">
@@ -100,7 +100,7 @@
 
                                 <!-- Vendedor -->
                                 <div class="flex items-start gap-2">
-                                    <x-heroicon-o-user-circle class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                                    <x-heroicon-o-user-circle class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5"/>
                                     <div class="flex-1">
                                         <p class="text-xs text-gray-500 dark:text-gray-400">Vendedor</p>
                                         <p class="font-medium text-gray-900 dark:text-gray-100">
@@ -112,7 +112,7 @@
                                 @if ($totalDescontosProduto > 0)
                                     <div class="flex items-start gap-2">
                                         <x-heroicon-o-currency-dollar
-                                            class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                                            class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5"/>
                                         <div class="flex-1">
                                             <p class="text-xs text-gray-500 dark:text-gray-400">
                                                 Valor Original (antes dos descontos)
@@ -121,7 +121,7 @@
                                                 R$ {{ number_format($valorOriginalEstimado, 2, ',', '.') }}
                                             </p>
                                             <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                                                <x-heroicon-o-information-circle class="w-3 h-3 inline" />
+                                                <x-heroicon-o-information-circle class="w-3 h-3 inline"/>
                                                 Inclui {{ $descontosProdutoAprovados->count() }} desconto(s) por produto
                                             </p>
                                         </div>
@@ -129,7 +129,7 @@
                                 @endif
 
                                 <div class="flex items-start gap-2">
-                                    <x-heroicon-o-currency-dollar class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                                    <x-heroicon-o-currency-dollar class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5"/>
                                     <div class="flex-1">
                                         <p class="text-xs text-gray-500 dark:text-gray-400">
                                             @if ($totalDescontosProduto > 0)
@@ -147,7 +147,7 @@
                                 @if ($totalDescontosOutros > 0 || ($descontosAprovados->count() > 0 && $totalDescontosProduto > 0))
                                     <div class="flex items-start gap-2">
                                         <x-heroicon-o-currency-dollar
-                                            class="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                                            class="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5"/>
                                         <div class="flex-1">
                                             <p class="text-xs text-gray-500 dark:text-gray-400">
                                                 Valor Final com Descontos
@@ -178,7 +178,7 @@
                                                 class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                                                 <div class="flex items-center gap-2 mb-1">
                                                     <x-heroicon-o-cube
-                                                        class="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                                        class="w-4 h-4 text-blue-600 dark:text-blue-400"/>
                                                     <span class="text-xs font-medium text-blue-900 dark:text-blue-200">
                                                         Desconto por Produto
                                                     </span>
@@ -197,7 +197,7 @@
                                                 class="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3">
                                                 <div class="flex items-center gap-2 mb-1">
                                                     <x-heroicon-o-tag
-                                                        class="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                                                        class="w-4 h-4 text-orange-600 dark:text-orange-400"/>
                                                     <span
                                                         class="text-xs font-medium text-orange-900 dark:text-orange-200">
                                                         Outros Descontos
@@ -217,7 +217,7 @@
                                                 class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
                                                 <div class="flex items-center gap-2 mb-1">
                                                     <x-heroicon-o-arrow-trending-down
-                                                        class="w-4 h-4 text-green-600 dark:text-green-400" />
+                                                        class="w-4 h-4 text-green-600 dark:text-green-400"/>
                                                     <span
                                                         class="text-xs font-medium text-green-900 dark:text-green-200">
                                                         Economia Total
@@ -229,7 +229,8 @@
                                                 </p>
                                                 @if ($valorOriginalEstimado > 0)
                                                     <p class="text-xs text-green-600 dark:text-green-400">
-                                                        {{ number_format((($totalDescontosProduto + $totalDescontosOutros) / $valorOriginalEstimado) * 100, 1) }}%
+                                                        {{ number_format((($totalDescontosProduto + $totalDescontosOutros) / $valorOriginalEstimado) * 100, 1) }}
+                                                        %
                                                         de desconto
                                                     </p>
                                                 @endif
@@ -242,13 +243,13 @@
                     </div>
                 </div>
 
-                <hr class="my-6 border-gray-200 dark:border-gray-700" />
+                <hr class="my-6 border-gray-200 dark:border-gray-700"/>
 
                 <!-- Lista de Descontos para Aprovação -->
                 <div class="space-y-4 mb-6">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-medium flex items-center gap-2">
-                            <x-heroicon-o-tag class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                            <x-heroicon-o-tag class="w-5 h-5 text-blue-600 dark:text-blue-400"/>
                             Descontos Pendentes de Aprovação
                         </h3>
                         <div class="flex items-center gap-2">
@@ -261,7 +262,8 @@
 
                     <div class="space-y-3">
                         @forelse($descontos as $index => $desconto)
-                            <div class="ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10 rounded-lg overflow-hidden"
+                            <div
+                                class="ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10 rounded-lg overflow-hidden"
                                 wire:key="desconto-{{ $desconto->id }}">
 
                                 <!-- Header do Desconto -->
@@ -290,7 +292,7 @@
                                                     @if ($produtoHeader)
                                                         <p
                                                             class="text-xs mt-1 inline-flex items-center gap-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full font-medium">
-                                                            <x-heroicon-o-cube class="w-3 h-3" />
+                                                            <x-heroicon-o-cube class="w-3 h-3"/>
                                                             {{ $produtoHeader->nome ?? ($produtoHeader->descricao ?? "Produto #{$desconto->produto_id}") }}
                                                         </p>
                                                     @endif
@@ -350,8 +352,8 @@
                                             ->values()
                                             ->toArray();
 
-                                        // Carrega todos os itens do orçamento com o produto relacionado
-                                        $todosItensOrcamento = $orcamento->itens()->with('produto')->get();
+                                        // Carrega apenas itens com produto cadastrado — encomendas não entram no cálculo de desconto
+                                        $todosItensOrcamento = $orcamento->itens()->with('produto')->whereNotNull('produto_id')->get();
 
                                         if ($desconto->tipo === 'produto') {
                                             // --------------------------------------------------
@@ -448,7 +450,7 @@
                                                 <div
                                                     class="flex items-center justify-center w-10 h-10 bg-gray-100 dark:bg-gray-900/40 rounded-full">
                                                     <x-heroicon-o-tag
-                                                        class="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                                                        class="w-5 h-5 text-gray-600 dark:text-gray-400"/>
                                                 </div>
                                                 <div class="flex-1">
                                                     <p class="text-xs text-gray-600 dark:text-gray-400 font-medium">
@@ -473,7 +475,7 @@
                                                 <div
                                                     class="flex items-center justify-center w-10 h-10 bg-gray-100 dark:bg-gray-900/40 rounded-full">
                                                     <x-heroicon-o-tag
-                                                        class="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                                                        class="w-5 h-5 text-gray-600 dark:text-gray-400"/>
                                                 </div>
                                                 <div class="flex-1">
                                                     <p class="text-xs text-gray-600 dark:text-gray-400 font-medium">
@@ -495,7 +497,7 @@
                                             <div
                                                 class="flex items-center justify-center w-10 h-10 bg-red-100 dark:bg-red-900/40 rounded-full">
                                                 <x-heroicon-o-currency-dollar
-                                                    class="w-5 h-5 text-red-600 dark:text-red-400" />
+                                                    class="w-5 h-5 text-red-600 dark:text-red-400"/>
                                             </div>
                                             <div class="flex-1">
                                                 <p class="text-xs text-red-600 dark:text-red-400 font-medium">
@@ -511,14 +513,14 @@
                                             </div>
                                         </div>
 
-                                        
-<!-- Valor COM Desconto / Valor Após Desconto -->
+
+                                        <!-- Valor COM Desconto / Valor Após Desconto -->
                                         <div
                                             class="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                                             <div
                                                 class="flex items-center justify-center w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-full">
                                                 <x-heroicon-o-calculator
-                                                    class="w-5 h-5 text-green-600 dark:text-green-400" />
+                                                    class="w-5 h-5 text-green-600 dark:text-green-400"/>
                                             </div>
                                             <div class="flex-1">
                                                 <p class="text-xs text-green-600 dark:text-green-400 font-medium">
@@ -544,7 +546,7 @@
                                                 <div
                                                     class="flex items-center justify-center w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-full">
                                                     <x-heroicon-o-percent-badge
-                                                        class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                                        class="w-5 h-5 text-blue-600 dark:text-blue-400"/>
                                                 </div>
                                                 <div class="flex-1">
                                                     <p class="text-xs text-blue-600 dark:text-blue-400 font-medium">
@@ -563,7 +565,7 @@
                                                 <div
                                                     class="flex items-center justify-center w-10 h-10 bg-indigo-100 dark:bg-indigo-900/40 rounded-full">
                                                     <x-heroicon-o-cube
-                                                        class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                                                        class="w-5 h-5 text-indigo-600 dark:text-indigo-400"/>
                                                 </div>
                                                 <div class="flex-1">
                                                     <p
@@ -574,12 +576,12 @@
                                                     </p>
                                                 </div>
                                             </div>
-<div
+                                            <div
                                                 class="flex items-center gap-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg">
                                                 <div
                                                     class="flex items-center justify-center w-10 h-10 bg-indigo-100 dark:bg-indigo-900/40 rounded-full">
                                                     <x-heroicon-o-cube
-                                                        class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                                                        class="w-5 h-5 text-indigo-600 dark:text-indigo-400"/>
                                                 </div>
                                                 <div class="flex-1">
                                                     <p
@@ -595,7 +597,7 @@
                                                 <div
                                                     class="flex items-center justify-center w-10 h-10 bg-indigo-100 dark:bg-indigo-900/40 rounded-full">
                                                     <x-heroicon-o-cube
-                                                        class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                                                        class="w-5 h-5 text-indigo-600 dark:text-indigo-400"/>
                                                 </div>
                                                 <div class="flex-1">
                                                     <p
@@ -608,7 +610,7 @@
                                             </div>
                                         @endif
 
-                                        
+
                                     </div>
 
                                     <!-- Detalhamento visual para desconto por produto -->
@@ -619,7 +621,7 @@
                                                 <div
                                                     class="flex items-center justify-center w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-full flex-shrink-0">
                                                     <x-heroicon-o-information-circle
-                                                        class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                                        class="w-5 h-5 text-blue-600 dark:text-blue-400"/>
                                                 </div>
                                                 <div class="flex-1">
                                                     <p
@@ -650,7 +652,8 @@
                                                         <div class="bg-blue-100 dark:bg-blue-900/40 rounded p-2 mt-2">
                                                             <p class="text-xs">
                                                                 <strong>Percentual:</strong>
-                                                                {{ $valorOriginalProduto > 0 ? number_format(($valorDesconto / $valorOriginalProduto) * 100, 2, ',', '.') : '0,00' }}%
+                                                                {{ $valorOriginalProduto > 0 ? number_format(($valorDesconto / $valorOriginalProduto) * 100, 2, ',', '.') : '0,00' }}
+                                                                %
                                                                 de desconto aplicado
                                                             </p>
                                                         </div>
@@ -668,7 +671,7 @@
                                                 <div
                                                     class="flex items-center justify-center w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-full flex-shrink-0">
                                                     <x-heroicon-o-information-circle
-                                                        class="w-5 h-5 text-green-600 dark:text-green-400" />
+                                                        class="w-5 h-5 text-green-600 dark:text-green-400"/>
                                                 </div>
                                                 <div class="flex-1">
                                                     <p
@@ -777,7 +780,7 @@
 
                                     <!-- Formulário de aprovação/rejeição -->
                                     <form method="POST" action="{{ route('descontos.avaliar', $desconto->id) }}"
-                                        class="flex items-center gap-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                          class="flex items-center gap-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                                         @csrf
 
                                         <div class="flex-1">
@@ -786,21 +789,21 @@
                                                 Justificativa (opcional)
                                             </label>
                                             <input type="text" name="justificativa"
-                                                class="w-full text-sm border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
-                                                placeholder="Digite uma justificativa (se necessário)">
+                                                   class="w-full text-sm border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                                   placeholder="Digite uma justificativa (se necessário)">
                                         </div>
 
                                         <div class="flex gap-2 pt-5">
                                             <button type="submit" name="acao" value="aprovar"
-                                                class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm">
-                                                <x-heroicon-o-check-circle class="w-4 h-4" />
+                                                    class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm">
+                                                <x-heroicon-o-check-circle class="w-4 h-4"/>
                                                 <span>Aprovar</span>
                                             </button>
 
                                             <button type="submit" name="acao" value="rejeitar"
-                                                onclick="return confirm('Tem certeza que deseja rejeitar este desconto? Esta ação não pode ser desfeita.')"
-                                                class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm">
-                                                <x-heroicon-o-x-circle class="w-4 h-4" />
+                                                    onclick="return confirm('Tem certeza que deseja rejeitar este desconto? Esta ação não pode ser desfeita.')"
+                                                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm">
+                                                <x-heroicon-o-x-circle class="w-4 h-4"/>
                                                 <span>Rejeitar</span>
                                             </button>
                                         </div>
@@ -821,7 +824,7 @@
                         @empty
                             <div
                                 class="text-center py-12 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                                <x-heroicon-o-check-circle class="w-12 h-12 mx-auto mb-3 opacity-50 text-green-500" />
+                                <x-heroicon-o-check-circle class="w-12 h-12 mx-auto mb-3 opacity-50 text-green-500"/>
                                 <p class="text-lg font-medium mb-1">Nenhum desconto pendente</p>
                                 <p class="text-sm">Todos os descontos foram avaliados ou não há descontos aplicados.
                                 </p>
@@ -835,20 +838,20 @@
                             <div class="flex items-center justify-between gap-4">
                                 <div class="flex items-center gap-2">
                                     <x-heroicon-o-information-circle
-                                        class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                        class="w-5 h-5 text-blue-600 dark:text-blue-400"/>
                                     <span class="text-sm font-medium text-blue-900 dark:text-blue-200">
                                         Ações em lote para todos os descontos:
                                     </span>
                                 </div>
                                 <div class="flex gap-2">
                                     <button type="button" wire:click="aprovarTodos"
-                                        class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm">
-                                        <x-heroicon-o-check-circle class="w-4 h-4" />
+                                            class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm">
+                                        <x-heroicon-o-check-circle class="w-4 h-4"/>
                                         Aprovar Todos
                                     </button>
                                     <button type="button" wire:click="rejeitarTodos"
-                                        class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm">
-                                        <x-heroicon-o-x-circle class="w-4 h-4" />
+                                            class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm">
+                                        <x-heroicon-o-x-circle class="w-4 h-4"/>
                                         Rejeitar Todos
                                     </button>
                                 </div>
@@ -858,12 +861,12 @@
                 </div>
 
                 @if ($descontos && is_countable($descontos) && count($descontos) > 0)
-                    <hr class="my-6 border-gray-200 dark:border-gray-700" />
+                    <hr class="my-6 border-gray-200 dark:border-gray-700"/>
 
                     <!-- Resumo Financeiro -->
                     <div class="space-y-4">
                         <h3 class="text-lg font-medium flex items-center gap-2">
-                            <x-heroicon-o-calculator class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                            <x-heroicon-o-calculator class="w-5 h-5 text-blue-600 dark:text-blue-400"/>
                             Resumo Financeiro
                         </h3>
 
@@ -917,13 +920,14 @@
                                         class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mt-3">
                                         <div class="flex items-start gap-2">
                                             <x-heroicon-o-exclamation-triangle
-                                                class="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+                                                class="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5"/>
                                             <div class="flex-1">
                                                 <p
                                                     class="text-sm font-medium text-yellow-900 dark:text-yellow-200 mb-1">
                                                     Percentual Total de Desconto:</p>
                                                 <p class="text-lg font-bold text-yellow-700 dark:text-yellow-300">
-                                                    {{ number_format(($orcamento->totalDescontosAprovados() / $orcamento->valor_total_itens) * 100, 2, ',', '.') }}%
+                                                    {{ number_format(($orcamento->totalDescontosAprovados() / $orcamento->valor_total_itens) * 100, 2, ',', '.') }}
+                                                    %
                                                 </p>
                                             </div>
                                         </div>
