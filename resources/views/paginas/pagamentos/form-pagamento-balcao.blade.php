@@ -236,34 +236,7 @@
                                         </div>
                                     @endforeach
                                 </div>
-<hr class="my-6 border-gray-200 dark:border-gray-700 hidden" id="hrDesconto">
 
-                            <!-- ═══════════════════════════════════════════════ -->
-                            <!-- DESCONTO NO BALCÃO (aparece só com pix/dinheiro) -->
-                            <!-- ═══════════════════════════════════════════════ -->
-                            <div class="mb-6 hidden" id="secaoDesconto">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">Desconto no Balcão (até 3%)</h3>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                                    Aplicável apenas sobre o valor pago em <strong>Dinheiro</strong> ou <strong>PIX</strong>.
-                                </p>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Valor do Desconto</label>
-                                        <input type="number" name="desconto_balcao" id="inputDesconto"
-                                            step="0.01" min="0" max="0"
-                                            value="{{ old('desconto_balcao', 0) }}"
-                                            oninput="enforceMaxDesconto(this)"
-                                            class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
-                                            placeholder="0,00">
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                            Máximo (3% do valor em PIX/Dinheiro): <strong id="textoMaxDesconto">R$ 0,00</strong>
-                                        </p>
-                                        @error('desconto_balcao')
-                                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
                                 <!-- Resumo de Valores -->
                                 <div class="mt-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg p-4">
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -296,7 +269,34 @@
                                 </div>
                             </div>
 
-                            
+                            <hr class="my-6 border-gray-200 dark:border-gray-700 hidden" id="hrDesconto">
+
+                            <!-- ═══════════════════════════════════════════════ -->
+                            <!-- DESCONTO NO BALCÃO (aparece só com pix/dinheiro) -->
+                            <!-- ═══════════════════════════════════════════════ -->
+                            <div class="mb-6 hidden" id="secaoDesconto">
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">Desconto no Balcão (até 3%)</h3>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                                    Aplicável apenas sobre o valor pago em <strong>Dinheiro</strong> ou <strong>PIX</strong>.
+                                </p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Valor do Desconto</label>
+                                        <input type="number" name="desconto_balcao" id="inputDesconto"
+                                            step="0.01" min="0" max="0"
+                                            value="{{ old('desconto_balcao', 0) }}"
+                                            oninput="enforceMaxDesconto(this)"
+                                            class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                            placeholder="0,00">
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            Máximo (3% do valor em PIX/Dinheiro): <strong id="textoMaxDesconto">R$ 0,00</strong>
+                                        </p>
+                                        @error('desconto_balcao')
+                                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
 
                             <hr class="my-6 border-gray-200 dark:border-gray-700">
 
@@ -390,12 +390,92 @@
                                     class="bg-gray-500 hover:bg-gray-600 text-white font-medium px-6 py-3 rounded-lg transition-colors shadow-md">
                                     Cancelar
                                 </a>
-                                <button type="submit" id="btnFinalizar"
+                                <button type="button" id="btnFinalizar" onclick="confirmarSubmit()"
                                     class="bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-lg transition-all shadow-lg border-2 border-green-700 disabled:border-gray-400">
                                     Finalizar Pagamento
                                 </button>
                             </div>
                         </form>
+
+                        <!-- ═══════════════════════════════════════════════════ -->
+                        <!-- MODAL — troco em método não-dinheiro               -->
+                        <!-- ═══════════════════════════════════════════════════ -->
+                        <div id="modalTrocoNaoDinheiro"
+                            class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+                            role="dialog" aria-modal="true" aria-labelledby="modalTrocoTitulo">
+
+                            {{-- Overlay escuro --}}
+                            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="fecharModal()"></div>
+
+                            {{-- Card do modal --}}
+                            <div class="relative z-10 w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-red-200 dark:border-red-800 overflow-hidden">
+
+                                {{-- Cabeçalho vermelho --}}
+                                <div class="bg-red-600 px-6 py-4 flex items-center gap-3">
+                                    <div class="flex-shrink-0 w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 id="modalTrocoTitulo" class="text-lg font-bold text-white">Atenção — Troco em método incomum</h3>
+                                        <p class="text-red-200 text-xs mt-0.5">Confirmação obrigatória</p>
+                                    </div>
+                                </div>
+
+                                {{-- Corpo --}}
+                                <div class="px-6 py-5 space-y-4">
+                                    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4">
+                                        <p class="text-sm text-red-800 dark:text-red-200 font-medium">
+                                            O valor recebido é maior que o necessário, mas <strong>parte ou todo o pagamento não é em dinheiro</strong>.
+                                        </p>
+                                        <p class="text-sm text-red-700 dark:text-red-300 mt-2">
+                                            Dar troco em formas como PIX, cartão ou boleto <strong>exige autorização</strong> e pode
+                                            envolver processos manuais de estorno ou transferência.
+                                        </p>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-3 text-center">
+                                        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">Valor Cobrado</p>
+                                            <p class="text-lg font-bold text-gray-900 dark:text-gray-100" id="modalValorFinal">—</p>
+                                        </div>
+                                        <div class="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3">
+                                            <p class="text-xs text-orange-600 dark:text-orange-400">Troco a Devolver</p>
+                                            <p class="text-lg font-bold text-orange-700 dark:text-orange-300" id="modalValorTroco">—</p>
+                                        </div>
+                                    </div>
+
+                                    {{-- Formas não-dinheiro com excesso --}}
+                                    <div>
+                                        <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Formas com valor acima do necessário:</p>
+                                        <ul id="modalListaFormas" class="space-y-1 text-sm text-gray-700 dark:text-gray-300"></ul>
+                                    </div>
+
+                                    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg p-3 flex items-start gap-2">
+                                        <svg class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <p class="text-xs text-amber-800 dark:text-amber-200">
+                                            Confirme apenas se um <strong>supervisor ou gerente autorizou</strong> o recebimento com troco neste método.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {{-- Rodapé com ações --}}
+                                <div class="px-6 pb-6 flex gap-3">
+                                    <button type="button" onclick="fecharModal()"
+                                        class="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-gray-300 font-medium px-4 py-3 rounded-lg transition-colors">
+                                        ← Corrigir valores
+                                    </button>
+                                    <button type="button" onclick="confirmarComTroco()"
+                                        class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-3 rounded-lg transition-colors shadow-md">
+                                        Confirmar mesmo assim
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -477,6 +557,16 @@
                     document.getElementById('valorPago').textContent  = fmt(valorPago);
                     document.getElementById('valorTroco').textContent = fmt(troco);
 
+                    // Coloração do troco: laranja normal se dinheiro, vermelho se não-dinheiro
+                    const trocoEl = document.getElementById('valorTroco');
+                    if (troco > 0.01 && temTrocoNaoDinheiro(valorFinal)) {
+                        trocoEl.classList.remove('text-orange-700', 'dark:text-orange-300');
+                        trocoEl.classList.add('text-red-600', 'dark:text-red-400', 'font-extrabold');
+                    } else {
+                        trocoEl.classList.remove('text-red-600', 'dark:text-red-400', 'font-extrabold');
+                        trocoEl.classList.add('text-orange-700', 'dark:text-orange-300');
+                    }
+
                     const btn = document.getElementById('btnFinalizar');
                     if (faltando > 0.01) {
                         document.getElementById('alertaFaltando').classList.remove('hidden');
@@ -489,6 +579,116 @@
                         btn.disabled = false;
                     }
                 }
+
+                /**
+                 * Retorna true se houver troco e existir alguma forma que NÃO é dinheiro
+                 * com valor que, sozinha ou em conjunto, gera o excedente.
+                 */
+                function temTrocoNaoDinheiro(valorFinal) {
+                    let totalNaoDinheiro = 0;
+                    document.querySelectorAll('.forma-card').forEach(card => {
+                        const select = card.querySelector('.select-condicao');
+                        const input  = card.querySelector('[name$="[valor]"]');
+                        if (!select || !input) return;
+                        const tipo = condicaoTipo[parseInt(select.value)];
+                        if (tipo !== 'dinheiro') {
+                            totalNaoDinheiro += parseFloat(input.value || 0);
+                        }
+                    });
+                    // Há troco de não-dinheiro se o total não-dinheiro + dinheiro > valorFinal
+                    // e existe pelo menos uma forma não-dinheiro com valor > 0
+                    const valorPago = Array.from(
+                        document.querySelectorAll('[name^="formas_pagamento"][name$="[valor]"]')
+                    ).reduce((s, i) => s + parseFloat(i.value || 0), 0);
+                    return totalNaoDinheiro > 0 && valorPago > valorFinal + 0.01;
+                }
+
+                /**
+                 * Coleta as formas não-dinheiro que contribuem para o troco,
+                 * retornando array de { nome, valor, tipo }.
+                 */
+                function formasNaoDinheiroComExcesso() {
+                    const desconto   = parseFloat(document.getElementById('inputDesconto')?.value || 0);
+                    const valorFinal = Math.max(0, valorTotalOrcamento - desconto);
+                    const resultado  = [];
+
+                    document.querySelectorAll('.forma-card').forEach(card => {
+                        const select = card.querySelector('.select-condicao');
+                        const input  = card.querySelector('[name$="[valor]"]');
+                        if (!select || !input) return;
+                        const tipo  = condicaoTipo[parseInt(select.value)];
+                        const valor = parseFloat(input.value || 0);
+                        if (tipo && tipo !== 'dinheiro' && valor > 0) {
+                            const nomeEl = select.options[select.selectedIndex];
+                            resultado.push({ nome: nomeEl?.text ?? tipo, valor, tipo });
+                        }
+                    });
+
+                    return resultado;
+                }
+
+                // ─── Modal de troco em não-dinheiro ──────────────────────────────────────
+                let _submitAutorizado = false;
+
+                function confirmarSubmit() {
+                    const desconto   = parseFloat(document.getElementById('inputDesconto')?.value || 0);
+                    const valorFinal = Math.max(0, valorTotalOrcamento - desconto);
+                    const valorPago  = Array.from(
+                        document.querySelectorAll('[name^="formas_pagamento"][name$="[valor]"]')
+                    ).reduce((s, i) => s + parseFloat(i.value || 0), 0);
+                    const troco = valorPago - valorFinal;
+
+                    // Se já foi autorizado pelo modal, submete direto
+                    if (_submitAutorizado) {
+                        _submitAutorizado = false;
+                        document.getElementById('formPagamento').submit();
+                        return;
+                    }
+
+                    // Há troco em forma não-dinheiro → mostra modal
+                    if (troco > 0.01 && temTrocoNaoDinheiro(valorFinal)) {
+                        abrirModal(valorFinal, troco);
+                        return;
+                    }
+
+                    // Caso normal: submete
+                    document.getElementById('formPagamento').submit();
+                }
+
+                function abrirModal(valorFinal, troco) {
+                    document.getElementById('modalValorFinal').textContent = fmt(valorFinal);
+                    document.getElementById('modalValorTroco').textContent = fmt(troco);
+
+                    const lista = document.getElementById('modalListaFormas');
+                    lista.innerHTML = '';
+                    formasNaoDinheiroComExcesso().forEach(f => {
+                        const li = document.createElement('li');
+                        li.className = 'flex items-center gap-2';
+                        li.innerHTML = `
+                            <span class="inline-block w-2 h-2 rounded-full bg-red-400 flex-shrink-0"></span>
+                            <span><strong>${f.nome}</strong> — ${fmt(f.valor)}</span>`;
+                        lista.appendChild(li);
+                    });
+
+                    document.getElementById('modalTrocoNaoDinheiro').classList.remove('hidden');
+                    document.body.classList.add('overflow-hidden');
+                }
+
+                function fecharModal() {
+                    document.getElementById('modalTrocoNaoDinheiro').classList.add('hidden');
+                    document.body.classList.remove('overflow-hidden');
+                }
+
+                function confirmarComTroco() {
+                    fecharModal();
+                    _submitAutorizado = true;
+                    document.getElementById('formPagamento').submit();
+                }
+
+                // Fecha modal com ESC
+                document.addEventListener('keydown', e => {
+                    if (e.key === 'Escape') fecharModal();
+                });
 
                 const fmt = v => 'R$ ' + v.toFixed(2).replace('.', ',');
 
