@@ -14,7 +14,7 @@ class PagamentoForma extends Model
 
     protected $fillable = [
         'pagamento_id',
-        'metodo_pagamento_id',
+        'condicao_pagamento_id',
         'valor',
         'usa_credito',
         'parcelas',
@@ -23,41 +23,43 @@ class PagamentoForma extends Model
     ];
 
     protected $casts = [
-        'valor' => 'decimal:2',
-        'valor_parcela' => 'decimal:2',
-        'usa_credito' => 'boolean',
-        'parcelas' => 'integer',
+        'valor'        => 'decimal:2',
+        'valor_parcela'=> 'decimal:2',
+        'usa_credito'  => 'boolean',
+        'parcelas'     => 'integer',
     ];
 
-    /**
-     * Relacionamento com Pagamento
-     */
+    // ── Relacionamentos ──────────────────────────────────────────────────────
+
     public function pagamento()
     {
         return $this->belongsTo(Pagamento::class);
     }
 
-    /**
-     * Relacionamento com Método de Pagamento
-     */
-    public function metodoPagamento()
+    public function condicaoPagamento()
     {
-        return $this->belongsTo(MetodoPagamento::class, 'metodo_pagamento_id');
+        return $this->belongsTo(CondicoesPagamento::class, 'condicao_pagamento_id');
     }
 
-    /**
-     * Accessor para formatar o valor
-     */
-    public function getValorFormatadoAttribute()
+    public function comprovantes()
+    {
+        return $this->hasMany(PagamentoComprovante::class, 'pagamento_forma_id');
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    public function getValorFormatadoAttribute(): string
     {
         return 'R$ ' . number_format($this->valor, 2, ',', '.');
     }
 
-    /**
-     * Verifica se o método é parcelado
-     */
-    public function isParcelado()
+    public function isParcelado(): bool
     {
         return $this->parcelas > 1;
+    }
+
+    public function permiteDescontoBalcao(): bool
+    {
+        return $this->condicaoPagamento?->permiteDescontoBalcao() ?? false;
     }
 }

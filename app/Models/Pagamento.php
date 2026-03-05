@@ -32,142 +32,102 @@ class Pagamento extends Model
     ];
 
     protected $casts = [
-        'data_pagamento' => 'datetime',
-        'data_estorno' => 'datetime',
-        'desconto_balcao' => 'decimal:2',
-        'desconto_aplicado' => 'decimal:2',
-        'valor_final' => 'decimal:2',
-        'valor_pago' => 'decimal:2',
-        'troco' => 'decimal:2',
-        'estornado' => 'boolean',
+        'data_pagamento'   => 'datetime',
+        'data_estorno'     => 'datetime',
+        'desconto_balcao'  => 'decimal:2',
+        'desconto_aplicado'=> 'decimal:2',
+        'valor_final'      => 'decimal:2',
+        'valor_pago'       => 'decimal:2',
+        'troco'            => 'decimal:2',
+        'estornado'        => 'boolean',
     ];
 
-    /**
-     * Relacionamento com Orçamento
-     */
+    // ── Relacionamentos ──────────────────────────────────────────────────────
+
     public function orcamento()
     {
         return $this->belongsTo(Orcamento::class);
     }
 
-    /**
-     * Relacionamento com Pedido
-     */
     public function pedido()
     {
         return $this->belongsTo(Pedido::class);
     }
 
-    /**
-     * Relacionamento com Condição de Pagamento
-     */
     public function condicaoPagamento()
     {
-        return $this->belongsTo(CondicoesPagamento::class);
+        return $this->belongsTo(CondicoesPagamento::class, 'condicao_pagamento_id');
     }
 
-    /**
-     * Relacionamento com Usuário que registrou
-     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Relacionamento com Usuário que estornou
-     */
     public function usuarioEstorno()
     {
         return $this->belongsTo(User::class, 'usuario_estorno_id');
     }
 
-    /**
-     * Relacionamento com Formas de Pagamento utilizadas (NOVO)
-     */
+    /** Formas de pagamento usadas neste pagamento */
     public function formas()
     {
         return $this->hasMany(PagamentoForma::class);
     }
 
-    /**
-     * Relacionamento com Movimentações de Crédito relacionadas
-     */
+    /** Todos os comprovantes do pagamento (independente da forma) */
+    public function comprovantes()
+    {
+        return $this->hasMany(PagamentoComprovante::class);
+    }
+
     public function movimentacoesCredito()
     {
         return $this->hasMany(ClienteCreditoMovimentacoes::class, 'referencia_id')
             ->where('referencia_tipo', 'orcamento');
     }
 
-    /**
-     * Scope para pagamentos não estornados
-     */
+    // ── Scopes ───────────────────────────────────────────────────────────────
+
     public function scopeAtivos($query)
     {
         return $query->where('estornado', false);
     }
 
-    /**
-     * Scope para pagamentos estornados
-     */
     public function scopeEstornados($query)
     {
         return $query->where('estornado', true);
     }
 
-    /**
-     * Verifica se o pagamento utilizou créditos
-     */
-    public function utilizouCreditos()
-    {
-        return $this->formas()->where('usa_credito', true)->exists();
-    }
-
-    /**
-     * Obtém o valor total pago com créditos
-     */
-    public function getValorCreditosAttribute()
-    {
-        return $this->formas()->where('usa_credito', true)->sum('valor');
-    }
-
-    /**
-     * Obtém o valor total pago com outros métodos
-     */
-    public function getValorOutrosMetodosAttribute()
-    {
-        return $this->formas()->where('usa_credito', false)->sum('valor');
-    }
-
-     /**
-     * Scope para pagamentos de um orçamento específico
-     */
     public function scopeDoOrcamento($query, $orcamentoId)
     {
         return $query->where('orcamento_id', $orcamentoId);
     }
 
-    /**
-     * Scope para pagamentos de um pedido específico
-     */
     public function scopeDoPedido($query, $pedidoId)
     {
         return $query->where('pedido_id', $pedidoId);
     }
 
-    /**
-     * Scope para pagamentos de uma condição específica
-     */
-    public function scopeComCondicao($query, $condicaoId)
-    {
-        return $query->where('condicao_pagamento_id', $condicaoId);
-    }
-
-    /**
-     * Scope para pagamentos realizados em um período
-     */
     public function scopeNoPeriodo($query, $dataInicio, $dataFim)
     {
         return $query->whereBetween('data_pagamento', [$dataInicio, $dataFim]);
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    public function utilizouCreditos(): bool
+    {
+        return $this->formas()->where('usa_credito', true)->exists();
+    }
+
+    public function getValorCreditosAttribute()
+    {
+        return $this->formas()->where('usa_credito', true)->sum('valor');
+    }
+
+    public function getValorOutrosMetodosAttribute()
+    {
+        return $this->formas()->where('usa_credito', false)->sum('valor');
     }
 }

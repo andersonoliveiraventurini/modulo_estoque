@@ -1,5 +1,5 @@
 <!-- Container  class="bg-white dark:bg-zinc-900 shadow rounded-2xl border border-zinc-200 dark:border-zinc-700"  -->
-<div >
+<div>
 
     <!-- Cabeçalho -->
     <div class="flex items-center justify-between p-6 border-b border-zinc-200 dark:border-zinc-700">
@@ -108,7 +108,7 @@
                             class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Status Pedido
                         </button>
-                    </th>                    
+                    </th>
                     <th class="px-6 py-3 text-left">
                         <button wire:click="sortBy('workflow_status')"
                             class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
@@ -131,7 +131,8 @@
                 @forelse($orcamentos as $o)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="{{ route('orcamentos.show', $o) }}"  class="hover:underline">{{ $o->obra }}</a></td>
+                                href="{{ route('orcamentos.show', $o) }}"
+                                class="hover:underline">{{ $o->obra }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->cliente->nome }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->status }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->workflow_status }}</td>
@@ -147,7 +148,16 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 flex gap-2">
-                            Ver pagamento
+                            @if ($o->pagamento)
+                                <a href="{{ route('pagamentos.show', $o->pagamento->id) }}">
+                                    <x-button size="sm" variant="secondary">
+                                        <x-heroicon-o-eye class="w-4 h-4" />
+                                        Ver pagamento
+                                    </x-button>
+                                </a>
+                            @else
+                                <span class="text-xs text-gray-400">Sem pagamento</span>
+                            @endif
                         </td>
 
                     </tr>

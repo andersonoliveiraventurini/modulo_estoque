@@ -112,6 +112,11 @@ class Orcamento extends Model
         return $query->where('status', 'Aprovado');
     }
 
+    public function pagamento()
+    {
+        return $this->hasOne(Pagamento::class, 'orcamento_id')->where('estornado', false);
+    }
+
     /**
      * Verificar se o orçamento tem desconto
      */
@@ -199,18 +204,18 @@ class Orcamento extends Model
     public function solicitacaoPagamentoPendente()
     {
         return $this->hasOne(SolicitacaoPagamento::class)
-                    ->where('status', 'Pendente')
-                    ->whereNull('aprovado_em')
-                    ->whereNull('rejeitado_em')
-                    ->latest();
+            ->where('status', 'Pendente')
+            ->whereNull('aprovado_em')
+            ->whereNull('rejeitado_em')
+            ->latest();
     }
 
     public function temSolicitacaoPagamentoPendente()
     {
         return $this->solicitacoesPagamento()
-                    ->where('status', 'Pendente')
-                    ->whereNull('aprovado_em')
-                    ->whereNull('rejeitado_em')
-                    ->exists();
+            ->where('status', 'Pendente')
+            ->whereNull('aprovado_em')
+            ->whereNull('rejeitado_em')
+            ->exists();
     }
 }

@@ -75,7 +75,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('movimentacao', MovimentacaoController::class)->names('movimentacao');
 
     // cotação de produto
-// Grupo de cotação
+    // Grupo de cotação
     Route::get('/cotacoes', [ConsultaPrecoController::class, 'index'])->name('consulta_preco.index');
     Route::get('/cotacoes/criar/{cliente_id}', [ConsultaPrecoController::class, 'criar_cotacao'])->name('consulta_preco.criar');
     Route::post('/cotacoes', [ConsultaPrecoController::class, 'store'])->name('consulta_preco.store');
@@ -85,16 +85,16 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/cotacoes/grupo/{grupoId}/adicionar-item', [ConsultaPrecoController::class, 'adicionarItem'])->name('consulta_preco.adicionar_item'); // ✅ movida para cá
     Route::delete('/cotacoes/grupo/{grupoId}', [ConsultaPrecoController::class, 'destroyGrupo'])->name('consulta_preco.destroy_grupo');
 
-// Item individual
+    // Item individual
     Route::get('/cotacoes/item/{consulta}', [ConsultaPrecoController::class, 'show'])->name('consulta_preco.show');
     Route::get('/cotacoes/item/{consult_id}/editar', [ConsultaPrecoController::class, 'edit'])->name('consulta_preco.edit');
     Route::put('/cotacoes/item/{consulta_id}', [ConsultaPrecoController::class, 'update'])->name('consulta_preco.update');
     Route::delete('/cotacoes/item/{consulta_id}', [ConsultaPrecoController::class, 'destroy'])->name('consulta_preco.destroy');
 
-// Adicionar fornecedor a item
+    // Adicionar fornecedor a item
     Route::post('/cotacoes/item/{consultaId}/fornecedor', [ConsultaPrecoController::class, 'adicionarFornecedor'])->name('consulta_preco.add_fornecedor');
 
-// PDF via token
+    // PDF via token
     Route::get('/cotacoes/visualizar/{token}', [ConsultaPrecoController::class, 'visualizarCotacao'])->name('cotacoes.view');
 
 
@@ -227,6 +227,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/solicitacoes-pagamento/{id}/avaliar', [SolicitacaoPagamentoController::class, 'avaliar'])
         ->name('solicitacoes-pagamento.avaliar');
+
+    Route::get('/pagamentos/comprovantes/{comprovante}/download', [PagamentoController::class, 'downloadComprovante'])
+        ->name('pagamentos.comprovante.download');
 
     Route::resource('notas', NotaFiscalController::class)->names('notas');
 
