@@ -109,6 +109,9 @@
                             Status Pedido
                         </button>
                     </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                        Valor Pago
+                    </th>
                     <th class="px-6 py-3 text-left">
                         <button wire:click="sortBy('workflow_status')"
                             class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
@@ -135,6 +138,32 @@
                                 class="hover:underline">{{ $o->obra }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->cliente->nome }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->status }}</td>
+                        <td class="px-6 py-4">
+                            @if ($o->pagamento)
+                                <a href="{{ route('pagamentos.show', $o->pagamento->id) }}"
+                                   class="inline-flex items-center gap-1.5 font-semibold text-green-700 dark:text-green-400 hover:text-green-900 dark:hover:text-green-200 hover:underline transition">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    R$ {{ number_format($o->pagamento->valor_pago, 2, ',', '.') }}
+                                </a>
+                                @if ($o->pagamento->formas->isNotEmpty())
+                                    <div class="mt-1 flex flex-wrap gap-1">
+                                        @foreach ($o->pagamento->formas as $forma)
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300">
+                                                {{ $forma->condicaoPagamento->nome ?? '—' }}
+                                                <span class="ml-1 text-zinc-400 dark:text-zinc-500">
+                                                    R$ {{ number_format($forma->valor, 2, ',', '.') }}
+                                                </span>
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            @else
+                                <span class="text-xs text-zinc-400 dark:text-zinc-500">—</span>
+                            @endif
+                        </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->workflow_status }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->vendedor->name }}</td>
                         <td class="px-6 py-4">

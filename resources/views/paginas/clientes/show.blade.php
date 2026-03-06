@@ -28,6 +28,9 @@
                             class="text-secondary-600 hover:underline text-sm font-medium">
                             Análises de crédito
                         </a>
+                        <a href="{{ route('orcamentos.cliente', $cliente->id) }}">
+                            Ver histórico de compras
+                        </a>
                         <a href="{{ route('orcamentos.cliente', $cliente->id ?? null) }}"
                             class="text-secondary-600 hover:underline text-sm font-medium">
                             Orçamentos
@@ -139,7 +142,7 @@
                                 <x-show-field label="Complemento" :value="$endereco->complemento" />
                                 <x-show-field label="Logradouro" :value="$endereco->logradouro" class="md:col-span-3" />
                             </div>
-                            <br/>
+                            <br />
                         @empty
                             <p class="text-gray-500 text-sm">Nenhum endereço cadastrado.</p>
                         @endforelse

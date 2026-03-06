@@ -1,4 +1,5 @@
-<?php 
+<?php
+
 namespace App\Livewire;
 
 use App\Models\Orcamento;
@@ -20,23 +21,14 @@ class ListaOrcamentoCliente extends Component
         $this->clienteId = $clienteId;
     }
 
-    public function updatingSearch()
-    {
-        $this->resetPage();
-    }
-
-    public function updatingPerPage()
-    {
-        $this->resetPage();
-    }
+    public function updatingSearch()  { $this->resetPage(); }
+    public function updatingPerPage() { $this->resetPage(); }
 
     public function sortBy($field)
     {
-        if ($this->sortField === $field) {
-            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-            $this->sortDirection = 'asc';
-        }
+        $this->sortDirection = $this->sortField === $field
+            ? ($this->sortDirection === 'asc' ? 'desc' : 'asc')
+            : 'asc';
 
         $this->sortField = $field;
     }
@@ -45,7 +37,11 @@ class ListaOrcamentoCliente extends Component
     {
         $orcamentos = Orcamento::query()
             ->where('cliente_id', $this->clienteId)
-            ->with(['cliente'])
+            ->with([
+                'cliente',
+                'pagamentos'       => fn ($q) => $q->where('estornado', false)->latest()->limit(1),
+                'pagamentos.formas.condicaoPagamento',
+            ])
             ->when($this->search, function ($query) {
                 $query->where('obra', 'like', "%{$this->search}%")
                       ->orWhere('status', 'like', "%{$this->search}%");

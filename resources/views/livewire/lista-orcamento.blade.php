@@ -136,15 +136,22 @@
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse($orcamentos as $o)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="{{ route('orcamentos.show', $o) }}" class="hover:underline">{{ $o->id }}</a></td>
-                           <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="{{ route('clientes.show', $o->cliente) }}" class="hover:underline">{{ $o->cliente->numero_brcom }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="{{ route('clientes.show', $o->cliente) }}" class="hover:underline">{{ $o->cliente->nome }}</a></td>
-                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="{{ route('orcamentos.show', $o) }}"  class="hover:underline">{{ $o->obra }}</a></td>
-                    <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->status }}</td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
+                                href="{{ route('orcamentos.show', $o) }}"
+                                class="hover:underline">{{ $o->id }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
+                                href="{{ route('clientes.show', $o->cliente) }}"
+                                class="hover:underline">{{ $o->cliente->numero_brcom }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
+                                href="{{ route('clientes.show', $o->cliente) }}"
+                                class="hover:underline">{{ $o->cliente->nome }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
+                                href="{{ route('orcamentos.show', $o) }}"
+                                class="hover:underline">{{ $o->obra }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->status }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->vendedor->name }}</td>
                         <td class="px-6 py-4">
-                            @if ($o->pdf_path && $o->status != 'Aprovar desconto'&& $o->status != 'Aprovar pagamento')
+                            @if ($o->pdf_path && $o->status != 'Aprovar desconto' && $o->status != 'Aprovar pagamento')
                                 <a href="{{ asset('storage/' . $o->pdf_path) }}" target="_blank">
                                     <x-button size="sm" variant="primary">
                                         <x-heroicon-o-document-arrow-down class="w-4 h-4" />
@@ -170,15 +177,17 @@
                                     Duplicar
                                 </x-button>
                             </form>
-                            <form action="{{ route('orcamentos.destroy', $o->id) }}" method="POST"
-                                onsubmit="return confirm('Deseja excluir este orçamento?');">
-                                @csrf
-                                @method('DELETE')
-                                <x-button size="sm" variant="danger">
-                                    <x-heroicon-o-trash class="w-4 h-4" />
-                                    Excluir
-                                </x-button>
-                            </form>
+                            @if ($o->status !== 'Pago')
+                                <form action="{{ route('orcamentos.destroy', $o->id) }}" method="POST"
+                                    onsubmit="return confirm('Deseja excluir este orçamento?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <x-button size="sm" variant="danger">
+                                        <x-heroicon-o-trash class="w-4 h-4" />
+                                        Excluir
+                                    </x-button>
+                                </form>
+                            @endif
                         </td>
 
                     </tr>

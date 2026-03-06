@@ -1,3 +1,4 @@
+
 <x-layouts.app :title="__('Editar Orçamento')">
     <div class="flex w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
@@ -10,7 +11,11 @@
                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                         </path>
                     </svg>
+                    @if (!$orcamento->encomenda)
                     Editar Orçamento para Cliente {{ $cliente->id }} - {{ $cliente->nome ?? $cliente->nome_fantasia }}
+                    @else
+                    Editar Encomenda para Cliente {{ $cliente->id }} - {{ $cliente->nome ?? $cliente->nome_fantasia }}
+                    @endif
                 </h2>
                 {{-- Erros de validação --}}
                 @if ($errors->any())
@@ -63,28 +68,32 @@
 
                 @if ($orcamento->encomenda && $orcamento->itens->whereNotNull('produto_id')->isEmpty())
                     <tbody>
-                    <tr>
-                        <td colspan="10" class="px-4 py-6 text-center" style="margin-top: 2rem;">
-                            <div class="inline-flex items-center gap-2 px-4 py-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg text-sm text-blue-700 dark:text-blue-300">
-                                <x-heroicon-o-information-circle class="w-5 h-5 flex-shrink-0" />
-                                Este orçamento foi gerado a partir de uma encomenda. Use a busca abaixo para adicionar produtos ao orçamento.
-                            </div>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td colspan="10" class="px-4 py-6 text-center" style="margin-top: 2rem;">
+                                <div
+                                    class="inline-flex items-center gap-2 px-4 py-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg text-sm text-blue-700 dark:text-blue-300">
+                                    <x-heroicon-o-information-circle class="w-5 h-5 flex-shrink-0" />
+                                    Este orçamento foi gerado a partir de uma encomenda. Use a busca abaixo para
+                                    adicionar produtos ao orçamento.
+                                </div>
+                            </td>
+                        </tr>
                     </tbody>
                 @endif
                 <!-- Pesquisa de Produtos -->
-                <div class="space-y-4">
-                    <hr />
-                    <h3 class="text-lg font-medium flex items-center gap-2">
-                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                        Buscar Produtos
-                    </h3>
-                    <livewire:lista-produto-orcamento />
-                </div>
+                @if (!$orcamento->encomenda)
+                    <div class="space-y-4">
+                        <hr />
+                        <h3 class="text-lg font-medium flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            Buscar Produtos
+                        </h3>
+                        <livewire:lista-produto-orcamento />
+                    </div>
+                @endif
 
                 <!-- Campos iniciais -->
                 <form action="{{ route('orcamentos.update', $orcamento->id) }}" method="POST" class="space-y-8"
@@ -92,212 +101,222 @@
                     @csrf
                     @method('PUT')
                     <input type="hidden" name="cliente_id" value="{{ $cliente->id }}" />
+                    @if (!$orcamento->encomenda)
+                        <!-- Produtos no Orçamento -->
+                        <div class="space-y-4"><br />
+                            <hr />
+                            <h3 class="text-lg font-medium flex items-center gap-2">
+                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 7h9m0 0V10"></path>
+                                </svg>
+                                Produtos no Orçamento
+                            </h3>
+                            <div
+                                class="ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10 rounded-lg overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                    <thead class="bg-gray-50 dark:bg-gray-700">
+                                        <tr>
+                                            <th scope="col"
+                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                                Código</th>
+                                            <th scope="col"
+                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                                Produto</th>
+                                            <th scope="col"
+                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                                Part Number</th>
+                                            <th scope="col"
+                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                                Fornecedor</th>
+                                            <th scope="col"
+                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                                Cor</th>
+                                            <th scope="col"
+                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                                Preço Unit.</th>
+                                            <th scope="col"
+                                                class="w-20 px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                                Qtd.</th>
+                                            <th scope="col"
+                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                                Subtotal</th>
+                                            <th scope="col"
+                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                                c/ Desconto</th>
+                                            <th scope="col"
+                                                class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                                Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="produtos-originais" class="divide-y">
+                                        @foreach ($orcamento->itens->whereNotNull('produto_id') as $item)
+                                            <tr data-estoque="{{ $item->produto->estoque_atual ?? 'null' }}">
+                                                <input type="hidden" name="produtos[{{ $loop->index }}][produto_id]"
+                                                    value="{{ $item->produto->id }}">
+                                                <input type="hidden"
+                                                    name="produtos[{{ $loop->index }}][valor_unitario]"
+                                                    class="valor-unitario-hidden" value="{{ $item->valor_unitario }}">
+                                                <input type="hidden" name="produtos[{{ $loop->index }}][part_number]"
+                                                    value="{{ $item->produto->part_number ?? '' }}">
+                                                <input type="hidden" name="produtos[{{ $loop->index }}][quantidade]"
+                                                    value="{{ $item->quantidade }}">
+                                                <input type="hidden" name="produtos[{{ $loop->index }}][subtotal]"
+                                                    value="{{ number_format($item->valor_unitario * $item->quantidade, 2, '.', '') }}">
+                                                <input type="hidden"
+                                                    name="produtos[{{ $loop->index }}][subtotal_com_desconto]"
+                                                    value="{{ number_format($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0), 2, '.', '') }}">
+                                                <input type="hidden"
+                                                    name="produtos[{{ $loop->index }}][preco_unitario_com_desconto]"
+                                                    value="{{ number_format(($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0)) / $item->quantidade, 2, '.', '') }}">
 
-                    <!-- Produtos no Orçamento -->
-                    <div class="space-y-4"><br />
-                        <hr />
-                        <h3 class="text-lg font-medium flex items-center gap-2">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 7h9m0 0V10"></path>
-                            </svg>
-                            Produtos no Orçamento
-                        </h3>
-                        <div
-                            class="ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10 rounded-lg overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead class="bg-gray-50 dark:bg-gray-700">
-                                    <tr>
-                                        <th scope="col"
-                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
-                                            Código</th>
-                                        <th scope="col"
-                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
-                                            Produto</th>
-                                        <th scope="col"
-                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
-                                            Part Number</th>
-                                        <th scope="col"
-                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
-                                            Fornecedor</th>
-                                        <th scope="col"
-                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
-                                            Cor</th>
-                                        <th scope="col"
-                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
-                                            Preço Unit.</th>
-                                        <th scope="col"
-                                            class="w-20 px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
-                                            Qtd.</th>
-                                        <th scope="col"
-                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
-                                            Subtotal</th>
-                                        <th scope="col"
-                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
-                                            c/ Desconto</th>
-                                        <th scope="col"
-                                            class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
-                                            Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="produtos-originais" class="divide-y">
-                                @foreach ($orcamento->itens->whereNotNull('produto_id') as $item)
-                                    <tr data-estoque="{{ $item->produto->estoque_atual ?? 'null' }}">
-                                        <input type="hidden" name="produtos[{{ $loop->index }}][produto_id]"
-                                               value="{{ $item->produto->id }}">
-                                        <input type="hidden" name="produtos[{{ $loop->index }}][valor_unitario]"
-                                               class="valor-unitario-hidden" value="{{ $item->valor_unitario }}">
-                                        <input type="hidden" name="produtos[{{ $loop->index }}][part_number]"
-                                               value="{{ $item->produto->part_number ?? '' }}">
-                                        <input type="hidden" name="produtos[{{ $loop->index }}][quantidade]"
-                                               value="{{ $item->quantidade }}">
-                                        <input type="hidden" name="produtos[{{ $loop->index }}][subtotal]"
-                                               value="{{ number_format($item->valor_unitario * $item->quantidade, 2, '.', '') }}">
-                                        <input type="hidden" name="produtos[{{ $loop->index }}][subtotal_com_desconto]"
-                                               value="{{ number_format($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0), 2, '.', '') }}">
-                                        <input type="hidden" name="produtos[{{ $loop->index }}][preco_unitario_com_desconto]"
-                                               value="{{ number_format(($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0)) / $item->quantidade, 2, '.', '') }}">
+                                                <td class="px-3 py-2 border">{{ $item->produto->id }}</td>
+                                                <td class="px-3 py-2 border">{{ $item->produto->nome }}</td>
+                                                <td class="px-3 py-2 border">{{ $item->produto->part_number ?? '' }}
+                                                </td>
+                                                <td class="px-3 py-2 border">
+                                                    {{ $item->produto->fornecedor->nome ?? '' }}</td>
+                                                <td class="px-3 py-2 border">{{ $item->produto->cor ?? '' }}</td>
+                                                <td class="px-3 py-2 border">R$
+                                                    {{ number_format($item->valor_unitario, 2, ',', '.') }}
+                                                </td>
+                                                <td class="px-3 py-2 border">
+                                                    <input type="number"
+                                                        name="produtos[{{ $loop->index }}][quantidade]"
+                                                        value="{{ $item->quantidade }}" min="1"
+                                                        onchange="alterarQuantidadeOriginal({{ $loop->index }}, this.value)"
+                                                        class="w-12 border rounded px-2 py-1 text-center"
+                                                        style="max-width: 4rem;" />
+                                                </td>
+                                                <td class="px-3 py-2 border">R$
+                                                    {{ number_format($item->valor_unitario * $item->quantidade, 2, ',', '.') }}
+                                                </td>
+                                                <td class="px-3 py-2 border text-green-600">R$
+                                                    {{ number_format($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0), 2, ',', '.') }}
+                                                </td>
+                                                <td class="px-3 py-2 border text-center">
+                                                    <button type="button"
+                                                        onclick="removerProdutoOriginal({{ $loop->index }})"
+                                                        class="text-red-600 hover:text-red-800">🗑</button>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                    <tbody id="produtos-selecionados" class="divide-y">
 
-                                        <td class="px-3 py-2 border">{{ $item->produto->id }}</td>
-                                        <td class="px-3 py-2 border">{{ $item->produto->nome }}</td>
-                                        <td class="px-3 py-2 border">{{ $item->produto->part_number ?? '' }}</td>
-                                        <td class="px-3 py-2 border">{{ $item->produto->fornecedor->nome ?? '' }}</td>
-                                        <td class="px-3 py-2 border">{{ $item->produto->cor ?? '' }}</td>
-                                        <td class="px-3 py-2 border">R$
-                                            {{ number_format($item->valor_unitario, 2, ',', '.') }}
-                                        </td>
-                                        <td class="px-3 py-2 border">
-                                            <input type="number"
-                                                   name="produtos[{{ $loop->index }}][quantidade]"
-                                                   value="{{ $item->quantidade }}" min="1"
-                                                   onchange="alterarQuantidadeOriginal({{ $loop->index }}, this.value)"
-                                                   class="w-12 border rounded px-2 py-1 text-center"
-                                                   style="max-width: 4rem;" />
-                                        </td>
-                                        <td class="px-3 py-2 border">R$
-                                            {{ number_format($item->valor_unitario * $item->quantidade, 2, ',', '.') }}
-                                        </td>
-                                        <td class="px-3 py-2 border text-green-600">R$
-                                            {{ number_format($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0), 2, ',', '.') }}
-                                        </td>
-                                        <td class="px-3 py-2 border text-center">
-                                            <button type="button"
-                                                    onclick="removerProdutoOriginal({{ $loop->index }})"
-                                                    class="text-red-600 hover:text-red-800">🗑</button>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                                </tbody>
-                                <tbody id="produtos-selecionados" class="divide-y">
-
-                                </tbody>
-                            </table>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Seção de Vidros -->
-                    <div class="space-y-4">
-                        <br />
-                        <h3 class="text-lg font-medium flex items-center gap-2">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z">
-                                </path>
-                            </svg>
-                            Vidros ou Esteiras
+                        <!-- Seção de Vidros -->
+                        <div class="space-y-4">
+                            <br />
+                            <h3 class="text-lg font-medium flex items-center gap-2">
+                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z">
+                                    </path>
+                                </svg>
+                                Vidros ou Esteiras
 
-                            <button type="button" onclick="addVidro()"
-                                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                                + Adicionar Vidro/Esteira
-                            </button>
-                        </h3>
+                                <button type="button" onclick="addVidro()"
+                                    class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                                    + Adicionar Vidro/Esteira
+                                </button>
+                            </h3>
 
-                        <!-- Wrapper dos vidros -->
-                        <div id="vidros-wrapper" class="space-y-4">
-                            @foreach ($orcamento->vidros ?? [] as $vidro)
-                                <div class="space-y-2 relative border border-neutral-200 dark:border-neutral-700 rounded-lg p-4"
-                                    data-vidro-id="{{ $vidro->id }}">
-                                    <input type="hidden" name="vidros_existentes[{{ $loop->index }}][id]"
-                                        value="{{ $vidro->id }}" />
-                                    <div class="overflow-x-auto">
-                                        <div class="flex gap-4 min-w-max">
-                                            <div class="flex-1">
-                                                <label
-                                                    class="block text-sm font-medium text-gray-700">Descrição</label>
-                                                <input type="text"
-                                                    name="vidros_existentes[{{ $loop->index }}][descricao]"
-                                                    value="{{ $vidro->descricao }}"
-                                                    placeholder="Ex: Vidro incolor 8mm"
-                                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                            </div>
-                                            <div class="flex-1">
-                                                <label
-                                                    class="block text-sm font-medium text-gray-700">Quantidade</label>
-                                                <input type="number"
-                                                    name="vidros_existentes[{{ $loop->index }}][quantidade]"
-                                                    value="{{ $vidro->quantidade }}"
-                                                    oninput="calcularVidroExistente(this)"
-                                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                            </div>
-                                            <div class="flex-1">
-                                                <label class="block text-sm font-medium text-gray-700">Preço m²</label>
-                                                <input type="number" step="0.01"
-                                                    name="vidros_existentes[{{ $loop->index }}][preco_m2]"
-                                                    value="{{ $vidro->preco_metro_quadrado }}"
-                                                    oninput="calcularVidroExistente(this)"
-                                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                            </div>
-                                            <div class="flex-1">
-                                                <label class="block text-sm font-medium text-gray-700">Altura
-                                                    (mm)
-                                                </label>
-                                                <input type="number"
-                                                    name="vidros_existentes[{{ $loop->index }}][altura]"
-                                                    value="{{ $vidro->altura }}"
-                                                    oninput="calcularVidroExistente(this)"
-                                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-                                            </div>
-                                            <div class="flex-1">
-                                                <label class="block text-sm font-medium text-gray-700">Largura
-                                                    (mm)</label>
-                                                <input type="number"
-                                                    name="vidros_existentes[{{ $loop->index }}][largura]"
-                                                    value="{{ $vidro->largura }}"
-                                                    oninput="calcularVidroExistente(this)"
-                                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                            <!-- Wrapper dos vidros -->
+                            <div id="vidros-wrapper" class="space-y-4">
+                                @foreach ($orcamento->vidros ?? [] as $vidro)
+                                    <div class="space-y-2 relative border border-neutral-200 dark:border-neutral-700 rounded-lg p-4"
+                                        data-vidro-id="{{ $vidro->id }}">
+                                        <input type="hidden" name="vidros_existentes[{{ $loop->index }}][id]"
+                                            value="{{ $vidro->id }}" />
+                                        <div class="overflow-x-auto">
+                                            <div class="flex gap-4 min-w-max">
+                                                <div class="flex-1">
+                                                    <label
+                                                        class="block text-sm font-medium text-gray-700">Descrição</label>
+                                                    <input type="text"
+                                                        name="vidros_existentes[{{ $loop->index }}][descricao]"
+                                                        value="{{ $vidro->descricao }}"
+                                                        placeholder="Ex: Vidro incolor 8mm"
+                                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                                </div>
+                                                <div class="flex-1">
+                                                    <label
+                                                        class="block text-sm font-medium text-gray-700">Quantidade</label>
+                                                    <input type="number"
+                                                        name="vidros_existentes[{{ $loop->index }}][quantidade]"
+                                                        value="{{ $vidro->quantidade }}"
+                                                        oninput="calcularVidroExistente(this)"
+                                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                                </div>
+                                                <div class="flex-1">
+                                                    <label class="block text-sm font-medium text-gray-700">Preço
+                                                        m²</label>
+                                                    <input type="number" step="0.01"
+                                                        name="vidros_existentes[{{ $loop->index }}][preco_m2]"
+                                                        value="{{ $vidro->preco_metro_quadrado }}"
+                                                        oninput="calcularVidroExistente(this)"
+                                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                                </div>
+                                                <div class="flex-1">
+                                                    <label class="block text-sm font-medium text-gray-700">Altura
+                                                        (mm)
+                                                    </label>
+                                                    <input type="number"
+                                                        name="vidros_existentes[{{ $loop->index }}][altura]"
+                                                        value="{{ $vidro->altura }}"
+                                                        oninput="calcularVidroExistente(this)"
+                                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                                </div>
+                                                <div class="flex-1">
+                                                    <label class="block text-sm font-medium text-gray-700">Largura
+                                                        (mm)</label>
+                                                    <input type="number"
+                                                        name="vidros_existentes[{{ $loop->index }}][largura]"
+                                                        value="{{ $vidro->largura }}"
+                                                        oninput="calcularVidroExistente(this)"
+                                                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                                                </div>
                                             </div>
                                         </div>
+                                        <input type="hidden" name="vidros_existentes[{{ $loop->index }}][area]"
+                                            class="area-hidden"
+                                            value="{{ number_format(($vidro->altura / 1000) * ($vidro->largura / 1000), 2, '.', '') }}" />
+                                        <input type="hidden"
+                                            name="vidros_existentes[{{ $loop->index }}][valor_total]"
+                                            class="valor-hidden" value="{{ $vidro->valor_total }}" />
+                                        <input type="hidden"
+                                            name="vidros_existentes[{{ $loop->index }}][valor_com_desconto]"
+                                            class="valor-desconto-hidden" value="{{ $vidro->valor_com_desconto }}" />
+                                        <div class="mt-2 text-sm">
+                                            <strong>Área:</strong> <span
+                                                class="area">{{ number_format(($vidro->altura / 1000) * ($vidro->largura / 1000), 2, ',', '.') }}</span>
+                                            m² |
+                                            <strong>Valor:</strong> R$ <span
+                                                class="valor">{{ number_format($vidro->valor_total, 2, ',', '.') }}</span>
+                                            |
+                                            <strong>c/ desc:</strong> R$ <span
+                                                class="valor-desconto">{{ number_format($vidro->valor_com_desconto, 2, ',', '.') }}</span>
+                                            <button type="button" onclick="removeVidroExistente(this)"
+                                                class="absolute right-2 text-red-600 hover:text-red-800"
+                                                style="padding-top: -1rem;">Remover</button>
+                                        </div>
                                     </div>
-                                    <input type="hidden" name="vidros_existentes[{{ $loop->index }}][area]"
-                                        class="area-hidden"
-                                        value="{{ number_format(($vidro->altura / 1000) * ($vidro->largura / 1000), 2, '.', '') }}" />
-                                    <input type="hidden" name="vidros_existentes[{{ $loop->index }}][valor_total]"
-                                        class="valor-hidden" value="{{ $vidro->valor_total }}" />
-                                    <input type="hidden"
-                                        name="vidros_existentes[{{ $loop->index }}][valor_com_desconto]"
-                                        class="valor-desconto-hidden" value="{{ $vidro->valor_com_desconto }}" />
-                                    <div class="mt-2 text-sm">
-                                        <strong>Área:</strong> <span
-                                            class="area">{{ number_format(($vidro->altura / 1000) * ($vidro->largura / 1000), 2, ',', '.') }}</span>
-                                        m² |
-                                        <strong>Valor:</strong> R$ <span
-                                            class="valor">{{ number_format($vidro->valor_total, 2, ',', '.') }}</span>
-                                        |
-                                        <strong>c/ desc:</strong> R$ <span
-                                            class="valor-desconto">{{ number_format($vidro->valor_com_desconto, 2, ',', '.') }}</span>
-                                        <button type="button" onclick="removeVidroExistente(this)"
-                                            class="absolute right-2 text-red-600 hover:text-red-800"
-                                            style="padding-top: -1rem;">Remover</button>
-                                    </div>
-                                </div>
-                            @endforeach
+                                @endforeach
+                            </div>
                         </div>
-                    </div>
-
+                    @endif
                     <!-- Endereço de entrega -->
                     <div class="space-y-4">
-                        <hr />
+                        @if (!$orcamento->encomenda)
+                            <hr />
+                        @endif
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
@@ -320,8 +339,10 @@
                                 label="Prazo de Entrega" :value="$orcamento->prazo_entrega" />
                             <x-select name="frete" label="Tipo de Frete">
                                 <option value="">Selecione...</option>
-                                <option value="cif" @selected($orcamento->frete == 'cif')>CIF - entrega por conta do fornecedor</option>
-                                <option value="fob" @selected($orcamento->frete == 'fob')>FOB - entrega por conta do cliente</option>
+                                <option value="cif" @selected($orcamento->frete == 'cif')>CIF - entrega por conta do
+                                    fornecedor</option>
+                                <option value="fob" @selected($orcamento->frete == 'fob')>FOB - entrega por conta do cliente
+                                </option>
                             </x-select>
                             <x-select name="enderecos_cadastrados" label="Endereços de cadastrados do cliente">
                                 <option value="">Selecione...</option>
