@@ -23,6 +23,18 @@ class Kernel extends ConsoleKernel
             ->onFailure(function () {
                 \Log::error('Falha ao expirar créditos vencidos');
             });
+
+        // Verifica estoque dos orçamentos Pendentes a cada 30 minutos
+        $schedule->command('orcamentos:verificar-estoque')
+            ->everyThirtyMinutes()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->onSuccess(function () {
+                \Log::info('Verificação de estoque concluída com sucesso');
+            })
+            ->onFailure(function () {
+                \Log::error('Falha na verificação de estoque dos orçamentos');
+            });
     }
 
     /**

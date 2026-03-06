@@ -76,9 +76,7 @@ class OrcamentoController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
-    }
+    public function create() {}
 
     public function clienteOrcamento($cliente_id)
     {
@@ -96,7 +94,7 @@ class OrcamentoController extends Controller
 
         // validação CNPJ ativo na Receita Federal
         $ativo = Http::get("https://brasilapi.com.br/api/cnpj/v1/" . preg_replace('/\D/', '', $cliente->cnpj))
-                ->json('descricao_situacao_cadastral') === 'ATIVA';
+            ->json('descricao_situacao_cadastral') === 'ATIVA';
 
         $produtos = Produto::all();
         $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
@@ -512,10 +510,10 @@ class OrcamentoController extends Controller
         $temQualquerDesconto = $temDescontoPercentual || $temDescontoEspecifico || $itenscomdesconto;
 
         $necessitaAprovacaoDesconto = $temQualquerDesconto && (
-                $descontoPercentual > (float)($request->desconto_aprovado ?? 0) ||
-                (Auth()->user()->vendedor->desconto ?? 0) < $descontoPercentual ||
-                $itenscomdesconto
-            );
+            $descontoPercentual > (float)($request->desconto_aprovado ?? 0) ||
+            (Auth()->user()->vendedor->desconto ?? 0) < $descontoPercentual ||
+            $itenscomdesconto
+        );
 
         // ✅ DETERMINA O STATUS FINAL DO ORÇAMENTO
         if (!$temQualquerDesconto && !$necessitaAprovacaoPagamento) {
@@ -953,7 +951,30 @@ class OrcamentoController extends Controller
             'condicaoPagamento',
         ])->findOrFail($id);
 
-        // ✅ Verifica se há itens de encomenda sem fornecedor selecionado
+        // ── Verificação de estoque ────────────────────────────────────────────
+        if (! $orcamento->encomenda && in_array($orcamento->status, ['Pendente', 'Sem estoque'])) {
+
+            $todosTêmEstoque = $orcamento->itens->every(function ($item) {
+                $produto = $item->produto;
+                if (! $produto) return false;
+                $disponivel = ($produto->estoque_atual ?? 0) - ($produto->estoque_web ?? 0);
+                return $disponivel >= $item->quantidade;
+            });
+
+            if ($todosTêmEstoque && $orcamento->status === 'Sem estoque') {
+                // Estoque voltou — libera para Pendente
+                $orcamento->status = 'Pendente';
+                $orcamento->save();
+                $orcamento->refresh();
+            } elseif (! $todosTêmEstoque && $orcamento->status === 'Pendente') {
+                // Estoque caiu — bloqueia
+                $orcamento->status = 'Sem estoque';
+                $orcamento->save();
+                $orcamento->refresh();
+            }
+        }
+
+        // ── Cotação bloqueada (encomenda sem fornecedor) ──────────────────────
         $cotacaoBloqueada = false;
         if ($orcamento->encomenda) {
             $grupo = \App\Models\ConsultaPrecoGrupo::with('itens.fornecedorSelecionado')
@@ -973,7 +994,7 @@ class OrcamentoController extends Controller
     public function atualizarStatus(Request $request, $id)
     {
         try {
-            $orcamento = Orcamento::with(['itens'])->findOrFail($id);
+            $orcamento = Orcamento::with(['itens.produto'])->findOrFail($id);
 
             $status      = $request->input('status');
             $validStatus = ['Aprovar desconto', 'Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'];
@@ -982,25 +1003,51 @@ class OrcamentoController extends Controller
                 return response()->json(['message' => 'Status inválido!'], 422);
             }
 
-            // ✅ Bloqueia aprovação se houver itens de encomenda sem fornecedor selecionado
-            if ($status === 'Aprovado' && $orcamento->encomenda) {
-                $grupo = \App\Models\ConsultaPrecoGrupo::with('itens.fornecedorSelecionado')
-                    ->where('orcamento_id', $orcamento->id)
-                    ->first();
+            // ── Validações ao tentar Aprovar ─────────────────────────────────────
+            if ($status === 'Aprovado') {
 
-                if ($grupo) {
-                    $semFornecedor = $grupo->itens->filter(
-                        fn($item) => is_null($item->fornecedorSelecionado)
-                    );
+                // ✅ Bloqueia se houver itens de encomenda sem fornecedor selecionado
+                if ($orcamento->encomenda) {
+                    $grupo = \App\Models\ConsultaPrecoGrupo::with('itens.fornecedorSelecionado')
+                        ->where('orcamento_id', $orcamento->id)
+                        ->first();
 
-                    if ($semFornecedor->isNotEmpty()) {
-                        return response()->json([
-                            'message' => 'Não é possível aprovar: ' . $semFornecedor->count() . ' item(ns) da encomenda ainda não possui(em) fornecedor selecionado. Acesse a cotação e precifique todos os itens antes de aprovar.',
-                        ], 422);
+                    if ($grupo) {
+                        $semFornecedor = $grupo->itens->filter(
+                            fn($item) => is_null($item->fornecedorSelecionado)
+                        );
+
+                        if ($semFornecedor->isNotEmpty()) {
+                            return response()->json([
+                                'message' => 'Não é possível aprovar: ' . $semFornecedor->count() . ' item(ns) da encomenda ainda não possui(em) fornecedor selecionado. Acesse a cotação e precifique todos os itens antes de aprovar.',
+                            ], 422);
+                        }
                     }
+                }
+
+                // ✅ Bloqueia se houver itens sem estoque suficiente
+                $itensSemEstoque = $orcamento->itens->filter(function ($item) {
+                    $produto = $item->produto;
+                    if (! $produto) return true;
+                    $estoqueDisponivel = ($produto->estoque_atual ?? 0) - ($produto->estoque_web ?? 0);
+                    return $estoqueDisponivel < $item->quantidade;
+                });
+
+                if ($itensSemEstoque->isNotEmpty()) {
+                    $orcamento->status = 'Sem estoque';
+                    $orcamento->save();
+
+                    $nomes = $itensSemEstoque
+                        ->map(fn($i) => $i->produto?->nome ?? "Item #{$i->id}")
+                        ->join(', ');
+
+                    return response()->json([
+                        'message' => "Estoque insuficiente para: {$nomes}. Status alterado para \"Sem estoque\".",
+                    ], 422);
                 }
             }
 
+            // ── Salva o novo status ──────────────────────────────────────────────
             $orcamento->status            = $status;
             $orcamento->usuario_logado_id = auth()->id();
 
@@ -1010,12 +1057,12 @@ class OrcamentoController extends Controller
 
             $orcamento->save();
 
-            // ── PENDENTE — só salva e retorna ───────────────────────────────────
+            // ── PENDENTE — só salva e retorna ────────────────────────────────────
             if ($status === 'Pendente') {
                 return response()->json(['message' => 'Status atualizado para Pendente com sucesso!']);
             }
 
-            // ── CANCELADO / REJEITADO / EXPIRADO ────────────────────────────────
+            // ── CANCELADO / REJEITADO / EXPIRADO ─────────────────────────────────
             if ($status !== 'Aprovado') {
                 $orcamento->cancelarLoteDeSeparacaoAtivo();
                 return response()->json([
@@ -1024,7 +1071,7 @@ class OrcamentoController extends Controller
                 ]);
             }
 
-            // ── APROVADO: requer separação manual ───────────────────────────────
+            // ── APROVADO: requer separação manual ────────────────────────────────
             if ($orcamento->requer_separacao) {
                 try {
                     $pdfPath = app(\App\Services\OrcamentoPdfService::class)
@@ -1042,7 +1089,7 @@ class OrcamentoController extends Controller
                 ]);
             }
 
-            // ── APROVADO: cria lote de separação automaticamente ────────────────
+            // ── APROVADO: cria lote de separação automaticamente ─────────────────
             \DB::transaction(function () use ($orcamento) {
                 $existe = \App\Models\PickingBatch::where('orcamento_id', $orcamento->id)
                     ->whereIn('status', ['aberto', 'em_separacao'])
@@ -1116,7 +1163,6 @@ class OrcamentoController extends Controller
                 'message'  => 'Orçamento aprovado e separação iniciada!',
                 'redirect' => route('orcamentos.separacao.show', $orcamento->id),
             ]);
-
         } catch (\Exception $e) {
             \Log::error("Erro ao atualizar status do orçamento #{$id}: " . $e->getMessage());
             \Log::error($e->getTraceAsString());
@@ -1255,7 +1301,7 @@ class OrcamentoController extends Controller
         if ($cliente->cnpj) {
             try {
                 $ativo = Http::get("https://brasilapi.com.br/api/cnpj/v1/" . preg_replace('/\D/', '', $cliente->cnpj))
-                        ->json('descricao_situacao_cadastral') === 'ATIVA';
+                    ->json('descricao_situacao_cadastral') === 'ATIVA';
             } catch (\Exception $e) {
                 Log::warning("Erro ao validar CNPJ: " . $e->getMessage());
             }
@@ -1562,7 +1608,6 @@ class OrcamentoController extends Controller
                             ]);
 
                             $itenscomdesconto = true;
-
                         } elseif ($tipoDesconto === 'percentual' && $descontoPercentual > 0) {
                             $subtotal = $precoOriginalSemDesconto * $quantidade;
                             $valorComDesconto = $subtotal - ($subtotal * ($descontoPercentual / 100));
@@ -1665,7 +1710,6 @@ class OrcamentoController extends Controller
                             ]);
 
                             $itenscomdesconto = true;
-
                         } elseif ($tipoDesconto === 'percentual' && $descontoPercentual > 0) {
                             $subtotal = $precoOriginalSemDesconto * $quantidade;
                             $valorComDesconto = $subtotal - ($subtotal * ($descontoPercentual / 100));
@@ -1840,10 +1884,10 @@ class OrcamentoController extends Controller
             $descontoVendedor = (float)(auth()->user()->vendedor->desconto ?? 0);
 
             $necessitaAprovacaoDesconto = $temQualquerDesconto && (
-                    $descontoPercentual > $descontoAprovadoCliente ||
-                    $descontoVendedor < $descontoPercentual ||
-                    $itenscomdesconto
-                );
+                $descontoPercentual > $descontoAprovadoCliente ||
+                $descontoVendedor < $descontoPercentual ||
+                $itenscomdesconto
+            );
 
             // ----------------------------------------------------------------
             // Definir status e redirecionar
@@ -1895,7 +1939,6 @@ class OrcamentoController extends Controller
             return redirect()
                 ->route('orcamentos.show', $orcamento->id)
                 ->with('warning', 'Orçamento atualizado, mas houve falha ao gerar o PDF. Contate o suporte.');
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             // ----------------------------------------------------------------
             // Erros de validação do Laravel — exibe campos com problema
@@ -1906,7 +1949,6 @@ class OrcamentoController extends Controller
                 ->back()
                 ->withInput()
                 ->withErrors($e->errors());
-
         } catch (\Exception $e) {
             // ----------------------------------------------------------------
             // Qualquer outro erro — rollback + mensagem detalhada em dev

@@ -20,6 +20,29 @@ services:
     networks:
       - laravel-network
 
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel-scheduler
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor
+      - /var/www/html/node_modules
+    depends_on:
+      - mysql
+      - app
+    networks:
+      - laravel-network
+    command: >
+      sh -c "while true; do
+               php artisan schedule:run --verbose --no-interaction >> /var/www/html/storage/logs/scheduler.log 2>&1;
+               sleep 60;
+             done"
+
   mysql:
     image: mysql:8.0
     container_name: mysql-1

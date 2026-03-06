@@ -195,15 +195,50 @@
                                         </p>
                                     </div>
                                 @elseif ($orcamento->status === 'Sem estoque')
+                                    @php
+                                        // Calcula quais itens estão sem estoque para exibir na view
+                                        $itensSemEstoqueView = $orcamento->itens->filter(function ($item) {
+                                            $produto = $item->produto;
+                                            if (!$produto) {
+                                                return true;
+                                            }
+                                            $disponivel = ($produto->estoque_atual ?? 0) - ($produto->estoque_web ?? 0);
+                                            return $disponivel < $item->quantidade;
+                                        });
+                                    @endphp
                                     <div class="space-y-2">
                                         <div class="flex items-center gap-2">
                                             <span class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
-                                            <p class="text-sm font-semibold text-red-700 dark:text-red-400">
-                                                Sem Estoque</p>
+                                            <p class="text-sm font-semibold text-red-700 dark:text-red-400">Sem Estoque
+                                            </p>
                                         </div>
                                         <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                                            Este orçamento não poder seguir por falta de estoque.
+                                            Este orçamento não pode seguir por falta de estoque.
+                                            O status voltará automaticamente para <strong>Pendente</strong>
+                                            assim que todos os produtos ficarem disponíveis.
                                         </p>
+                                        @if ($itensSemEstoqueView->isNotEmpty())
+                                            <ul class="mt-1 space-y-1">
+                                                @foreach ($itensSemEstoqueView as $item)
+                                                    @php
+                                                        $prod = $item->produto;
+                                                        $disponivel =
+                                                            ($prod->estoque_atual ?? 0) - ($prod->estoque_web ?? 0);
+                                                        $faltam = max(0, $item->quantidade - $disponivel);
+                                                    @endphp
+                                                    <li
+                                                        class="flex items-center justify-between text-xs bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded px-2 py-1">
+                                                        <span
+                                                            class="font-medium text-red-800 dark:text-red-200 truncate">
+                                                            {{ $prod->nome ?? "Item #{$item->id}" }}
+                                                        </span>
+                                                        <span class="text-red-600 dark:text-red-400 flex-shrink-0 ml-2">
+                                                            Faltam {{ number_format($faltam, 0, ',', '.') }} un.
+                                                        </span>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        @endif
                                     </div>
 
                                     {{-- ── STATUS NORMAL ── --}}
