@@ -1036,15 +1036,17 @@
                 </x-button>
             </a>
 
-            <form action="{{ route('orcamentos.destroy', $orcamento->id) }}" method="POST"
-                onsubmit="return confirm('Tem certeza que deseja excluir este orçamento?');">
-                @csrf
-                @method('DELETE')
-                <x-button type="submit" size="sm" variant="danger">
-                    <x-heroicon-o-trash class="w-4 h-4" />
-                    Excluir Orçamento
-                </x-button>
-            </form>
+            @if ($orcamento->status !== 'Pago')
+                <form action="{{ route('orcamentos.destroy', $orcamento->id) }}" method="POST"
+                    onsubmit="return confirm('Tem certeza que deseja excluir este orçamento?');">
+                    @csrf
+                    @method('DELETE')
+                    <x-button type="submit" size="sm" variant="danger">
+                        <x-heroicon-o-trash class="w-4 h-4" />
+                        Excluir Orçamento
+                    </x-button>
+                </form>
+            @endif
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
