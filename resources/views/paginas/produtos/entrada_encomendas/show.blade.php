@@ -1,6 +1,7 @@
 <x-layouts.app :title="__('Entrada #' . $entradaEncomenda->id)">
     <div class="flex flex-col gap-6">
 
+        {{-- ── Cabeçalho ──────────────────────────────────────────────────── --}}
         <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-700 p-6 shadow">
             <div class="flex flex-wrap items-start justify-between gap-4">
                 <div>
@@ -38,7 +39,6 @@
                         {{ $entradaEncomenda->status }}
                     </span>
 
-                    {{-- Botão só aparece quando ainda há itens parciais --}}
                     @if ($entradaEncomenda->status === 'Recebido parcialmente')
                         <a href="{{ route('entrada_encomendas.complementar', $entradaEncomenda->id) }}">
                             <x-button size="sm" variant="primary">
@@ -57,66 +57,177 @@
             @endif
         </div>
 
-        {{-- Itens --}}
+        {{-- ── Itens ───────────────────────────────────────────────────────── --}}
         <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow overflow-hidden">
             <div class="px-6 py-4 border-b border-zinc-100 dark:border-zinc-700">
                 <h3 class="font-semibold text-zinc-800 dark:text-zinc-200">Itens desta Entrada</h3>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-zinc-50 dark:bg-zinc-800">
-                    <tr class="text-xs text-zinc-500 uppercase tracking-wider">
-                        <th class="px-4 py-3 text-left">Item</th>
-                        <th class="px-4 py-3 text-right">Qtd Solicitada</th>
-                        <th class="px-4 py-3 text-right">Qtd Recebida</th>
-                        <th class="px-4 py-3 text-right">Pendente nesta entrada</th>
-                        <th class="px-4 py-3 text-center">Status</th>
-                        <th class="px-4 py-3 text-left">Observação</th>
-                    </tr>
-                    </thead>
-                    <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
-                    @foreach ($entradaEncomenda->itens as $item)
-                        @php $pendente = $item->quantidadePendente(); @endphp
-                        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition">
-                            <td class="px-4 py-3 font-medium text-zinc-800 dark:text-zinc-200">
-                                {{ $item->consultaPreco->descricao }}
+
+            <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                @foreach ($entradaEncomenda->itens as $item)
+                    @php
+                        $pendente   = $item->quantidadePendente();
+                        $temProduto = $item->ncm || $item->codigo_barras || $item->sku
+                                   || $item->unidade_medida || $item->peso
+                                   || $item->categoria_id || $item->sub_categoria_id;
+                    @endphp
+
+                    <div class="px-6 py-5 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
+
+                        {{-- Nome + status --}}
+                        <div class="flex flex-wrap items-start justify-between gap-2 mb-3">
+                            <div>
+                                <span class="font-semibold text-sm text-zinc-800 dark:text-zinc-200">
+                                    {{ $item->consultaPreco->descricao }}
+                                </span>
                                 @if ($item->consultaPreco->cor)
                                     <span class="text-zinc-400 text-xs"> · {{ $item->consultaPreco->cor->nome }}</span>
                                 @endif
-                            </td>
-                            <td class="px-4 py-3 text-right text-zinc-600">{{ number_format($item->quantidade_solicitada, 0, ',', '.') }}</td>
-                            <td class="px-4 py-3 text-right font-semibold text-zinc-700 dark:text-zinc-300">{{ number_format($item->quantidade_recebida, 0, ',', '.') }}</td>
-                            <td class="px-4 py-3 text-right {{ $pendente > 0 ? 'text-amber-600 font-semibold' : 'text-zinc-400' }}">
-                                {{ $pendente > 0 ? number_format($pendente, 0, ',', '.') : '—' }}
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                @if ($item->recebido_completo)
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
-                                        <x-heroicon-o-check-circle class="w-3 h-3" /> Completo
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
-                                        <x-heroicon-o-clock class="w-3 h-3" /> Parcial
-                                    </span>
+                                @if ($item->consultaPreco->part_number)
+                                    <span class="text-zinc-400 text-xs"> · PN: {{ $item->consultaPreco->part_number }}</span>
                                 @endif
-                            </td>
-                            <td class="px-4 py-3 text-zinc-500 text-xs italic">{{ $item->observacao ?? '—' }}</td>
-                        </tr>
-                    @endforeach
-                    </tbody>
-                </table>
+                            </div>
+
+                            @if ($item->recebido_completo)
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                                    <x-heroicon-o-check-circle class="w-3 h-3" /> Completo
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                                    <x-heroicon-o-clock class="w-3 h-3" /> Parcial
+                                </span>
+                            @endif
+                        </div>
+
+                        {{-- Quantidades + peso --}}
+                        <div class="flex flex-wrap gap-6 text-sm mb-3">
+                            <div>
+                                <span class="text-xs text-zinc-400 block">Qtd Solicitada</span>
+                                <span class="font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ number_format($item->quantidade_solicitada, 0, ',', '.') }}
+                                    @if ($item->unidade_medida) <span class="text-xs text-zinc-400">{{ $item->unidade_medida }}</span> @endif
+                                </span>
+                            </div>
+                            <div>
+                                <span class="text-xs text-zinc-400 block">Qtd Recebida</span>
+                                <span class="font-semibold text-zinc-800 dark:text-zinc-200">
+                                    {{ number_format($item->quantidade_recebida, 0, ',', '.') }}
+                                    @if ($item->unidade_medida) <span class="text-xs text-zinc-400">{{ $item->unidade_medida }}</span> @endif
+                                </span>
+                            </div>
+                            @if ($pendente > 0)
+                                <div>
+                                    <span class="text-xs text-zinc-400 block">Pendente</span>
+                                    <span class="font-semibold text-amber-600">
+                                        {{ number_format($pendente, 0, ',', '.') }}
+                                        @if ($item->unidade_medida) <span class="text-xs">{{ $item->unidade_medida }}</span> @endif
+                                    </span>
+                                </div>
+                            @endif
+                            @if ($item->peso)
+                                <div>
+                                    <span class="text-xs text-zinc-400 block">Peso</span>
+                                    <span class="text-zinc-600 dark:text-zinc-400">{{ number_format($item->peso, 3, ',', '.') }} kg</span>
+                                </div>
+                            @endif
+                        </div>
+
+                        {{-- Observação do recebimento --}}
+                        @if ($item->observacao)
+                            <p class="text-xs italic text-zinc-500 dark:text-zinc-400 mb-3">
+                                📝 {{ $item->observacao }}
+                            </p>
+                        @endif
+
+                        {{-- Informações do produto --}}
+                        @if ($temProduto)
+                            <div class="pt-3 border-t border-zinc-100 dark:border-zinc-700">
+                                <p class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
+                                    Informações do Produto
+                                </p>
+                                <div class="flex flex-wrap gap-x-8 gap-y-3">
+
+                                    @if ($item->ncm)
+                                        <div>
+                                            <span class="text-xs text-zinc-400 block mb-0.5">NCM</span>
+                                            <span class="font-mono text-xs bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded text-zinc-700 dark:text-zinc-300">
+                                                {{ $item->ncm }}
+                                            </span>
+                                        </div>
+                                    @endif
+
+                                    @if ($item->codigo_barras)
+                                        <div>
+                                            <span class="text-xs text-zinc-400 block mb-0.5">Código de Barras</span>
+                                            <span class="font-mono text-xs bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded text-zinc-700 dark:text-zinc-300">
+                                                {{ $item->codigo_barras }}
+                                            </span>
+                                        </div>
+                                    @endif
+
+                                    @if ($item->sku)
+                                        <div>
+                                            <span class="text-xs text-zinc-400 block mb-0.5">SKU / Código</span>
+                                            <span class="font-mono text-xs bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded text-zinc-700 dark:text-zinc-300">
+                                                {{ $item->sku }}
+                                            </span>
+                                        </div>
+                                    @endif
+
+                                    @if ($item->unidade_medida)
+                                        <div>
+                                            <span class="text-xs text-zinc-400 block mb-0.5">Unidade de Medida</span>
+                                            <span class="text-xs text-zinc-700 dark:text-zinc-300 font-medium">
+                                                {{ $item->unidade_medida }}
+                                            </span>
+                                        </div>
+                                    @endif
+
+                                    @if ($item->categoria)
+                                        <div>
+                                            <span class="text-xs text-zinc-400 block mb-0.5">Categoria</span>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                                {{ $item->categoria->nome }}
+                                            </span>
+                                        </div>
+                                    @endif
+
+                                    @if ($item->subCategoria)
+                                        <div>
+                                            <span class="text-xs text-zinc-400 block mb-0.5">Subcategoria</span>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+                                                {{ $item->subCategoria->nome }}
+                                            </span>
+                                        </div>
+                                    @endif
+
+                                </div>
+                            </div>
+                        @else
+                            <p class="text-xs text-zinc-400 italic">Nenhuma informação de produto registrada.</p>
+                        @endif
+
+                    </div>
+                @endforeach
             </div>
         </div>
 
+        {{-- ── Rodapé ──────────────────────────────────────────────────────── --}}
         <div class="flex gap-3">
             <a href="{{ route('entrada_encomendas.aprovadas') }}">
                 <x-button size="sm" variant="primary">
                     <x-heroicon-o-arrow-uturn-left class="w-4 h-4" /> Voltar ao Painel
                 </x-button>
             </a>
+            <a href="{{ route('entrada_encomendas.edit', $entradaEncomenda->id) }}">
+                <x-button size="sm" variant="warning">
+                    <x-heroicon-o-pencil-square class="w-4 h-4" /> Editar Recebimento
+                </x-button>
+            </a>
             <a href="{{ route('entrada_encomendas.index') }}">
-                <x-button size="sm" variant="secondary">Ver todas as entradas</x-button>
+                <x-button size="sm" variant="orange">Ver todas as entradas</x-button>
             </a>
         </div>
+
     </div>
 </x-layouts.app>

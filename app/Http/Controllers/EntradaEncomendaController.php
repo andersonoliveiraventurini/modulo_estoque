@@ -229,57 +229,104 @@ class EntradaEncomendaController extends Controller
     // ──────────────────────────────────────────────────────────
     // EDIT — editar/complementar uma entrada parcial
     // ──────────────────────────────────────────────────────────
-    public function edit(EntradaEncomenda $entradaEncomenda)
-    {
-        $entradaEncomenda->load([
-            'grupo.cliente',
-            'itens.consultaPreco',
-        ]);
+   public function edit(EntradaEncomenda $entradaEncomenda)
+{
+    $entradaEncomenda->load([
+        'grupo.cliente',
+        'recebedor',
+        'destinatario',
+        'itens.consultaPreco.cor',
+        'itens.categoria',
+        'itens.subCategoria',
+    ]);
 
-        $usuarios = \App\Models\User::orderBy('name')->get();
+    $usuarios      = \App\Models\User::orderBy('name')->get();
+    $categorias    = \App\Models\Categoria::orderBy('nome')->get();
+    $subCategorias = \App\Models\SubCategoria::orderBy('nome')->get();
 
-        return view('paginas.produtos.entrada_encomendas.edit', compact('entradaEncomenda', 'usuarios'));
-    }
+    return view('paginas.produtos.entrada_encomendas.edit', compact(
+        'entradaEncomenda', 'usuarios', 'categorias', 'subCategorias'
+    ));
+}
 
-    // ──────────────────────────────────────────────────────────
-    // UPDATE — atualiza entrada (ex: complementar itens faltantes)
-    // ──────────────────────────────────────────────────────────
     public function update(Request $request, EntradaEncomenda $entradaEncomenda)
     {
         $request->validate([
-            'data_entrega'  => 'nullable|date',
-            'entregue_para' => 'nullable|exists:users,id',
-            'observacao'    => 'nullable|string|max:1000',
-            'itens'         => 'required|array',
-            'itens.*.id'                     => 'required|exists:entrada_encomenda_itens,id',
-            'itens.*.quantidade_recebida'    => 'required|numeric|min:0',
-            'itens.*.observacao'             => 'nullable|string|max:500',
+            'data_recebimento' => 'required|date',
+            'data_entrega'     => 'nullable|date|after_or_equal:data_recebimento',
+            'recebido_por'     => 'nullable|exists:users,id',
+            'entregue_para'    => 'nullable|exists:users,id',
+            'observacao'       => 'nullable|string|max:1000',
+            'itens'            => 'required|array|min:1',
+            'itens.*.id'                    => 'required|exists:entrada_encomenda_itens,id',
+            'itens.*.quantidade_recebida'   => 'required|numeric|min:0',
+            'itens.*.observacao'            => 'nullable|string|max:500',
+            // Campos de produto — opcionais
+            'itens.*.ncm'              => 'nullable|string|max:20',
+            'itens.*.codigo_barras'    => 'nullable|string|max:50',
+            'itens.*.sku'              => 'nullable|string|max:50',
+            'itens.*.unidade_medida'   => 'nullable|string|max:20',
+            'itens.*.peso'             => 'nullable|numeric|min:0',
+            'itens.*.categoria_id'     => 'nullable|exists:categorias,id',
+            'itens.*.sub_categoria_id' => 'nullable|exists:sub_categorias,id',
         ]);
 
         DB::beginTransaction();
 
         try {
+            // Atualiza cada item
             foreach ($request->itens as $itemData) {
-                $item = EntradaEncomendaItem::findOrFail($itemData['id']);
-                $novaQtd = (float)$itemData['quantidade_recebida'];
+                $item    = EntradaEncomendaItem::findOrFail($itemData['id']);
+                $novaQtd = (float) $itemData['quantidade_recebida'];
 
+                // recebido_completo: considera somente esta entrada
+                // (comparado ao que foi solicitado nesta entrada)
                 $item->update([
                     'quantidade_recebida' => $novaQtd,
-                    'recebido_completo'   => $novaQtd >= (float)$item->quantidade_solicitada,
-                    'observacao'          => $itemData['observacao'] ?? $item->observacao,
+                    'recebido_completo'   => $novaQtd >= (float) $item->quantidade_solicitada,
+                    'observacao'          => $itemData['observacao'] ?? null,
+                    // Campos de produto
+                    'ncm'              => $itemData['ncm'] ?? null,
+                    'codigo_barras'    => $itemData['codigo_barras'] ?? null,
+                    'sku'              => $itemData['sku'] ?? null,
+                    'unidade_medida'   => $itemData['unidade_medida'] ?? null,
+                    'peso'             => isset($itemData['peso']) && $itemData['peso'] !== '' ? $itemData['peso'] : null,
+                    'categoria_id'     => $itemData['categoria_id'] ?? null,
+                    'sub_categoria_id' => $itemData['sub_categoria_id'] ?? null,
                 ]);
             }
 
-            // Reavalia status da entrada
+            // Recalcula status: considera TODAS as entradas do grupo para saber se está completo
             $entradaEncomenda->refresh()->load('itens');
-            $todosCompletos = $entradaEncomenda->estaCompleto();
+
+            $grupo = $entradaEncomenda->grupo ?? ConsultaPrecoGrupo::with('itens')
+                ->findOrFail($entradaEncomenda->grupo_id);
+
+            // Soma de TODAS as entradas do grupo (incluindo esta já atualizada)
+            $totalRecebidoMap = EntradaEncomendaItem::whereHas(
+                'entrada', fn($q) => $q->where('grupo_id', $grupo->id)
+            )->get()
+             ->groupBy('consulta_preco_id')
+             ->map(fn($itens) => $itens->sum('quantidade_recebida'));
+
+            $todosCompletos = $grupo->itens->every(function ($item) use ($totalRecebidoMap) {
+                $recebido = (float) ($totalRecebidoMap[$item->id] ?? 0);
+                return $recebido >= (float) $item->quantidade;
+            });
+
+            $novoStatus = $request->filled('data_entrega')
+                ? 'Entregue'
+                : ($todosCompletos ? 'Recebido completo' : 'Recebido parcialmente');
 
             $entradaEncomenda->update([
-                'entregue_para' => $request->entregue_para ?? $entradaEncomenda->entregue_para,
-                'data_entrega'  => $request->data_entrega  ?? $entradaEncomenda->data_entrega,
-                'status'        => $request->filled('data_entrega') ? 'Entregue'
-                    : ($todosCompletos ? 'Recebido completo' : 'Recebido parcialmente'),
-                'observacao'    => $request->observacao ?? $entradaEncomenda->observacao,
+                'data_recebimento' => $request->data_recebimento,
+                'recebido_por'     => $request->filled('recebido_por')
+                    ? $request->recebido_por
+                    : $entradaEncomenda->recebido_por,
+                'entregue_para'    => $request->entregue_para ?? null,
+                'data_entrega'     => $request->data_entrega  ?? null,
+                'status'           => $novoStatus,
+                'observacao'       => $request->observacao ?? null,
             ]);
 
             DB::commit();
@@ -287,9 +334,10 @@ class EntradaEncomendaController extends Controller
             return redirect()
                 ->route('entrada_encomendas.show', $entradaEncomenda->id)
                 ->with('success', 'Entrada atualizada com sucesso!');
+
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Erro ao atualizar entrada: ' . $e->getMessage());
+            Log::error('Erro ao atualizar entrada de encomenda: ' . $e->getMessage());
             return back()->withInput()->with('error', 'Erro ao atualizar: ' . $e->getMessage());
         }
     }
