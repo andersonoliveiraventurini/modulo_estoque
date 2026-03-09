@@ -16,11 +16,22 @@ class EntradaEncomendaItem extends Model
         'quantidade_recebida',
         'recebido_completo',
         'observacao',
+        // campos de identificação do produto
+        'ncm',
+        'codigo_barras',
+        'sku',
+        'unidade_medida',
+        'peso',
+        'categoria_id',
+        'sub_categoria_id',
     ];
 
     protected $casts = [
         'recebido_completo' => 'boolean',
+        'peso'              => 'float',
     ];
+
+    // ── Relacionamentos ─────────────────────────────────────
 
     public function entrada(): BelongsTo
     {
@@ -32,7 +43,18 @@ class EntradaEncomendaItem extends Model
         return $this->belongsTo(ConsultaPreco::class, 'consulta_preco_id');
     }
 
-    /** Quantidade ainda pendente de recebimento */
+    public function categoria(): BelongsTo
+    {
+        return $this->belongsTo(Categoria::class);
+    }
+
+    public function subCategoria(): BelongsTo
+    {
+        return $this->belongsTo(SubCategoria::class, 'sub_categoria_id');
+    }
+
+    // ── Helpers ─────────────────────────────────────────────
+
     public function quantidadePendente(): float
     {
         return max(0, (float) $this->quantidade_solicitada - (float) $this->quantidade_recebida);

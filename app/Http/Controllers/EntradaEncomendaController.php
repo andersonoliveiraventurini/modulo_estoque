@@ -33,33 +33,41 @@ class EntradaEncomendaController extends Controller
     // ──────────────────────────────────────────────────────────
     public function create(Request $request)
     {
-        // O grupo pode vir por query string ?grupo_id=X
         $grupoId = $request->get('grupo_id');
-        $grupo   = $grupoId
-            ? ConsultaPrecoGrupo::with(['cliente', 'itens.fornecedorSelecionado.fornecedor', 'usuario'])
-            ->findOrFail($grupoId)
+
+        $grupo = $grupoId
+            ? ConsultaPrecoGrupo::with([
+                'cliente',
+                'itens.cor',
+                'itens.fornecedorSelecionado.fornecedor',
+                'itens.fornecedorSelecionado.comprador',
+                'usuario',
+                'entradas.itens',
+            ])->findOrFail($grupoId)
             : null;
 
-        // Lista grupos aprovados que ainda não têm entrada completa
         $gruposDisponiveis = ConsultaPrecoGrupo::with(['cliente', 'itens'])
             ->where('status', 'Aprovado')
-            ->whereDoesntHave('entradas', fn($q) => $q->where('status', 'Recebido completo'))
-            ->orderBy('created_at', 'desc')
+            ->latest()
             ->get();
 
-        $usuarios = \App\Models\User::orderBy('name')->get();
+        $usuarios     = \App\Models\User::orderBy('name')->get();
+        $categorias   = \App\Models\Categoria::orderBy('nome')->get();      // ← NOVO
+        $subCategorias = \App\Models\SubCategoria::orderBy('nome')->get();  // ← NOVO
 
         return view('paginas.produtos.entrada_encomendas.create', compact(
             'grupo',
             'gruposDisponiveis',
-            'usuarios'
+            'usuarios',
+            'categorias',
+            'subCategorias'
         ));
     }
 
     // ──────────────────────────────────────────────────────────
     // STORE — salva a entrada
     // ──────────────────────────────────────────────────────────
-    public function store(Request $request)
+     public function store(Request $request)
     {
         $request->validate([
             'grupo_id'         => 'required|exists:consulta_preco_grupos,id',
@@ -73,6 +81,14 @@ class EntradaEncomendaController extends Controller
             'itens.*.quantidade_solicitada' => 'required|numeric|min:0',
             'itens.*.quantidade_recebida'   => 'required|numeric|min:0',
             'itens.*.observacao'            => 'nullable|string|max:500',
+            // Campos de produto — todos opcionais
+            'itens.*.ncm'               => 'nullable|string|max:20',
+            'itens.*.codigo_barras'     => 'nullable|string|max:50',
+            'itens.*.sku'               => 'nullable|string|max:50',
+            'itens.*.unidade_medida'    => 'nullable|string|max:20',
+            'itens.*.peso'              => 'nullable|numeric|min:0',
+            'itens.*.categoria_id'      => 'nullable|exists:categorias,id',
+            'itens.*.sub_categoria_id'  => 'nullable|exists:sub_categorias,id',
         ]);
 
         DB::beginTransaction();
@@ -80,31 +96,25 @@ class EntradaEncomendaController extends Controller
         try {
             $grupo = ConsultaPrecoGrupo::with('cliente')->findOrFail($request->grupo_id);
 
-            // ── Calcula o pendente consolidado ANTES desta entrada ───────────
-            // Soma tudo já recebido em entradas anteriores para cada item
+            // Soma já recebido em entradas anteriores
             $jaRecebidoMap = EntradaEncomendaItem::whereHas('entrada', fn($q) =>
                 $q->where('grupo_id', $grupo->id)
             )->get()->groupBy('consulta_preco_id')->map(fn($itens) =>
                 $itens->sum('quantidade_recebida')
             );
 
-            // Verifica se todos os itens desta entrada ficam completos
-            // considerando o acumulado total (anteriores + esta entrada)
             $todosCompletos = true;
             foreach ($request->itens as $itemData) {
-                $cpId          = $itemData['consulta_preco_id'];
-                $jaRecebido    = (float) ($jaRecebidoMap[$cpId] ?? 0);
-                $novaQtd       = (float) $itemData['quantidade_recebida'];
-                $totalSolicitado = (float) $itemData['quantidade_solicitada'];
+                $cpId        = $itemData['consulta_preco_id'];
+                $jaRecebido  = (float) ($jaRecebidoMap[$cpId] ?? 0);
+                $novaQtd     = (float) $itemData['quantidade_recebida'];
+                $totalPedido = (float) $itemData['quantidade_solicitada'];
 
-                // quantidade_solicitada no form é o total original do item na cotação
-                if (($jaRecebido + $novaQtd) < $totalSolicitado) {
+                if (($jaRecebido + $novaQtd) < $totalPedido) {
                     $todosCompletos = false;
                     break;
                 }
             }
-
-            $statusEntrada = $todosCompletos ? 'Recebido completo' : 'Recebido parcialmente';
 
             $entrada = EntradaEncomenda::create([
                 'grupo_id'         => $grupo->id,
@@ -113,26 +123,32 @@ class EntradaEncomendaController extends Controller
                 'cliente_id'       => $grupo->cliente_id,
                 'data_recebimento' => $request->data_recebimento,
                 'data_entrega'     => $request->data_entrega ?? null,
-                'status'           => $request->filled('data_entrega') ? 'Entregue' : $statusEntrada,
+                'status'           => $request->filled('data_entrega') ? 'Entregue'
+                    : ($todosCompletos ? 'Recebido completo' : 'Recebido parcialmente'),
                 'observacao'       => $request->observacao ?? null,
             ]);
 
             foreach ($request->itens as $itemData) {
-                $cpId            = $itemData['consulta_preco_id'];
-                $jaRecebido      = (float) ($jaRecebidoMap[$cpId] ?? 0);
-                $novaQtd         = (float) $itemData['quantidade_recebida'];
-                $totalSolicitado = (float) $itemData['quantidade_solicitada'];
-
-                // recebido_completo = acumulado total >= solicitado na cotação
-                $estaCompleto = ($jaRecebido + $novaQtd) >= $totalSolicitado;
+                $cpId        = $itemData['consulta_preco_id'];
+                $jaRecebido  = (float) ($jaRecebidoMap[$cpId] ?? 0);
+                $novaQtd     = (float) $itemData['quantidade_recebida'];
+                $totalPedido = (float) $itemData['quantidade_solicitada'];
 
                 EntradaEncomendaItem::create([
                     'entrada_id'            => $entrada->id,
                     'consulta_preco_id'     => $cpId,
-                    'quantidade_solicitada' => $totalSolicitado,   // total original
-                    'quantidade_recebida'   => $novaQtd,           // só o que chegou nesta entrada
-                    'recebido_completo'     => $estaCompleto,      // baseado no acumulado
+                    'quantidade_solicitada' => $totalPedido,
+                    'quantidade_recebida'   => $novaQtd,
+                    'recebido_completo'     => ($jaRecebido + $novaQtd) >= $totalPedido,
                     'observacao'            => $itemData['observacao'] ?? null,
+                    // Campos de produto opcionais
+                    'ncm'               => $itemData['ncm'] ?? null,
+                    'codigo_barras'     => $itemData['codigo_barras'] ?? null,
+                    'sku'               => $itemData['sku'] ?? null,
+                    'unidade_medida'    => $itemData['unidade_medida'] ?? null,
+                    'peso'              => $itemData['peso'] ?? null,
+                    'categoria_id'      => $itemData['categoria_id'] ?? null,
+                    'sub_categoria_id'  => $itemData['sub_categoria_id'] ?? null,
                 ]);
             }
 
@@ -158,11 +174,13 @@ class EntradaEncomendaController extends Controller
         $entradaEncomenda->load([
             'grupo.cliente',
             'grupo.itens.cor',
+            'grupo.itens.fornecedorSelecionado.fornecedor',
+            'grupo.itens.fornecedorSelecionado.comprador',  // ← comprador que precificou
         ]);
 
         $grupo = $entradaEncomenda->grupo;
 
-        // Soma tudo que já foi recebido para cada item, em todas as entradas do grupo
+        // Soma tudo já recebido em TODAS as entradas do grupo
         $recebidoMap = EntradaEncomendaItem::whereHas(
             'entrada',
             fn($q) =>
@@ -172,7 +190,6 @@ class EntradaEncomendaController extends Controller
             $itens->sum('quantidade_recebida')
         );
 
-        // Monta resumo por item
         $itensPendentes = $grupo->itens->map(function ($item) use ($recebidoMap) {
             $solicitado = (float) $item->quantidade;
             $recebido   = (float) ($recebidoMap[$item->id] ?? 0);
