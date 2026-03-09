@@ -31,6 +31,7 @@ use App\Http\Controllers\CategoriaController;
 use App\Livewire\OrcamentoShow;
 use App\Http\Controllers\SeparacaoController;
 use App\Http\Controllers\ConferenciaController;
+use App\Http\Controllers\EntradaEncomendaController;
 use App\Http\Controllers\PagamentoController;
 use App\Http\Controllers\SolicitacaoPagamentoController;
 use App\Livewire\ListaConferencia;
@@ -96,7 +97,18 @@ Route::middleware(['auth'])->group(function () {
 
     // PDF via token
     Route::get('/cotacoes/visualizar/{token}', [ConsultaPrecoController::class, 'visualizarCotacao'])->name('cotacoes.view');
+    // Encomendas aprovadas — painel da área de compras
+    Route::get('/encomendas/aprovadas', [EntradaEncomendaController::class, 'encomendasAprovadas'])
+        ->name('entrada_encomendas.aprovadas');
 
+    // CRUD de entrada de encomendas
+    Route::resource('entrada-encomendas', EntradaEncomendaController::class)
+        ->names('entrada_encomendas')
+        ->parameters(['entrada-encomendas' => 'entradaEncomenda']);
+
+Route::get('entrada-encomendas/{entradaEncomenda}/complementar', 
+    [EntradaEncomendaController::class, 'complementar'])
+    ->name('entrada_encomendas.complementar');
 
     //Route::resource('consulta_preco', ConsultaPrecoController::class)->names('consulta_preco');
     //Route::get('criar_cotacao/{cliente_id}', [ConsultaPrecoController::class, 'criar_cotacao'])->name('consulta_preco.criar_cotacao');

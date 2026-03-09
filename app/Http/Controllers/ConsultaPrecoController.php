@@ -50,7 +50,9 @@ class ConsultaPrecoController extends Controller
         $cores = Cor::orderBy('nome')->get();
 
         return view('paginas.produtos.consulta_precos.create', compact(
-            'cliente', 'fornecedores', 'cores'
+            'cliente',
+            'fornecedores',
+            'cores'
         ));
     }
 
@@ -101,7 +103,6 @@ class ConsultaPrecoController extends Controller
             return redirect()
                 ->route('consulta_preco.show_grupo', $grupo->id)
                 ->with('success', 'Cotação criada com sucesso!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Erro ao criar cotação: ' . $e->getMessage());
@@ -112,7 +113,7 @@ class ConsultaPrecoController extends Controller
     // ──────────────────────────────────────────────────────────
     // SHOW GRUPO — visualiza um grupo de cotação completo
     // ──────────────────────────────────────────────────────────
-    public function showGrupo($grupoId)
+     public function showGrupo($grupoId)
     {
         $grupo = ConsultaPrecoGrupo::with([
             'cliente',
@@ -120,16 +121,28 @@ class ConsultaPrecoController extends Controller
             'orcamento',
             'itens.cor',
             'itens.fornecedores.fornecedor',
+            'itens.fornecedores.comprador',        // ← comprador que preencheu o preço
             'itens.fornecedorSelecionado.fornecedor',
+            'entradas.recebedor',                  // ← quem recebeu
+            'entradas.destinatario',               // ← para quem entregou
+            'entradas.itens.consultaPreco',        // ← itens de cada entrada
         ])->findOrFail($grupoId);
 
         $grupo->verificarExpiracao();
         $grupo->refresh();
 
-        $cores = Cor::orderBy('nome')->get(); //  precisa estar aqui
-        $fornecedores = Fornecedor::orderBy('nome_fantasia')->get(); //
+        $cores        = Cor::orderBy('nome')->get();
+        $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
 
-        return view('paginas.produtos.consulta_precos.show_grupo', compact('grupo', 'cores', 'fornecedores'));
+        $itemStatusMap = [
+            'Pendente'   => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200',
+            'Disponível' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
+            'Expirado'   => 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200',
+        ];
+
+        return view('paginas.produtos.consulta_precos.show_grupo', compact(
+            'grupo', 'cores', 'fornecedores', 'itemStatusMap'
+        ));
     }
 
     // ──────────────────────────────────────────────────────────
@@ -176,19 +189,21 @@ class ConsultaPrecoController extends Controller
             ]);
 
             // Salva/atualiza preços por fornecedor
+            // ALTERAÇÃO: grava comprador_id (usuário logado) em cada fornecedor atualizado
             if ($request->has('fornecedores')) {
                 foreach ($request->fornecedores as $fornData) {
                     ConsultaPrecoFornecedor::updateOrCreate(
                         [
                             'consulta_preco_id' => $consultaPreco->id,
-                            'fornecedor_id' => $fornData['fornecedor_id'],
+                            'fornecedor_id'     => $fornData['fornecedor_id'],
                         ],
                         [
-                            'preco_compra' => $this->brToDecimal($fornData['preco_compra'] ?? null),
-                            'preco_venda' => $this->brToDecimal($fornData['preco_venda'] ?? null),
+                            'preco_compra'  => $this->brToDecimal($fornData['preco_compra'] ?? null),
+                            'preco_venda'   => $this->brToDecimal($fornData['preco_venda']  ?? null),
                             'prazo_entrega' => $fornData['prazo_entrega'] ?? null,
-                            'selecionado' => false,
-                            'observacao' => $fornData['observacao'] ?? null,
+                            'selecionado'   => false,
+                            'observacao'    => $fornData['observacao'] ?? null,
+                            'comprador_id'  => auth()->id(),   // ← NOVO
                         ]
                     );
                 }
@@ -241,7 +256,6 @@ class ConsultaPrecoController extends Controller
             return redirect()
                 ->route('consulta_preco.show_grupo', $consultaPreco->grupo_id)
                 ->with('success', 'Item atualizado com sucesso!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Erro ao atualizar cotação: ' . $e->getMessage());
@@ -303,7 +317,6 @@ class ConsultaPrecoController extends Controller
             return redirect()
                 ->route('consulta_preco.show_grupo', $grupo->id)
                 ->with('success', 'Cotação aprovada! Agora você pode gerar o orçamento.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Erro ao aprovar: ' . $e->getMessage());
@@ -386,11 +399,12 @@ class ConsultaPrecoController extends Controller
 
             return redirect()
                 ->route('orcamentos.show', $orcamento->id)
-                ->with($pdfGerado ? 'success' : 'warning', $pdfGerado
-                    ? 'Orçamento gerado com sucesso a partir da cotação!'
-                    : 'Orçamento gerado, mas houve falha ao gerar o PDF. Contate o suporte.'
+                ->with(
+                    $pdfGerado ? 'success' : 'warning',
+                    $pdfGerado
+                        ? 'Orçamento gerado com sucesso a partir da cotação!'
+                        : 'Orçamento gerado, mas houve falha ao gerar o PDF. Contate o suporte.'
                 );
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Erro ao gerar orçamento da cotação: ' . $e->getMessage());
@@ -405,7 +419,7 @@ class ConsultaPrecoController extends Controller
         $request->validate([
             'descricao'  => 'required|string|max:255',
             'quantidade' => 'required|numeric|min:1',
-            'part_number'=> 'nullable|string|max:100',
+            'part_number' => 'nullable|string|max:100',
             'cor_id'     => 'nullable|exists:cores,id',
             'observacao' => 'nullable|string|max:500',
         ]);
@@ -521,7 +535,7 @@ class ConsultaPrecoController extends Controller
         return redirect()->back()->with('success', 'Item removido com sucesso.');
     }
 
-// ✅ Método auxiliar de recálculo
+    // ✅ Método auxiliar de recálculo
     private function recalcularTotaisOrcamento(\App\Models\Orcamento $orcamento, ConsultaPrecoGrupo $grupo): void
     {
         $totalProdutos = \App\Models\OrcamentoItem::where('orcamento_id', $orcamento->id)
@@ -608,7 +622,6 @@ class ConsultaPrecoController extends Controller
             }
 
             return false;
-
         } catch (\Exception $e) {
             Log::error("Erro ao gerar PDF para cotação #{$cotacao->id}: " . $e->getMessage());
             return false;
@@ -634,7 +647,6 @@ class ConsultaPrecoController extends Controller
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'inline; filename="cotacao_' . $cotacao->id . '.pdf"',
             ]);
-
         } catch (\Exception $e) {
             abort(404, 'Cotação não encontrada ou token expirado');
         }

@@ -3,6 +3,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ConsultaPrecoFornecedor extends Model
 {
@@ -17,10 +18,13 @@ class ConsultaPrecoFornecedor extends Model
         'prazo_entrega',
         'selecionado',
         'observacao',
+        'comprador_id', 
     ];
 
     protected $casts = [
         'selecionado' => 'boolean',
+        'preco_compra'  => 'decimal:2',
+        'preco_venda'   => 'decimal:2',
     ];
 
     public function consultaPreco()
@@ -31,5 +35,10 @@ class ConsultaPrecoFornecedor extends Model
     public function fornecedor()
     {
         return $this->belongsTo(Fornecedor::class);
+    }
+
+     public function comprador(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'comprador_id');
     }
 }

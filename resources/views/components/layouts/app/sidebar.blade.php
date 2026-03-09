@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}"  >
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
-  
+
     @include('partials.head')
 </head>
 
@@ -12,9 +12,9 @@
         <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
             <x-app-logo />
         </a>
-        <flux:navlist.item icon="home" :href="route('clientes.index')"
-                :current="request()->routeIs('clientes.index')" wire:navigate>{{ __('Criar orçamento') }}
-            </flux:navlist.item>
+        <flux:navlist.item icon="home" :href="route('clientes.index')" :current="request()->routeIs('clientes.index')"
+            wire:navigate>{{ __('Criar orçamento') }}
+        </flux:navlist.item>
         <flux:navlist.item icon="calculator" :href="route('orcamentos.index')"
             :current="request()->routeIs('orcamentos.index')" wire:navigate>{{ __('Orçamentos') }}
         </flux:navlist.item>
@@ -69,6 +69,9 @@
             <flux:navlist.item icon="home" :href="route('consulta_preco.index')"
                 :current="request()->routeIs('consulta_preco.index')" wire:navigate>{{ __('Encomendas') }}
             </flux:navlist.item>
+            <flux:navlist.item icon="truck" :href="route('entrada_encomendas.index')"
+                :current="request()->routeIs('entrada_encomendas.index')" wire:navigate>
+                {{ __('Receber encomendas') }}</flux:navlist.item>
             <flux:navlist.item icon="home" wire:navigate>{{ __('Pedidos de compras - Cezar') }}
             </flux:navlist.item>
             <flux:navlist.item icon="home" wire:navigate>{{ __('Relatórios- Cezar') }}
@@ -82,6 +85,9 @@
             <flux:navlist.item icon="truck" :href="route('movimentacao.create')"
                 :current="request()->routeIs('movimentacao.create')" wire:navigate>
                 {{ __('Receber produto') }}</flux:navlist.item>
+            <flux:navlist.item icon="truck" :href="route('entrada_encomendas.index')"
+                :current="request()->routeIs('entrada_encomendas.index')" wire:navigate>
+                {{ __('Receber encomendas') }}</flux:navlist.item>
 
             <flux:navlist.item icon="home" wire:navigate>{{ __('Devoluções - Cezar') }}
             </flux:navlist.item>
@@ -131,7 +137,8 @@
                 :current="request()->routeIs('descontos.index')" wire:navigate>{{ __('Descontos Solicitados') }}
             </flux:navlist.item>
             <flux:navlist.item icon="home" :href="route('descontos.index')"
-                :current="request()->routeIs('descontos.index')" wire:navigate>{{ __('Cezar - Descontos por cliente') }}
+                :current="request()->routeIs('descontos.index')" wire:navigate>
+                {{ __('Cezar - Descontos por cliente') }}
             </flux:navlist.item>
         </flux:navlist.group>
         <flux:navlist.group heading="Administração" expandable :expanded="false">

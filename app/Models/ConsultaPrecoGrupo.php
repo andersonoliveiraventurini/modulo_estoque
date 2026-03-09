@@ -85,4 +85,9 @@ class ConsultaPrecoGrupo extends Model
             $this->update(['status' => 'Expirado']);
         }
     }
+
+    public function entradas(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\EntradaEncomenda::class, 'grupo_id');
+    }
 }
