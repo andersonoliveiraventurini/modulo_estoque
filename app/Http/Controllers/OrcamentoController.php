@@ -566,13 +566,9 @@ class OrcamentoController extends Controller
         $pdfGeradoComSucesso = $pdfService->gerarOrcamentoPdf($orcamento);
 
         if ($pdfGeradoComSucesso) {
-            $mensagem = $orcamento->encomenda !== null
-                ? 'Orçamento de encomenda criado e PDF gerado! A separação iniciará após confirmação do pagamento.'
-                : 'Orçamento criado e PDF gerado com sucesso!';
-
             return redirect()
                 ->route('orcamentos.show', $orcamento->id)
-                ->with('success', $mensagem);
+                ->with('success', 'Orçamento criado e PDF gerado com sucesso!');
         }
 
         return redirect()
@@ -992,7 +988,32 @@ class OrcamentoController extends Controller
             }
         }
 
-        return view('paginas.orcamentos.show', compact('orcamento', 'cotacaoBloqueada'));
+        // ── Lógica de aprovação por cotação ──────────────────────────────────
+        $itensConsulta = \App\Models\ConsultaPreco::where('orcamento_id', $orcamento->id)->get();
+
+        $todosDisponiveis = $itensConsulta->isNotEmpty()
+            && $itensConsulta->every(fn($i) => $i->status === 'Disponível');
+
+        $ultimaAtualizacao = $itensConsulta->where('status', 'Disponível')->max('updated_at');
+
+        $aprovacaoExpirada = $todosDisponiveis
+            && $ultimaAtualizacao !== null
+            && \Carbon\Carbon::parse($ultimaAtualizacao)->addDays(10)->isPast();
+
+        $bloqueiaAprovado = !$todosDisponiveis || $aprovacaoExpirada;
+
+        $statusBloqueado = $cotacaoBloqueada || $aprovacaoExpirada;
+
+        return view('paginas.orcamentos.show', compact(
+            'orcamento',
+            'cotacaoBloqueada',
+            'itensConsulta',
+            'todosDisponiveis',
+            'ultimaAtualizacao',
+            'aprovacaoExpirada',
+            'bloqueiaAprovado',
+            'statusBloqueado',
+        ));
     }
 
     public function atualizarStatus(Request $request, $id)
@@ -1010,8 +1031,8 @@ class OrcamentoController extends Controller
             // ── Validações ao tentar Aprovar ─────────────────────────────────────
             if ($status === 'Aprovado') {
 
+                // ✅ Bloqueia se houver itens de encomenda sem fornecedor selecionado
                 if ($orcamento->encomenda) {
-                    // ✅ Encomenda: só valida se todos os itens têm fornecedor selecionado
                     $grupo = \App\Models\ConsultaPrecoGrupo::with('itens.fornecedorSelecionado')
                         ->where('orcamento_id', $orcamento->id)
                         ->first();
@@ -1027,30 +1048,27 @@ class OrcamentoController extends Controller
                             ], 422);
                         }
                     }
+                }
 
-                    // ✅ Encomenda: pula verificação de estoque (itens não têm produto_id)
+                // ✅ Bloqueia se houver itens sem estoque suficiente
+                $itensSemEstoque = $orcamento->itens->filter(function ($item) {
+                    $produto = $item->produto;
+                    if (! $produto) return true;
+                    $estoqueDisponivel = ($produto->estoque_atual ?? 0) - ($produto->estoque_web ?? 0);
+                    return $estoqueDisponivel < $item->quantidade;
+                });
 
-                } else {
-                    // ✅ Orçamento normal: verifica estoque
-                    $itensSemEstoque = $orcamento->itens->filter(function ($item) {
-                        $produto = $item->produto;
-                        if (! $produto) return false;
-                        $estoqueDisponivel = ($produto->estoque_atual ?? 0) - ($produto->estoque_web ?? 0);
-                        return $estoqueDisponivel < $item->quantidade;
-                    });
+                if ($itensSemEstoque->isNotEmpty()) {
+                    $orcamento->status = 'Sem estoque';
+                    $orcamento->save();
 
-                    if ($itensSemEstoque->isNotEmpty()) {
-                        $orcamento->status = 'Sem estoque';
-                        $orcamento->save();
+                    $nomes = $itensSemEstoque
+                        ->map(fn($i) => $i->produto?->nome ?? "Item #{$i->id}")
+                        ->join(', ');
 
-                        $nomes = $itensSemEstoque
-                            ->map(fn($i) => $i->produto?->nome ?? "Item #{$i->id}")
-                            ->join(', ');
-
-                        return response()->json([
-                            'message' => "Estoque insuficiente para: {$nomes}. Status alterado para \"Sem estoque\".",
-                        ], 422);
-                    }
+                    return response()->json([
+                        'message' => "Estoque insuficiente para: {$nomes}. Status alterado para \"Sem estoque\".",
+                    ], 422);
                 }
             }
 
@@ -1075,26 +1093,6 @@ class OrcamentoController extends Controller
                 return response()->json([
                     'message'  => 'Status atualizado com sucesso!',
                     'redirect' => route('orcamentos.index'),
-                ]);
-            }
-
-            // ── APROVADO: encomenda aguarda pagamento antes de qualquer separação ─
-            if ($orcamento->encomenda !== null) {
-                $orcamento->update(['workflow_status' => 'aguardando_pagamento']);
-
-                try {
-                    $pdfPath = app(\App\Services\OrcamentoPdfService::class)
-                        ->gerarOrcamentoPdf($orcamento->fresh());
-                    if ($pdfPath && is_string($pdfPath)) {
-                        \App\Models\Orcamento::where('id', $orcamento->id)
-                            ->update(['pdf_path' => $pdfPath]);
-                    }
-                } catch (\Exception $pdfEx) {
-                    \Log::warning("PDF não gerado (encomenda aguardando pagamento) orçamento #{$id}: " . $pdfEx->getMessage());
-                }
-
-                return response()->json([
-                    'message' => 'Orçamento de encomenda aprovado! A separação iniciará após confirmação do pagamento.',
                 ]);
             }
 

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('orcamentos', function (Blueprint $table) {
             $table->enum('workflow_status', [
+                'aguardando_pagamento',
                 'aguardando_separacao',
                 'em_separacao',
                 'aguardando_conferencia',

@@ -1,4 +1,3 @@
-
 <x-layouts.app :title="__('Editar Orçamento')">
     <div class="flex w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
@@ -12,9 +11,11 @@
                         </path>
                     </svg>
                     @if (!$orcamento->encomenda)
-                    Editar Orçamento para Cliente {{ $cliente->id }} - {{ $cliente->nome ?? $cliente->nome_fantasia }}
+                        Editar Orçamento para Cliente {{ $cliente->id }} -
+                        {{ $cliente->nome ?? $cliente->nome_fantasia }}
                     @else
-                    Editar Encomenda para Cliente {{ $cliente->id }} - {{ $cliente->nome ?? $cliente->nome_fantasia }}
+                        Editar Encomenda para Cliente {{ $cliente->id }} -
+                        {{ $cliente->nome ?? $cliente->nome_fantasia }}
                     @endif
                 </h2>
                 {{-- Erros de validação --}}
@@ -66,21 +67,6 @@
                 <input type="hidden" name="desconto_aprovado" id="desconto_aprovado"
                     value="{{ $cliente->desconto_aprovado ?? 0 }}" />
 
-                @if ($orcamento->encomenda && $orcamento->itens->whereNotNull('produto_id')->isEmpty())
-                    <tbody>
-                        <tr>
-                            <td colspan="10" class="px-4 py-6 text-center" style="margin-top: 2rem;">
-                                <div
-                                    class="inline-flex items-center gap-2 px-4 py-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg text-sm text-blue-700 dark:text-blue-300">
-                                    <x-heroicon-o-information-circle class="w-5 h-5 flex-shrink-0" />
-                                    Este orçamento foi gerado a partir de uma encomenda. Use a busca abaixo para
-                                    adicionar produtos ao orçamento.
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                @endif
-                <!-- Pesquisa de Produtos -->
                 @if (!$orcamento->encomenda)
                     <div class="space-y-4">
                         <hr />
@@ -95,14 +81,152 @@
                     </div>
                 @endif
 
-                <!-- Campos iniciais -->
+                {{-- ================================================================
+                     FORM — tudo que precisa ser enviado ao controller está aqui dentro
+                     ================================================================ --}}
                 <form action="{{ route('orcamentos.update', $orcamento->id) }}" method="POST" class="space-y-8"
                     enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
+
+                    {{-- ✅ FIX 1: desconto_aprovado e cliente_id DENTRO do form --}}
                     <input type="hidden" name="cliente_id" value="{{ $cliente->id }}" />
+                    <input type="hidden" name="desconto_aprovado" id="desconto_aprovado"
+                        value="{{ $cliente->desconto_aprovado ?? 0 }}" />
+
+                    {{-- ================================================================
+                         ITENS DE ENCOMENDA — ✅ FIX 2: agora DENTRO do form
+                         ================================================================ --}}
+                    @if ($orcamento->encomenda && $orcamento->itens->whereNotNull('produto_id')->isEmpty())
+                        @php
+                            $grupo = \App\Models\ConsultaPrecoGrupo::with([
+                                'itens.cor',
+                                'itens.fornecedorSelecionado.fornecedor',
+                            ])
+                                ->where('orcamento_id', $orcamento->id)
+                                ->first();
+                        @endphp
+
+                        @if ($grupo && $grupo->itens->count() > 0)
+                            <div class="space-y-4">
+                                <hr />
+                                <h3 class="text-lg font-medium flex items-center gap-2">
+                                    <x-heroicon-o-shopping-cart class="w-5 h-5 text-purple-600" />
+                                    Itens da Encomenda
+                                    <span class="text-xs font-normal text-zinc-400">(cotação
+                                        #{{ $grupo->id }})</span>
+                                </h3>
+
+                                <div
+                                    class="ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10 rounded-lg overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                        <thead class="bg-gray-50 dark:bg-gray-700">
+                                            <tr>
+                                                <th
+                                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                    Descrição</th>
+                                                <th
+                                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                    Cor</th>
+                                                <th
+                                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                    Fornecedor</th>
+                                                <th
+                                                    class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">
+                                                    Qtd</th>
+                                                <th
+                                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
+                                                    Preço Venda</th>
+                                                <th
+                                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
+                                                    Desc. Item (R$)</th>
+                                                <th
+                                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
+                                                    Subtotal</th>
+                                                <th
+                                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
+                                                    c/ Desconto</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="itens-encomenda" class="divide-y">
+                                            @foreach ($grupo->itens as $item)
+                                                @php
+                                                    $forn = $item->fornecedorSelecionado;
+                                                    $precoVenda = $forn ? (float) $forn->preco_venda : 0;
+                                                @endphp
+                                                <tr data-item-id="{{ $item->id }}"
+                                                    data-preco-original="{{ $precoVenda }}"
+                                                    data-quantidade="{{ $item->quantidade }}">
+
+                                                    {{-- Hiddens enviados ao controller --}}
+                                                    <input type="hidden"
+                                                        name="encomenda_itens[{{ $loop->index }}][consulta_preco_id]"
+                                                        value="{{ $item->id }}">
+                                                    <input type="hidden"
+                                                        name="encomenda_itens[{{ $loop->index }}][fornecedor_id]"
+                                                        value="{{ $forn->fornecedor_id ?? '' }}">
+                                                    <input type="hidden"
+                                                        name="encomenda_itens[{{ $loop->index }}][quantidade]"
+                                                        value="{{ $item->quantidade }}">
+                                                    <input type="hidden"
+                                                        name="encomenda_itens[{{ $loop->index }}][preco_original]"
+                                                        value="{{ $precoVenda }}" class="enc-preco-original">
+                                                    <input type="hidden"
+                                                        name="encomenda_itens[{{ $loop->index }}][desconto_item]"
+                                                        value="0" class="enc-desconto-item">
+                                                    <input type="hidden"
+                                                        name="encomenda_itens[{{ $loop->index }}][tipo_desconto]"
+                                                        value="percentual" class="enc-tipo-desconto">
+                                                    <input type="hidden"
+                                                        name="encomenda_itens[{{ $loop->index }}][preco_final]"
+                                                        value="{{ $precoVenda }}" class="enc-preco-final">
+
+                                                    <td class="px-4 py-2 text-sm font-medium">{{ $item->descricao }}
+                                                    </td>
+                                                    <td class="px-4 py-2 text-sm">{{ $item->cor->nome ?? '—' }}</td>
+                                                    <td class="px-4 py-2 text-sm">
+                                                        @if ($forn)
+                                                            <span
+                                                                class="text-emerald-600 font-medium">{{ $forn->fornecedor->nome_fantasia }}</span>
+                                                        @else
+                                                            <span class="text-red-500 text-xs">Sem fornecedor</span>
+                                                        @endif
+                                                    </td>
+                                                    <td class="px-4 py-2 text-center font-semibold">
+                                                        {{ $item->quantidade }}</td>
+                                                    <td class="px-4 py-2 text-right text-sm">
+                                                        R$ <span
+                                                            class="enc-preco-display">{{ number_format($precoVenda, 2, ',', '.') }}</span>
+                                                    </td>
+                                                    <td class="px-4 py-2 text-right text-sm">
+                                                        <input type="number" step="0.01" min="0"
+                                                            value="0" placeholder="0,00"
+                                                            class="enc-desconto-input w-24 border rounded px-2 py-1 text-sm text-right"
+                                                            data-index="{{ $loop->index }}"
+                                                            onchange="recalcularItemEncomenda(this)" />
+                                                    </td>
+                                                    <td class="px-4 py-2 text-right text-sm font-medium">
+                                                        R$ <span
+                                                            class="enc-subtotal">{{ number_format($precoVenda * $item->quantidade, 2, ',', '.') }}</span>
+                                                    </td>
+                                                    <td
+                                                        class="px-4 py-2 text-right text-sm font-semibold text-emerald-600">
+                                                        R$ <span
+                                                            class="enc-subtotal-desc">{{ number_format($precoVenda * $item->quantidade, 2, ',', '.') }}</span>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        @endif
+                    @endif
+
+                    {{-- ================================================================
+                         PRODUTOS NORMAIS (somente não-encomenda)
+                         ================================================================ --}}
                     @if (!$orcamento->encomenda)
-                        <!-- Produtos no Orçamento -->
                         <div class="space-y-4"><br />
                             <hr />
                             <h3 class="text-lg font-medium flex items-center gap-2">
@@ -118,49 +242,53 @@
                                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                     <thead class="bg-gray-50 dark:bg-gray-700">
                                         <tr>
-                                            <th scope="col"
-                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                            <th
+                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                                 Código</th>
-                                            <th scope="col"
-                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                            <th
+                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                                 Produto</th>
-                                            <th scope="col"
-                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                            <th
+                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                                 Part Number</th>
-                                            <th scope="col"
-                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                            <th
+                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                                 Fornecedor</th>
-                                            <th scope="col"
-                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                            <th
+                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                                 Cor</th>
-                                            <th scope="col"
-                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                            <th
+                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                                 Preço Unit.</th>
-                                            <th scope="col"
-                                                class="w-20 px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                            <th
+                                                class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-20">
                                                 Qtd.</th>
-                                            <th scope="col"
-                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                            <th
+                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                                 Subtotal</th>
-                                            <th scope="col"
-                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                            <th
+                                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                                 c/ Desconto</th>
-                                            <th scope="col"
-                                                class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                                            <th
+                                                class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                                 Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody id="produtos-originais" class="divide-y">
                                         @foreach ($orcamento->itens->whereNotNull('produto_id') as $item)
                                             <tr data-estoque="{{ $item->produto->estoque_atual ?? 'null' }}">
-                                                <input type="hidden" name="produtos[{{ $loop->index }}][produto_id]"
+                                                <input type="hidden"
+                                                    name="produtos[{{ $loop->index }}][produto_id]"
                                                     value="{{ $item->produto->id }}">
                                                 <input type="hidden"
                                                     name="produtos[{{ $loop->index }}][valor_unitario]"
-                                                    class="valor-unitario-hidden" value="{{ $item->valor_unitario }}">
-                                                <input type="hidden" name="produtos[{{ $loop->index }}][part_number]"
+                                                    class="valor-unitario-hidden"
+                                                    value="{{ $item->valor_unitario }}">
+                                                <input type="hidden"
+                                                    name="produtos[{{ $loop->index }}][part_number]"
                                                     value="{{ $item->produto->part_number ?? '' }}">
-                                                <input type="hidden" name="produtos[{{ $loop->index }}][quantidade]"
+                                                <input type="hidden"
+                                                    name="produtos[{{ $loop->index }}][quantidade]"
                                                     value="{{ $item->quantidade }}">
                                                 <input type="hidden" name="produtos[{{ $loop->index }}][subtotal]"
                                                     value="{{ number_format($item->valor_unitario * $item->quantidade, 2, '.', '') }}">
@@ -179,8 +307,7 @@
                                                     {{ $item->produto->fornecedor->nome ?? '' }}</td>
                                                 <td class="px-3 py-2 border">{{ $item->produto->cor ?? '' }}</td>
                                                 <td class="px-3 py-2 border">R$
-                                                    {{ number_format($item->valor_unitario, 2, ',', '.') }}
-                                                </td>
+                                                    {{ number_format($item->valor_unitario, 2, ',', '.') }}</td>
                                                 <td class="px-3 py-2 border">
                                                     <input type="number"
                                                         name="produtos[{{ $loop->index }}][quantidade]"
@@ -203,9 +330,7 @@
                                             </tr>
                                         @endforeach
                                     </tbody>
-                                    <tbody id="produtos-selecionados" class="divide-y">
-
-                                    </tbody>
+                                    <tbody id="produtos-selecionados" class="divide-y"></tbody>
                                 </table>
                             </div>
                         </div>
@@ -316,6 +441,8 @@
                     <div class="space-y-4">
                         @if (!$orcamento->encomenda)
                             <hr />
+                        @else
+                            <br />
                         @endif
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
@@ -1435,7 +1562,102 @@
     function formatarMoeda(valor) {
         return parseFloat(valor).toFixed(2).replace('.', ',');
     }
+    window.recalcularItemEncomenda = function(input) {
+        const index = input.getAttribute('data-index');
+        const row = input.closest('tr');
+        const precoOri = parseFloat(row.querySelector('.enc-preco-original').value) || 0;
+        const qtd = parseFloat(row.querySelector('input[name="encomenda_itens[' + index + '][quantidade]"]')
+            .value) || 1;
+        const descItem = parseFloat(input.value) || 0;
 
+        const precoFinal = Math.max(0, precoOri - descItem);
+        const subtotal = precoOri * qtd;
+        const subtotalComDesconto = precoFinal * qtd;
+
+        // Atualiza hiddens
+        row.querySelector('.enc-desconto-item').value = descItem;
+        row.querySelector('.enc-preco-final').value = precoFinal;
+        row.querySelector('.enc-tipo-desconto').value = descItem > 0 ? 'produto' : 'percentual';
+
+        // Atualiza display
+        row.querySelector('.enc-subtotal').textContent = formatarMoeda(subtotal);
+        row.querySelector('.enc-subtotal-desc').textContent = formatarMoeda(subtotalComDesconto);
+
+        recalcularTotaisEncomenda();
+    };
+
+    function recalcularTotaisEncomenda() {
+        // Aplica desconto percentual global nos itens de encomenda sem desconto individual
+        const descontoPercentual = obterDescontoAplicado();
+        let totalEncomenda = 0;
+        let totalEncomendaComDesc = 0;
+
+        document.querySelectorAll('#itens-encomenda tr').forEach(function(row) {
+            const precoOri = parseFloat(row.querySelector('.enc-preco-original')?.value) || 0;
+            const descItem = parseFloat(row.querySelector('.enc-desconto-item')?.value) || 0;
+            const qtd = parseFloat(row.dataset.quantidade) || 1;
+            const tipo = row.querySelector('.enc-tipo-desconto')?.value;
+
+            const subtotal = precoOri * qtd;
+            let subtotalDesc;
+
+            if (descItem > 0) {
+                // Desconto fixo por item — ignora percentual
+                subtotalDesc = (precoOri - descItem) * qtd;
+            } else if (descontoPercentual > 0) {
+                // Aplica percentual global
+                subtotalDesc = subtotal - (subtotal * (descontoPercentual / 100));
+                // Atualiza o hidden preco_final com valor pós-percentual
+                const precoFinalInput = row.querySelector('.enc-preco-final');
+                if (precoFinalInput) {
+                    precoFinalInput.value = ((precoOri) - (precoOri * descontoPercentual / 100)).toFixed(4);
+                }
+            } else {
+                subtotalDesc = subtotal;
+            }
+
+            // Atualiza display da coluna c/ desconto
+            const spanDesc = row.querySelector('.enc-subtotal-desc');
+            if (spanDesc) spanDesc.textContent = formatarMoeda(subtotalDesc);
+
+            totalEncomenda += subtotal;
+            totalEncomendaComDesc += subtotalDesc;
+        });
+
+        return {
+            totalEncomenda,
+            totalEncomendaComDesc
+        };
+    }
+
+    // Sobrescreve recalcularTotais para incluir encomenda
+    const _recalcularTotaisOriginal = recalcularTotais;
+    recalcularTotais = function() {
+        recalcularTodosProdutosOriginais();
+
+        const totaisOriginais = calcularTotalProdutosOriginais();
+        const totaisNovos = calcularTotalProdutosNovos();
+        const totaisVidros = calcularTotalVidros();
+        const totaisEncomenda = recalcularTotaisEncomenda();
+
+        const totalGeral = totaisOriginais.total + totaisNovos.total +
+            totaisVidros.totalVidros + totaisEncomenda.totalEncomenda;
+
+        const totalGeralComDesconto = totaisOriginais.totalComDesconto + totaisNovos.totalComDesconto +
+            totaisVidros.totalVidrosComDesconto + totaisEncomenda.totalEncomendaComDesc;
+
+        const valorTotalInput = document.getElementById('valor_total');
+        if (valorTotalInput) valorTotalInput.value = totalGeral.toFixed(2);
+
+        const guia = parseFloat(document.querySelector('[name="guia_recolhimento"]')?.value) || 0;
+        const descontoEspecifico = parseFloat(document.querySelector('[name="desconto_especifico"]')?.value) || 0;
+
+        let valorFinal = totalGeralComDesconto - descontoEspecifico + guia;
+        if (valorFinal < 0) valorFinal = 0;
+
+        const valorFinalInput = document.getElementById('valor_final');
+        if (valorFinalInput) valorFinalInput.value = valorFinal.toFixed(2);
+    };
     // ==================== INICIALIZAÇÃO ====================
     function inicializar() {
         console.log('Inicializando sistema de orçamento - EDIT...');
