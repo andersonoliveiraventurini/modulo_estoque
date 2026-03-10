@@ -18,6 +18,9 @@
         <flux:navlist.item icon="calculator" :href="route('orcamentos.index')"
             :current="request()->routeIs('orcamentos.index')" wire:navigate>{{ __('Orçamentos') }}
         </flux:navlist.item>
+        <flux:navlist.item icon="truck" :href="route('entrada_encomendas.kanban')"
+            :current="request()->routeIs('entrada_encomendas.kanban')" wire:navigate>{{ __('Acompanhar encomendas') }}
+        </flux:navlist.item>
         <flux:navlist.item icon="chart-bar" :href="route('orcamentos.status_orcamentos')"
             :current="request()->routeIs('orcamentos.status_orcamentos')" wire:navigate>{{ __('Status Pedido') }}
         </flux:navlist.item>

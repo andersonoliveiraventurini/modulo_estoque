@@ -28,6 +28,11 @@ class EntradaEncomendaController extends Controller
         return view('paginas.produtos.entrada_encomendas.index', compact('entradas'));
     }
 
+    public function kanban()
+    {
+        return view('paginas.produtos.entrada_encomendas.kanban');
+    }
+
     // ──────────────────────────────────────────────────────────
     // CREATE — formulário de entrada a partir de um grupo aprovado/pago
     // ──────────────────────────────────────────────────────────
@@ -67,7 +72,7 @@ class EntradaEncomendaController extends Controller
     // ──────────────────────────────────────────────────────────
     // STORE — salva a entrada
     // ──────────────────────────────────────────────────────────
-     public function store(Request $request)
+    public function store(Request $request)
     {
         $request->validate([
             'grupo_id'         => 'required|exists:consulta_preco_grupos,id',
@@ -97,9 +102,12 @@ class EntradaEncomendaController extends Controller
             $grupo = ConsultaPrecoGrupo::with('cliente')->findOrFail($request->grupo_id);
 
             // Soma já recebido em entradas anteriores
-            $jaRecebidoMap = EntradaEncomendaItem::whereHas('entrada', fn($q) =>
+            $jaRecebidoMap = EntradaEncomendaItem::whereHas(
+                'entrada',
+                fn($q) =>
                 $q->where('grupo_id', $grupo->id)
-            )->get()->groupBy('consulta_preco_id')->map(fn($itens) =>
+            )->get()->groupBy('consulta_preco_id')->map(
+                fn($itens) =>
                 $itens->sum('quantidade_recebida')
             );
 
@@ -157,7 +165,6 @@ class EntradaEncomendaController extends Controller
             return redirect()
                 ->route('entrada_encomendas.show', $entrada->id)
                 ->with('success', 'Entrada registrada com sucesso!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Erro ao registrar entrada de encomenda: ' . $e->getMessage());
@@ -229,25 +236,28 @@ class EntradaEncomendaController extends Controller
     // ──────────────────────────────────────────────────────────
     // EDIT — editar/complementar uma entrada parcial
     // ──────────────────────────────────────────────────────────
-   public function edit(EntradaEncomenda $entradaEncomenda)
-{
-    $entradaEncomenda->load([
-        'grupo.cliente',
-        'recebedor',
-        'destinatario',
-        'itens.consultaPreco.cor',
-        'itens.categoria',
-        'itens.subCategoria',
-    ]);
+    public function edit(EntradaEncomenda $entradaEncomenda)
+    {
+        $entradaEncomenda->load([
+            'grupo.cliente',
+            'recebedor',
+            'destinatario',
+            'itens.consultaPreco.cor',
+            'itens.categoria',
+            'itens.subCategoria',
+        ]);
 
-    $usuarios      = \App\Models\User::orderBy('name')->get();
-    $categorias    = \App\Models\Categoria::orderBy('nome')->get();
-    $subCategorias = \App\Models\SubCategoria::orderBy('nome')->get();
+        $usuarios      = \App\Models\User::orderBy('name')->get();
+        $categorias    = \App\Models\Categoria::orderBy('nome')->get();
+        $subCategorias = \App\Models\SubCategoria::orderBy('nome')->get();
 
-    return view('paginas.produtos.entrada_encomendas.edit', compact(
-        'entradaEncomenda', 'usuarios', 'categorias', 'subCategorias'
-    ));
-}
+        return view('paginas.produtos.entrada_encomendas.edit', compact(
+            'entradaEncomenda',
+            'usuarios',
+            'categorias',
+            'subCategorias'
+        ));
+    }
 
     public function update(Request $request, EntradaEncomenda $entradaEncomenda)
     {
@@ -304,10 +314,11 @@ class EntradaEncomendaController extends Controller
 
             // Soma de TODAS as entradas do grupo (incluindo esta já atualizada)
             $totalRecebidoMap = EntradaEncomendaItem::whereHas(
-                'entrada', fn($q) => $q->where('grupo_id', $grupo->id)
+                'entrada',
+                fn($q) => $q->where('grupo_id', $grupo->id)
             )->get()
-             ->groupBy('consulta_preco_id')
-             ->map(fn($itens) => $itens->sum('quantidade_recebida'));
+                ->groupBy('consulta_preco_id')
+                ->map(fn($itens) => $itens->sum('quantidade_recebida'));
 
             $todosCompletos = $grupo->itens->every(function ($item) use ($totalRecebidoMap) {
                 $recebido = (float) ($totalRecebidoMap[$item->id] ?? 0);
@@ -334,7 +345,6 @@ class EntradaEncomendaController extends Controller
             return redirect()
                 ->route('entrada_encomendas.show', $entradaEncomenda->id)
                 ->with('success', 'Entrada atualizada com sucesso!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Erro ao atualizar entrada de encomenda: ' . $e->getMessage());

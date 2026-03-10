@@ -106,9 +106,14 @@ Route::middleware(['auth'])->group(function () {
         ->names('entrada_encomendas')
         ->parameters(['entrada-encomendas' => 'entradaEncomenda']);
 
-Route::get('entrada-encomendas/{entradaEncomenda}/complementar', 
-    [EntradaEncomendaController::class, 'complementar'])
-    ->name('entrada_encomendas.complementar');
+    Route::get(
+        'entrada-encomendas/{entradaEncomenda}/complementar',
+        [EntradaEncomendaController::class, 'complementar']
+    )
+        ->name('entrada_encomendas.complementar');
+    
+    Route::get('/encomendas/kanban', [EntradaEncomendaController::class, 'kanban'])
+        ->name('entrada_encomendas.kanban');
 
     //Route::resource('consulta_preco', ConsultaPrecoController::class)->names('consulta_preco');
     //Route::get('criar_cotacao/{cliente_id}', [ConsultaPrecoController::class, 'criar_cotacao'])->name('consulta_preco.criar_cotacao');
