@@ -162,21 +162,36 @@
             <div class="space-y-4">
                 @foreach ($grupo->itens as $item)
                     <div class="border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden">
-                        <div class="flex items-center justify-between px-4 py-3 bg-zinc-50 dark:bg-zinc-800">
-                            <div class="flex items-center gap-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 bg-zinc-50 dark:bg-zinc-800">
+                            <div class="flex items-center gap-3 min-w-0">
                                 <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium {{ $itemStatusMap[$item->status] ?? 'bg-zinc-100 text-zinc-600' }}">
                                     {{ $item->status }}
                                 </span>
-                                <span class="font-semibold text-sm text-zinc-800 dark:text-zinc-200">
+                                <span class="font-semibold text-sm text-zinc-800 dark:text-zinc-200 truncate">
                                     {{ $item->descricao ?: '(sem descrição)' }}
                                 </span>
-                                <span class="text-xs text-zinc-500">
+                                <span class="text-xs text-zinc-500 whitespace-nowrap">
                                     Qtd: {{ $item->quantidade }}
                                     @if ($item->cor) · Cor: {{ $item->cor->nome }} @endif
                                     @if ($item->part_number) · PN: {{ $item->part_number }} @endif
                                 </span>
                             </div>
-                            <div class="flex gap-2">
+
+                            <div class="flex flex-wrap gap-2 items-center">
+
+                                {{-- ── BOTÃO CADASTRAR COMO PRODUTO ── --}}
+                                <a href="{{ route('produtos.create_from_item', $item->id) }}"
+                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition
+                                       bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100
+                                       dark:bg-violet-900/20 dark:text-violet-300 dark:border-violet-700 dark:hover:bg-violet-900/40"
+                                   title="Abrir cadastro de produto pré-preenchido com os dados deste item">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                    </svg>
+                                    Cadastrar como Produto
+                                </a>
+
                                 @if (!in_array($grupo->status, ['Cancelado', 'Expirado']))
                                     <a href="{{ route('consulta_preco.edit', $item->id) }}">
                                         <x-button size="sm" variant="secondary">
@@ -185,6 +200,7 @@
                                         </x-button>
                                     </a>
                                 @endif
+
                                 @if (!$grupo->orcamento_id || in_array($grupo->status, ['Aprovado', 'Disponível']))
                                     <form action="{{ route('consulta_preco.destroy', $item->id) }}" method="POST"
                                           onsubmit="return confirm('Remover o item \'{{ addslashes($item->descricao) }}\' desta cotação?')">
@@ -253,7 +269,6 @@
 
         {{-- ── RECEBIMENTOS ──────────────────────────────────── --}}
         @php
-            // Mapa consolidado: total recebido por consulta_preco_id em TODAS as entradas
             $recebidoMap = [];
             foreach ($grupo->entradas as $entrada) {
                 foreach ($entrada->itens as $ei) {
@@ -276,7 +291,6 @@
                     </a>
                 </div>
 
-                {{-- Resumo consolidado --}}
                 <div class="mb-5 p-4 bg-zinc-50 dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700">
                     <p class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Situação atual dos itens</p>
                     <table class="w-full text-sm">
@@ -311,7 +325,6 @@
                     </table>
                 </div>
 
-                {{-- Timeline de entradas --}}
                 <div class="space-y-3">
                     @foreach ($grupo->entradas->sortByDesc('data_recebimento') as $entrada)
                         @php
@@ -320,64 +333,42 @@
                                 'Recebido completo'     => 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
                                 'Entregue'              => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
                             ];
-
-                            // Recebido acumulado ATÉ esta entrada (para exibir contexto correto)
-                            // Simplesmente mostra o que esta entrada recebeu, sem comparar com total
                         @endphp
                         <div class="flex items-start gap-4 p-4 border border-zinc-100 dark:border-zinc-700 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
                             <div class="mt-0.5 flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
                                 <x-heroicon-o-inbox-arrow-down class="w-4 h-4 text-blue-600 dark:text-blue-400" />
                             </div>
-
                             <div class="flex-1 min-w-0">
                                 <div class="flex flex-wrap items-center gap-2 mb-1">
-                                    <span class="font-semibold text-sm text-zinc-800 dark:text-zinc-200">
-                                        Entrada #{{ $entrada->id }}
-                                    </span>
+                                    <span class="font-semibold text-sm text-zinc-800 dark:text-zinc-200">Entrada #{{ $entrada->id }}</span>
                                     <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium {{ $entStatusMap[$entrada->status] ?? 'bg-zinc-100 text-zinc-600' }}">
                                         {{ $entrada->status }}
                                     </span>
                                 </div>
-
                                 <div class="flex flex-wrap gap-4 text-xs text-zinc-500 mb-2">
-                                    <span>
-                                        📦 Recebido por <strong class="text-zinc-700 dark:text-zinc-300">{{ $entrada->recebedor->name }}</strong>
-                                        em {{ $entrada->data_recebimento->format('d/m/Y') }}
-                                    </span>
+                                    <span>📦 Recebido por <strong class="text-zinc-700 dark:text-zinc-300">{{ $entrada->recebedor->name }}</strong> em {{ $entrada->data_recebimento->format('d/m/Y') }}</span>
                                     @if ($entrada->destinatario)
-                                        <span>
-                                            🤝 Entregue para <strong class="text-zinc-700 dark:text-zinc-300">{{ $entrada->destinatario->name }}</strong>
+                                        <span>🤝 Entregue para <strong class="text-zinc-700 dark:text-zinc-300">{{ $entrada->destinatario->name }}</strong>
                                             @if ($entrada->data_entrega) em {{ $entrada->data_entrega->format('d/m/Y') }} @endif
                                         </span>
                                     @endif
                                 </div>
-
-                                {{-- Badges: mostra só o que foi recebido NESTA entrada --}}
                                 <div class="flex flex-wrap gap-2">
                                     @foreach ($entrada->itens as $ei)
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border
-                                            {{ $ei->recebido_completo
-                                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-700'
-                                                : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:border-amber-700' }}">
+                                            {{ $ei->recebido_completo ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200' }}">
                                             {{ $ei->consultaPreco->descricao }}:
                                             <strong>+{{ number_format($ei->quantidade_recebida, 0, ',', '.') }}</strong>
-                                            {{-- Mostra o total recebido acumulado --}}
-                                            <span class="opacity-60 ml-0.5">
-                                                (total: {{ number_format($recebidoMap[$ei->consulta_preco_id] ?? $ei->quantidade_recebida, 0, ',', '.') }}/{{ number_format($ei->quantidade_solicitada, 0, ',', '.') }})
-                                            </span>
+                                            <span class="opacity-60 ml-0.5">(total: {{ number_format($recebidoMap[$ei->consulta_preco_id] ?? $ei->quantidade_recebida, 0, ',', '.') }}/{{ number_format($ei->quantidade_solicitada, 0, ',', '.') }})</span>
                                         </span>
                                     @endforeach
                                 </div>
-
                                 @if ($entrada->observacao)
                                     <p class="text-xs text-zinc-400 italic mt-1">{{ $entrada->observacao }}</p>
                                 @endif
                             </div>
-
                             <a href="{{ route('entrada_encomendas.show', $entrada->id) }}" class="flex-shrink-0">
-                                <x-button size="sm" variant="secondary">
-                                    <x-heroicon-o-eye class="w-3.5 h-3.5" />
-                                </x-button>
+                                <x-button size="sm" variant="secondary"><x-heroicon-o-eye class="w-3.5 h-3.5" /></x-button>
                             </a>
                         </div>
                     @endforeach
@@ -393,8 +384,7 @@
                     </div>
                     <a href="{{ route('entrada_encomendas.create', ['grupo_id' => $grupo->id]) }}">
                         <x-button size="sm" variant="primary">
-                            <x-heroicon-o-inbox-arrow-down class="w-4 h-4" />
-                            Registrar Primeiro Recebimento
+                            <x-heroicon-o-inbox-arrow-down class="w-4 h-4" /> Registrar Primeiro Recebimento
                         </x-button>
                     </a>
                 </div>
@@ -404,16 +394,12 @@
         {{-- ── RODAPÉ ──────────────────────────────────────── --}}
         <div class="flex justify-between">
             <a href="{{ route('consulta_preco.index') }}">
-                <x-button size="sm" variant="primary">
-                    <x-heroicon-o-arrow-uturn-left class="w-4 h-4"/> Voltar
-                </x-button>
+                <x-button size="sm" variant="primary"><x-heroicon-o-arrow-uturn-left class="w-4 h-4"/> Voltar</x-button>
             </a>
             <form action="{{ route('consulta_preco.destroy_grupo', $grupo->id) }}" method="POST"
                   onsubmit="return confirm('Excluir esta cotação e todos os itens?')">
                 @csrf @method('DELETE')
-                <x-button type="submit" size="sm" variant="danger">
-                    <x-heroicon-o-trash class="w-4 h-4"/> Excluir Cotação
-                </x-button>
+                <x-button type="submit" size="sm" variant="danger"><x-heroicon-o-trash class="w-4 h-4"/> Excluir Cotação</x-button>
             </form>
         </div>
 

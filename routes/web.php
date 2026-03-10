@@ -115,6 +115,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/encomendas/kanban', [EntradaEncomendaController::class, 'kanban'])
         ->name('entrada_encomendas.kanban');
 
+        Route::get('/produtos/create-from-item/{consultaPreco}', [ProdutoController::class, 'createFromItem'])
+    ->name('produtos.create_from_item');
+
     //Route::resource('consulta_preco', ConsultaPrecoController::class)->names('consulta_preco');
     //Route::get('criar_cotacao/{cliente_id}', [ConsultaPrecoController::class, 'criar_cotacao'])->name('consulta_preco.criar_cotacao');
     //Route::get('/cotacoes/view/{token}', [CotacaoController::class, 'visualizarCotacao'])

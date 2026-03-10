@@ -35,7 +35,49 @@ class ProdutoController extends Controller
         $cores = Cor::orderBy('nome')->get();
         return view('paginas.produtos.create', compact('fornecedores', 'categorias', 'subcategorias', 'cores'));
     }
+    public function createFromItem(\App\Models\ConsultaPreco $consultaPreco)
+    {
+        $consultaPreco->load([
+            'cor',
+            'fornecedorSelecionado.fornecedor',
+            'grupo.itens',
+        ]);
 
+        $forn        = $consultaPreco->fornecedorSelecionado;
+        $fornecedor  = $forn?->fornecedor;
+
+        // Monta array com todos os dados disponíveis do item cotado
+        // + dados preenchidos no recebimento (entrada_encomenda_itens)
+        $itemRecebimento = \App\Models\EntradaEncomendaItem::where('consulta_preco_id', $consultaPreco->id)
+            ->whereNotNull('ncm')           // pega o primeiro com dados preenchidos
+            ->orWhere('consulta_preco_id', $consultaPreco->id)
+            ->orderByDesc('created_at')
+            ->first();
+
+        // Flash dos dados para a view de criação de produto
+        session()->flash('prefill_produto', [
+            // Dados básicos da cotação
+            'nome'          => $consultaPreco->descricao,
+            'part_number'   => $consultaPreco->part_number,
+            'cor_id'        => $consultaPreco->cor_id,
+            'fornecedor_id' => $fornecedor?->id,
+            'preco_custo'   => $forn?->preco_compra,
+            'preco_venda'   => $forn?->preco_venda,
+            // Dados do recebimento (se preenchidos)
+            'ncm'           => $itemRecebimento?->ncm        ?? $consultaPreco->ncm ?? null,
+            'codigo_barras' => $itemRecebimento?->codigo_barras ?? null,
+            'sku'           => $itemRecebimento?->sku           ?? null,
+            'unidade'       => $itemRecebimento?->unidade_medida ?? null,
+            'peso'          => $itemRecebimento?->peso           ?? null,
+            'categoria_id'  => $itemRecebimento?->categoria_id  ?? null,
+            'subcategoria_id' => $itemRecebimento?->sub_categoria_id ?? null,
+            // Referência de origem
+            '_origem_consulta_preco_id' => $consultaPreco->id,
+            '_origem_grupo_id'          => $consultaPreco->grupo_id,
+        ]);
+
+        return redirect()->route('produtos.create');
+    }
     /**
      * Store a newly created resource in storage.
      */
@@ -135,7 +177,7 @@ class ProdutoController extends Controller
     public function inativar($produto_id)
     {
         $produto = Produto::findOrFail($produto_id);
-        $produto->update(['status' => 'inativo']); 
+        $produto->update(['status' => 'inativo']);
 
         return redirect()
             ->route('produtos.index')
@@ -145,7 +187,7 @@ class ProdutoController extends Controller
     public function ativar($produto_id)
     {
         $produto = Produto::findOrFail($produto_id);
-        $produto->update(['status' => 'ativo']); 
+        $produto->update(['status' => 'ativo']);
 
         return redirect()
             ->route('produtos.index')

@@ -1,201 +1,459 @@
-<x-layouts.app :title="__('Criar item')">
+<x-layouts.app :title="__('Criar Produto')">
+
+@php
+    $pre = session('prefill_produto', []);
+    $p = fn(string $key, $default = '') => old($key, $pre[$key] ?? $default);
+@endphp
+
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-            <!-- Card Principal -->
-            <div
-                class="bg-white p-6 shadow rounded-2xl border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+            <div class="bg-white p-6 shadow rounded-2xl border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+
                 <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
                     <x-heroicon-o-building-office-2 class="w-5 h-5 text-primary-600" />
                     Cadastro de produto
                 </h2>
+
+                {{-- Aviso de origem quando vier de uma cotação --}}
+                @if (!empty($pre['_origem_consulta_preco_id']))
+                    <div class="mb-6 p-3 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700 rounded-lg text-sm text-violet-700 dark:text-violet-300 flex items-center gap-2">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z"/>
+                        </svg>
+                        Dados pré-preenchidos a partir do item da
+                        <a href="{{ route('consulta_preco.show_grupo', $pre['_origem_grupo_id']) }}"
+                           class="font-semibold underline hover:text-violet-900">
+                            Cotação #{{ $pre['_origem_grupo_id'] }}
+                        </a>
+                        — revise e complete antes de salvar.
+                    </div>
+                @endif
+
                 <form action="{{ route('produtos.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
                     @csrf
-                    <!-- Dados Básicos -->
+
+                    {{-- ── Dados Básicos ───────────────────────────── --}}
                     <div class="space-y-4">
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <x-heroicon-o-clipboard class="w-5 h-5 text-primary-600" />
                             Dados Básicos
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                            <x-input name="nome" label="Nome do Produto *" placeholder="Digite o nome" required
-                                class="col-span-2" />
-                            <x-input name="codigo_barras" label="Código de Barras" placeholder="7891234567890" />
-                            <x-input name="sku" label="SKU/Código" placeholder="PRD123456" />
-                            <x-select name="fornecedor_id" label="Fornecedores ativos">
-                                <option value="">Selecione...</option>
-                                @foreach ($fornecedores as $fornecedor)
-                                    <option value="{{ $fornecedor->id }}">{{ $fornecedor->nome_fantasia }}</option>
-                                @endforeach
-                            </x-select>
-                            <x-input name="part_number" label="Part Number" placeholder="Digite o código do fornecedor" />
-                            <x-select name="cor_id" label="Cor">
-                                <option value="">Selecione...</option>
-                                @foreach ($cores as $cor)
-                                    <option value="{{ $cor->id }}">{{ $cor->nome }}</option>
-                                @endforeach
-                            </x-select>
 
-                            <x-select name="unidade" label="Unidade de Medida *">
-                                <option value="">Selecione...</option>
-                                <option value="UN - Unidade">UN - Unidade</option>
-                                <option value="KG - Quilograma">KG - Quilograma</option>
-                                <option value="PT - Pacote">PT - Pacote</option>
-                            </x-select>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                                    Nome do Produto <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" name="nome" required
+                                       value="{{ $p('nome') }}"
+                                       placeholder="Digite o nome"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                                @error('nome') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                            </div>
 
-                            <x-input type="number" step="0.01" name="peso" label="Peso" placeholder="0.000" />
-                            <x-input name="estoque_minimo" label="Estoque Mínimo" placeholder="0.00" />
-                            <x-select id="categoria_id" name="categoria_id" label="Categoria">
-                                <option value="">Selecione...</option>
-                                @foreach ($categorias as $categoria)
-                                    <option value="{{ $categoria->id }}">{{ $categoria->nome }}</option>
-                                @endforeach
-                            </x-select>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Código de Barras</label>
+                                <input type="text" name="codigo_barras"
+                                       value="{{ $p('codigo_barras') }}"
+                                       placeholder="7891234567890"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
 
-                            <x-select id="subcategoria_id" name="subcategoria_id" label="Subcategoria"
-                                style="display:none;">
-                                <option value="">Selecione...</option>
-                            </x-select>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">SKU / Código</label>
+                                <input type="text" name="sku"
+                                       value="{{ $p('sku') }}"
+                                       placeholder="PRD123456"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
 
-                            <x-select name="flag_encomenda" label="Produto sob encomenda">
-                                <option value="">Selecione...</option>
-                                <option value="1">Sim</option>
-                                <option value="0">Não</option>
-                            </x-select>
-                        </div>
-                        <!-- Endereço -->
-                        <div class="space-y-4">
-                            <!-- Endereço -->
-                            <div class="space-y-4"><br />
-                                <hr />
-                                <h3 class="text-lg font-medium flex items-center gap-2">
-                                    <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
-                                    Informações Fiscais - Entrada
-                                </h3>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Fornecedores ativos</label>
+                                <select name="fornecedor_id"
+                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                                    <option value="">Selecione...</option>
+                                    @foreach ($fornecedores as $fornecedor)
+                                        <option value="{{ $fornecedor->id }}"
+                                            {{ $p('fornecedor_id') == $fornecedor->id ? 'selected' : '' }}>
+                                            {{ $fornecedor->nome_fantasia }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
 
-                                    <x-input name="preco_base" label="Preço de Base - sem imposto" placeholder="0.00" />
-                                    <x-input type="number" step="0.01" name="icms" label="% ICMS" />
-                                    <x-input type="number" step="0.01" name="pis" label="PIS" />
-                                    <x-input type="number" step="0.01" name="cofins" label="Cofins" />
-                                    <x-input type="number" step="0.01" name="mva" label="MVA" />
-                                </div>
-                                <!-- Endereço -->
-                                <br />
-                                <hr />
-                                <h3 class="text-lg font-medium flex items-center gap-2">
-                                    <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
-                                    Financeiro
-                                </h3>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Part Number</label>
+                                <input type="text" name="part_number"
+                                       value="{{ $p('part_number') }}"
+                                       placeholder="Digite o código do fornecedor"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
 
-                                    <x-input name="preco_custo" label="Preço de Custo" placeholder="0.00" />
-                                    <x-input name="custo_frete_fornecedor" label="Custo Frete Fornecedor"
-                                        placeholder="0.00" />
-                                    <x-input name="custo_operacional" label="Custo Operacional" placeholder="0.00" />
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Cor</label>
+                                <select name="cor_id"
+                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                                    <option value="">Selecione...</option>
+                                    @foreach ($cores as $cor)
+                                        <option value="{{ $cor->id }}"
+                                            {{ $p('cor_id') == $cor->id ? 'selected' : '' }}>
+                                            {{ $cor->nome }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
 
-                                    <x-input name="margem_lucro" label="Margem de Lucro" placeholder="0.00" />
-                                    <x-input name="preco_venda" label="Preço de Venda" placeholder="0.00" />
-                                    <x-select name="liberar_desconto" label="Liberar desconto">
-                                        <option value="">Selecione...</option>
-                                        <option value="1">Sim</option>
-                                        <option value="0">Não</option>
-                                    </x-select>
-                                    <x-input name="porcentagem_desconto" label="Porcentagem de Desconto" placeholder="0.00" />
-                                    <x-input name="valor_desconto" label="Valor do Desconto" placeholder="0.00" />
-                                </div>
-                                <!-- Endereço -->
-                                <div class="space-y-4">
-                                    <hr />
-                                    <h3 class="text-lg font-medium flex items-center gap-2">
-                                        <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
-                                        Observações
-                                    </h3>
-                                    <div class="space-y-6">
-                                        <x-textarea name="descricao" label="Descrição"
-                                            placeholder="Escreva as características e detalhes do produto..."
-                                            rows="3" />
-                                        <x-textarea name="observacoes" label="Observações"
-                                            placeholder="Observações gerais, condições especiais, informações adicionais..."
-                                            rows="3" />
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                                    Unidade de Medida <span class="text-red-500">*</span>
+                                </label>
+                                <select name="unidade"
+                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                                    <option value="">Selecione...</option>
+                                    @foreach ([
+                                        'UN - Unidade'     => 'UN - Unidade',
+                                        'PC - Peça'        => 'PC - Peça',
+                                        'CX - Caixa'       => 'CX - Caixa',
+                                        'KG - Quilograma'  => 'KG - Quilograma',
+                                        'G - Grama'        => 'G - Grama',
+                                        'M - Metro'        => 'M - Metro',
+                                        'M2 - Metro quadrado' => 'M2 - Metro quadrado',
+                                        'M3 - Metro cúbico'   => 'M3 - Metro cúbico',
+                                        'L - Litro'        => 'L - Litro',
+                                        'ML - Mililitro'   => 'ML - Mililitro',
+                                        'PAR - Par'        => 'PAR - Par',
+                                        'RL - Rolo'        => 'RL - Rolo',
+                                        'PT - Pacote'      => 'PT - Pacote',
+                                    ] as $val => $label)
+                                        <option value="{{ $val }}"
+                                            {{ $p('unidade') === $val ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('unidade') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                            </div>
 
-                                        <div>
-                                            <label class="text-sm font-medium">Imagem do Produto</label>
-                                            <input type="file" name="images[]" multiple
-                                                accept="image/png,image/jpeg,image/gif"
-                                                class="mt-2 block w-full text-sm text-gray-600 border rounded-lg p-2">
-                                            <p class="text-xs text-gray-500 mt-1">Selecione uma ou mais imagens (PNG,
-                                                JPG ou GIF até 5MB cada)</p>
-                                        </div>
-                                    </div>
-                                    <div class="space-y-4"><br />
-                                        <hr />
-                                        <h3 class="text-lg font-medium flex items-center gap-2">
-                                            <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
-                                            Informações Fiscais - Saída
-                                        </h3>
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                                            <x-select name="tipo_sped" label="Tipo Produto SPED">
-                                                <option value="">Selecione...</option>
-                                                <option value="00">00 - Mercadoria para Revenda</option>
-                                                <option value="01">01 - Matéria-Prima</option>
-                                                <option value="02">02 - Embalagem</option>
-                                                <option value="03">03 - Produto em Processo</option>
-                                                <option value="04">04 - Produto Acabado</option>
-                                                <option value="05">05 - Subproduto</option>
-                                                <option value="06">06 - Produto Intermediário</option>
-                                                <option value="07">07 - Material de Uso e Consumo</option>
-                                                <option value="08">08 - Ativo Imobilizado</option>
-                                                <option value="09">09 - Serviços</option>
-                                                <option value="10">10 - Outros Insumos</option>
-                                                <option value="99">99 - Outras</option>
-                                            </x-select>
-                                            <x-input name="ncm"
-                                                label="NCM - Nomenclatura Comum do Mercosul (8 dígitos)"
-                                                placeholder="12345678" required />
-                                            <x-input type="number" step="0.01" name="substituicao_tributaria"
-                                                label="% Substituição Tributária" />
-                                            <x-input type="number" step="0.01" name="icms" label="% ICMS" />
-                                            <x-input type="number" step="0.01" name="pis" label="PIS" />
-                                            <x-input type="number" step="0.01" name="cofins" label="Cofins" />
-                                            <x-input name="classificacao_fiscal" label="CL Fiscal" />
-                                        </div>
-                                        <br />
-                                        <!-- Ações -->
-                                        <div class="flex gap-4">
-                                            <x-button type="submit">Cadastrar
-                                                Produto</x-button>
-                                            <x-button type="reset">Limpar Formulário</x-button>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Peso</label>
+                                <input type="number" step="0.001" name="peso"
+                                       value="{{ $p('peso') }}"
+                                       placeholder="0.000"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Estoque Mínimo</label>
+                                <input type="number" step="0.01" name="estoque_minimo"
+                                       value="{{ $p('estoque_minimo') }}"
+                                       placeholder="0.00"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Categoria</label>
+                                <select id="categoria_id" name="categoria_id"
+                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                                    <option value="">Selecione...</option>
+                                    @foreach ($categorias as $categoria)
+                                        <option value="{{ $categoria->id }}"
+                                            {{ $p('categoria_id') == $categoria->id ? 'selected' : '' }}>
+                                            {{ $categoria->nome }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Subcategoria</label>
+                                <select id="subcategoria_id" name="subcategoria_id"
+                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none"
+                                        style="{{ $p('categoria_id') ? '' : 'display:none;' }}">
+                                    <option value="">Selecione...</option>
+                                    @foreach ($subcategorias as $sub)
+                                        <option value="{{ $sub->id }}"
+                                                data-categoria="{{ $sub->categoria_id }}"
+                                            {{ $p('subcategoria_id') == $sub->id ? 'selected' : '' }}>
+                                            {{ $sub->nome }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Produto sob encomenda</label>
+                                <select name="flag_encomenda"
+                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                                    <option value="">Selecione...</option>
+                                    <option value="1" {{ $p('flag_encomenda') == '1' ? 'selected' : '' }}>Sim</option>
+                                    <option value="0" {{ $p('flag_encomenda') === '0' ? 'selected' : '' }}>Não</option>
+                                </select>
                             </div>
                         </div>
+                    </div>
+
+                    {{-- ── Informações Fiscais - Entrada ────────────── --}}
+                    <div class="space-y-4">
+                        <hr class="border-zinc-200 dark:border-zinc-700" />
+                        <h3 class="text-lg font-medium flex items-center gap-2">
+                            <x-heroicon-o-users class="w-5 h-5 text-primary-600" />
+                            Informações Fiscais — Entrada
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Preço de Base (sem imposto)</label>
+                                <input type="number" step="0.01" name="preco_base"
+                                       value="{{ $p('preco_base') }}" placeholder="0.00"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">% ICMS</label>
+                                <input type="number" step="0.01" name="icms"
+                                       value="{{ $p('icms') }}"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">PIS</label>
+                                <input type="number" step="0.01" name="pis"
+                                       value="{{ $p('pis') }}"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Cofins</label>
+                                <input type="number" step="0.01" name="cofins"
+                                       value="{{ $p('cofins') }}"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">MVA</label>
+                                <input type="number" step="0.01" name="mva"
+                                       value="{{ $p('mva') }}"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- ── Financeiro ───────────────────────────────── --}}
+                    <div class="space-y-4">
+                        <hr class="border-zinc-200 dark:border-zinc-700" />
+                        <h3 class="text-lg font-medium flex items-center gap-2">
+                            <x-heroicon-o-banknotes class="w-5 h-5 text-primary-600" />
+                            Financeiro
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Preço de Custo</label>
+                                <input type="number" step="0.01" name="preco_custo"
+                                       value="{{ $p('preco_custo') }}" placeholder="0.00"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Custo Frete Fornecedor</label>
+                                <input type="number" step="0.01" name="custo_frete_fornecedor"
+                                       value="{{ $p('custo_frete_fornecedor') }}" placeholder="0.00"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Custo Operacional</label>
+                                <input type="number" step="0.01" name="custo_operacional"
+                                       value="{{ $p('custo_operacional') }}" placeholder="0.00"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Margem de Lucro</label>
+                                <input type="number" step="0.01" name="margem_lucro"
+                                       value="{{ $p('margem_lucro') }}" placeholder="0.00"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Preço de Venda</label>
+                                <input type="number" step="0.01" name="preco_venda"
+                                       value="{{ $p('preco_venda') }}" placeholder="0.00"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Liberar Desconto <span class="text-red-500">*</span></label>
+                                <select name="liberar_desconto" required
+                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                                    <option value="">Selecione...</option>
+                                    <option value="1" {{ $p('liberar_desconto') == '1' ? 'selected' : '' }}>Sim</option>
+                                    <option value="0" {{ $p('liberar_desconto') === '0' ? 'selected' : '' }}>Não</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Porcentagem de Desconto</label>
+                                <input type="number" step="0.01" name="porcentagem_desconto"
+                                       value="{{ $p('porcentagem_desconto') }}" placeholder="0.00"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Valor do Desconto</label>
+                                <input type="number" step="0.01" name="valor_desconto"
+                                       value="{{ $p('valor_desconto') }}" placeholder="0.00"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- ── Observações ──────────────────────────────── --}}
+                    <div class="space-y-4">
+                        <hr class="border-zinc-200 dark:border-zinc-700" />
+                        <h3 class="text-lg font-medium flex items-center gap-2">
+                            <x-heroicon-o-chat-bubble-left-ellipsis class="w-5 h-5 text-primary-600" />
+                            Observações
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Descrição</label>
+                                <textarea name="descricao" rows="3"
+                                          placeholder="Escreva as características e detalhes do produto..."
+                                          class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">{{ $p('descricao') }}</textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Observações</label>
+                                <textarea name="observacoes" rows="3"
+                                          placeholder="Observações gerais, condições especiais, informações adicionais..."
+                                          class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">{{ $p('observacoes') }}</textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Imagem do Produto</label>
+                                <input type="file" name="images[]" multiple accept="image/png,image/jpeg,image/gif"
+                                       class="mt-1 block w-full text-sm text-gray-600 border border-zinc-300 dark:border-zinc-600 rounded-lg p-2 dark:bg-zinc-800">
+                                <p class="text-xs text-gray-500 mt-1">Selecione uma ou mais imagens (PNG, JPG ou GIF até 5MB cada)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- ── Informações Fiscais - Saída ──────────────── --}}
+                    <div class="space-y-4">
+                        <hr class="border-zinc-200 dark:border-zinc-700" />
+                        <h3 class="text-lg font-medium flex items-center gap-2">
+                            <x-heroicon-o-document-text class="w-5 h-5 text-primary-600" />
+                            Informações Fiscais — Saída
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Tipo Produto SPED</label>
+                                <select name="tipo_sped"
+                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                                    <option value="">Selecione...</option>
+                                    @foreach ([
+                                        '00' => '00 - Mercadoria para Revenda',
+                                        '01' => '01 - Matéria-Prima',
+                                        '02' => '02 - Embalagem',
+                                        '03' => '03 - Produto em Processo',
+                                        '04' => '04 - Produto Acabado',
+                                        '05' => '05 - Subproduto',
+                                        '06' => '06 - Produto Intermediário',
+                                        '07' => '07 - Material de Uso e Consumo',
+                                        '08' => '08 - Ativo Imobilizado',
+                                        '09' => '09 - Serviços',
+                                        '10' => '10 - Outros Insumos',
+                                        '99' => '99 - Outras',
+                                    ] as $val => $label)
+                                        <option value="{{ $val }}"
+                                            {{ $p('tipo_sped') === $val ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                                    NCM — Nomenclatura Comum do Mercosul (8 dígitos) <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" name="ncm" required
+                                       value="{{ $p('ncm') }}"
+                                       placeholder="12345678"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                                @error('ncm') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">% Substituição Tributária</label>
+                                <input type="number" step="0.01" name="substituicao_tributaria"
+                                       value="{{ $p('substituicao_tributaria') }}"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">% ICMS</label>
+                                <input type="number" step="0.01" name="icms_saida"
+                                       value="{{ $p('icms_saida') }}"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">PIS</label>
+                                <input type="number" step="0.01" name="pis_saida"
+                                       value="{{ $p('pis_saida') }}"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Cofins</label>
+                                <input type="number" step="0.01" name="cofins_saida"
+                                       value="{{ $p('cofins_saida') }}"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">CL Fiscal</label>
+                                <input type="text" name="classificacao_fiscal"
+                                       value="{{ $p('classificacao_fiscal') }}"
+                                       class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- ── Ações ─────────────────────────────────────── --}}
+                    <div class="flex gap-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                        <x-button type="submit" variant="primary">Cadastrar Produto</x-button>
+                        <x-button type="reset" variant="secondary">Limpar Formulário</x-button>
+                        @if (!empty($pre['_origem_grupo_id']))
+                            <a href="{{ route('consulta_preco.show_grupo', $pre['_origem_grupo_id']) }}"
+                               class="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-zinc-600 hover:text-zinc-900 border border-zinc-300 rounded-lg transition">
+                                ← Voltar para Cotação #{{ $pre['_origem_grupo_id'] }}
+                            </a>
+                        @endif
                     </div>
                 </form>
             </div>
         </div>
     </div>
-    <script>
-        document.getElementById('categoria_id').addEventListener('change', function() {
-            let categoriaId = this.value;
-            let subSelect = document.getElementById('subcategoria_id');
 
-            if (categoriaId) {
-                fetch(`/categorias/${categoriaId}/subcategorias`)
-                    .then(response => response.json())
-                    .then(data => {
-                        subSelect.innerHTML = '<option value="">Selecione...</option>';
-                        if (data.length > 0) {
-                            data.forEach(sub => {
-                                subSelect.innerHTML += `<option value="${sub.id}">${sub.nome}</option>`;
-                            });
-                            subSelect.style.display = 'block';
-                        } else {
-                            subSelect.style.display = 'none';
-                        }
-                    });
+    <script>
+        const subcategorias = @json($subcategorias->map(fn($s) => ['id' => $s->id, 'nome' => $s->nome, 'categoria_id' => $s->categoria_id]));
+        const prefillSubcategoriaId = {{ $p('subcategoria_id') ?: 'null' }};
+        const prefillCategoriaId    = {{ $p('categoria_id') ?: 'null' }};
+
+        const categoriaSelect    = document.getElementById('categoria_id');
+        const subcategoriaSelect = document.getElementById('subcategoria_id');
+
+        function renderSubcategorias(categoriaId, selectedId = null) {
+            subcategoriaSelect.innerHTML = '<option value="">Selecione...</option>';
+            const filtradas = subcategorias.filter(s => s.categoria_id == categoriaId);
+
+            if (filtradas.length > 0) {
+                filtradas.forEach(sub => {
+                    const opt = document.createElement('option');
+                    opt.value = sub.id;
+                    opt.textContent = sub.nome;
+                    if (selectedId && sub.id == selectedId) opt.selected = true;
+                    subcategoriaSelect.appendChild(opt);
+                });
+                subcategoriaSelect.style.display = 'block';
             } else {
-                subSelect.style.display = 'none';
+                subcategoriaSelect.style.display = 'none';
+            }
+        }
+
+        // Inicializa se vier com categoria pré-preenchida
+        if (prefillCategoriaId) {
+            renderSubcategorias(prefillCategoriaId, prefillSubcategoriaId);
+        }
+
+        categoriaSelect.addEventListener('change', function () {
+            if (this.value) {
+                renderSubcategorias(this.value);
+            } else {
+                subcategoriaSelect.innerHTML = '<option value="">Selecione...</option>';
+                subcategoriaSelect.style.display = 'none';
             }
         });
     </script>
