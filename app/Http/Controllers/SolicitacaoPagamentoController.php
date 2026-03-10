@@ -6,6 +6,14 @@ use App\Http\Requests\StoreSolicitacaoPagamentoRequest;
 use App\Http\Requests\UpdateSolicitacaoPagamentoRequest;
 use App\Models\SolicitacaoPagamento;
 
+use App\Models\Orcamento;
+use App\Models\Desconto;
+use App\Services\OrcamentoPdfService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
+
 class SolicitacaoPagamentoController extends Controller
 {
     /**
@@ -82,7 +90,7 @@ class SolicitacaoPagamentoController extends Controller
             return back()->with('success', 'Solicitação de pagamento aprovada com sucesso!');
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Erro ao aprovar solicitação de pagamento', [
                 'solicitacao_id' => $id,
                 'erro' => $e->getMessage(),
@@ -139,7 +147,7 @@ class SolicitacaoPagamentoController extends Controller
             return back()->with('success', 'Solicitação de pagamento rejeitada!');
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Erro ao rejeitar solicitação de pagamento', [
                 'solicitacao_id' => $id,
                 'erro' => $e->getMessage(),
@@ -171,7 +179,7 @@ class SolicitacaoPagamentoController extends Controller
      */
     private function atualizarOrcamentoAposAprovacao($orcamentoId)
     {
-        $orcamento = Orcamento::find($orcamentoId);
+        $orcamento = Orcamento::with(['itens', 'itens.produto'])->find($orcamentoId);
 
         if (!$orcamento) {
             return;
@@ -182,51 +190,128 @@ class SolicitacaoPagamentoController extends Controller
             ->pendentes()
             ->count();
 
-        // Se não houver mais solicitações pendentes
-        if ($solicitacoesPendentes === 0) {
-            // Verifica se ainda há descontos pendentes
-            $descontosPendentes = Desconto::where('orcamento_id', $orcamentoId)
-                ->whereNull('aprovado_em')
-                ->whereNull('rejeitado_em')
-                ->count();
+        if ($solicitacoesPendentes > 0) {
+            Log::info("Pagamento aprovado, mas ainda há {$solicitacoesPendentes} solicitações pendentes no orçamento #{$orcamentoId}");
+            return;
+        }
 
-            if ($descontosPendentes > 0) {
-                // Ainda tem descontos pendentes - muda para aprovar desconto
-                $orcamento->update([
-                    'status' => 'Aprovar desconto',
+        // Verifica se ainda há descontos pendentes
+        $descontosPendentes = Desconto::where('orcamento_id', $orcamentoId)
+            ->whereNull('aprovado_em')
+            ->whereNull('rejeitado_em')
+            ->count();
+
+        if ($descontosPendentes > 0) {
+            $orcamento->update(['status' => 'Aprovar desconto']);
+            Log::info("Pagamento aprovado, mas ainda há descontos pendentes no orçamento #{$orcamentoId}");
+            return;
+        }
+
+        // Verifica estoque
+        $temItensSemEstoque = false;
+        foreach ($orcamento->itens as $item) {
+            $produto = $item->produto;
+            if ($produto && $produto->estoque_atual !== null) {
+                if ((float) $item->quantidade > (float) $produto->estoque_atual) {
+                    $temItensSemEstoque = true;
+                    break;
+                }
+            }
+        }
+
+        if ($temItensSemEstoque) {
+            $orcamento->update(['status' => 'Sem estoque']);
+            Log::info("Pagamento aprovado, mas orçamento #{$orcamentoId} ficou como 'Sem estoque'");
+            return;
+        }
+
+        // ── STATUS: Pago para encomenda, Pendente para orçamento normal ────
+        $novoStatus = $orcamento->encomenda !== null ? 'Pago' : 'Pendente';
+        $orcamento->update(['status' => $novoStatus]);
+
+        // Gera o PDF
+        $pdfService = new OrcamentoPdfService();
+        $pdfService->gerarOrcamentoPdf($orcamento->fresh());
+
+        Log::info("Pagamento aprovado para orçamento #{$orcamentoId} → status: {$novoStatus}");
+
+        // ── ENCOMENDA: inicia separação agora que está pago ─────────────────
+        if ($orcamento->encomenda !== null) {
+            $this->iniciarSeparacaoEncomenda($orcamento->fresh());
+        }
+    }
+
+    private function iniciarSeparacaoEncomenda(Orcamento $orcamento): void
+    {
+        try {
+            DB::transaction(function () use ($orcamento) {
+
+                // Evita lote duplicado
+                $existe = \App\Models\PickingBatch::where('orcamento_id', $orcamento->id)
+                    ->whereIn('status', ['aberto', 'em_separacao'])
+                    ->exists();
+
+                if ($existe) {
+                    Log::warning("Tentativa de criar PickingBatch duplicado para encomenda #{$orcamento->id}");
+                    return;
+                }
+
+                $batch = \App\Models\PickingBatch::create([
+                    'orcamento_id'  => $orcamento->id,
+                    'status'        => 'em_separacao',
+                    'started_at'    => now(),
+                    'criado_por_id' => Auth::id(),
                 ]);
 
-                Log::info("Pagamento aprovado, mas ainda há descontos pendentes no orçamento #{$orcamentoId}");
-            } else {
-                //  Verifica estoque antes de definir status final
-                $temItensSemEstoque = false;
+                // ── Produtos físicos ─────────────────────────────────────
+                $itensProduto = $orcamento->itens->whereNotNull('produto_id');
+                foreach ($itensProduto as $oi) {
+                    \App\Models\PickingItem::create([
+                        'picking_batch_id'  => $batch->id,
+                        'orcamento_item_id' => $oi->id,
+                        'produto_id'        => $oi->produto_id,
+                        'is_encomenda'      => false,
+                        'qty_solicitada'    => $oi->quantidade,
+                        'qty_separada'      => 0,
+                        'status'            => 'pendente',
+                    ]);
+                }
 
-                foreach ($orcamento->itens as $item) {
-                    $produto = \App\Models\Produto::find($item->produto_id);
-                    if ($produto && $produto->estoque_atual !== null) {
-                        if ((float) $item->quantidade > (float) $produto->estoque_atual) {
-                            $temItensSemEstoque = true;
-                            break;
-                        }
+                // ── Itens de consulta de preço (encomenda) ───────────────
+                $grupo = \App\Models\ConsultaPrecoGrupo::with('itens')
+                    ->where('orcamento_id', $orcamento->id)
+                    ->first();
+
+                if ($grupo) {
+                    foreach ($grupo->itens as $item) {
+                        \App\Models\PickingItem::create([
+                            'picking_batch_id'    => $batch->id,
+                            'orcamento_item_id'   => null,
+                            'produto_id'          => null,
+                            'consulta_preco_id'   => $item->id,
+                            'is_encomenda'        => true,
+                            'descricao_encomenda' => $item->descricao,
+                            'qty_solicitada'      => $item->quantidade,
+                            'qty_separada'        => 0,
+                            'status'              => 'pendente',
+                        ]);
                     }
                 }
 
-                if ($temItensSemEstoque) {
-                    $orcamento->update(['status' => 'Sem estoque']);
-
-                    Log::info("Pagamento aprovado, mas orçamento #{$orcamentoId} ficou como 'Sem estoque'");
-                } else {
-                    $orcamento->update(['status' => 'Pendente']);
-
-                    // Gera o PDF atualizado
-                    $pdfService = new OrcamentoPdfService();
-                    $pdfService->gerarOrcamentoPdf($orcamento);
-
-                    Log::info("Pagamento aprovado e PDF gerado para orçamento #{$orcamentoId}");
+                // ── Reservas de estoque (só produtos físicos) ────────────
+                if ($itensProduto->isNotEmpty()) {
+                    app(\App\Services\EstoqueService::class)->reservarParaOrcamento($orcamento);
                 }
-            }
-        } else {
-            Log::info("Pagamento aprovado, mas ainda há {$solicitacoesPendentes} solicitações pendentes no orçamento #{$orcamentoId}");
+
+                $orcamento->update(['workflow_status' => 'em_separacao']);
+
+                Log::info("PickingBatch criado para encomenda #{$orcamento->id} após pagamento confirmado", [
+                    'picking_batch_id' => $batch->id,
+                ]);
+            });
+        } catch (\Exception $e) {
+            Log::error("Erro ao iniciar separação da encomenda #{$orcamento->id}: " . $e->getMessage());
+            // Não relança a exceção — o pagamento já foi aprovado, separação pode ser iniciada manualmente
         }
     }
 

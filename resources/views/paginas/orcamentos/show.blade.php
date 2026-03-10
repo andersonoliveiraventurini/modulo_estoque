@@ -25,8 +25,16 @@
                         <p
                             class="text-xs text-neutral-400 dark:text-neutral-500 font-medium uppercase tracking-wider leading-none mb-0.5">
                             Orçamento</p>
-                        <h2 class="text-lg font-bold text-neutral-900 dark:text-white leading-tight truncate">
+                        <h2 class="text-lg font-bold text-neutral-900 dark:text-white leading-tight truncate flex items-center gap-2">
                             #{{ $orcamento->id }}
+                            @if ($orcamento->encomenda !== null)
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300 border border-violet-200 dark:border-violet-700">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                    </svg>
+                                    Encomenda
+                                </span>
+                            @endif
                         </h2>
                     </div>
                 </div>
@@ -244,7 +252,6 @@
                                     {{-- ── STATUS NORMAL ── --}}
                                 @else
                                     {{-- Seletor de Status --}}
-                                    {{-- Seletor de Status --}}
                                     <div class="space-y-2">
                                         <p
                                             class="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
@@ -329,39 +336,44 @@
                                         @endif
                                     </div>
 
-                                    {{-- Badge Workflow --}}
+                                    {{-- ── Badge Workflow ── --}}
                                     @php
                                         $wf = $orcamento->workflow_status;
                                         $map = [
+                                            'aguardando_pagamento' => [
+                                                'label' => 'Aguardando Pagamento',
+                                                'class' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
+                                                'dot'   => 'animate-pulse',
+                                            ],
                                             'aguardando_separacao' => [
                                                 'label' => 'Aguardando Separação',
-                                                'class' =>
-                                                    'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
+                                                'class' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
+                                                'dot'   => '',
                                             ],
                                             'em_separacao' => [
                                                 'label' => 'Em Separação',
-                                                'class' =>
-                                                    'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
+                                                'class' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
+                                                'dot'   => '',
                                             ],
                                             'aguardando_conferencia' => [
                                                 'label' => 'Aguardando Conferência',
-                                                'class' =>
-                                                    'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
+                                                'class' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
+                                                'dot'   => '',
                                             ],
                                             'em_conferencia' => [
                                                 'label' => 'Em Conferência',
-                                                'class' =>
-                                                    'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200',
+                                                'class' => 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200',
+                                                'dot'   => '',
                                             ],
                                             'conferido' => [
                                                 'label' => 'Conferido',
-                                                'class' =>
-                                                    'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
+                                                'class' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
+                                                'dot'   => '',
                                             ],
                                             'finalizado' => [
                                                 'label' => 'Conferido e Finalizado',
-                                                'class' =>
-                                                    'bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-100',
+                                                'class' => 'bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-100',
+                                                'dot'   => '',
                                             ],
                                         ];
                                         $badge = $map[$wf] ?? null;
@@ -374,41 +386,56 @@
                                                 Logística</p>
                                             <span
                                                 class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium {{ $badge['class'] }}">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-current opacity-70"></span>
+                                                <span class="w-1.5 h-1.5 rounded-full bg-current opacity-70 {{ $badge['dot'] ?? '' }}"></span>
                                                 {{ $badge['label'] }}
                                             </span>
                                         </div>
                                     @endif
 
-                                    {{-- Botões Operacionais --}}
+                                    {{-- ── Botões Operacionais: ocultos para encomendas aguardando pagamento ── --}}
                                     @if ($orcamento->status === 'Aprovado')
-                                        <div class="space-y-2">
-                                            <p
-                                                class="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
-                                                Operacional</p>
-                                            <div class="grid grid-cols-2 gap-2">
-                                                <a href="{{ route('orcamentos.separacao.show', $orcamento->id) }}"
-                                                    class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors">
-                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                                                    </svg>
-                                                    Separação
-                                                </a>
-                                                <a href="{{ route('orcamentos.conferencia.show', $orcamento->id) }}"
-                                                    class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium transition-colors">
-                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                                                    </svg>
-                                                    Conferência
-                                                </a>
+                                        @if ($orcamento->workflow_status !== 'aguardando_pagamento')
+                                            <div class="space-y-2">
+                                                <p
+                                                    class="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                                    Operacional</p>
+                                                <div class="grid grid-cols-2 gap-2">
+                                                    <a href="{{ route('orcamentos.separacao.show', $orcamento->id) }}"
+                                                        class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                                        </svg>
+                                                        Separação
+                                                    </a>
+                                                    <a href="{{ route('orcamentos.conferencia.show', $orcamento->id) }}"
+                                                        class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium transition-colors">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                                        </svg>
+                                                        Conferência
+                                                    </a>
+                                                </div>
                                             </div>
-                                        </div>
+                                        @else
+                                            {{-- Encomenda aprovada, separação bloqueada --}}
+                                            <div class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+                                                <div class="flex items-start gap-2">
+                                                    <svg class="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m0-8v4m9 1a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                    </svg>
+                                                    <div>
+                                                        <p class="text-xs font-semibold text-amber-800 dark:text-amber-200">Separação bloqueada</p>
+                                                        <p class="text-xs text-amber-700 dark:text-amber-300 mt-0.5">Encomenda aprovada. A separação inicia após confirmação do pagamento pelo financeiro.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
                                     @endif
 
                                     {{-- ── BOTÃO PDF DESTACADO ── --}}
@@ -441,6 +468,57 @@
                 </div>
             </div>
         </div>
+
+        {{-- ══════════════════════════════════════
+             BANNER ENCOMENDA — aguardando pagamento / em separação
+        ══════════════════════════════════════ --}}
+        @if ($orcamento->encomenda !== null)
+            @php
+                $temPickingAtivo = \App\Models\PickingBatch::where('orcamento_id', $orcamento->id)
+                    ->whereIn('status', ['aberto', 'em_separacao'])
+                    ->exists();
+            @endphp
+
+            @if (!$temPickingAtivo && $orcamento->status === 'Aprovado')
+                <div class="rounded-2xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 p-5 flex items-start gap-4 shadow">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-800/40 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-amber-600 dark:text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m0-8v4m9 1a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-semibold text-amber-800 dark:text-amber-200 text-sm">
+                            Encomenda aprovada — Separação aguardando pagamento
+                        </p>
+                        <p class="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                            Este orçamento é uma <strong>encomenda</strong>. O lote de separação não será iniciado
+                            até que o pagamento seja confirmado pelo financeiro via
+                            <a href="{{ route('solicitacoes-pagamento.aprovar', $orcamento->id) }}"
+                               class="underline font-semibold hover:text-amber-900 dark:hover:text-amber-100">
+                                solicitação de pagamento
+                            </a>.
+                        </p>
+                    </div>
+                </div>
+
+            @elseif ($temPickingAtivo)
+                <div class="rounded-2xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-700 p-5 flex items-start gap-4 shadow">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-800/40 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-semibold text-emerald-800 dark:text-emerald-200 text-sm">
+                            Encomenda — Pagamento confirmado · Separação em andamento
+                        </p>
+                        <p class="text-sm text-emerald-700 dark:text-emerald-300 mt-0.5">
+                            O pagamento desta encomenda foi confirmado e o lote de separação foi iniciado automaticamente.
+                        </p>
+                    </div>
+                </div>
+            @endif
+        @endif
 
         {{-- ✅ ALERTA PARA APROVAÇÕES PENDENTES --}}
         @if ($orcamento->status === 'Aprovar desconto')
@@ -528,8 +606,8 @@
             </div>
         @endif
 
-        @if (in_array($orcamento->status, ['Aprovado']))
-            {{-- Progresso da Expedição --}}
+        {{-- Progresso da Expedição — oculto enquanto encomenda aguarda pagamento --}}
+        @if (in_array($orcamento->status, ['Aprovado']) && $orcamento->workflow_status !== 'aguardando_pagamento')
             {{-- ✅ SÓ MOSTRA SE NÃO FOR REJEITADO --}}
             @if ($orcamento->status !== 'Rejeitado')
                 <div
@@ -577,13 +655,12 @@
                 </div>
             @endif
 
-            {{-- Card de chamada para Separação quando aprovado e sem lote ativo --}}
+            {{-- Card de chamada para Separação — oculto para encomendas aguardando pagamento --}}
             @php
                 $temBatchAtivo = \App\Models\PickingBatch::where('orcamento_id', $orcamento->id)
                     ->whereIn('status', ['aberto', 'em_separacao'])
                     ->exists();
             @endphp
-            {{-- ✅ SÓ MOSTRA SE STATUS FOR APROVADO E NÃO FOR REJEITADO --}}
             @if ($orcamento->status === 'Aprovado' && $temBatchAtivo && $orcamento->status !== 'Rejeitado')
                 <div
                     class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
@@ -602,6 +679,7 @@
                 </div>
             @endif
         @endif
+
         {{-- Itens do Orçamento --}}
         @if ($orcamento->itens->count() > 0 && $orcamento->itens->whereNotNull('produto_id')->count() > 0)
             <div
@@ -647,7 +725,7 @@
                                     $disponivel = $estoqueAtual - $reservado;
                                     $min = (float) ($prod->estoque_minimo ?? 0);
                                     $risco = $disponivel - (float) $item->quantidade < $min;
-                                    $semEstoque = (float) $item->quantidade > $disponivel; // ✅ NOVO
+                                    $semEstoque = (float) $item->quantidade > $disponivel;
                                 @endphp
                                 <tr class="{{ $semEstoque ? 'bg-red-50 dark:bg-red-900/20' : '' }}">
                                     <td class="px-3 py-2 border">{{ $prod->codigo ?? $item->produto_id }}</td>
@@ -805,7 +883,6 @@
                                             class="px-3 py-2 border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400">
                                             {{ $forn->prazo_entrega ?? '—' }}
                                         </td>
-                                        {{-- ✅ Preço final por item --}}
                                         <td
                                             class="px-3 py-2 border border-zinc-200 dark:border-zinc-700 text-right font-semibold text-emerald-600 dark:text-emerald-400">
                                             @if ($forn && $forn->preco_venda)
@@ -871,12 +948,9 @@
         @endif
 
         {{-- Totais e Descontos --}}
-        {{-- Totais e Descontos --}}
         @php
-            // Itens normais (com produto cadastrado)
             $totalItens = (float) $orcamento->itens->whereNotNull('produto_id')->sum('valor_com_desconto');
 
-            // Itens de encomenda (sem produto_id, gerados por cotação)
             $totalEncomenda = 0;
             if ($orcamento->encomenda ?? null) {
                 $grupoTotais = \App\Models\ConsultaPrecoGrupo::with(['itens.fornecedorSelecionado'])
@@ -909,7 +983,6 @@
             <h3 class="text-lg font-semibold mb-4">Totais e Descontos</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    {{-- Desconto Percentual --}}
                     @if ($percentual > 0)
                         <div class="flex items-center justify-between mb-2">
                             <span><strong>Desconto Percentual:</strong>
@@ -936,13 +1009,11 @@
                         </div>
                     @endif
 
-                    {{-- Descontos Fixos --}}
                     @foreach ($orcamento->descontos->where('tipo', 'fixo') as $desc)
                         <div class="flex items-center justify-between mb-2">
                             <span>
                                 <strong>{{ $desc->motivo ?: 'Desconto Fixo' }}:</strong>
                                 -R$ {{ number_format($desc->valor, 2, ',', '.') }}
-
                                 @if ($desc->aprovado_em || $desc->aprovado_por)
                                     <span
                                         class="inline-flex items-center px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200">
@@ -959,17 +1030,14 @@
                                     </a>
                                 @endif
                             </span>
-
                         </div>
                     @endforeach
 
-                    {{-- Descontos por Produto --}}
                     @foreach ($orcamento->descontos->where('tipo', 'produto') as $desc)
                         <div class="flex items-center justify-between mb-2">
                             <span>
                                 <strong>{{ $desc->motivo ?: 'Desconto em Produto' }}:</strong>
                                 -R$ {{ number_format($desc->valor, 2, ',', '.') }}
-
                                 @if ($desc->aprovado_em || $desc->aprovado_por)
                                     <span
                                         class="inline-flex items-center px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200">
@@ -986,17 +1054,14 @@
                                     </a>
                                 @endif
                             </span>
-
                         </div>
                     @endforeach
 
-                    {{-- Guia de Recolhimento --}}
                     @if ($orcamento->guia_recolhimento > 0)
                         <p class="mt-2"><strong>Guia de Recolhimento:</strong> R$
                             {{ number_format((float) $orcamento->guia_recolhimento, 2, ',', '.') }}</p>
                     @endif
 
-                    {{-- Frete --}}
                     @if ((float) $orcamento->frete > 0)
                         <p><strong>Frete:</strong> R$ {{ number_format((float) $orcamento->frete, 2, ',', '.') }}</p>
                     @endif
@@ -1055,24 +1120,13 @@
             'use strict';
 
             function qs(sel, ctx) {
-                if (!ctx) {
-                    ctx = document;
-                }
+                if (!ctx) { ctx = document; }
                 return ctx.querySelector(sel);
-            }
-
-            function qsa(sel, ctx) {
-                if (!ctx) {
-                    ctx = document;
-                }
-                return Array.prototype.slice.call(ctx.querySelectorAll(sel));
             }
 
             function findAncestorWithClass(el, className) {
                 while (el && el !== document) {
-                    if (el.classList && el.classList.contains(className)) {
-                        return el;
-                    }
+                    if (el.classList && el.classList.contains(className)) { return el; }
                     el = el.parentNode;
                 }
                 return null;
@@ -1080,7 +1134,6 @@
 
             function setLoading(btn, isLoading) {
                 if (!btn) return;
-
                 if (isLoading) {
                     btn.disabled = true;
                     btn.dataset.originalText = btn.textContent;
@@ -1092,79 +1145,51 @@
             }
 
             function formFetch(url, formEl, extra) {
-                if (!extra) {
-                    extra = {};
-                }
+                if (!extra) { extra = {}; }
                 var fd = new FormData(formEl);
-
                 for (var k in extra) {
-                    if (Object.prototype.hasOwnProperty.call(extra, k)) {
-                        fd.set(k, extra[k]);
-                    }
+                    if (Object.prototype.hasOwnProperty.call(extra, k)) { fd.set(k, extra[k]); }
                 }
-
                 return fetch(url, {
                     method: 'POST',
                     body: fd,
                     credentials: 'same-origin',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    }
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
                 }).then(function(resp) {
                     var respClone = resp.clone();
-
                     if (!resp.ok) {
-                        return respClone.json()
-                            .then(function(j) {
-                                var msg = (j && j.message) ? j.message : 'Erro na requisição';
-                                var e = new Error(msg);
-                                e.status = resp.status;
-                                throw e;
-                            })
-                            .catch(function() {
-                                return resp.text().then(function(t) {
-                                    var e2 = new Error('Erro: ' + resp.status);
-                                    e2.status = resp.status;
-                                    throw e2;
-                                });
+                        return respClone.json().then(function(j) {
+                            var msg = (j && j.message) ? j.message : 'Erro na requisição';
+                            var e = new Error(msg);
+                            e.status = resp.status;
+                            throw e;
+                        }).catch(function() {
+                            return resp.text().then(function() {
+                                var e2 = new Error('Erro: ' + resp.status);
+                                e2.status = resp.status;
+                                throw e2;
                             });
+                        });
                     }
-
-                    return resp.json().catch(function() {
-                        return {};
-                    });
+                    return resp.json().catch(function() { return {}; });
                 });
             }
 
-            // Clique no botão Atualizar Status (delegação global)
             document.addEventListener('click', function(ev) {
                 var btn = ev.target;
-
                 if (!btn.classList.contains('atualizar-status')) {
                     btn = findAncestorWithClass(ev.target, 'atualizar-status');
                 }
-
-                if (!btn) {
-                    return;
-                }
+                if (!btn) return;
 
                 var id = btn.getAttribute('data-id');
                 var form = qs('#form-status-' + id);
-
-                if (!form) {
-                    console.error('Formulário não encontrado: #form-status-' + id);
-                    return;
-                }
+                if (!form) { console.error('Formulário não encontrado: #form-status-' + id); return; }
 
                 var url = form.getAttribute('data-url');
                 var select = form.querySelector('.status-select');
                 var novoStatus = select ? select.value : '';
-
-                if (!url) {
-                    console.error('URL não encontrada no formulário');
-                    return;
-                }
+                if (!url) { console.error('URL não encontrada no formulário'); return; }
 
                 Swal.fire({
                     title: 'Confirmação',
@@ -1174,60 +1199,30 @@
                     confirmButtonText: 'Sim, atualizar',
                     cancelButtonText: 'Cancelar'
                 }).then(function(res) {
-                    if (!res.isConfirmed) {
-                        return;
-                    }
-
+                    if (!res.isConfirmed) return;
                     setLoading(btn, true);
-
                     var hasMethod = !!form.querySelector('input[name="_method"]');
-                    var extra = {
-                        status: novoStatus
-                    };
-                    if (!hasMethod) {
-                        extra._method = 'PUT';
-                    }
-
+                    var extra = { status: novoStatus };
+                    if (!hasMethod) { extra._method = 'PUT'; }
                     formFetch(url, form, extra).then(function(data) {
-                        var msg = (data && data.message) ? data.message :
-                            'Status atualizado com sucesso!';
-                        Swal.fire({
-                            title: 'Sucesso',
-                            text: msg,
-                            icon: 'success',
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
+                        var msg = (data && data.message) ? data.message : 'Status atualizado com sucesso!';
+                        Swal.fire({ title: 'Sucesso', text: msg, icon: 'success', timer: 1500, showConfirmButton: false });
                         if (data && data.redirect) {
-                            setTimeout(function() {
-                                window.location.href = data.redirect;
-                            }, 1600);
+                            setTimeout(function() { window.location.href = data.redirect; }, 1600);
                         } else {
-                            setTimeout(function() {
-                                window.location.reload();
-                            }, 1600);
+                            setTimeout(function() { window.location.reload(); }, 1600);
                         }
                     }, function(err) {
-                        var emsg = (err && err.message) ? err.message :
-                            'Não foi possível atualizar o status.';
-                        Swal.fire({
-                            title: 'Erro',
-                            text: emsg,
-                            icon: 'error'
-                        });
+                        var emsg = (err && err.message) ? err.message : 'Não foi possível atualizar o status.';
+                        Swal.fire({ title: 'Erro', text: emsg, icon: 'error' });
                         setLoading(btn, false);
                     });
                 });
             });
 
-            // Submit do form Aprovar Desconto (delegação global)
             document.addEventListener('submit', function(ev) {
                 var form = ev.target;
-
-                if (!form.matches('[id^="form-aprovar-"]')) {
-                    return;
-                }
-
+                if (!form.matches('[id^="form-aprovar-"]')) return;
                 ev.preventDefault();
 
                 var action = form.getAttribute('action');
@@ -1235,58 +1230,27 @@
                 var selectAcao = form.querySelector('select[name="acao"]');
                 var acao = selectAcao ? selectAcao.value : '';
 
-                console.log('Action URL:', action);
-                console.log('Ação selecionada:', acao);
-
-                if (!action) {
-                    console.error('Action não encontrada no formulário');
-                    return;
-                }
-
+                if (!action) { console.error('Action não encontrada no formulário'); return; }
                 if (!acao) {
-                    Swal.fire({
-                        title: 'Atenção',
-                        text: 'Por favor, selecione uma ação.',
-                        icon: 'warning'
-                    });
+                    Swal.fire({ title: 'Atenção', text: 'Por favor, selecione uma ação.', icon: 'warning' });
                     return;
                 }
 
                 setLoading(submitBtn, true);
-
-                formFetch(action, form, {
-                    acao: acao
-                }).then(function(data) {
+                formFetch(action, form, { acao: acao }).then(function(data) {
                     var msg = (data && data.message) ? data.message : 'Ação executada com sucesso!';
-                    Swal.fire({
-                        title: 'Sucesso',
-                        text: msg,
-                        icon: 'success',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
+                    Swal.fire({ title: 'Sucesso', text: msg, icon: 'success', timer: 1500, showConfirmButton: false });
                     if (data && data.redirect) {
-                        setTimeout(function() {
-                            window.location.href = data.redirect;
-                        }, 1600);
+                        setTimeout(function() { window.location.href = data.redirect; }, 1600);
                     } else {
-                        setTimeout(function() {
-                            window.location.reload();
-                        }, 1600);
+                        setTimeout(function() { window.location.reload(); }, 1600);
                     }
                 }).catch(function(err) {
-                    console.error('Erro capturado:', err);
-                    var emsg = (err && err.message) ? err.message :
-                        'Não foi possível concluir a operação.';
-                    Swal.fire({
-                        title: 'Erro',
-                        text: emsg,
-                        icon: 'error'
-                    });
+                    var emsg = (err && err.message) ? err.message : 'Não foi possível concluir a operação.';
+                    Swal.fire({ title: 'Erro', text: emsg, icon: 'error' });
                     setLoading(submitBtn, false);
                 });
             });
-
         })();
     </script>
 </x-layouts.app>
