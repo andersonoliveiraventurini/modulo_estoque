@@ -225,21 +225,20 @@
                     <div class="space-y-3">
                         @forelse($descontos as $index => $desconto)
                             @php
-                                // ── Detecta se é item de encomenda ──────────────────────────────
-                                // produto_id null + motivo contém "encomenda #ID"
-                                $isEncomenda = is_null($desconto->produto_id)
-                                    && str_contains(strtolower($desconto->motivo ?? ''), 'encomenda');
-
-                                // Extrai ID do consulta_preco do motivo: "...encomenda #42..."
-                                $consultaPrecoIdMotivo = null;
-                                if ($isEncomenda) {
+                                // ── Detecta se é item de encomenda: tipo produto com consulta_preco_id OU produto_id null + motivo "encomenda" ──
+                                $consultaPrecoId = $desconto->consulta_preco_id ?? null;
+                                if (!$consultaPrecoId && is_null($desconto->produto_id) && str_contains(strtolower($desconto->motivo ?? ''), 'encomenda')) {
                                     preg_match('/encomenda\s*#?(\d+)/i', $desconto->motivo ?? '', $matchEnc);
-                                    $consultaPrecoIdMotivo = isset($matchEnc[1]) ? (int) $matchEnc[1] : null;
+                                    $consultaPrecoId = isset($matchEnc[1]) ? (int) $matchEnc[1] : null;
                                 }
+                                $isEncomenda = $desconto->tipo === 'produto' && (
+                                    $consultaPrecoId !== null
+                                    || (is_null($desconto->produto_id) && str_contains(strtolower($desconto->motivo ?? ''), 'encomenda'))
+                                );
 
-                                // Item de encomenda correspondente (se disponível)
-                                $itemEncomenda = ($consultaPrecoIdMotivo && $itensEncomendaMap->has($consultaPrecoIdMotivo))
-                                    ? $itensEncomendaMap->get($consultaPrecoIdMotivo)
+                                // Item de encomenda correspondente (usa consulta_preco_id do banco primeiro)
+                                $itemEncomenda = ($consultaPrecoId && $itensEncomendaMap->has($consultaPrecoId))
+                                    ? $itensEncomendaMap->get($consultaPrecoId)
                                     : null;
 
                                 $fornEncomenda = $itemEncomenda?->fornecedorSelecionado;
@@ -278,11 +277,11 @@
                                     if ($isEncomenda && $itemEncomenda) {
                                         // ── Desconto por item de ENCOMENDA ──────────────────────
                                         $quantidade            = (float) ($itemEncomenda->quantidade ?? 1);
-                                        $precoVendaAtual       = (float) ($fornEncomenda?->preco_venda ?? 0);
+                                        $precoOriginalUnit     = (float) ($fornEncomenda?->preco_venda ?? 0);
                                         $precoCompra           = (float) ($fornEncomenda?->preco_compra ?? 0);
                                         $valorDesconto         = (float) $desconto->valor;
-                                        $valorOriginalProduto  = ($precoVendaAtual + ($valorDesconto / $quantidade)) * $quantidade;
-                                        $valorComDesconto      = $precoVendaAtual * $quantidade;
+                                        $valorOriginalProduto  = $precoOriginalUnit * $quantidade;
+                                        $valorComDesconto      = max(0, $valorOriginalProduto - $valorDesconto);
                                     } else {
                                         // ── Desconto por PRODUTO NORMAL ─────────────────────────
                                         $itemOrcamento = $produtoIdReal
@@ -326,9 +325,11 @@
                                         $idsEncComDescontoIndividual = \App\Models\Desconto::where('orcamento_id', $orcamento->id)
                                             ->where('tipo', 'produto')
                                             ->whereNull('rejeitado_em')
-                                            ->where('produto_id', null)
-                                            ->get('motivo')
+                                            ->get(['consulta_preco_id', 'motivo'])
                                             ->map(function ($d) {
+                                                if (!empty($d->consulta_preco_id)) {
+                                                    return (int) $d->consulta_preco_id;
+                                                }
                                                 preg_match('/encomenda\s*#?(\d+)/i', $d->motivo ?? '', $m);
                                                 return isset($m[1]) ? (int) $m[1] : null;
                                             })

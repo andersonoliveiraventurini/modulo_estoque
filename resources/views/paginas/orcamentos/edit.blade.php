@@ -139,7 +139,7 @@
                                                     Preço Venda</th>
                                                 <th
                                                     class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
-                                                    Desc. Item (R$)</th>
+                                                    Valor novo unit. (R$)</th>
                                                 <th
                                                     class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
                                                     Subtotal</th>
@@ -149,10 +149,16 @@
                                             </tr>
                                         </thead>
                                         <tbody id="itens-encomenda" class="divide-y">
+                                            @php
+                                                $orcamentoEncomendaItens = $orcamento->itens->whereNull('produto_id')->values();
+                                            @endphp
                                             @foreach ($grupo->itens as $item)
                                                 @php
                                                     $forn = $item->fornecedorSelecionado;
                                                     $precoVenda = $forn ? (float) $forn->preco_venda : 0;
+                                                    $orcamentoItem = $orcamentoEncomendaItens->get($loop->index);
+                                                    $valorNovoUnit = $orcamentoItem ? (float) $orcamentoItem->valor_unitario_com_desconto : $precoVenda;
+                                                    if ($valorNovoUnit <= 0) { $valorNovoUnit = $precoVenda; }
                                                 @endphp
                                                 <tr data-item-id="{{ $item->id }}"
                                                     data-preco-original="{{ $precoVenda }}"
@@ -173,13 +179,13 @@
                                                         value="{{ $precoVenda }}" class="enc-preco-original">
                                                     <input type="hidden"
                                                         name="encomenda_itens[{{ $loop->index }}][desconto_item]"
-                                                        value="0" class="enc-desconto-item">
+                                                        value="{{ number_format($precoVenda - $valorNovoUnit, 2, '.', '') }}" class="enc-desconto-item">
                                                     <input type="hidden"
                                                         name="encomenda_itens[{{ $loop->index }}][tipo_desconto]"
-                                                        value="percentual" class="enc-tipo-desconto">
+                                                        value="{{ $valorNovoUnit < $precoVenda ? 'produto' : 'percentual' }}" class="enc-tipo-desconto">
                                                     <input type="hidden"
                                                         name="encomenda_itens[{{ $loop->index }}][preco_final]"
-                                                        value="{{ $precoVenda }}" class="enc-preco-final">
+                                                        value="{{ number_format($valorNovoUnit, 2, '.', '') }}" class="enc-preco-final">
 
                                                     <td class="px-4 py-2 text-sm font-medium">{{ $item->descricao }}
                                                     </td>
@@ -200,8 +206,9 @@
                                                     </td>
                                                     <td class="px-4 py-2 text-right text-sm">
                                                         <input type="number" step="0.01" min="0"
-                                                            value="0" placeholder="0,00"
-                                                            class="enc-desconto-input w-24 border rounded px-2 py-1 text-sm text-right"
+                                                            value="{{ number_format($valorNovoUnit, 2, '.', '') }}"
+                                                            placeholder="{{ number_format($precoVenda, 2, ',', '.') }}"
+                                                            class="enc-valor-novo-input w-24 border rounded px-2 py-1 text-sm text-right"
                                                             data-index="{{ $loop->index }}"
                                                             onchange="recalcularItemEncomenda(this)" />
                                                     </td>
@@ -212,7 +219,7 @@
                                                     <td
                                                         class="px-4 py-2 text-right text-sm font-semibold text-emerald-600">
                                                         R$ <span
-                                                            class="enc-subtotal-desc">{{ number_format($precoVenda * $item->quantidade, 2, ',', '.') }}</span>
+                                                            class="enc-subtotal-desc">{{ number_format($valorNovoUnit * $item->quantidade, 2, ',', '.') }}</span>
                                                     </td>
                                                 </tr>
                                             @endforeach
@@ -1568,15 +1575,18 @@
         const precoOri = parseFloat(row.querySelector('.enc-preco-original').value) || 0;
         const qtd = parseFloat(row.querySelector('input[name="encomenda_itens[' + index + '][quantidade]"]')
             .value) || 1;
-        const descItem = parseFloat(input.value) || 0;
+        // Input é o valor novo unitário (preço com desconto) — vendedor informa o novo preço, não o valor do desconto
+        let valorNovo = parseFloat(input.value) || precoOri;
+        valorNovo = Math.max(0, Math.min(valorNovo, precoOri));
 
-        const precoFinal = Math.max(0, precoOri - descItem);
+        const precoFinal = valorNovo;
+        const descItem = precoOri - precoFinal;
         const subtotal = precoOri * qtd;
         const subtotalComDesconto = precoFinal * qtd;
 
         // Atualiza hiddens
-        row.querySelector('.enc-desconto-item').value = descItem;
-        row.querySelector('.enc-preco-final').value = precoFinal;
+        row.querySelector('.enc-desconto-item').value = descItem.toFixed(2);
+        row.querySelector('.enc-preco-final').value = precoFinal.toFixed(2);
         row.querySelector('.enc-tipo-desconto').value = descItem > 0 ? 'produto' : 'percentual';
 
         // Atualiza display
@@ -1594,16 +1604,16 @@
 
         document.querySelectorAll('#itens-encomenda tr').forEach(function(row) {
             const precoOri = parseFloat(row.querySelector('.enc-preco-original')?.value) || 0;
-            const descItem = parseFloat(row.querySelector('.enc-desconto-item')?.value) || 0;
+            const precoFinal = parseFloat(row.querySelector('.enc-preco-final')?.value) || precoOri;
             const qtd = parseFloat(row.dataset.quantidade) || 1;
             const tipo = row.querySelector('.enc-tipo-desconto')?.value;
 
             const subtotal = precoOri * qtd;
             let subtotalDesc;
 
-            if (descItem > 0) {
-                // Desconto fixo por item — ignora percentual
-                subtotalDesc = (precoOri - descItem) * qtd;
+            if (tipo === 'produto' || precoFinal < precoOri) {
+                // Valor novo unitário definido pelo vendedor
+                subtotalDesc = precoFinal * qtd;
             } else if (descontoPercentual > 0) {
                 // Aplica percentual global
                 subtotalDesc = subtotal - (subtotal * (descontoPercentual / 100));

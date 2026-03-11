@@ -207,7 +207,7 @@
                                     </div>
                                 @elseif ($orcamento->status === 'Sem estoque')
                                     @php
-                                        // Calcula quais itens estão sem estoque para exibir na view
+                                        // Itens pendentes / sem estoque: produtos com falta + itens sem produto (ex.: encomenda listados para informação)
                                         $itensSemEstoqueView = $orcamento->itens->filter(function ($item) {
                                             $produto = $item->produto;
                                             if (!$produto) {
@@ -216,6 +216,7 @@
                                             $disponivel = ($produto->estoque_atual ?? 0) - ($produto->estoque_web ?? 0);
                                             return $disponivel < $item->quantidade;
                                         });
+                                        $ehEncomendaSemProdutos = ($orcamento->encomenda ?? false) && $itensSemEstoqueView->isEmpty();
                                     @endphp
                                     <div class="space-y-2">
                                         <div class="flex items-center gap-2">
@@ -223,25 +224,31 @@
                                             <p class="text-sm font-semibold text-red-700 dark:text-red-400">Sem Estoque
                                             </p>
                                         </div>
-                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                                            Este orçamento não pode seguir por falta de estoque.
-                                            O status voltará automaticamente para <strong>Pendente</strong>
-                                            assim que todos os produtos ficarem disponíveis.
-                                        </p>
+                                        @if ($ehEncomendaSemProdutos)
+                                            <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                                                Este orçamento é uma <strong>encomenda</strong>; itens de encomenda não possuem estoque próprio.
+                                                O status pode ter sido definido anteriormente. Você pode visualizar o PDF abaixo e tentar aprovar novamente.
+                                            </p>
+                                        @else
+                                            <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                                                Este orçamento não pode seguir por falta de estoque.
+                                                O status voltará automaticamente para <strong>Pendente</strong>
+                                                assim que todos os produtos ficarem disponíveis.
+                                            </p>
+                                        @endif
                                         @if ($itensSemEstoqueView->isNotEmpty())
                                             <ul class="mt-1 space-y-1">
                                                 @foreach ($itensSemEstoqueView as $item)
                                                     @php
                                                         $prod = $item->produto;
-                                                        $disponivel =
-                                                            ($prod->estoque_atual ?? 0) - ($prod->estoque_web ?? 0);
-                                                        $faltam = max(0, $item->quantidade - $disponivel);
+                                                        $disponivel = $prod ? (($prod->estoque_atual ?? 0) - ($prod->estoque_web ?? 0)) : 0;
+                                                        $faltam = $prod ? max(0, $item->quantidade - $disponivel) : (int) $item->quantidade;
                                                     @endphp
                                                     <li
                                                         class="flex items-center justify-between text-xs bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded px-2 py-1">
                                                         <span
                                                             class="font-medium text-red-800 dark:text-red-200 truncate">
-                                                            {{ $prod->nome ?? "Item #{$item->id}" }}
+                                                            {{ $prod ? ($prod->nome ?? "Item #{$item->id}") : "Item #{$item->id}" }}
                                                         </span>
                                                         <span class="text-red-600 dark:text-red-400 flex-shrink-0 ml-2">
                                                             Faltam {{ number_format($faltam, 0, ',', '.') }} un.
@@ -493,8 +500,8 @@
                                         @endif
                                     @endif
 
-                                    {{-- ── BOTÃO PDF DESTACADO ── --}}
-                                    @if (in_array($orcamento->status, ['Aprovar desconto', 'Aprovar pagamento', 'Pendente', 'Aprovado']))
+                                    {{-- ── BOTÃO PDF DESTACADO (sempre visível quando existir PDF, inclusive com status Sem estoque) ── --}}
+                                    @if (in_array($orcamento->status, ['Aprovar desconto', 'Aprovar pagamento', 'Pendente', 'Aprovado', 'Sem estoque']))
 
                                         @if ($orcamento->pdf_path)
                                             <a href="{{ asset('storage/' . $orcamento->pdf_path) }}" target="_blank"
@@ -1014,20 +1021,8 @@
         @php
             $totalItens = (float) $orcamento->itens->whereNotNull('produto_id')->sum('valor_com_desconto');
 
-            $totalEncomenda = 0;
-            if ($orcamento->encomenda ?? null) {
-                $grupoTotais = \App\Models\ConsultaPrecoGrupo::with(['itens.fornecedorSelecionado'])
-                    ->where('orcamento_id', $orcamento->id)
-                    ->first();
-                if ($grupoTotais) {
-                    foreach ($grupoTotais->itens as $itemCotacao) {
-                        $fornSel = $itemCotacao->fornecedorSelecionado;
-                        if ($fornSel && $fornSel->preco_venda) {
-                            $totalEncomenda += (float) $fornSel->preco_venda * (float) $itemCotacao->quantidade;
-                        }
-                    }
-                }
-            }
+            // Total encomenda = soma dos itens do orçamento (produto_id null) já com desconto por item aplicado
+            $totalEncomenda = (float) $orcamento->itens->whereNull('produto_id')->sum('valor_com_desconto');
 
             $totalVidros = (float) $orcamento->vidros->sum('valor_com_desconto');
             $totalFixos = (float) $orcamento->descontos->where('tipo', 'fixo')->sum('valor');

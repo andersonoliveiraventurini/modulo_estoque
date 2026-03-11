@@ -368,11 +368,16 @@
         </tr>
         </thead>
         <tbody>
-        @foreach ($grupoCotacao->itens as $item)
+        @php
+            $itensOrcamentoEncomenda = $orcamento->itens->whereNull('produto_id')->values();
+        @endphp
+        @foreach ($grupoCotacao->itens as $idx => $item)
             @php
                 $forn     = $item->fornecedorSelecionado;
-                $preco    = $forn ? (float) $forn->preco_venda : 0;
-                $subtotal = $preco * (float) $item->quantidade;
+                $precoOri = $forn ? (float) $forn->preco_venda : 0;
+                $oi       = $itensOrcamentoEncomenda->get($idx);
+                $preco    = $oi ? (float) $oi->valor_unitario_com_desconto : $precoOri;
+                $subtotal = $oi ? (float) $oi->valor_com_desconto : ($precoOri * (float) $item->quantidade);
             @endphp
             <tr>
                 <td align="center">{{ $item->quantidade }}</td>
@@ -439,14 +444,10 @@
         ? (float) $orcamento->itens->whereNotNull('produto_id')->sum('valor_com_desconto')
         : 0;
 
-    // Encomenda
-    $totalEncomenda = 0;
-    if ($temEncomenda) {
-        foreach ($grupoCotacao->itens as $item) {
-            $forn = $item->fornecedorSelecionado;
-            $totalEncomenda += $forn ? (float) $forn->preco_venda * (float) $item->quantidade : 0;
-        }
-    }
+    // Encomenda = soma dos itens do orçamento (produto_id null) já com desconto por item aplicado
+    $totalEncomenda = $temEncomenda
+        ? (float) $orcamento->itens->whereNull('produto_id')->sum('valor_com_desconto')
+        : 0;
 
     $totalVidros   = ($orcamento->relationLoaded('vidros'))
                         ? (float) $orcamento->vidros->sum('valor_com_desconto')
@@ -514,7 +515,7 @@
 
     @foreach ($descontosProdutoAprov as $desc)
         <tr>
-            <td>Desconto especial: {{ $desc->produto->nome ?? ('Produto #' . $desc->produto_id) }}</td>
+            <td>Desconto especial: @if($desc->consulta_preco_id)Item encomenda #{{ $desc->consulta_preco_id }}@else{{ $desc->produto->nome ?? ('Produto #' . $desc->produto_id) }}@endif</td>
             <td class="valor">- R$ {{ number_format($desc->valor, 2, ',', '.') }}</td>
         </tr>
     @endforeach

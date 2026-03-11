@@ -19,6 +19,7 @@ class Desconto extends Model
         'orcamento_id',
         'pedido_id',
         'produto_id',
+        'consulta_preco_id',
         'user_id',
         'porcentagem',
         'aprovado_em',
@@ -42,6 +43,14 @@ class Desconto extends Model
     public function produto()
     {
         return $this->belongsTo(Produto::class);
+    }
+
+    /**
+     * Item da encomenda (consulta_precos) quando o desconto é específico do item
+     */
+    public function consultaPreco()
+    {
+        return $this->belongsTo(ConsultaPreco::class, 'consulta_preco_id');
     }
 
     public function cliente()

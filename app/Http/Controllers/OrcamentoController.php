@@ -989,7 +989,12 @@ class OrcamentoController extends Controller
         }
 
         // ── Lógica de aprovação por cotação ──────────────────────────────────
-        $itensConsulta = \App\Models\ConsultaPreco::where('orcamento_id', $orcamento->id)->get();
+        $grupoIds = \App\Models\ConsultaPrecoGrupo::where('orcamento_id', $orcamento->id)
+            ->pluck('id');
+
+        $itensConsulta = $grupoIds->isNotEmpty()
+            ? \App\Models\ConsultaPreco::whereIn('grupo_id', $grupoIds)->get()
+            : collect();
 
         $todosDisponiveis = $itensConsulta->isNotEmpty()
             && $itensConsulta->every(fn($i) => $i->status === 'Disponível');
@@ -1050,10 +1055,15 @@ class OrcamentoController extends Controller
                     }
                 }
 
-                // ✅ Bloqueia se houver itens sem estoque suficiente
+                // ✅ Bloqueia se houver itens (com produto) sem estoque suficiente — itens de encomenda (produto_id null) não têm estoque próprio
                 $itensSemEstoque = $orcamento->itens->filter(function ($item) {
+                    if (is_null($item->produto_id)) {
+                        return false; // item de encomenda: não verifica estoque
+                    }
                     $produto = $item->produto;
-                    if (! $produto) return true;
+                    if (! $produto) {
+                        return false;
+                    }
                     $estoqueDisponivel = ($produto->estoque_atual ?? 0) - ($produto->estoque_web ?? 0);
                     return $estoqueDisponivel < $item->quantidade;
                 });
@@ -1567,6 +1577,70 @@ class OrcamentoController extends Controller
             // Limpar descontos anteriores antes de recalcular
             // ----------------------------------------------------------------
             $orcamento->descontos()->delete();
+
+            // ----------------------------------------------------------------
+            // Itens de ENCOMENDA — valor novo unitário (vendedor informa preço final, não desconto)
+            // Desconto específico por item (consulta_preco_id) e percentual aplicado a todos
+            // ----------------------------------------------------------------
+            if ($orcamento->encomenda && $request->has('encomenda_itens')) {
+                $itensEncomenda = $orcamento->itens()->whereNull('produto_id')->orderBy('id')->get();
+                $encomendaItensRequest = $request->input('encomenda_itens', []);
+
+                foreach ($encomendaItensRequest as $index => $enc) {
+                    $oi = $itensEncomenda->get($index);
+                    if (! $oi) {
+                        continue;
+                    }
+
+                    $precoOriginal = (float) ($enc['preco_original'] ?? $oi->valor_unitario);
+                    $precoFinal = (float) ($enc['preco_final'] ?? $precoOriginal);
+                    $precoFinal = max(0, min($precoFinal, $precoOriginal));
+                    $quantidade = (float) ($enc['quantidade'] ?? $oi->quantidade);
+                    $tipoDesconto = $enc['tipo_desconto'] ?? 'percentual';
+                    $valorComDesconto = round($precoFinal * $quantidade, 2);
+                    $descontoReais = $precoOriginal - $precoFinal;
+
+                    // desconto = percentual quando aplicado percentual global; 0 quando desconto específico
+                    $descontoItem = ($tipoDesconto === 'percentual' && $descontoPercentual > 0)
+                        ? $descontoPercentual
+                        : 0;
+
+                    $oi->update([
+                        'valor_unitario' => $precoOriginal,
+                        'valor_unitario_com_desconto' => $precoFinal,
+                        'valor_com_desconto' => $valorComDesconto,
+                        'desconto' => $descontoItem,
+                        'user_id' => $request->user()?->id,
+                    ]);
+
+                    // Desconto ESPECÍFICO por item (valor novo informado) — registra na tabela descontos com consulta_preco_id (id do item da encomenda)
+                    if ($descontoReais > 0 && $tipoDesconto === 'produto') {
+                        $consultaPrecoId = ! empty($enc['consulta_preco_id']) ? (int) $enc['consulta_preco_id'] : null;
+                        $motivo = 'Desconto específico no item da encomenda (valor novo informado pelo vendedor)';
+                        if ($consultaPrecoId) {
+                            $motivo .= ' — Item encomenda #' . $consultaPrecoId;
+                        }
+
+                        $orcamento->descontos()->create([
+                            'motivo' => $motivo,
+                            'valor' => round($descontoReais * $quantidade, 2),
+                            'porcentagem' => null,
+                            'tipo' => 'produto',
+                            'produto_id' => null,
+                            'consulta_preco_id' => $consultaPrecoId,
+                            'cliente_id' => $orcamento->cliente_id,
+                            'user_id' => auth()->id(),
+                        ]);
+                        $itenscomdesconto = true;
+                    }
+                }
+
+                $totalItens = $orcamento->itens()->sum(\DB::raw('COALESCE(valor_com_desconto, valor_unitario * quantidade)'));
+                $orcamento->update([
+                    'valor_total_itens' => $totalItens,
+                    'valor_com_desconto' => $totalItens,
+                ]);
+            }
 
             // ----------------------------------------------------------------
             // Produtos EXISTENTES (já estavam no orçamento)

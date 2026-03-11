@@ -78,6 +78,14 @@ class ConsultaPreco extends Model
         return $this->hasMany(ConsultaPrecoFornecedor::class, 'consulta_preco_id');
     }
 
+    /**
+     * Descontos específicos aplicados a este item da encomenda
+     */
+    public function descontos()
+    {
+        return $this->hasMany(Desconto::class, 'consulta_preco_id');
+    }
+
     public function fornecedorSelecionado()
     {
         return $this->hasOne(ConsultaPrecoFornecedor::class, 'consulta_preco_id')
