@@ -262,7 +262,7 @@
             @if ($orcamento->condicao_id == 20)
                 {{ $orcamento->outros_meios_pagamento }}
             @else
-                {{ $orcamento->condicaoPagamento->nome }}
+                {{ $orcamento->condicaoPagamento->nome ?? '---' }}
             @endif
         </td>
         <td class="label">Tipo de frete:</td>
@@ -453,20 +453,19 @@
                         ? (float) $orcamento->vidros->sum('valor_com_desconto')
                         : 0;
 
-    $totalGeral = $totalProdutos + $totalEncomenda + $totalVidros;
-
     $descontosPercentuais  = $descontosAtivos->where('tipo', 'percentual');
     $descontosFixos        = $descontosAtivos->where('tipo', 'fixo');
     $descontosProdutoAprov = $descontosAtivos
                                 ->where('tipo', 'produto')
                                 ->filter(fn($d) => !is_null($d->aprovado_em));
 
-    $valorDescontosFixos = (float) $descontosFixos->sum('valor');
+    $totalFixos        = (float) $descontosFixos->sum('valor');
     $percentualAplicado  = $descontosPercentuais->max('porcentagem') ?? 0;
     $freteNumerico       = is_numeric($orcamento->frete) ? (float) $orcamento->frete : 0;
     $guiaNumerico        = is_numeric($orcamento->guia_recolhimento) ? (float) $orcamento->guia_recolhimento : 0;
 
-    $valorFinal = $totalGeral - $valorDescontosFixos + $freteNumerico + $guiaNumerico;
+    // Mesmo cálculo da tela de show: soma produtos + encomenda + vidros - descontos fixos + frete + guia
+    $valorFinal = $totalProdutos + $totalEncomenda + $totalVidros - $totalFixos + $freteNumerico + $guiaNumerico;
 @endphp
 
 <h3>Totais e Descontos</h3>

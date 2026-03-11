@@ -15,6 +15,14 @@ class OrcamentoPdfService
     public function gerarOrcamentoPdf(Orcamento $orcamento): bool
     {
         try {
+            // Não gerar PDF se não houver condição de pagamento definida
+            if (empty($orcamento->condicao_id)) {
+                Log::warning("Tentativa de gerar PDF para orçamento sem condição de pagamento definida", [
+                    'orcamento_id' => $orcamento->id,
+                ]);
+                return false;
+            }
+
             // 1. TOKEN E LINK SEGURO
             $token         = Str::uuid();
             $tokenExpiraEm = Carbon::now()->addDays(2);

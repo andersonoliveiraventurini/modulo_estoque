@@ -1034,7 +1034,7 @@
         wrapper.innerHTML = '';
 
         const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]')?.value) || 0;
-        let descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]')?.value) || 0;
+        let descontoOrcamento = parseFloat((document.querySelector('[name="desconto"]')?.value || '').replace(',', '.')) || 0;
         descontoOrcamento = Math.min(Math.max(descontoOrcamento, 0), 100);
         const descontoPercentual = Math.max(descontoCliente, descontoOrcamento);
 
@@ -1260,7 +1260,7 @@
         const precoOriginal = precoOriginalInput ? parseFloat(precoOriginalInput.value) : valorUnitario;
 
         const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado]"')?.value) || 0;
-        let descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]')?.value) || 0;
+        let descontoOrcamento = parseFloat((document.querySelector('[name="desconto"]')?.value || '').replace(',', '.')) || 0;
         descontoOrcamento = Math.min(Math.max(descontoOrcamento, 0), 100);
         const descontoPercentual = Math.max(descontoCliente, descontoOrcamento);
 
@@ -1396,7 +1396,7 @@
         const valor = area * precoM2 * quantidade;
 
         const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]')?.value) || 0;
-        let descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]')?.value) || 0;
+        let descontoOrcamento = parseFloat((document.querySelector('[name="desconto"]')?.value || '').replace(',', '.')) || 0;
         descontoOrcamento = Math.min(Math.max(descontoOrcamento, 0), 100);
         const desconto = Math.max(descontoCliente, descontoOrcamento);
 
@@ -1460,9 +1460,16 @@
     // ==================== TOTAIS ====================
     function obterDescontoAplicado() {
         const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]')?.value) || 0;
-        let descontoOrcamento = parseFloat(document.querySelector('[name="desconto"]')?.value) || 0;
+        // Normaliza o campo de desconto do orçamento:
+        // - remove tudo que não for dígito
+        // - interpreta como inteiro de 0 a 100 (ex.: "45" => 45)
+        let raw = (document.querySelector('[name="desconto"]')?.value || '').toString();
+        raw = raw.replace(/[^\d]/g, '');
+        let descontoOrcamento = raw ? parseInt(raw, 10) : 0;
         descontoOrcamento = Math.min(Math.max(descontoOrcamento, 0), 100);
-        return Math.max(descontoCliente, descontoOrcamento);
+        // Se o usuário informar um desconto no campo do orçamento, usa esse valor;
+        // se deixar em branco/zero, cai no desconto aprovado do cliente (se existir).
+        return descontoOrcamento > 0 ? descontoOrcamento : descontoCliente;
     }
 
     function calcularTotalProdutosOriginais() {
@@ -1611,8 +1618,8 @@
             const subtotal = precoOri * qtd;
             let subtotalDesc;
 
-            if (tipo === 'produto' || precoFinal < precoOri) {
-                // Valor novo unitário definido pelo vendedor
+            if (tipo === 'produto') {
+                // Valor novo unitário definido manualmente pelo vendedor (ignora percentual global)
                 subtotalDesc = precoFinal * qtd;
             } else if (descontoPercentual > 0) {
                 // Aplica percentual global

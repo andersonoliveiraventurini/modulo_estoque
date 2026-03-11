@@ -388,17 +388,29 @@ class ConsultaPrecoController extends Controller
 
             DB::commit();
 
-            // Gera o PDF do orçamento
+            $orcamentoFresh = $orcamento->fresh();
+
+            // Se ainda não há condição de pagamento, não tenta gerar PDF e não mostra erro.
+            if (empty($orcamentoFresh->condicao_id)) {
+                return redirect()
+                    ->route('orcamentos.show', $orcamentoFresh->id)
+                    ->with(
+                        'success',
+                        'Orçamento de encomenda gerado com sucesso a partir da cotação! Defina a condição de pagamento para gerar o PDF.'
+                    );
+            }
+
+            // Gera o PDF do orçamento (somente quando já existe condição de pagamento)
             $pdfGerado = false;
             try {
                 $pdfService = new \App\Services\OrcamentoPdfService();
-                $pdfGerado = $pdfService->gerarOrcamentoPdf($orcamento->fresh());
+                $pdfGerado = $pdfService->gerarOrcamentoPdf($orcamentoFresh);
             } catch (\Exception $e) {
                 Log::error('Erro ao gerar PDF do orçamento a partir da cotação: ' . $e->getMessage());
             }
 
             return redirect()
-                ->route('orcamentos.show', $orcamento->id)
+                ->route('orcamentos.show', $orcamentoFresh->id)
                 ->with(
                     $pdfGerado ? 'success' : 'warning',
                     $pdfGerado

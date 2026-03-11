@@ -294,6 +294,21 @@
                                                             Ver comprovante — Pagamento #{{ $pagamentoRegistrado->id }}
                                                         </a>
                                                     @endif
+
+                                                    @if ($orcamento->encomenda)
+                                                        <div class="mt-3 flex flex-wrap gap-2">
+                                                            <a href="{{ route('orcamentos.separacao.show', $orcamento->id) }}"
+                                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium">
+                                                                <x-heroicon-o-clipboard-document-list class="w-4 h-4" />
+                                                                Separação
+                                                            </a>
+                                                            <a href="{{ route('orcamentos.conferencia.show', $orcamento->id) }}"
+                                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-sky-600 hover:bg-sky-700 text-white text-xs font-medium">
+                                                                <x-heroicon-o-clipboard-document-check class="w-4 h-4" />
+                                                                Conferência
+                                                            </a>
+                                                        </div>
+                                                    @endif
                                                 </div>
                                             </div>
                                         @else
@@ -377,6 +392,14 @@
                                                         Salvar
                                                     </button>
                                                 </form>
+
+                                                @if ($orcamento->encomenda && $orcamento->status === 'Aprovado')
+                                                    <a href="{{ route('orcamentos.pagamento', $orcamento->id) }}"
+                                                        class="inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium">
+                                                        <x-heroicon-o-banknotes class="w-4 h-4" />
+                                                        Registrar pagamento no balcão
+                                                    </a>
+                                                @endif
                                             @endif
 
                                         @endif
@@ -500,26 +523,23 @@
                                         @endif
                                     @endif
 
-                                    {{-- ── BOTÃO PDF DESTACADO (sempre visível quando existir PDF, inclusive com status Sem estoque) ── --}}
-                                    @if (in_array($orcamento->status, ['Aprovar desconto', 'Aprovar pagamento', 'Pendente', 'Aprovado', 'Sem estoque']))
-
-                                        @if ($orcamento->pdf_path)
-                                            <a href="{{ asset('storage/' . $orcamento->pdf_path) }}" target="_blank"
-                                                rel="noopener"
-                                                class="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg
+                                    {{-- ── BOTÃO PDF DESTACADO (sempre visível quando existir PDF, independente do status) ── --}}
+                                    @if ($orcamento->pdf_path)
+                                        <a href="{{ asset('storage/' . $orcamento->pdf_path) }}" target="_blank"
+                                            rel="noopener"
+                                            class="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg
                        bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700
                        text-white text-sm font-semibold tracking-wide
                        shadow-md shadow-emerald-900/40
                        transition-all duration-150 group">
-                                                <svg class="w-4 h-4 transition-transform group-hover:-translate-y-0.5 group-hover:scale-110"
-                                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h4a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                                                </svg>
-                                                Baixar PDF do Orçamento
-                                            </a>
-                                        @endif
+                                            <svg class="w-4 h-4 transition-transform group-hover:-translate-y-0.5 group-hover:scale-110"
+                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h4a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                                            </svg>
+                                            Baixar PDF do Orçamento
+                                        </a>
                                     @endif
                                 @endif
 
@@ -566,7 +586,7 @@
                         </p>
                     </div>
                 </div>
-            @elseif ($temPickingAtivo)
+            @elseif ($temPickingAtivo && $orcamento->status === 'Pago')
                 <div
                     class="rounded-2xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-700 p-5 flex items-start gap-4 shadow">
                     <div
@@ -677,7 +697,7 @@
         @endif
 
         {{-- Progresso da Expedição — oculto enquanto encomenda aguarda pagamento --}}
-        @if (in_array($orcamento->status, ['Aprovado']) && $orcamento->workflow_status !== 'aguardando_pagamento')
+        @if (in_array($orcamento->status, ['Aprovado', 'Pago']) && $orcamento->workflow_status !== 'aguardando_pagamento')
             {{-- ✅ SÓ MOSTRA SE NÃO FOR REJEITADO --}}
             @if ($orcamento->status !== 'Rejeitado')
                 <div

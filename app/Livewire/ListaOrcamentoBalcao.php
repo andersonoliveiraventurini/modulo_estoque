@@ -80,10 +80,22 @@ class ListaOrcamentoBalcao extends Component
             ->with(['cliente', 'vendedor', 'endereco'])
 
             // Pontos obrigatórios do Balcão
-            ->whereIn('workflow_status', ['conferido', 'finalizado'])
-            ->whereIn('status', ['Aprovado'])
             ->whereHas('transportes', function ($query) {
+                // somente retiradas/balcão
                 $query->whereIn('tipo_transporte_id', [4, 5]);
+            })
+            ->where(function ($q) {
+                // Orçamentos NORMAIS: já conferidos / finalizados e aprovados
+                $q->where(function ($q2) {
+                    $q2->whereNull('encomenda')
+                        ->whereIn('workflow_status', ['conferido', 'finalizado'])
+                        ->where('status', 'Aprovado');
+                })
+                // ENCOMENDAS: precisam ser pagas antes da separação
+                ->orWhere(function ($q2) {
+                    $q2->whereNotNull('encomenda')
+                        ->where('status', 'Aprovado');
+                });
             })
             // fim - pontos obrigatórios do Balcão
 
