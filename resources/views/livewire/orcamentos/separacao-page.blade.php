@@ -167,7 +167,8 @@
         </div>
 
         {{-- SEÇÃO DE EMBALAGEM - Antes de concluir o lote --}}
-        @if ($orcamento->validade >= now() || in_array($orcamento->status, ['Aprovado']))
+        {{-- Liberado para: orçamentos normais Aprovados (dentro da validade) OU encomendas com status Pago --}}
+        @if ($orcamento->validade >= now() || in_array($orcamento->status, ['Aprovado']) || ($orcamento->encomenda != null && $orcamento->status === 'Pago'))
             <div class="mt-6 rounded-lg border bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
                 <div class="p-4">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Informações de Embalagem</h3>
@@ -213,7 +214,7 @@
         <div
             class="rounded-lg border-2 border-dashed p-8 text-center border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
             <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Nenhum lote de separação em andamento</h3>
-            @if (in_array($orcamento->status, ['Aprovado']))
+            @if (in_array($orcamento->status, ['Aprovado']) || ($orcamento->encomenda != null && $orcamento->status === 'Pago'))
                 <p class="text-gray-500 dark:text-gray-400 mt-2 mb-4">
                     Clique no botão abaixo para criar um novo lote e iniciar o processo de separação dos itens deste
                     orçamento.
@@ -226,7 +227,10 @@
             @else
                 <div class="text-sm text-gray-500 dark:text-gray-400"><br />
                     A separação só pode ser iniciada quando o orçamento estiver com status
-                    <span class="font-semibold">Aprovado</span>.
+                    <span class="font-semibold">Aprovado</span>
+                    @if ($orcamento->encomenda != null)
+                        ou <span class="font-semibold">Pago</span> (encomenda)
+                    @endif.
                 </div>
             @endif
         </div>

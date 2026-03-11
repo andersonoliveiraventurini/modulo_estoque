@@ -90,7 +90,13 @@
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="bg-zinc-50 dark:bg-zinc-800">
-                <tr>
+                <tr>                    
+                    <th class="px-6 py-3 text-left">
+                        <button wire:click="sortBy('id')"
+                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Orçamento ID
+                        </button>
+                    </th>
                     <th class="px-6 py-3 text-left">
                         <button wire:click="sortBy('obra')"
                             class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
@@ -133,6 +139,9 @@
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse($orcamentos as $o)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
+                                href="{{ route('orcamentos.show', $o) }}"
+                                class="hover:underline">{{ $o->id }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
                                 href="{{ route('orcamentos.show', $o) }}"
                                 class="hover:underline">{{ $o->obra }}</a></td>
