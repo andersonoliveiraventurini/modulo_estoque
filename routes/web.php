@@ -271,8 +271,9 @@ Route::middleware(['auth'])->group(function () {
 
 
     Route::resource('armazens', ArmazemController::class)->names('armazens');
-
-    Route::resource('vendedores', VendedorController::class)->names('vendedores');
+        
+    Route::resource('vendedores', VendedorController::class)
+        ->parameters(['vendedores' => 'vendedor']);
     Route::resource('usuarios', UserController::class)->names('usuarios');
     Route::get('/usuarios/{user}/edit-password', [UserController::class, 'editPassword'])->name('usuarios.editPassword');
     Route::put('/usuarios/{user}/update-password', [UserController::class, 'updatePassword'])->name('usuarios.updatePassword');

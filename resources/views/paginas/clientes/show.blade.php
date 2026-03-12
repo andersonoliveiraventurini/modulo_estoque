@@ -85,8 +85,9 @@
 
                     <x-tab name="credito" label="Crédito">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <x-show-field label="Vendedor Interno" :value="$cliente->vendedor?->nome" />
-                            <x-show-field label="Vendedor Externo" :value="$cliente->vendedorExterno?->nome" />
+                            <x-show-field label="Vendedor Responsável" :value="$cliente->vendedor?->user?->name" />
+                            <x-show-field label="Vendedor Externo" :value="$cliente->vendedorExterno?->user?->name" />
+                            <x-show-field label="Vendedor Assistente" :value="$cliente->vendedorAssistente?->user?->name" />
                             <x-show-field label="Desconto (%)" :value="$cliente->desconto" />
                             <x-show-field label="Bloqueado" :value="$cliente->bloqueado ? 'Sim' : 'Não'" />
                             <x-show-field label="Negociar títulos" :value="$cliente->negociar_titulos ? 'Sim' : 'Não'" />

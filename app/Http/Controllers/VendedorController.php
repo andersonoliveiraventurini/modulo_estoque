@@ -9,66 +9,54 @@ use App\Models\Vendedor;
 
 class VendedorController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        return view('paginas.usuarios.vendedores.index');
+        $vendedores = Vendedor::with('user')->get();
+        return view('paginas.usuarios.vendedores.index', compact('vendedores'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         $usuarios = User::whereDoesntHave('vendedor')->get();
         return view('paginas.usuarios.vendedores.create', compact('usuarios'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreVendedorRequest $request)
     {
-        Vendedor::create($request->except([
-            '_token'
-        ]));
+        Vendedor::create($request->except('_token'));
 
         return redirect()
-        ->route('vendedores.index') // 👈 manda para a listagem de clientes
-        ->with('success', 'Vendedor cadastrado com sucesso!');
+            ->route('vendedores.index')
+            ->with('success', 'Vendedor cadastrado com sucesso!');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Vendedor $vendedor)
     {
-        //
+        $vendedor->load('user');
+        return view('paginas.usuarios.vendedores.show', compact('vendedor'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Vendedor $vendedor)
-    {
-        //
-    }
+   public function edit(Vendedor $vendedor)
+{
+    $vendedor->load('user');
+    return view('paginas.usuarios.vendedores.edit', compact('vendedor'));
+}
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdateVendedorRequest $request, Vendedor $vendedor)
     {
-        //
+        $vendedor->update($request->only(['externo', 'desconto']));
+
+        return redirect()
+            ->route('vendedores.index')
+            ->with('success', 'Vendedor atualizado com sucesso!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Vendedor $vendedor)
     {
-        //
+        $vendedor->delete();
+
+        return redirect()
+            ->route('vendedores.index')
+            ->with('success', 'Vendedor removido com sucesso!');
     }
 }

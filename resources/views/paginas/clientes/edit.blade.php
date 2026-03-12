@@ -84,7 +84,61 @@
                                     value="{{ old('suframa', $cliente->suframa) }}" />
                             </div>
                         </x-tab>
-
+<!-- Aba Vendedores -->
+                        <x-tab name="vendedores" label="Vendedores">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <x-select name="vendedor_id" label="Vendedor Responsável">
+                                        <option value="">Selecione um vendedor</option>
+                                        @foreach ($vendedores as $v)
+                                            <option value="{{ $v->id }}"
+                                                @selected(old('vendedor_id', $cliente->vendedor_id) == $v->id)>
+                                                {{ $v->user->name }}
+                                            </option>
+                                        @endforeach
+                                    </x-select>
+                                    @if ($cliente->vendedor)
+                                        <p class="text-xs text-neutral-500 mt-1">
+                                            Atual: <span class="font-medium">{{ $cliente->vendedor->user->name }}</span>
+                                        </p>
+                                    @endif
+                                </div>
+ 
+                                <div>
+                                    <x-select name="vendedor_externo_id" label="Vendedor Externo">
+                                        <option value="">Selecione um vendedor externo</option>
+                                        @foreach ($vendedores_externos as $v)
+                                            <option value="{{ $v->id }}"
+                                                @selected(old('vendedor_externo_id', $cliente->vendedor_externo_id) == $v->id)>
+                                                {{ $v->user->name }}
+                                            </option>
+                                        @endforeach
+                                    </x-select>
+                                    @if ($cliente->vendedorExterno)
+                                        <p class="text-xs text-neutral-500 mt-1">
+                                            Atual: <span class="font-medium">{{ $cliente->vendedorExterno->user->name }}</span>
+                                        </p>
+                                    @endif
+                                </div>
+ 
+                                <div>
+                                    <x-select name="vendedor_assistente_id" label="Vendedor Assistente">
+                                        <option value="">Selecione um assistente</option>
+                                        @foreach ($vendedores as $v)
+                                            <option value="{{ $v->id }}"
+                                                @selected(old('vendedor_assistente_id', $cliente->vendedor_assistente_id) == $v->id)>
+                                                {{ $v->user->name }}
+                                            </option>
+                                        @endforeach
+                                    </x-select>
+                                    @if ($cliente->vendedorAssistente)
+                                        <p class="text-xs text-neutral-500 mt-1">
+                                            Atual: <span class="font-medium">{{ $cliente->vendedorAssistente->user->name }}</span>
+                                        </p>
+                                    @endif
+                                </div>
+                            </div>
+                        </x-tab>
                         <!-- Aba Endereço Comercial -->
                         <x-tab name="endereco" label="Endereço Comercial">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">

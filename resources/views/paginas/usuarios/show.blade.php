@@ -67,9 +67,6 @@
 
                 <!-- Botões -->
                 <div class="flex gap-4 mt-6">
-                    <a href="{{ route('usuarios.edit', $usuario) }}">
-                        Editar
-                    </a>
                     <a href="{{ route('usuarios.index') }}">
                         Voltar
                     </a>

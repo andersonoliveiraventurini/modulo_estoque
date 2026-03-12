@@ -61,6 +61,14 @@
                                     <option value="{{ $v->id }}">{{ $v->name }}</option>
                                 @endforeach
                             </x-select>
+                            <x-select name="vendedor_assistente_id" label="Vendedor Assistente">
+                                <option value="">Selecione um assistente</option>
+                                @foreach ($vendedores as $v)
+                                    <option value="{{ $v->id }}" {{ old('vendedor_assistente_id') == $v->id ? 'selected' : '' }}>
+                                        {{ $v->name }}
+                                    </option>
+                                @endforeach
+                            </x-select>
                         </div>
                     </div>
                     <!-- Contatos da Empresa -->

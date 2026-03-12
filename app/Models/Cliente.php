@@ -26,6 +26,7 @@ class Cliente extends Model
         'regime_tributario',
         'vendedor_id',
         'vendedor_externo_id',
+        'vendedor_assistente_id',
     ];
 
     protected $casts = [
@@ -86,6 +87,10 @@ class Cliente extends Model
     {
         return $this->belongsTo(Vendedor::class, 'vendedor_externo_id');
     }
+public function vendedorAssistente()
+{
+    return $this->belongsTo(Vendedor::class, 'vendedor_assistente_id');
+}
 
     public function pedidos()
     {

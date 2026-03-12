@@ -3,49 +3,46 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateClienteRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
+        $clienteId = $this->route('cliente')?->id;
+
         return [
             // Pessoa Jurídica
-            'cnpj'           => ['required', 'string', 'max:18'],
-            'razao_social'   => ['nullable', 'string', 'max:255'],
-            'nome_fantasia'  => ['nullable', 'string', 'max:255'],
-            'tratamento'     => ['nullable', 'string', 'max:100'],
+            'cnpj'          => ['nullable', 'string', 'max:18', Rule::unique('clientes', 'cnpj')->ignore($clienteId)->whereNull('deleted_at')],
+            'razao_social'  => ['nullable', 'string', 'max:255'],
+            'nome_fantasia' => ['nullable', 'string', 'max:255'],
+            'tratamento'    => ['nullable', 'string', 'max:100'],
 
             // Pessoa Física
-            'cpf'            => ['nullable', 'string', 'max:14'],
+            'cpf'            => ['nullable', 'string', 'max:14', Rule::unique('clientes', 'cpf')->ignore($clienteId)->whereNull('deleted_at')],
             'nome'           => ['nullable', 'string', 'max:255'],
             'data_nascimento' => ['nullable', 'date'],
 
+            // Documentos
             'certidoes_negativas' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-            'delete_documents'   => ['nullable', 'array'],
-            'delete_documents.*' => ['integer', 'exists:documentos,id'],
+            'delete_documents'    => ['nullable', 'array'],
+            'delete_documents.*'  => ['integer', 'exists:documentos,id'],
 
             // Vendedores
-            'vendedor_id'        => ['nullable', 'exists:users,id'],
-            'vendedor_externo_id' => ['nullable', 'exists:users,id'],
+            'vendedor_id'             => ['nullable', 'exists:vendedores,id'],
+            'vendedor_externo_id'     => ['nullable', 'exists:vendedores,id'],
+            'vendedor_assistente_id'  => ['nullable', 'exists:vendedores,id'],
 
-            // Contatos (array dinâmico)
-            'contatos'                   => ['nullable', 'array'],
-            'contatos.*.nome'            => ['nullable', 'string', 'max:255'],
-            'contatos.*.telefone'        => ['nullable', 'string', 'max:20'],
-            'contatos.*.email'           => ['nullable', 'email', 'max:255'],
+            // Contatos
+            'contatos'           => ['nullable', 'array'],
+            'contatos.*.nome'    => ['nullable', 'string', 'max:255'],
+            'contatos.*.telefone' => ['nullable', 'string', 'max:20'],
+            'contatos.*.email'   => ['nullable', 'email', 'max:255'],
 
             // Endereço Comercial
             'endereco_cep'        => ['nullable', 'string', 'max:9'],
