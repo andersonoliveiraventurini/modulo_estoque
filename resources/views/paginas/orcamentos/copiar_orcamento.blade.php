@@ -24,7 +24,8 @@
                             <option value="">Selecione um cliente...</option>
                             @foreach ($clientes as $cliente)
                                 <option value="{{ $cliente->id }}">
-                                    {{ $cliente->id }} - {{ $cliente->nome }} - {{ $cliente->nome_fantasia }} - {{ $cliente->razao_social }} - {{ $cliente->tratamento }}
+                                    {{ $cliente->id }} - {{ $cliente->nome }} - {{ $cliente->nome_fantasia }} -
+                                    {{ $cliente->razao_social }} - {{ $cliente->tratamento }}
                                 </option>
                             @endforeach
                         </x-select>
@@ -33,11 +34,26 @@
                             <option value="">Selecione um orçamento...</option>
                             @foreach ($orcamentos as $orcamento)
                                 <option value="{{ $orcamento->id }}">
-                                    {{ $orcamento->id }} - {{ $orcamento->obra }} - Cliente: {{ $orcamento->cliente->id }} - {{ $orcamento->cliente->nome }}
+                                    {{ $orcamento->id }} - {{ $orcamento->obra }} - Cliente:
+                                    {{ $orcamento->cliente->id }} - {{ $orcamento->cliente->nome }}
                                 </option>
                             @endforeach
                         </x-select>
-
+                        <div
+                            class="flex items-start gap-2 mt-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+                            <svg class="w-4 h-4 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            <span>
+                                <strong class="font-medium">Atenção:</strong>
+                                Encomendas <strong class="font-medium">não serão
+                                    duplicadas</strong> para o novo cliente. Apenas orçamento serão
+                                copiados.
+                            </span>
+                        </div>
                         <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
                             Copiar Orçamento
                         </button>

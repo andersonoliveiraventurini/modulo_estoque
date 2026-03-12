@@ -68,7 +68,7 @@ class OrcamentoController extends Controller
 
     public function copiarOrcamento()
     {
-        $orcamentos = Orcamento::orderBy('id', 'desc')->get();
+        $orcamentos = Orcamento::where('encomenda',null)->orderBy('id', 'desc')->get();
         $clientes = Cliente::orderBy('nome_fantasia')->get();
         return view('paginas.orcamentos.copiar_orcamento', compact('orcamentos', 'clientes'));
     }

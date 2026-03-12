@@ -169,14 +169,16 @@
                                     </x-button>
                                 </a>
                             @endif
-                            <form action="{{ route('orcamentos.duplicar', $o->id) }}" method="POST"
-                                onsubmit="return confirm('Deseja duplicar este orçamento?');">
-                                @csrf
-                                <x-button size="sm" variant="primary">
-                                    <x-heroicon-o-document-duplicate class="w-4 h-4" />
-                                    Duplicar
-                                </x-button>
-                            </form>
+                            @if (!$o->encomenda)
+                                <form action="{{ route('orcamentos.duplicar', $o->id) }}" method="POST"
+                                    onsubmit="return confirm('Deseja duplicar este orçamento?');">
+                                    @csrf
+                                    <x-button size="sm" variant="primary">
+                                        <x-heroicon-o-document-duplicate class="w-4 h-4" />
+                                        Duplicar
+                                    </x-button>
+                                </form>
+                            @endif
                             @if ($o->status !== 'Pago')
                                 <form action="{{ route('orcamentos.destroy', $o->id) }}" method="POST"
                                     onsubmit="return confirm('Deseja excluir este orçamento?');">
