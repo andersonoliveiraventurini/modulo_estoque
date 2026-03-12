@@ -291,6 +291,20 @@
         </tr>
     @endif
 </table>
+
+@if (!is_null($orcamento->encomenda))
+    <div style="
+        margin: 10px 0;
+        padding: 8px 12px;
+        background-color: #fff8e1;
+        border-left: 4px solid #f0a500;
+        border-radius: 3px;
+        font-size: 10.5px;
+        color: #7a5c00;
+    ">
+        <strong>Atenção:</strong> Os valores apresentados referem-se a um preço teórico para encomenda, podendo sofrer alterações conforme variações de mercado e câmbio. O preço final será confirmado somente com a chegada do material e emissão da Nota Fiscal.
+    </div>
+@endif
 {{-- ===========================
      PRÉ-PROCESSAMENTO DE DESCONTOS
 =========================== --}}
