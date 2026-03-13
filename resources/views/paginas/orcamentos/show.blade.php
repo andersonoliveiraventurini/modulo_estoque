@@ -216,7 +216,8 @@
                                             $disponivel = ($produto->estoque_atual ?? 0) - ($produto->estoque_web ?? 0);
                                             return $disponivel < $item->quantidade;
                                         });
-                                        $ehEncomendaSemProdutos = ($orcamento->encomenda ?? false) && $itensSemEstoqueView->isEmpty();
+                                        $ehEncomendaSemProdutos =
+                                            ($orcamento->encomenda ?? false) && $itensSemEstoqueView->isEmpty();
                                     @endphp
                                     <div class="space-y-2">
                                         <div class="flex items-center gap-2">
@@ -226,8 +227,10 @@
                                         </div>
                                         @if ($ehEncomendaSemProdutos)
                                             <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                                                Este orçamento é uma <strong>encomenda</strong>; itens de encomenda não possuem estoque próprio.
-                                                O status pode ter sido definido anteriormente. Você pode visualizar o PDF abaixo e tentar aprovar novamente.
+                                                Este orçamento é uma <strong>encomenda</strong>; itens de encomenda não
+                                                possuem estoque próprio.
+                                                O status pode ter sido definido anteriormente. Você pode visualizar o
+                                                PDF abaixo e tentar aprovar novamente.
                                             </p>
                                         @else
                                             <p class="text-xs text-neutral-500 dark:text-neutral-400">
@@ -241,14 +244,18 @@
                                                 @foreach ($itensSemEstoqueView as $item)
                                                     @php
                                                         $prod = $item->produto;
-                                                        $disponivel = $prod ? (($prod->estoque_atual ?? 0) - ($prod->estoque_web ?? 0)) : 0;
-                                                        $faltam = $prod ? max(0, $item->quantidade - $disponivel) : (int) $item->quantidade;
+                                                        $disponivel = $prod
+                                                            ? ($prod->estoque_atual ?? 0) - ($prod->estoque_web ?? 0)
+                                                            : 0;
+                                                        $faltam = $prod
+                                                            ? max(0, $item->quantidade - $disponivel)
+                                                            : (int) $item->quantidade;
                                                     @endphp
                                                     <li
                                                         class="flex items-center justify-between text-xs bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded px-2 py-1">
                                                         <span
                                                             class="font-medium text-red-800 dark:text-red-200 truncate">
-                                                            {{ $prod ? ($prod->nome ?? "Item #{$item->id}") : "Item #{$item->id}" }}
+                                                            {{ $prod ? $prod->nome ?? "Item #{$item->id}" : "Item #{$item->id}" }}
                                                         </span>
                                                         <span class="text-red-600 dark:text-red-400 flex-shrink-0 ml-2">
                                                             Faltam {{ number_format($faltam, 0, ',', '.') }} un.
@@ -299,12 +306,14 @@
                                                         <div class="mt-3 flex flex-wrap gap-2">
                                                             <a href="{{ route('orcamentos.separacao.show', $orcamento->id) }}"
                                                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium">
-                                                                <x-heroicon-o-clipboard-document-list class="w-4 h-4" />
+                                                                <x-heroicon-o-clipboard-document-list
+                                                                    class="w-4 h-4" />
                                                                 Separação
                                                             </a>
                                                             <a href="{{ route('orcamentos.conferencia.show', $orcamento->id) }}"
                                                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-sky-600 hover:bg-sky-700 text-white text-xs font-medium">
-                                                                <x-heroicon-o-clipboard-document-check class="w-4 h-4" />
+                                                                <x-heroicon-o-clipboard-document-check
+                                                                    class="w-4 h-4" />
                                                                 Conferência
                                                             </a>
                                                         </div>
@@ -376,7 +385,7 @@
                 {{ $statusBloqueado ? 'opacity-50 cursor-not-allowed' : '' }}"
                                                         data-id="{{ $orcamento->id }}">
                                                         @foreach (['Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'] as $s)
-                                                            @if ($s === 'Aprovado' && $bloqueiaAprovado)
+                                                            @if ($s === 'Aprovado' && $bloqueiaAprovado && $orcamento->status !== 'Aprovado')
                                                                 @continue
                                                             @endif
                                                             <option value="{{ $s }}"
@@ -534,8 +543,7 @@
                        transition-all duration-150 group">
                                             <svg class="w-4 h-4 transition-transform group-hover:-translate-y-0.5 group-hover:scale-110"
                                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    stroke-width="2"
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h4a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                                             </svg>
                                             Baixar PDF do Orçamento

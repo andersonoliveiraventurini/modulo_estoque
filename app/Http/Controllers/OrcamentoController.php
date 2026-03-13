@@ -967,11 +967,23 @@ class OrcamentoController extends Controller
 
         $ultimaAtualizacao = $itensConsulta->where('status', 'Disponível')->max('updated_at');
 
-        $aprovacaoExpirada = $todosDisponiveis
-            && $ultimaAtualizacao !== null
-            && \Carbon\Carbon::parse($ultimaAtualizacao)->addDays(10)->isPast();
+        $prazoAprovacaoDias = $orcamento->encomenda ? 10 : 2;
 
-        $bloqueiaAprovado = !$todosDisponiveis || $aprovacaoExpirada;
+        if ($orcamento->encomenda) {
+            // Encomenda: bloqueia se nem todos disponíveis, ou se prazo de 10 dias expirou
+            $aprovacaoExpirada = $todosDisponiveis
+                && $ultimaAtualizacao !== null
+                && \Carbon\Carbon::parse($ultimaAtualizacao)->addDays(10)->isPast();
+
+            $bloqueiaAprovado = !$todosDisponiveis || $aprovacaoExpirada;
+        } else {
+            // Orçamento comum: prazo de 2 dias a partir do created_at
+            $aprovacaoExpirada = \Carbon\Carbon::parse($orcamento->created_at)
+                ->addDays(2)
+                ->isPast();
+
+            $bloqueiaAprovado = $aprovacaoExpirada;
+        }
 
         $statusBloqueado = $cotacaoBloqueada || $aprovacaoExpirada;
 
@@ -1295,7 +1307,7 @@ class OrcamentoController extends Controller
             'descontos'
         ])->findOrFail($id);
 
-        $cliente = Cliente::with('enderecos')->findOrFail($cliente_id);
+        $cliente = Cliente::with('enderecos')->findOrFail($orcamento->cliente_id);
         $cnpj = preg_replace('/\D/', '', $cliente->cnpj);
 
         $body = Cache::remember("cnpj_{$cnpj}", now()->addHours(24), function () use ($cnpj) {
