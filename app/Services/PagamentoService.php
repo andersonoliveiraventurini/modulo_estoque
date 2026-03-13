@@ -14,11 +14,15 @@ use Illuminate\Validation\ValidationException;
 
 class PagamentoService
 {
-    protected $creditoService;
-
-    public function __construct(CreditoService $creditoService)
-    {
+    protected CreditoService $creditoService;
+    protected PagamentoPdfService $pdfService;   
+ 
+    public function __construct(
+        CreditoService $creditoService,
+        PagamentoPdfService $pdfService          
+    ) {
         $this->creditoService = $creditoService;
+        $this->pdfService     = $pdfService;     
     }
 
     /**
@@ -29,68 +33,72 @@ class PagamentoService
      * @throws ValidationException
      * @throws \Exception
      */
-    public function salvarPagamentoVenda(array $dados)
+   public function salvarPagamentoVenda(array $dados): array
     {
-        // Valida os dados de entrada
         $dadosValidados = $this->validarDadosPagamento($dados);
-
-        return DB::transaction(function () use ($dadosValidados) {
-            // Busca o registro (orçamento ou pedido)
-            $registro = $this->buscarRegistro($dadosValidados);
-            $clienteId = $registro->cliente_id;
-
-            // Valida se o registro já foi pago
-            $this->validarRegistroNaoPago($registro);
-
-            // Calcula os valores da venda
-            $valoresVenda = $this->calcularValoresVenda($registro, $dadosValidados);
-
-            // Valida os métodos de pagamento
-            $this->validarMetodosPagamento($dadosValidados['metodos_pagamento'], $valoresVenda, $clienteId);
-
-            // Valida o valor pago total
-            $this->validarValorPago($dadosValidados['metodos_pagamento'], $valoresVenda);
-
-            // Cria o registro do pagamento
-            $pagamento = $this->criarPagamento($registro, $dadosValidados, $valoresVenda);
-
-            // Processa os métodos de pagamento e créditos
-            $resultadoProcessamento = $this->processarMetodosPagamento(
-                $pagamento,
-                $dadosValidados['metodos_pagamento'],
-                $clienteId,
-                $dadosValidados
-            );
-
-            // Processa o troco
-            $creditoTroco = null;
-            if ($valoresVenda['troco'] > 0 && ($dadosValidados['gerar_troco_como_credito'] ?? false)) {
-                $creditoTroco = $this->processarTrocoComoCredito(
-                    $clienteId,
-                    $valoresVenda['troco'],
+ 
+        // A transaction retorna o array de resultado com o pagamento já salvo.
+        $resultado = \Illuminate\Support\Facades\DB::transaction(
+            function () use ($dadosValidados) {
+                $registro  = $this->buscarRegistro($dadosValidados);
+                $clienteId = $registro->cliente_id;
+ 
+                $this->validarRegistroNaoPago($registro);
+ 
+                $valoresVenda = $this->calcularValoresVenda($registro, $dadosValidados);
+ 
+                $this->validarMetodosPagamento(
+                    $dadosValidados['metodos_pagamento'],
+                    $valoresVenda,
+                    $clienteId
+                );
+ 
+                $this->validarValorPago($dadosValidados['metodos_pagamento'], $valoresVenda);
+ 
+                $pagamento = $this->criarPagamento($registro, $dadosValidados, $valoresVenda);
+ 
+                $resultadoProcessamento = $this->processarMetodosPagamento(
                     $pagamento,
+                    $dadosValidados['metodos_pagamento'],
+                    $clienteId,
                     $dadosValidados
                 );
+ 
+                $creditoTroco = null;
+                if ($valoresVenda['troco'] > 0 && ($dadosValidados['gerar_troco_como_credito'] ?? false)) {
+                    $creditoTroco = $this->processarTrocoComoCredito(
+                        $clienteId,
+                        $valoresVenda['troco'],
+                        $pagamento,
+                        $dadosValidados
+                    );
+                }
+ 
+                $this->atualizarStatusRegistro($registro, 'pago');
+ 
+                return [
+                    'sucesso'              => true,
+                    'mensagem'             => 'Pagamento salvo com sucesso!',
+                    'pagamento'            => $pagamento->fresh(['metodos.metodoPagamento', 'condicaoPagamento']),
+                    'creditos_utilizados'  => $resultadoProcessamento['creditos_utilizados'],
+                    'credito_troco_gerado' => $creditoTroco,
+                    'valores'              => [
+                        'valor_total'    => $valoresVenda['valor_total'],
+                        'desconto_total' => $valoresVenda['desconto_total'],
+                        'valor_final'    => $valoresVenda['valor_final'],
+                        'valor_pago'     => $valoresVenda['valor_pago'],
+                        'troco'          => $valoresVenda['troco'],
+                    ],
+                ];
             }
-
-            // Atualiza o status do registro
-            $this->atualizarStatusRegistro($registro, 'pago');
-
-            return [
-                'sucesso' => true,
-                'mensagem' => 'Pagamento salvo com sucesso!',
-                'pagamento' => $pagamento->fresh(['metodos.metodoPagamento', 'condicaoPagamento']),
-                'creditos_utilizados' => $resultadoProcessamento['creditos_utilizados'],
-                'credito_troco_gerado' => $creditoTroco,
-                'valores' => [
-                    'valor_total' => $valoresVenda['valor_total'],
-                    'desconto_total' => $valoresVenda['desconto_total'],
-                    'valor_final' => $valoresVenda['valor_final'],
-                    'valor_pago' => $valoresVenda['valor_pago'],
-                    'troco' => $valoresVenda['troco'],
-                ],
-            ];
-        });
+        );
+ 
+        // ── PDF gerado FORA da transaction ───────────────────────────────────
+        // Falha de I/O no PDF não reverte o pagamento já commitado.
+        // O caminho fica em $resultado['pagamento']->pdf_path após o gerar().
+        $this->pdfService->gerar($resultado['pagamento']);
+ 
+        return $resultado;
     }
 
     /**

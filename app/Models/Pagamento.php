@@ -24,6 +24,7 @@ class Pagamento extends Model
         'numero_documento',
         'cnpj_cpf_nota',
         'observacoes',
+        'pdf_path',             
         'user_id',
         'estornado',
         'data_estorno',
@@ -32,14 +33,14 @@ class Pagamento extends Model
     ];
 
     protected $casts = [
-        'data_pagamento'   => 'datetime',
-        'data_estorno'     => 'datetime',
-        'desconto_balcao'  => 'decimal:2',
-        'desconto_aplicado'=> 'decimal:2',
-        'valor_final'      => 'decimal:2',
-        'valor_pago'       => 'decimal:2',
-        'troco'            => 'decimal:2',
-        'estornado'        => 'boolean',
+        'data_pagamento'    => 'datetime',
+        'data_estorno'      => 'datetime',
+        'desconto_balcao'   => 'decimal:2',
+        'desconto_aplicado' => 'decimal:2',
+        'valor_final'       => 'decimal:2',
+        'valor_pago'        => 'decimal:2',
+        'troco'             => 'decimal:2',
+        'estornado'         => 'boolean',
     ];
 
     // ── Relacionamentos ──────────────────────────────────────────────────────
@@ -69,13 +70,25 @@ class Pagamento extends Model
         return $this->belongsTo(User::class, 'usuario_estorno_id');
     }
 
-    /** Formas de pagamento usadas neste pagamento */
+    /**
+     * Formas/métodos de pagamento — tabela pagamento_formas (PagamentoController legado).
+     * Mantida para compatibilidade com código existente.
+     */
     public function formas()
     {
         return $this->hasMany(PagamentoForma::class);
     }
 
-    /** Todos os comprovantes do pagamento (independente da forma) */
+    /**
+     * Métodos de pagamento — tabela pagamento_metodos (PagamentoService novo).
+     * Usada pelo PagamentoService, PagamentoPdfService e estorno via service.
+     */
+    public function metodos()
+    {
+        return $this->hasMany(PagamentoMetodo::class);
+    }
+
+    /** Comprovantes de upload vinculados ao pagamento ou a uma forma específica */
     public function comprovantes()
     {
         return $this->hasMany(PagamentoComprovante::class);
@@ -116,18 +129,36 @@ class Pagamento extends Model
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
+    /** Verifica se qualquer relação (formas ou metodos) usou crédito */
     public function utilizouCreditos(): bool
     {
-        return $this->formas()->where('usa_credito', true)->exists();
+        return $this->formas()->where('usa_credito', true)->exists()
+            || $this->metodos()->where('usa_credito', true)->exists();
     }
 
-    public function getValorCreditosAttribute()
+    public function getValorCreditosAttribute(): float
     {
-        return $this->formas()->where('usa_credito', true)->sum('valor');
+        return (float) ($this->formas()->where('usa_credito', true)->sum('valor')
+            + $this->metodos()->where('usa_credito', true)->sum('valor'));
     }
 
-    public function getValorOutrosMetodosAttribute()
+    public function getValorOutrosMetodosAttribute(): float
     {
-        return $this->formas()->where('usa_credito', false)->sum('valor');
+        return (float) ($this->formas()->where('usa_credito', false)->sum('valor')
+            + $this->metodos()->where('usa_credito', false)->sum('valor'));
+    }
+
+    /** Retorna a URL pública do PDF do comprovante, ou null se não gerado */
+    public function getPdfUrlAttribute(): ?string
+    {
+        return $this->pdf_path
+            ? asset('storage/' . $this->pdf_path)
+            : null;
+    }
+
+    /** Indica se o comprovante PDF já foi gerado */
+    public function temPdf(): bool
+    {
+        return ! empty($this->pdf_path);
     }
 }

@@ -21,54 +21,34 @@ class ListaOrcamentoBalcaoConcluidos extends Component
     public $perPage = 10;
 
     protected $queryString = [
-        'search' => ['except' => ''],
-        'cliente' => ['except' => ''],
-        'cidade' => ['except' => ''],
-        'vendedor' => ['except' => ''],
-        'dataInicio' => ['except' => ''],
-        'dataFim' => ['except' => ''],
-        'sortField' => ['except' => 'id'],
+        'search'        => ['except' => ''],
+        'cliente'       => ['except' => ''],
+        'cidade'        => ['except' => ''],
+        'vendedor'      => ['except' => ''],
+        'dataInicio'    => ['except' => ''],
+        'dataFim'       => ['except' => ''],
+        'sortField'     => ['except' => 'id'],
         'sortDirection' => ['except' => 'desc'],
     ];
 
-    public function updatingSearch()
+    public function updatingSearch()     { $this->resetPage(); }
+    public function updatingCliente()    { $this->resetPage(); }
+    public function updatingCidade()     { $this->resetPage(); }
+    public function updatingVendedor()   { $this->resetPage(); }
+    public function updatingDataInicio() { $this->resetPage(); }
+    public function updatingDataFim()    { $this->resetPage(); }
+
+    public function limparFiltros(): void
     {
+        $this->reset(['search', 'cliente', 'cidade', 'vendedor', 'dataInicio', 'dataFim']);
         $this->resetPage();
     }
 
-    public function updatingCliente()
+    public function sortBy(string $field): void
     {
-        $this->resetPage();
-    }
-
-    public function updatingVendedor()
-    {
-        $this->resetPage();
-    }
-
-    public function updatingDataInicio()
-    {
-        $this->resetPage();
-    }
-
-    public function updatingDataFim()
-    {
-        $this->resetPage();
-    }
-
-    public function limparFiltros()
-    {
-        $this->reset(['search', 'cliente', 'vendedor', 'dataInicio', 'dataFim']);
-        $this->resetPage();
-    }
-
-    public function sortBy($field)
-    {
-        if ($this->sortField === $field) {
-            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-            $this->sortDirection = 'asc';
-        }
+        $this->sortDirection = $this->sortField === $field
+            ? ($this->sortDirection === 'asc' ? 'desc' : 'asc')
+            : 'asc';
 
         $this->sortField = $field;
         $this->resetPage();
@@ -77,64 +57,59 @@ class ListaOrcamentoBalcaoConcluidos extends Component
     public function render()
     {
         $orcamentos = Orcamento::query()
-            ->with(['cliente', 'vendedor', 'endereco'])
+            ->with([
+                'cliente',
+                'vendedor',
+                'endereco',
+                // Carrega o pagamento ativo mais recente + formas + condicao
+                // Mesmo padrão do ListaOrcamentoConcluidos
+                'pagamentos'                        => fn ($q) => $q->where('estornado', false)->latest()->limit(1),
+                'pagamentos.formas.condicaoPagamento',
+            ])
 
-            // Pontos obrigatórios do Balcão
+            // Filtros obrigatórios do Balcão
             ->whereIn('workflow_status', ['conferido', 'finalizado'])
             ->whereIn('status', ['Pago'])
-            ->whereHas('transportes', function ($query) {
-                $query->whereIn('tipo_transporte_id', [4, 5]);
-            })
-            // fim - pontos obrigatórios do Balcão
+            ->whereHas('transportes', fn ($q) => $q->whereIn('tipo_transporte_id', [4, 5]))
 
-            // 🔎 Busca geral
+            // Busca geral
             ->when($this->search, function ($query) {
                 $terms = preg_split('/\s+/', trim($this->search));
                 foreach ($terms as $term) {
-                    $normalizedTerm = str_replace(',', '.', $term);
-                    $query->where(function ($q) use ($normalizedTerm) {
-                        $q->where('obra', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('valor_total', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('status', 'like', "%{$normalizedTerm}%")
-                            ->orWhere('observacoes', 'like', "%{$normalizedTerm}%")
-                            ->orWhereHas('cliente', fn($q2) => $q2->where('nome', 'like', "%{$normalizedTerm}%"))
-                            ->orWhereHas('vendedor', fn($q2) => $q2->where('name', 'like', "%{$normalizedTerm}%"))
-                            ->orWhereHas('endereco', fn($q2) => $q2
-                                ->where('logradouro', 'like', "%{$normalizedTerm}%")
-                                ->orWhere('cidade', 'like', "%{$normalizedTerm}%"));
+                    $normalized = str_replace(',', '.', $term);
+                    $query->where(function ($q) use ($normalized) {
+                        $q->where('obra', 'like', "%{$normalized}%")
+                            ->orWhere('valor_total', 'like', "%{$normalized}%")
+                            ->orWhere('status', 'like', "%{$normalized}%")
+                            ->orWhere('observacoes', 'like', "%{$normalized}%")
+                            ->orWhereHas('cliente', fn ($q2) => $q2->where('nome', 'like', "%{$normalized}%"))
+                            ->orWhereHas('vendedor', fn ($q2) => $q2->where('name', 'like', "%{$normalized}%"))
+                            ->orWhereHas('endereco', fn ($q2) => $q2
+                                ->where('logradouro', 'like', "%{$normalized}%")
+                                ->orWhere('cidade', 'like', "%{$normalized}%"));
                     });
                 }
             })
 
-            // 🧍‍♂️ Filtro específico por cliente
-            ->when($this->cliente, function ($query) {
-                $query->whereHas('cliente', fn($q) =>
-                $q->where('nome', 'like', "%{$this->cliente}%"));
-            })
+            // Filtro por nome do cliente
+            ->when($this->cliente, fn ($q) =>
+                $q->whereHas('cliente', fn ($q2) => $q2->where('nome', 'like', "%{$this->cliente}%"))
+            )
 
-            // 🧑‍💼 Filtro específico por vendedor
-            ->when($this->vendedor, function ($query) {
-                $query->whereHas('vendedor', fn($q) =>
-                $q->where('name', 'like', "%{$this->vendedor}%"));
-            })
+            // Filtro por cidade (via endereços do cliente)
+            ->when($this->cidade, fn ($q) =>
+                $q->whereHas('cliente.enderecos', fn ($q2) =>
+                    $q2->where('cidade', 'like', "%{$this->cidade}%")
+                )
+            )
 
-            // 📅 Filtro por intervalo de datas (created_at)
-            ->when($this->dataInicio, function ($query) {
-                $query->whereDate('created_at', '>=', $this->dataInicio);
-            })
-            ->when($this->dataFim, function ($query) {
-                $query->whereDate('created_at', '<=', $this->dataFim);
-            })
+            // Filtro por vendedor
+            ->when($this->vendedor, fn ($q) =>
+                $q->whereHas('vendedor', fn ($q2) => $q2->where('name', 'like', "%{$this->vendedor}%"))
+            )
 
-            // 🧍‍♂️ Filtro específico por cliente (nome ou cidade)
-            ->when($this->cliente, function ($query) {
-                $query->whereHas('cliente', function ($q) {
-                    $q->where('nome', 'like', "%{$this->cliente}%")
-                        ->orWhereHas('enderecos', function ($q2) {
-                            $q2->where('cidade', 'like', "%{$this->cliente}%");
-                        });
-                });
-            })
+            ->when($this->dataInicio, fn ($q) => $q->whereDate('created_at', '>=', $this->dataInicio))
+            ->when($this->dataFim,    fn ($q) => $q->whereDate('created_at', '<=', $this->dataFim))
 
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate($this->perPage);

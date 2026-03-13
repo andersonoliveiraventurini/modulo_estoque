@@ -18,7 +18,10 @@
                             Registrado em {{ $pagamento->data_pagamento?->format('d/m/Y \à\s H:i') }}
                         </p>
                     </div>
+
                     <div class="flex items-center gap-3 flex-wrap">
+
+                        {{-- ── Badge de status ── --}}
                         @if($pagamento->estornado)
                             <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -30,6 +33,28 @@
                                 Confirmado
                             </span>
                         @endif
+
+                        {{-- ── Botão PDF do comprovante ── --}}
+                        @if($pagamento->temPdf())
+                            <a href="{{ route('pagamentos.comprovante-pdf', $pagamento) }}"
+                               target="_blank"
+                               class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold shadow transition-colors">
+                                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                </svg>
+                                Comprovante PDF
+                            </a>
+                        @else
+                            {{-- PDF ainda não gerado (falha de I/O no momento do pagamento) --}}
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 text-xs text-gray-400 dark:text-gray-500">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                PDF não gerado
+                            </span>
+                        @endif
+
                         <a href="{{ route('orcamentos.show', $pagamento->orcamento_id) }}"
                             class="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium">
                             ← Orçamento #{{ $pagamento->orcamento_id }}
@@ -68,6 +93,20 @@
                         </ul>
                     </div>
                 @endif
+                @if(session('warning'))
+    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-xl p-4">
+        <div class="flex gap-3">
+            <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+            <div>
+                <h4 class="font-semibold text-yellow-900 dark:text-yellow-200 text-sm">Atenção</h4>
+                <p class="text-sm text-yellow-800 dark:text-yellow-300 mt-0.5">{{ session('warning') }}</p>
+            </div>
+        </div>
+    </div>
+@endif
 
                 {{-- ── Grid principal ──────────────────────────────────────────── --}}
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -75,7 +114,7 @@
                     {{-- ── Coluna esquerda ─────────────────────────────────────── --}}
                     <div class="lg:col-span-2 space-y-6">
 
-                        {{-- Atendente + dados do orçamento --}}
+                        {{-- Dados do orçamento --}}
                         <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-5">
                             <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                                 <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,15 +206,13 @@
                                                 R$ {{ number_format($forma->valor, 2, ',', '.') }}
                                             </span>
                                         </div>
-
-                                        {{-- Comprovantes desta forma --}}
                                         @if($forma->comprovantes->isNotEmpty())
                                             <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
                                                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Comprovantes:</p>
                                                 <div class="flex flex-wrap gap-2">
                                                     @foreach($forma->comprovantes as $comp)
                                                         @if(str_contains($comp->mime_type, 'pdf'))
-                                                            <a href="{{ route('pagamentos.comprovante.download', $comp->id) }}"
+                                                            <a href="{{ route('pagamentos.comprovante.download', $comp->id) }}" target="_blank"
                                                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 transition-colors">
                                                                 📄 {{ $comp->nome_original }}
                                                                 <span class="text-gray-400">({{ number_format($comp->tamanho / 1024, 0) }} KB)</span>
@@ -198,9 +235,7 @@
                         </div>
 
                         {{-- Comprovantes gerais --}}
-                        @php
-                            $comprovantesGerais = $pagamento->comprovantes->whereNull('pagamento_forma_id');
-                        @endphp
+                        @php $comprovantesGerais = $pagamento->comprovantes->whereNull('pagamento_forma_id'); @endphp
                         @if($comprovantesGerais->isNotEmpty())
                             <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-5">
                                 <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
@@ -212,7 +247,7 @@
                                 <div class="flex flex-wrap gap-2">
                                     @foreach($comprovantesGerais as $comp)
                                         @if(str_contains($comp->mime_type, 'pdf'))
-                                            <a href="{{ route('pagamentos.comprovante.download', $comp->id) }}"
+                                            <a href="{{ route('pagamentos.comprovante.download', $comp->id) }}" target="_blank"
                                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 transition-colors">
                                                 📄 {{ $comp->nome_original }}
                                                 <span class="text-gray-400">({{ number_format($comp->tamanho / 1024, 0) }} KB)</span>
@@ -234,6 +269,43 @@
 
                     {{-- ── Coluna direita ───────────────────────────────────────── --}}
                     <div class="space-y-6">
+
+                        {{-- ── Card PDF do comprovante ── --}}
+                        <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-5">
+                            <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                </svg>
+                                Comprovante de Pagamento
+                            </h3>
+                            @if($pagamento->temPdf())
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                                    PDF gerado automaticamente no momento do pagamento.
+                                    Abre no navegador — use o botão de impressão do visualizador para imprimir ou salvar.
+                                </p>
+                                <a href="{{ route('pagamentos.comprovante-pdf', $pagamento) }}"
+                                   target="_blank"
+                                   class="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold shadow transition-colors">
+                                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                    Visualizar / Imprimir PDF
+                                </a>
+                            @else
+                                <div class="flex flex-col items-center justify-center py-4 text-center">
+                                    <svg class="w-10 h-10 text-gray-300 dark:text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                    </svg>
+                                    <p class="text-sm text-gray-400 dark:text-gray-500">PDF não disponível</p>
+                                    <p class="text-xs text-gray-400 dark:text-gray-600 mt-1">Houve uma falha na geração.</p>
+                                </div>
+                            @endif
+                        </div>
 
                         {{-- Resumo financeiro --}}
                         <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-5">
@@ -326,10 +398,7 @@
 <div id="lightbox"
     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4"
     onclick="fecharLightbox(event)">
-
     <div class="relative max-w-4xl w-full max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
-
-        {{-- Barra superior --}}
         <div class="flex items-center justify-between bg-zinc-900/90 rounded-t-xl px-4 py-2.5">
             <span id="lightboxNome" class="text-sm text-white font-medium truncate max-w-xs"></span>
             <div class="flex items-center gap-2 flex-shrink-0 ml-3">
@@ -348,33 +417,23 @@
                 </button>
             </div>
         </div>
-
-        {{-- Imagem --}}
         <div class="bg-zinc-800 rounded-b-xl overflow-auto flex items-center justify-center" style="max-height: calc(90vh - 50px);">
-            <img id="lightboxImg" src="" alt=""
-                class="max-w-full max-h-full object-contain select-none"
-                style="max-height: calc(90vh - 50px);">
+            <img id="lightboxImg" src="" alt="" class="max-w-full max-h-full object-contain select-none" style="max-height: calc(90vh - 50px);">
         </div>
     </div>
 </div>
 
 <script>
     function abrirLightbox(url, nome) {
-        const lb     = document.getElementById('lightbox');
-        const img    = document.getElementById('lightboxImg');
-        const titulo = document.getElementById('lightboxNome');
-        const dl     = document.getElementById('lightboxDownload');
-
-        img.src         = url;
-        img.alt         = nome;
-        titulo.textContent = nome;
-        dl.href         = url;
-
+        document.getElementById('lightboxImg').src = url;
+        document.getElementById('lightboxImg').alt = nome;
+        document.getElementById('lightboxNome').textContent = nome;
+        document.getElementById('lightboxDownload').href = url;
+        const lb = document.getElementById('lightbox');
         lb.classList.remove('hidden');
         lb.classList.add('flex');
         document.body.style.overflow = 'hidden';
     }
-
     function fecharLightbox(e) {
         if (e && e.target !== document.getElementById('lightbox')) return;
         const lb = document.getElementById('lightbox');
@@ -383,10 +442,6 @@
         document.getElementById('lightboxImg').src = '';
         document.body.style.overflow = '';
     }
-
-    // Fechar com ESC
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') fecharLightbox();
-    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharLightbox(); });
 </script>
 </x-layouts.app>

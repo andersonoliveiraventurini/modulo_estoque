@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use App\Services\PagamentoPdfService;
 
 class PagamentoController extends Controller
 {
@@ -85,169 +86,197 @@ class PagamentoController extends Controller
         ));
     }
 
+    public function verComprovantePdf(Pagamento $pagamento)
+    {
+        abort_if(
+            empty($pagamento->pdf_path) || ! Storage::disk('public')->exists($pagamento->pdf_path),
+            404,
+            'Comprovante PDF não encontrado.'
+        );
+
+        $conteudo = Storage::disk('public')->get($pagamento->pdf_path);
+
+        return response($conteudo, 200)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="comprovante-pagamento-' . $pagamento->id . '.pdf"')
+            ->header('Cache-Control', 'private, max-age=3600');
+    }
+
     // ═════════════════════════════════════════════════════════════════════════
     // SALVAR
     // ═════════════════════════════════════════════════════════════════════════
 
     public function salvarPagamentoOrcamento(Request $request, $orcamentoId)
-    {
-        try {
-            $validated = $request->validate([
-                'formas_pagamento'                   => 'required|array|min:1',
-                'formas_pagamento.*.condicao_id'     => 'required|exists:condicoes_pagamento,id',
-                'formas_pagamento.*.valor'           => 'required|numeric|min:0.01',
-                'desconto_balcao'                    => 'nullable|numeric|min:0',
-                'precisa_nota_fiscal'                => 'nullable|boolean',
-                'cnpj_cpf_nota'                      => 'nullable|string|max:20',
-                'observacoes'                        => 'nullable|string|max:1000',
-                'comprovantes'                       => 'nullable|array|max:10',
-                'comprovantes.*'                     => 'file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
-            ], [
-                'formas_pagamento.required'                  => 'Informe pelo menos uma forma de pagamento',
-                'formas_pagamento.*.condicao_id.required'    => 'Selecione a condição de pagamento',
-                'formas_pagamento.*.condicao_id.exists'      => 'Condição de pagamento inválida',
-                'formas_pagamento.*.valor.required'          => 'Informe o valor',
-                'formas_pagamento.*.valor.numeric'           => 'Valor deve ser numérico',
-                'formas_pagamento.*.valor.min'               => 'Valor deve ser maior que zero',
-                'comprovantes.max'                           => 'Máximo de 10 comprovantes',
-                'comprovantes.*.mimes'                       => 'Formatos aceitos: PDF, JPG, PNG, WEBP',
-                'comprovantes.*.max'                         => 'Cada comprovante deve ter no máximo 10 MB',
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return back()->withErrors($e->validator)->withInput();
-        }
-
-        try {
-            return DB::transaction(function () use ($request, $orcamentoId, $validated) {
-                $orcamento = Orcamento::with(['cliente'])->findOrFail($orcamentoId);
-
-                // ── Já pago? ─────────────────────────────────────────────────
-                if (Pagamento::where('orcamento_id', $orcamentoId)->where('estornado', false)->exists()) {
-                    return back()
-                        ->withErrors(['erro' => 'Este orçamento já possui um pagamento registrado.'])
-                        ->withInput();
-                }
-
-                // ── Proteção: bloqueia tipo "outros" se não for condição 20 ──
-                $condicaoEspecial = (int) $orcamento->condicao_id === self::CONDICAO_ESPECIAL_OUTROS;
-                foreach ($validated['formas_pagamento'] as $forma) {
-                    $cond = CondicoesPagamento::find($forma['condicao_id']);
-                    if (!$condicaoEspecial && $cond?->tipo === 'outros') {
-                        return back()
-                            ->withErrors(['erro' => 'A condição "Outros" não está disponível para este orçamento.'])
-                            ->withInput();
-                    }
-                }
-
-                // ── Valores base ──────────────────────────────────────────────
-                $valorTotal       = (float) $orcamento->valor_total_itens;
-                $descontoOriginal = (float) ($orcamento->totalDescontosAprovados() ?? 0);
-                $descontoBalcao   = (float) ($request->desconto_balcao ?? 0);
-
-                // ── Valida desconto de balcão ─────────────────────────────────
-                // Só permitido se houver forma pix ou dinheiro; incide só sobre
-                // o valor pago nessas formas (máx. 3%).
-                $valorPixDinheiro = 0;
-                foreach ($validated['formas_pagamento'] as $forma) {
-                    $cond = CondicoesPagamento::find($forma['condicao_id']);
-                    if ($cond?->permiteDescontoBalcao()) {
-                        $valorPixDinheiro += (float) $forma['valor'];
-                    }
-                }
-
-                if ($descontoBalcao > 0 && $valorPixDinheiro <= 0) {
-                    return back()
-                        ->withErrors(['desconto_balcao' => 'Desconto de balcão só é permitido quando parte do pagamento for em Dinheiro ou PIX.'])
-                        ->withInput();
-                }
-
-                $maxDesconto = $valorPixDinheiro * 0.03;
-                if ($descontoBalcao > $maxDesconto + 0.01) {
-                    return back()
-                        ->withErrors(['desconto_balcao' => 'Desconto máximo é 3% do valor em Dinheiro/PIX (R$ ' . number_format($maxDesconto, 2, ',', '.') . ').'])
-                        ->withInput();
-                }
-
-                // ── Valor final e troco ───────────────────────────────────────
-                $valorFinal = $valorTotal - $descontoOriginal - $descontoBalcao;
-                $valorPago  = (float) array_sum(array_column($validated['formas_pagamento'], 'valor'));
-
-                if ($valorPago < $valorFinal - 0.01) {
-                    return back()
-                        ->withErrors(['erro' => 'Valor pago insuficiente! Falta: R$ ' . number_format($valorFinal - $valorPago, 2, ',', '.')])
-                        ->withInput();
-                }
-
-                $troco = max(0, $valorPago - $valorFinal);
-
-                // ── Cria o pagamento ──────────────────────────────────────────
-                $pagamento = Pagamento::create([
-                    'orcamento_id'          => $orcamentoId,
-                    'condicao_pagamento_id' => $orcamento->condicao_id,
-                    'desconto_aplicado'     => $descontoOriginal,
-                    'desconto_balcao'       => $descontoBalcao,
-                    'valor_final'           => $valorFinal,
-                    'valor_pago'            => $valorPago,
-                    'troco'                 => $troco,
-                    'data_pagamento'        => now(),
-                    'tipo_documento'        => $request->boolean('precisa_nota_fiscal') ? 'nota_fiscal' : 'cupom_fiscal',
-                    'cnpj_cpf_nota'         => $request->cnpj_cpf_nota,
-                    'observacoes'           => $request->observacoes,
-                    'user_id'               => Auth::id(),
-                ]);
-
-                // ── Salva cada forma de pagamento ─────────────────────────────
-                foreach ($validated['formas_pagamento'] as $index => $forma) {
-                    $cond       = CondicoesPagamento::find($forma['condicao_id']);
-                    $usaCredito = $cond?->isCreditoCliente() ?? false;
-
-                    if ($usaCredito) {
-                        $this->utilizarCreditos(
-                            $orcamento->cliente_id,
-                            $forma['valor'],
-                            $pagamento->id,
-                            'orcamento'
-                        );
-                    }
-
-                    $pagamentoForma = PagamentoForma::create([
-                        'pagamento_id'         => $pagamento->id,
-                        'condicao_pagamento_id'=> $forma['condicao_id'],
-                        'valor'                => $forma['valor'],
-                        'usa_credito'          => $usaCredito,
-                        'parcelas'             => 1,
-                        'observacoes'          => null,
-                    ]);
-
-                    // ── Comprovantes vinculados a esta forma específica ───────
-                    $keyComprovantes = "comprovantes_forma_{$index}";
-                    if ($request->hasFile($keyComprovantes)) {
-                        foreach ($request->file($keyComprovantes) as $arquivo) {
-                            $this->salvarComprovante($arquivo, $pagamento->id, $pagamentoForma->id);
-                        }
-                    }
-                }
-
-                // ── Comprovantes gerais (não vinculados a forma específica) ───
-                if ($request->hasFile('comprovantes')) {
-                    foreach ($request->file('comprovantes') as $arquivo) {
-                        $this->salvarComprovante($arquivo, $pagamento->id, null);
-                    }
-                }
-
-                // ── Atualiza status do orçamento ──────────────────────────────
-                $orcamento->update(['status' => 'Pago', 'data_pagamento' => now()]);
-
-                return redirect()->route('orcamentos.index')
-                    ->with('success', "Pagamento #{$pagamento->id} registrado com sucesso!");
-            });
-
-        } catch (\Exception $e) {
-            return back()
-                ->withErrors(['erro' => 'Erro ao processar pagamento: ' . $e->getMessage()])
-                ->withInput();
-        }
+{
+    try {
+        $validated = $request->validate([
+            'formas_pagamento'               => 'required|array|min:1',
+            'formas_pagamento.*.condicao_id' => 'required|exists:condicoes_pagamento,id',
+            'formas_pagamento.*.valor'       => 'required|numeric|min:0.01',
+            'desconto_balcao'                => 'nullable|numeric|min:0',
+            'precisa_nota_fiscal'            => 'nullable|boolean',
+            'cnpj_cpf_nota'                  => 'nullable|string|max:20',
+            'observacoes'                    => 'nullable|string|max:1000',
+            'comprovantes'                   => 'nullable|array|max:10',
+            'comprovantes.*'                 => 'file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
+        ], [
+            'formas_pagamento.required'               => 'Informe pelo menos uma forma de pagamento',
+            'formas_pagamento.*.condicao_id.required' => 'Selecione a condição de pagamento',
+            'formas_pagamento.*.condicao_id.exists'   => 'Condição de pagamento inválida',
+            'formas_pagamento.*.valor.required'       => 'Informe o valor',
+            'formas_pagamento.*.valor.numeric'        => 'Valor deve ser numérico',
+            'formas_pagamento.*.valor.min'            => 'Valor deve ser maior que zero',
+            'comprovantes.max'                        => 'Máximo de 10 comprovantes',
+            'comprovantes.*.mimes'                    => 'Formatos aceitos: PDF, JPG, PNG, WEBP',
+            'comprovantes.*.max'                      => 'Cada comprovante deve ter no máximo 10 MB',
+        ]);
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return back()->withErrors($e->validator)->withInput();
     }
+ 
+    // ── Executa a transaction e captura o pagamento criado ────────────────
+    // A transaction NÃO retorna mais o redirect direto, para que possamos
+    // chamar o PagamentoPdfService APÓS o commit, fora de qualquer transação.
+    $pagamento = null;
+    $erroTransacao = null;
+ 
+    try {
+        $pagamento = DB::transaction(function () use ($request, $orcamentoId, $validated) {
+            $orcamento = Orcamento::with(['cliente'])->findOrFail($orcamentoId);
+ 
+            // ── Já pago? ──────────────────────────────────────────────────
+            if (Pagamento::where('orcamento_id', $orcamentoId)->where('estornado', false)->exists()) {
+                throw new \Exception('Este orçamento já possui um pagamento registrado.');
+            }
+ 
+            // ── Proteção: bloqueia tipo "outros" se não for condição 20 ───
+            $condicaoEspecial = (int) $orcamento->condicao_id === self::CONDICAO_ESPECIAL_OUTROS;
+            foreach ($validated['formas_pagamento'] as $forma) {
+                $cond = CondicoesPagamento::find($forma['condicao_id']);
+                if (! $condicaoEspecial && $cond?->tipo === 'outros') {
+                    throw new \Exception('A condição "Outros" não está disponível para este orçamento.');
+                }
+            }
+ 
+            // ── Valores base ──────────────────────────────────────────────
+            $valorTotal       = (float) $orcamento->valor_total_itens;
+            $descontoOriginal = (float) ($orcamento->totalDescontosAprovados() ?? 0);
+            $descontoBalcao   = (float) ($request->desconto_balcao ?? 0);
+ 
+            // ── Valida desconto de balcão ─────────────────────────────────
+            $valorPixDinheiro = 0;
+            foreach ($validated['formas_pagamento'] as $forma) {
+                $cond = CondicoesPagamento::find($forma['condicao_id']);
+                if ($cond?->permiteDescontoBalcao()) {
+                    $valorPixDinheiro += (float) $forma['valor'];
+                }
+            }
+ 
+            if ($descontoBalcao > 0 && $valorPixDinheiro <= 0) {
+                throw new \Exception('Desconto de balcão só é permitido quando parte do pagamento for em Dinheiro ou PIX.');
+            }
+ 
+            $maxDesconto = $valorPixDinheiro * 0.03;
+            if ($descontoBalcao > $maxDesconto + 0.01) {
+                throw new \Exception(
+                    'Desconto máximo é 3% do valor em Dinheiro/PIX (R$ ' . number_format($maxDesconto, 2, ',', '.') . ').'
+                );
+            }
+ 
+            // ── Valor final e troco ───────────────────────────────────────
+            $valorFinal = $valorTotal - $descontoOriginal - $descontoBalcao;
+            $valorPago  = (float) array_sum(array_column($validated['formas_pagamento'], 'valor'));
+ 
+            if ($valorPago < $valorFinal - 0.01) {
+                throw new \Exception(
+                    'Valor pago insuficiente! Falta: R$ ' . number_format($valorFinal - $valorPago, 2, ',', '.')
+                );
+            }
+ 
+            $troco = max(0, $valorPago - $valorFinal);
+ 
+            // ── Cria o pagamento ──────────────────────────────────────────
+            $pagamento = Pagamento::create([
+                'orcamento_id'          => $orcamentoId,
+                'condicao_pagamento_id' => $orcamento->condicao_id,
+                'desconto_aplicado'     => $descontoOriginal,
+                'desconto_balcao'       => $descontoBalcao,
+                'valor_final'           => $valorFinal,
+                'valor_pago'            => $valorPago,
+                'troco'                 => $troco,
+                'data_pagamento'        => now(),
+                'tipo_documento'        => $request->boolean('precisa_nota_fiscal') ? 'nota_fiscal' : 'cupom_fiscal',
+                'cnpj_cpf_nota'         => $request->cnpj_cpf_nota,
+                'observacoes'           => $request->observacoes,
+                'user_id'               => Auth::id(),
+            ]);
+ 
+            // ── Salva cada forma de pagamento ─────────────────────────────
+            foreach ($validated['formas_pagamento'] as $index => $forma) {
+                $cond       = CondicoesPagamento::find($forma['condicao_id']);
+                $usaCredito = $cond?->isCreditoCliente() ?? false;
+ 
+                if ($usaCredito) {
+                    $this->utilizarCreditos(
+                        $orcamento->cliente_id,
+                        $forma['valor'],
+                        $pagamento->id,
+                        'orcamento'
+                    );
+                }
+ 
+                $pagamentoForma = PagamentoForma::create([
+                    'pagamento_id'          => $pagamento->id,
+                    'condicao_pagamento_id' => $forma['condicao_id'],
+                    'valor'                 => $forma['valor'],
+                    'usa_credito'           => $usaCredito,
+                    'parcelas'              => 1,
+                    'observacoes'           => null,
+                ]);
+ 
+                // Comprovantes vinculados a esta forma específica
+                $keyComprovantes = "comprovantes_forma_{$index}";
+                if ($request->hasFile($keyComprovantes)) {
+                    foreach ($request->file($keyComprovantes) as $arquivo) {
+                        $this->salvarComprovante($arquivo, $pagamento->id, $pagamentoForma->id);
+                    }
+                }
+            }
+ 
+            // Comprovantes gerais
+            if ($request->hasFile('comprovantes')) {
+                foreach ($request->file('comprovantes') as $arquivo) {
+                    $this->salvarComprovante($arquivo, $pagamento->id, null);
+                }
+            }
+ 
+            // Atualiza status do orçamento
+            $orcamento->update(['status' => 'Pago', 'data_pagamento' => now()]);
+ 
+            // Retorna o pagamento criado para uso fora da transaction
+            return $pagamento;
+        });
+ 
+    } catch (\Exception $e) {
+        return back()
+            ->withErrors(['erro' => $e->getMessage()])
+            ->withInput();
+    }
+ 
+    // ── Gera o PDF FORA da transaction ────────────────────────────────────
+    $pdfGerado = app(PagamentoPdfService::class)->gerar($pagamento);
+ 
+    if ($pdfGerado) {
+        return redirect()->route('orcamentos.index')
+            ->with('success', "Pagamento #{$pagamento->id} registrado com sucesso!");
+    }
+ 
+    // PDF falhou: pagamento foi salvo, mas comprovante não foi gerado.
+    // Redireciona para o show do pagamento com aviso visível.
+    return redirect()->route('pagamentos.show', $pagamento->id)
+        ->with('success', "Pagamento #{$pagamento->id} registrado com sucesso!")
+        ->with('warning', 'O comprovante PDF não pôde ser gerado automaticamente. Verifique os logs ou tente gerar manualmente.');
+}
 
     // ═════════════════════════════════════════════════════════════════════════
     // DOWNLOAD DE COMPROVANTE
@@ -344,7 +373,6 @@ class PagamentoController extends Controller
                 return redirect()->route('pagamentos.show', $pagamento->id)
                     ->with('success', 'Pagamento estornado com sucesso!');
             });
-
         } catch (\Exception $e) {
             return back()->withErrors(['erro' => 'Erro ao estornar: ' . $e->getMessage()]);
         }

@@ -111,12 +111,12 @@ Route::middleware(['auth'])->group(function () {
         [EntradaEncomendaController::class, 'complementar']
     )
         ->name('entrada_encomendas.complementar');
-    
+
     Route::get('/encomendas/kanban', [EntradaEncomendaController::class, 'kanban'])
         ->name('entrada_encomendas.kanban');
 
-        Route::get('/produtos/create-from-item/{consultaPreco}', [ProdutoController::class, 'createFromItem'])
-    ->name('produtos.create_from_item');
+    Route::get('/produtos/create-from-item/{consultaPreco}', [ProdutoController::class, 'createFromItem'])
+        ->name('produtos.create_from_item');
 
     //Route::resource('consulta_preco', ConsultaPrecoController::class)->names('consulta_preco');
     //Route::get('criar_cotacao/{cliente_id}', [ConsultaPrecoController::class, 'criar_cotacao'])->name('consulta_preco.criar_cotacao');
@@ -251,6 +251,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pagamentos/comprovantes/{comprovante}/download', [PagamentoController::class, 'downloadComprovante'])
         ->name('pagamentos.comprovante.download');
 
+    Route::get('/pagamentos/{pagamento}/comprovante-pdf', [PagamentoController::class, 'verComprovantePdf'])
+        ->name('pagamentos.comprovante-pdf')
+        ->middleware('auth');
+
     Route::resource('notas', NotaFiscalController::class)->names('notas');
 
     Route::resource('clientes', ClienteController::class)->names('clientes');
@@ -271,7 +275,7 @@ Route::middleware(['auth'])->group(function () {
 
 
     Route::resource('armazens', ArmazemController::class)->names('armazens');
-        
+
     Route::resource('vendedores', VendedorController::class)
         ->parameters(['vendedores' => 'vendedor']);
     Route::resource('usuarios', UserController::class)->names('usuarios');
