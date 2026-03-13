@@ -381,7 +381,7 @@
         </div>
     </div>
 
-    @if (!$ativo)
+    @if ($ativo !== true)
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 alert('⚠️ Atenção: a situação do CNPJ não está ATIVA na Receita Federal.');

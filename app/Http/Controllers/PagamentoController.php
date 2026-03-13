@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cliente;
 use App\Models\Pagamento;
 use App\Models\PagamentoForma;
 use App\Models\PagamentoComprovante;
 use App\Models\Orcamento;
+use Illuminate\Support\Facades\Cache;
 use App\Models\CondicoesPagamento;
 use App\Models\ClienteCreditos;
 use App\Models\ClienteCreditoMovimentacoes;
@@ -55,17 +57,21 @@ class PagamentoController extends Controller
         $precisaNotaFiscal = strtolower($orcamento->tipo_documento ?? '') === 'nota fiscal';
 
         // Validação CNPJ ativo na Receita Federal
-        $ativo = true;
-        try {
-            $cnpj = preg_replace('/\D/', '', $orcamento->cliente->cnpj ?? '');
-            if (strlen($cnpj) === 14) {
-                $ativo = Http::timeout(5)
-                    ->get("https://brasilapi.com.br/api/cnpj/v1/{$cnpj}")
-                    ->json('descricao_situacao_cadastral') === 'ATIVA';
+        $cliente = Cliente::with('enderecos')->findOrFail($orcamento->cliente_id);
+        $cnpj = preg_replace('/\D/', '', $cliente->cnpj);
+
+        $body = Cache::remember("cnpj_{$cnpj}", now()->addHours(24), function () use ($cnpj) {
+            $response = Http::timeout(10)->get("https://brasilapi.com.br/api/cnpj/v1/{$cnpj}");
+
+            if ($response->status() === 429 || !$response->successful()) {
+                return null;
             }
-        } catch (\Exception) {
-            $ativo = true;
-        }
+
+            $data = json_decode($response->body(), true);
+            return json_last_error() === JSON_ERROR_NONE ? $data : null;
+        });
+
+        $ativo = strtoupper(trim($body['descricao_situacao_cadastral'] ?? '')) === 'ATIVA';
 
         return view('paginas.pagamentos.form-pagamento-balcao', compact(
             'orcamento',

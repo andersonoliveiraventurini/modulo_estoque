@@ -17,6 +17,7 @@ use App\Models\Orcamento;
 use App\Models\Produto;
 use App\Models\OrcamentoItem;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use App\Models\Vendedor;
 use App\Models\TipoTransporte;
 use Illuminate\Http\Request;
@@ -68,7 +69,7 @@ class OrcamentoController extends Controller
 
     public function copiarOrcamento()
     {
-        $orcamentos = Orcamento::where('encomenda',null)->orderBy('id', 'desc')->get();
+        $orcamentos = Orcamento::where('encomenda', null)->orderBy('id', 'desc')->get();
         $clientes = Cliente::orderBy('nome_fantasia')->get();
         return view('paginas.orcamentos.copiar_orcamento', compact('orcamentos', 'clientes'));
     }
@@ -91,10 +92,20 @@ class OrcamentoController extends Controller
     public function criarOrcamento($cliente_id)
     {
         $cliente = Cliente::with('enderecos')->findOrFail($cliente_id);
+        $cnpj = preg_replace('/\D/', '', $cliente->cnpj);
 
-        // validação CNPJ ativo na Receita Federal
-        $ativo = Http::get("https://brasilapi.com.br/api/cnpj/v1/" . preg_replace('/\D/', '', $cliente->cnpj))
-            ->json('descricao_situacao_cadastral') === 'ATIVA';
+        $body = Cache::remember("cnpj_{$cnpj}", now()->addHours(24), function () use ($cnpj) {
+            $response = Http::timeout(10)->get("https://brasilapi.com.br/api/cnpj/v1/{$cnpj}");
+
+            if ($response->status() === 429 || !$response->successful()) {
+                return null;
+            }
+
+            $data = json_decode($response->body(), true);
+            return json_last_error() === JSON_ERROR_NONE ? $data : null;
+        });
+
+        $ativo = strtoupper(trim($body['descricao_situacao_cadastral'] ?? '')) === 'ATIVA';
 
         $produtos = Produto::all();
         $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
@@ -102,7 +113,17 @@ class OrcamentoController extends Controller
         $vendedores = User::whereHas('vendedor')->get();
         $opcoesTransporte = TipoTransporte::all();
         $condicao = CondicoesPagamento::all();
-        return view('paginas.orcamentos.create', compact('produtos', 'cliente', 'fornecedores', 'cores', 'vendedores', 'opcoesTransporte', 'condicao', 'ativo'));
+
+        return view('paginas.orcamentos.create', compact(
+            'produtos',
+            'cliente',
+            'fornecedores',
+            'cores',
+            'vendedores',
+            'opcoesTransporte',
+            'condicao',
+            'ativo'
+        ));
     }
 
     public function aprovarDesconto(Request $request, $id)
@@ -600,61 +621,6 @@ class OrcamentoController extends Controller
             ]
         );
     }
-
-    /*
-    private function gerarOrcamentoPdf(Orcamento $orcamento): bool
-    {
-        try {
-            // 1. GERAÇÃO DE TOKEN E LINK SEGURO
-            $token = Str::uuid();
-            $tokenExpiraEm = Carbon::now()->addDays(2);
-            $linkSeguro = route('orcamentos.view', ['token' => $token]);
-
-            // 2. GERAÇÃO DO QR CODE
-            $qrCodeBase64 = base64_encode(
-                QrCode::format('png')
-                    ->size(130)
-                    ->margin(1)
-                    ->generate($linkSeguro)
-            );
-
-            // 3. GERAÇÃO DO PDF (passando a versão)
-            $pdf = Pdf::loadView('documentos_pdf.orcamento', [
-                'orcamento' => $orcamento,
-                'qrCode' => $qrCodeBase64,
-                'linkSeguro' => $linkSeguro,
-                'versao' => $orcamento->versao ?? 1, // IMPORTANTE: Passar versão para o PDF
-            ])->setPaper('a4');
-
-            // 4. NUMERAÇÃO DE PÁGINAS
-            $canvas = $pdf->getDomPDF()->getCanvas();
-            $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-                $text = "Página $pageNumber / $pageCount";
-                $font = $fontMetrics->get_font("Helvetica", "normal");
-                $canvas->text(270, 820, $text, $font, 10);
-            });
-
-            // 5. SALVAMENTO DO ARQUIVO
-            $path = "orcamentos/orcamento_{$orcamento->id}.pdf";
-            Storage::disk('public')->put($path, $pdf->output());
-
-            // 6. VERIFICAÇÃO E ATUALIZAÇÃO FINAL
-            if (Storage::disk('public')->exists($path)) {
-                $orcamento->update([
-                    'token_acesso' => $token,
-                    'token_expira_em' => $tokenExpiraEm,
-                    'pdf_path' => $path,
-                ]);
-                return true;
-            } else {
-                Log::error("Falha ao salvar o PDF no caminho: " . $path);
-                return false;
-            }
-        } catch (\Exception $e) {
-            Log::error("Erro fatal ao gerar PDF para o orçamento #{$orcamento->id}: " . $e->getMessage());
-            return false;
-        }
-    }*/
 
     public function processarAprovacaoDesconto(Request $request, $id)
     {
@@ -1329,18 +1295,21 @@ class OrcamentoController extends Controller
             'descontos'
         ])->findOrFail($id);
 
-        $cliente = Cliente::with('enderecos')->find($orcamento->cliente_id);
+        $cliente = Cliente::with('enderecos')->findOrFail($cliente_id);
+        $cnpj = preg_replace('/\D/', '', $cliente->cnpj);
 
-        // Validação CNPJ ativo na Receita Federal
-        $ativo = true;
-        if ($cliente->cnpj) {
-            try {
-                $ativo = Http::get("https://brasilapi.com.br/api/cnpj/v1/" . preg_replace('/\D/', '', $cliente->cnpj))
-                    ->json('descricao_situacao_cadastral') === 'ATIVA';
-            } catch (\Exception $e) {
-                Log::warning("Erro ao validar CNPJ: " . $e->getMessage());
+        $body = Cache::remember("cnpj_{$cnpj}", now()->addHours(24), function () use ($cnpj) {
+            $response = Http::timeout(10)->get("https://brasilapi.com.br/api/cnpj/v1/{$cnpj}");
+
+            if ($response->status() === 429 || !$response->successful()) {
+                return null;
             }
-        }
+
+            $data = json_decode($response->body(), true);
+            return json_last_error() === JSON_ERROR_NONE ? $data : null;
+        });
+
+        $ativo = strtoupper(trim($body['descricao_situacao_cadastral'] ?? '')) === 'ATIVA';
 
         $produtos = Produto::all();
         $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
