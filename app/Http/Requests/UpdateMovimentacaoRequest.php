@@ -6,23 +6,29 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateMovimentacaoRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'tipo_entrada' => 'required|in:entrada,saida',
+            'pedido_id' => 'nullable|exists:pedidos,id',
+            'nota_fiscal_fornecedor' => 'nullable|string',
+            'romaneiro' => 'nullable|string',
+            'observacao' => 'nullable|string',
+            'produtos' => 'required|array|min:1',
+            'produtos.*.fornecedor_id' => 'nullable|exists:fornecedores,id',
+            'produtos.*.produto_id' => 'required|exists:produtos,id',
+            'produtos.*.quantidade' => 'required|numeric|min:0.01',
+            'produtos.*.valor' => 'nullable|numeric|min:0',
+            'produtos.*.valor_total' => 'nullable|numeric|min:0',
+            'produtos.*.armazem' => 'nullable|string',
+            'produtos.*.corredor' => 'nullable|string',
+            'produtos.*.posicao' => 'nullable|string',
+            'produtos.*.observacao' => 'nullable|string|max:1000',
         ];
     }
 }

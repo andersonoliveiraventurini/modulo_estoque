@@ -41,6 +41,21 @@ class Produto extends Model
         'ativo',
     ];
 
+    public function addEstoque($quantidade)
+    {
+        $this->increment('estoque_atual', $quantidade);
+    }
+
+    public function removerEstoque($quantidade)
+    {
+        $this->decrement('estoque_atual', $quantidade);
+    }
+
+    public function movimentacoes()
+    {
+        return $this->hasMany(MovimentacaoProduto::class);
+    }
+
     public function images()
     {
         return $this->hasMany(Imagem::class, 'produto_id');

@@ -1,27 +1,27 @@
-<x-layouts.app :title="__('Criar Movimentação')">
+<x-layouts.app :title="__('Editar Movimentação')">
     <!-- Injeção de CSS do Select2 -->
     @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
         .select2-container .select2-selection--single {
             height: 42px;
-            border-color: #d1d5db; /* gray-300 */
-            border-radius: 0.375rem; /* rounded-md */
+            border-color: #d1d5db;
+            border-radius: 0.375rem;
             display: flex;
             align-items: center;
         }
         .dark .select2-container .select2-selection--single {
-            background-color: #171717; /* neutral-900 */
-            border-color: #404040; /* neutral-700 */
+            background-color: #171717;
+            border-color: #404040;
         }
         .dark .select2-container--default .select2-selection--single .select2-selection__rendered {
-            color: #d4d4d8; /* neutral-300 */
+            color: #d4d4d8;
         }
         .dark .select2-container--default .select2-results__option--selected {
             background-color: #262626; 
         }
         .dark .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
-            background-color: #4f46e5; /* indigo-600 */
+            background-color: #4f46e5;
             color: white;
         }
         .dark .select2-dropdown {
@@ -40,13 +40,15 @@
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
 
             <div class="bg-white p-6 shadow rounded-2xl border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-                <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
-                     <x-heroicon-o-truck class="w-5 h-5" /> 
-                    Criar Movimentação
-                </h2>
-                <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
-                    Registre a movimentação de um ou mais produtos no estoque.
-                </p>
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold flex items-center gap-2">
+                         <x-heroicon-o-truck class="w-5 h-5" /> 
+                        Editar Movimentação #{{ $movimentacao->id }}
+                    </h2>
+                    <a href="{{ route('movimentacao.index') }}" class="text-sm text-indigo-600 hover:text-indigo-800">
+                        &larr; Voltar
+                    </a>
+                </div>
 
                 @if ($errors->any())
                     <div class="mb-4 text-red-600 bg-red-100 p-4 rounded text-sm">
@@ -58,8 +60,9 @@
                     </div>
                 @endif
 
-                <form action="{{ route('movimentacao.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
+                <form action="{{ route('movimentacao.update', $movimentacao->id) }}" method="POST" enctype="multipart/form-data" class="space-y-8">
                     @csrf
+                    @method('PUT')
 
                     <!-- Dados Básicos -->
                     <div class="space-y-4">
@@ -69,19 +72,18 @@
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                             <x-select name="tipo_entrada" label="Tipo de movimentação">
-                                <option value="">Selecione</option>
-                                <option value="entrada" {{ old('tipo_entrada') == 'entrada' ? 'selected' : '' }}>Entrada</option>
-                                <option value="saida" {{ old('tipo_entrada') == 'saida' ? 'selected' : '' }}>Saída</option>
+                                <option value="entrada" {{ (old('tipo_entrada') ?? $movimentacao->tipo) == 'entrada' ? 'selected' : '' }}>Entrada</option>
+                                <option value="saida" {{ (old('tipo_entrada') ?? $movimentacao->tipo) == 'saida' ? 'selected' : '' }}>Saída</option>
                             </x-select>
                             <x-select name="pedido_id" label="Pedido">
                                 <option value="">Selecione</option>
                                 @foreach ($pedidos as $pedido)
-                                    <option value="{{ $pedido->id }}" {{ old('pedido_id') == $pedido->id ? 'selected' : '' }}>{{ $pedido->id }}</option>
+                                    <option value="{{ $pedido->id }}" {{ (old('pedido_id') ?? $movimentacao->pedido_id) == $pedido->id ? 'selected' : '' }}>{{ $pedido->id }}</option>
                                 @endforeach
                             </x-select>
-                            <x-input name="nota_fiscal_fornecedor" label="Nota Fiscal Fornecedor" placeholder="(opcional)" value="{{ old('nota_fiscal_fornecedor') }}" />
-                            <x-input name="romaneiro" label="Romaneiro" placeholder="(opcional)" value="{{ old('romaneiro') }}" />
-                            <x-input name="observacao" label="Observação" placeholder="..." value="{{ old('observacao') }}" />
+                            <x-input name="nota_fiscal_fornecedor" label="Nota Fiscal Fornecedor" placeholder="(opcional)" value="{{ old('nota_fiscal_fornecedor') ?? $movimentacao->nota_fiscal_fornecedor }}" />
+                            <x-input name="romaneiro" label="Romaneiro" placeholder="(opcional)" value="{{ old('romaneiro') ?? $movimentacao->romaneiro }}" />
+                            <x-input name="observacao" label="Observação" placeholder="..." value="{{ old('observacao') ?? $movimentacao->observacao }}" />
                         </div>
                     </div>
 
@@ -89,60 +91,84 @@
                     <div class="space-y-4 pt-4 border-t border-gray-200 dark:border-neutral-700">
                         <h3 class="text-lg font-medium flex items-center gap-2">
                             <x-heroicon-o-archive-box class="w-5 h-5" />                             
-                            Produtos
+                            Produtos (Itens vinculados)
                         </h3>
+                        <p class="text-sm text-neutral-500">Ao salvar, o estoque atual será refeito substituindo os itens pelas informações definidas abaixo.</p>
 
                         <div id="produtos-wrapper" class="space-y-4">
                             @php
-                                $itensAnteriores = old('produtos', [[]]);
+                                $itensAnteriores = old('produtos') ? old('produtos') : $movimentacao->itens->toArray();
                             @endphp
-
+                            
                             @foreach($itensAnteriores as $index => $item)
-                            <!-- Produto Iterado -->
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-xl dark:border-neutral-700 relative produto-item mt-4">
-                                <div class="col-span-1">
-                                    <x-select name="produtos[{{ $index }}][fornecedor_id]" label="Fornecedor *" class="fornecedor-select" onchange="filtrarProdutos(this)">
-                                        <option value="">Selecione um Fornecedor</option>
-                                        @foreach($fornecedores as $fornecedor)
-                                            <option value="{{ $fornecedor->id }}" {{ ($item['fornecedor_id'] ?? '') == $fornecedor->id ? 'selected' : '' }}>{{ $fornecedor->nome_fantasia }}</option>
-                                        @endforeach
-                                    </x-select>
-                                </div>
-                                <div class="col-span-1">
-                                    <x-select name="produtos[{{ $index }}][produto_id]" label="Produto *" class="produto-select">
-                                        <option value="">Selecione um Produto</option>
-                                        @foreach($produtos as $produto)
-                                            <option value="{{ $produto->id }}" data-fornecedor="{{ $produto->fornecedor_id }}" {{ ($item['produto_id'] ?? '') == $produto->id ? 'selected' : '' }}>
-                                                {{ $produto->nome }} ({{ $produto->sku }}) @if(optional($produto->cor)->nome) - Cor: {{ $produto->cor->nome }} @endif
-                                            </option>
-                                        @endforeach
-                                    </x-select>
-                                </div>
-                                <div class="col-span-1">
-                                    <x-input name="produtos[{{ $index }}][quantidade]" value="{{ $item['quantidade'] ?? '' }}" label="Quantidade *" placeholder="Ex. 10" type="number" step="0.01" />
-                                </div>
-                                <x-input name="produtos[{{ $index }}][valor]" value="{{ $item['valor'] ?? '' }}" label="Valor unitário" placeholder="Ex. 15.50" type="number" step="0.01" />
-                                <x-input name="produtos[{{ $index }}][valor_total]" value="{{ $item['valor_total'] ?? '' }}" label="Valor total" placeholder="Calculado auto." type="number" step="0.01" readonly class="bg-gray-100 dark:bg-neutral-800 cursor-not-allowed" />
-                                
-                                <x-select name="produtos[{{ $index }}][armazem]" label="Armazém">
-                                    <option value="">Selecione um Armazém</option>
-                                    @foreach($armazens as $armazem)
-                                        <option value="{{ $armazem->nome }}" {{ ($item['armazem'] ?? '') == $armazem->nome ? 'selected' : '' }}>{{ $armazem->nome }}</option>
-                                    @endforeach
-                                </x-select>
-                                
-                                <x-input name="produtos[{{ $index }}][corredor]" value="{{ $item['corredor'] ?? '' }}" label="Corredor" placeholder="Corredor" />
-                                <x-input name="produtos[{{ $index }}][posicao]" value="{{ $item['posicao'] ?? '' }}" label="Posição" placeholder="Posição" />
-                                <div class="col-span-1 md:col-span-3">
-                                    <x-input name="produtos[{{ $index }}][observacao]" value="{{ $item['observacao'] ?? '' }}" label="Observação (Ex: pacote, em caixa, defeito leve)" placeholder="Opcional..." />
-                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-xl dark:border-neutral-700 relative produto-item mt-4">
+                                    <div class="w-full">
+                                        <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Fornecedor *</label>
+                                        <select name="produtos[{{ $index }}][fornecedor_id]" onchange="filtrarProdutos(this)" class="fornecedor-select border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
+                                            <option value="">Selecione um Fornecedor</option>
+                                            @foreach($fornecedores as $fornecedor)
+                                                <option value="{{ $fornecedor->id }}" {{ ($item['fornecedor_id'] ?? '') == $fornecedor->id ? 'selected' : '' }}>{{ $fornecedor->nome_fantasia }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="w-full">
+                                        <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Produto *</label>
+                                        <select name="produtos[{{ $index }}][produto_id]" class="produto-select border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
+                                            <option value="">Selecione um Produto</option>
+                                            @foreach($produtos as $produto)
+                                                <option value="{{ $produto->id }}" data-fornecedor="{{ $produto->fornecedor_id }}" {{ ($item['produto_id'] ?? '') == $produto->id ? 'selected' : '' }}>
+                                                    {{ $produto->nome }} ({{ $produto->sku }}) @if(optional($produto->cor)->nome) - Cor: {{ $produto->cor->nome }} @endif
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="w-full">
+                                        <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Quantidade *</label>
+                                        <input name="produtos[{{ $index }}][quantidade]" value="{{ $item['quantidade'] ?? '' }}" type="number" step="0.01" class="border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
+                                    </div>
+                                    
+                                    <div class="w-full">
+                                        <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Valor Unitário</label>
+                                        <input name="produtos[{{ $index }}][valor]" value="{{ $item['valor_unitario'] ?? ($item['valor'] ?? '') }}" type="number" step="0.01" class="border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
+                                    </div>
+                                    
+                                    <div class="w-full">
+                                        <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Valor Total</label>
+                                        <input name="produtos[{{ $index }}][valor_total]" value="{{ $item['valor_total'] ?? '' }}" type="number" step="0.01" readonly placeholder="Calculado auto." class="bg-gray-100 dark:bg-neutral-800 cursor-not-allowed border-gray-300 dark:border-neutral-700 dark:text-neutral-500 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
+                                    </div>
+                                    
+                                    <div class="w-full">
+                                        <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Armazém</label>
+                                        <select name="produtos[{{ $index }}][armazem]" class="border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
+                                            <option value="">Selecione um Armazém</option>
+                                            @foreach($armazens as $armazem)
+                                                <option value="{{ $armazem->nome }}" {{ ($item['armazem'] ?? ($item['endereco'] ?? '')) == $armazem->nome ? 'selected' : '' }}>{{ $armazem->nome }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="w-full">
+                                        <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Corredor</label>
+                                        <input name="produtos[{{ $index }}][corredor]" value="{{ $item['corredor'] ?? '' }}" type="text" class="border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
+                                    </div>
+                                    
+                                    <div class="w-full">
+                                        <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Posição</label>
+                                        <input name="produtos[{{ $index }}][posicao]" value="{{ $item['posicao'] ?? '' }}" type="text" class="border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
+                                    </div>
 
-                                @if(count($itensAnteriores) > 1)
-                                <button type="button" onclick="removeProduto(this)" class="absolute top-2 right-2 px-2 py-1 text-xs font-semibold text-red-600 bg-red-100 rounded hover:bg-red-200">
-                                    Remover
-                                </button>
-                                @endif
-                            </div>
+                                    <div class="w-full md:col-span-3">
+                                        <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Observação (Ex: pacote, em caixa, defeito leve)</label>
+                                        <input name="produtos[{{ $index }}][observacao]" value="{{ $item['observacao'] ?? '' }}" type="text" placeholder="Opcional..." class="border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
+                                    </div>
+                                    
+                                    @if(count($itensAnteriores) > 1)
+                                    <button type="button" onclick="removeProduto(this)" class="absolute top-2 right-2 px-2 py-1 text-xs font-semibold text-red-600 bg-red-100 rounded hover:bg-red-200">
+                                        Remover
+                                    </button>
+                                    @endif
+                                </div>
                             @endforeach
                         </div>
 
@@ -152,8 +178,7 @@
                     </div>
 
                     <div class="flex gap-4 pt-4">
-                         <x-button type="submit" >Cadastrar Movimentação</x-button>
-                        <x-button type="reset" variant="secondary">Limpar Formulário</x-button>
+                         <x-button type="submit">Salvar Alterações</x-button>
                     </div>
 
                 </form>
@@ -225,7 +250,7 @@
                 <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Observação (Ex: pacote, em caixa, defeito leve)</label>
                 <input name="produtos[__INDEX__][observacao]" type="text" placeholder="Opcional..." class="border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
             </div>
-            
+
             <button type="button" onclick="removeProduto(this)" class="absolute top-2 right-2 px-2 py-1 text-xs font-semibold text-red-600 bg-red-100 rounded hover:bg-red-200">
                 Remover
             </button>
@@ -233,22 +258,17 @@
     </template>
 
     <script>
-        let produtoIndex = {{ count(old('produtos', [[]])) }};
+        let produtoIndex = {{ max(1, count($itensAnteriores)) }};
 
         function addProduto() {
             const wrapper = document.getElementById('produtos-wrapper');
             const template = document.getElementById('produto-template').innerHTML;
             
-            // Substitui __INDEX__ pelo iterador atual
             const novoElemento = template.replace(/__INDEX__/g, produtoIndex);
-            
-            // Insere o html criado no wrapper
             wrapper.insertAdjacentHTML('beforeend', novoElemento);
             produtoIndex++;
-
-            // Aplica os filtros básicos na linha nova recém-criada (que por padrão começará mostrando só os vazios ou todos)
             const recemCriado = wrapper.lastElementChild;
-            const selectFornecedor = recemCriado.querySelector('.fornecedor-select'); // optional
+            const selectFornecedor = recemCriado.querySelector('.fornecedor-select'); 
             filtrarProdutos(selectFornecedor);
         }
 
@@ -262,13 +282,11 @@
             const produtoSelect = container.querySelector('.produto-select');
             const fornecedorId = fornecedorSelect.value;
             
-            // Grava todos os options para que possamos restaurá-los/ocultá-los
             Array.from(produtoSelect.options).forEach(option => {
                 if(option.value === "") {
-                    option.style.display = 'block'; // a opção "Selecione" sempre visível
+                    option.style.display = 'block'; 
                 } else {
                     const dataFornecedor = option.getAttribute('data-fornecedor');
-                    // Se nenhum fornecedor selecionado ou data do option bater, mostrar
                     if(fornecedorId === "" || dataFornecedor === fornecedorId) {
                         option.hidden = false;
                         option.disabled = false;
@@ -279,7 +297,6 @@
                 }
             });
 
-            // Se o produto atual no select for inválido para novo fornecedor, resetar a seleção do produto
             const selectedOption = produtoSelect.options[produtoSelect.selectedIndex];
             if(selectedOption && selectedOption.hidden === true) {
                 produtoSelect.value = "";

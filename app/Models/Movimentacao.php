@@ -12,4 +12,36 @@ class Movimentacao extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'movimentacoes';
+
+    protected $fillable = [
+        'tipo',
+        'pedido_id',
+        'usuario_id',
+        'nota_fiscal_fornecedor',
+        'romaneiro',
+        'observacao',
+        'resumo_edicao',
+        'usuario_editou_id',
+    ];
+
+
+    public function itens()
+    {
+        return $this->hasMany(MovimentacaoProduto::class);
+    }
+
+    public function pedido()
+    {
+        return $this->belongsTo(Pedido::class);
+    }
+
+    public function usuario()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function usuarioEditou()
+    {
+        return $this->belongsTo(User::class, 'usuario_editou_id');
+    }
 }
