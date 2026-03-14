@@ -41,6 +41,13 @@
                                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Data de Criação</dt>
                                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $movimentacao->created_at->format('d/m/Y H:i:s') }}</dd>
                             </div>
+
+                            <div class="sm:col-span-1">
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Data da Movimentação</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 font-semibold">
+                                    {{ $movimentacao->data_movimentacao ? $movimentacao->data_movimentacao->format('d/m/Y') : $movimentacao->created_at->format('d/m/Y') }}
+                                </dd>
+                            </div>
                             
                             <div class="sm:col-span-1">
                                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Pedido Vinculado</dt>
@@ -53,6 +60,18 @@
                                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Nota Fiscal</dt>
                                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $movimentacao->nota_fiscal_fornecedor ?: '-' }}</dd>
                             </div>
+
+                            @if($movimentacao->arquivo_nota_fiscal)
+                            <div class="sm:col-span-1">
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Arquivo NF</dt>
+                                <dd class="mt-1">
+                                    <a href="{{ Storage::url($movimentacao->arquivo_nota_fiscal) }}" target="_blank"
+                                        class="inline-flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 underline hover:text-indigo-800">
+                                        <x-heroicon-o-document-arrow-down class="w-4 h-4" /> Ver / Baixar NF
+                                    </a>
+                                </dd>
+                            </div>
+                            @endif
                             
                             <div class="sm:col-span-1">
                                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Romaneiro</dt>

@@ -4,6 +4,7 @@
 <head>
 
     @include('partials.head')
+    @stack('styles')
 </head>
 
 <body class="min-h-screen bg-white dark:bg-zinc-800">
@@ -72,12 +73,10 @@
             <flux:navlist.item icon="home" :href="route('consulta_preco.index')"
                 :current="request()->routeIs('consulta_preco.index')" wire:navigate>{{ __('Encomendas') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="truck" :href="route('entrada_encomendas.index')"
-                :current="request()->routeIs('entrada_encomendas.index')" wire:navigate>
+            <flux:navlist.item icon="shopping-bag" :href="route('entrada_encomendas.index')" :current="request()->routeIs('entrada_encomendas.index')" wire:navigate>
                 {{ __('Receber encomendas') }}</flux:navlist.item>
-            <flux:navlist.item icon="home" wire:navigate>{{ __('Pedidos de compras - Cezar') }}
-            </flux:navlist.item>
-            <flux:navlist.item icon="home" wire:navigate>{{ __('Relatórios- Cezar') }}
+            <flux:navlist.item icon="clipboard-document-list" :href="route('pedido_compras.index')" :current="request()->routeIs('pedido_compras.*')" wire:navigate>
+                {{ __('Pedidos de Compras') }}
             </flux:navlist.item>
         </flux:navlist.group>
 
@@ -85,18 +84,22 @@
             <flux:navlist.item icon="home" :href="route('movimentacao.index')"
                 :current="request()->routeIs('movimentacao.index')" wire:navigate>{{ __('Movimentações') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="truck" :href="route('movimentacao.create')"
-                :current="request()->routeIs('movimentacao.create')" wire:navigate>
+            <flux:navlist.item icon="archive-box-arrow-down" :href="route('movimentacao.create')" :current="request()->routeIs('movimentacao.create')" wire:navigate>
                 {{ __('Receber produto') }}</flux:navlist.item>
-            <flux:navlist.item icon="truck" :href="route('entrada_encomendas.index')"
-                :current="request()->routeIs('entrada_encomendas.index')" wire:navigate>
-                {{ __('Receber encomendas') }}</flux:navlist.item>
 
-            <flux:navlist.item icon="home" wire:navigate>{{ __('Devoluções - Cezar') }}
-            </flux:navlist.item>
-            <flux:navlist.item icon="home" wire:navigate>{{ __('Não conformidades - Cezar') }}
-            </flux:navlist.item>
-            <flux:navlist.item icon="home" wire:navigate>{{ __('Relatórios- Cezar') }}
+            <flux:navlist.group heading="Endereços Físicos" expandable :expanded="false">
+                <flux:navlist.item icon="building-office" :href="route('armazens.index')" :current="request()->routeIs('armazens.*')" wire:navigate>
+                    {{ __('Armazéns') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="arrows-right-left" :href="route('corredores.index')" :current="request()->routeIs('corredores.*')" wire:navigate>
+                    {{ __('Corredores') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="map-pin" :href="route('posicoes.index')" :current="request()->routeIs('posicoes.*')" wire:navigate>
+                    {{ __('Posições') }}
+                </flux:navlist.item>
+            </flux:navlist.group>
+            <flux:navlist.item icon="exclamation-triangle" :href="route('inconsistencias.index')" :current="request()->routeIs('inconsistencias.*')" wire:navigate>
+                {{ __('Inconsistências') }}
             </flux:navlist.item>
         </flux:navlist.group>
 
@@ -323,6 +326,7 @@
     {{ $slot }}
 
     @fluxScripts
+    @stack('scripts')
 </body>
 
 </html>

@@ -13,7 +13,8 @@ class ArmazemController extends Controller
      */
     public function index()
     {
-        //
+        $armazens = armazem::all();
+        return view('paginas.armazens.index', compact('armazens'));
     }
 
     /**
@@ -21,7 +22,7 @@ class ArmazemController extends Controller
      */
     public function create()
     {
-        //
+        return view('paginas.armazens.create');
     }
 
     /**
@@ -29,7 +30,8 @@ class ArmazemController extends Controller
      */
     public function store(StorearmazemRequest $request)
     {
-        //
+        armazem::create($request->validated());
+        return redirect()->route('armazens.index')->with('success', 'Armazém criado com sucesso.');
     }
 
     /**
@@ -37,7 +39,7 @@ class ArmazemController extends Controller
      */
     public function show(armazem $armazem)
     {
-        //
+        return view('paginas.armazens.show', compact('armazem'));
     }
 
     /**
@@ -45,7 +47,7 @@ class ArmazemController extends Controller
      */
     public function edit(armazem $armazem)
     {
-        //
+        return view('paginas.armazens.edit', compact('armazem'));
     }
 
     /**
@@ -53,7 +55,8 @@ class ArmazemController extends Controller
      */
     public function update(UpdatearmazemRequest $request, armazem $armazem)
     {
-        //
+        $armazem->update($request->validated());
+        return redirect()->route('armazens.index')->with('success', 'Armazém atualizado com sucesso.');
     }
 
     /**
@@ -61,6 +64,7 @@ class ArmazemController extends Controller
      */
     public function destroy(armazem $armazem)
     {
-        //
+        $armazem->delete();
+        return redirect()->route('armazens.index')->with('success', 'Armazém deletado com sucesso.');
     }
 }

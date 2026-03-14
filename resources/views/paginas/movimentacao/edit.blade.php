@@ -66,115 +66,79 @@
 
                     <!-- Dados Básicos -->
                     <div class="space-y-4">
-                        <h3 class="text-lg font-medium flex items-center gap-2">
+                        <h3 class="text-lg font-medium flex items-center gap-2 text-gray-900 dark:text-gray-100">
                             <x-heroicon-o-clipboard class="w-5 h-5" /> 
                             Dados Básicos
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                             <x-select name="tipo_entrada" label="Tipo de movimentação">
+                                <option value="">Selecione</option>
                                 <option value="entrada" {{ (old('tipo_entrada') ?? $movimentacao->tipo) == 'entrada' ? 'selected' : '' }}>Entrada</option>
                                 <option value="saida" {{ (old('tipo_entrada') ?? $movimentacao->tipo) == 'saida' ? 'selected' : '' }}>Saída</option>
                             </x-select>
-                            <x-select name="pedido_id" label="Pedido">
-                                <option value="">Selecione</option>
-                                @foreach ($pedidos as $pedido)
-                                    <option value="{{ $pedido->id }}" {{ (old('pedido_id') ?? $movimentacao->pedido_id) == $pedido->id ? 'selected' : '' }}>{{ $pedido->id }}</option>
-                                @endforeach
-                            </x-select>
+                            <x-input name="data_movimentacao" label="Data da Movimentação" type="date" value="{{ old('data_movimentacao', optional($movimentacao->data_movimentacao)->format('Y-m-d') ?? $movimentacao->created_at->format('Y-m-d')) }}" />
                             <x-input name="nota_fiscal_fornecedor" label="Nota Fiscal Fornecedor" placeholder="(opcional)" value="{{ old('nota_fiscal_fornecedor') ?? $movimentacao->nota_fiscal_fornecedor }}" />
+                            <div>
+                                <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Arquivo NF (PDF/Imagem)</label>
+                                @if($movimentacao->arquivo_nota_fiscal)
+                                    <div class="text-xs text-indigo-600 dark:text-indigo-400 mb-1">
+                                        Arquivo atual: <a href="{{ Storage::url($movimentacao->arquivo_nota_fiscal) }}" target="_blank" class="underline">Ver NF atual</a>
+                                    </div>
+                                @endif
+                                <input type="file" name="arquivo_nota_fiscal" accept=".pdf,.jpg,.jpeg,.png"
+                                    class="mt-1 block w-full text-sm text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-neutral-700 rounded-md shadow-sm bg-white dark:bg-neutral-900 file:mr-4 file:py-2 file:px-4 file:rounded-l-md file:border-0 file:bg-indigo-50 file:text-indigo-700 dark:file:bg-indigo-900 dark:file:text-indigo-300" />
+                            </div>
                             <x-input name="romaneiro" label="Romaneiro" placeholder="(opcional)" value="{{ old('romaneiro') ?? $movimentacao->romaneiro }}" />
-                            <x-input name="observacao" label="Observação" placeholder="..." value="{{ old('observacao') ?? $movimentacao->observacao }}" />
+                            
+                            @if($movimentacao->pedido_compra_id)
+                            <div>
+                                <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Pedido de Compra Vinculado</label>
+                                <div class="mt-1 p-2 bg-gray-100 dark:bg-neutral-800 rounded border border-gray-200 dark:border-neutral-700 text-sm font-medium">
+                                    #{{ $movimentacao->pedido_compra_id }} – {{ optional($movimentacao->pedidoCompra->fornecedor)->nome_fantasia }}
+                                </div>
+                                <input type="hidden" name="pedido_compra_id" value="{{ $movimentacao->pedido_compra_id }}">
+                            </div>
+                            @endif
+
+                            <div class="md:col-span-3">
+                                <x-input name="observacao" label="Observação Geral" placeholder="..." value="{{ old('observacao') ?? $movimentacao->observacao }}" />
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Produtos -->
-                    <div class="space-y-4 pt-4 border-t border-gray-200 dark:border-neutral-700">
-                        <h3 class="text-lg font-medium flex items-center gap-2">
-                            <x-heroicon-o-archive-box class="w-5 h-5" />                             
-                            Produtos (Itens vinculados)
+                    {{-- === Pesquisa de Produtos (Livewire) === --}}
+                    <div class="space-y-4 pt-4 border-t border-gray-200 dark:border-neutral-700" id="secao-busca-produtos">
+                        <h3 class="text-lg font-medium flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                            <x-heroicon-o-magnifying-glass class="w-5 h-5 text-blue-600" />
+                            Buscar Produtos Extras
                         </h3>
-                        <p class="text-sm text-neutral-500">Ao salvar, o estoque atual será refeito substituindo os itens pelas informações definidas abaixo.</p>
+                        <livewire:lista-produto-orcamento :showStock="false" :showDiscount="false" />
+                    </div>
 
-                        <div id="produtos-wrapper" class="space-y-4">
-                            @php
-                                $itensAnteriores = old('produtos') ? old('produtos') : $movimentacao->itens->toArray();
-                            @endphp
-                            
-                            @foreach($itensAnteriores as $index => $item)
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-xl dark:border-neutral-700 relative produto-item mt-4">
-                                    <div class="w-full">
-                                        <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Fornecedor *</label>
-                                        <select name="produtos[{{ $index }}][fornecedor_id]" onchange="filtrarProdutos(this)" class="fornecedor-select border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
-                                            <option value="">Selecione um Fornecedor</option>
-                                            @foreach($fornecedores as $fornecedor)
-                                                <option value="{{ $fornecedor->id }}" {{ ($item['fornecedor_id'] ?? '') == $fornecedor->id ? 'selected' : '' }}>{{ $fornecedor->nome_fantasia }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="w-full">
-                                        <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Produto *</label>
-                                        <select name="produtos[{{ $index }}][produto_id]" class="produto-select border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
-                                            <option value="">Selecione um Produto</option>
-                                            @foreach($produtos as $produto)
-                                                <option value="{{ $produto->id }}" data-fornecedor="{{ $produto->fornecedor_id }}" {{ ($item['produto_id'] ?? '') == $produto->id ? 'selected' : '' }}>
-                                                    {{ $produto->nome }} ({{ $produto->sku }}) @if(optional($produto->cor)->nome) - Cor: {{ $produto->cor->nome }} @endif
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="w-full">
-                                        <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Quantidade *</label>
-                                        <input name="produtos[{{ $index }}][quantidade]" value="{{ $item['quantidade'] ?? '' }}" type="number" step="0.01" class="border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
-                                    </div>
-                                    
-                                    <div class="w-full">
-                                        <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Valor Unitário</label>
-                                        <input name="produtos[{{ $index }}][valor]" value="{{ $item['valor_unitario'] ?? ($item['valor'] ?? '') }}" type="number" step="0.01" class="border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
-                                    </div>
-                                    
-                                    <div class="w-full">
-                                        <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Valor Total</label>
-                                        <input name="produtos[{{ $index }}][valor_total]" value="{{ $item['valor_total'] ?? '' }}" type="number" step="0.01" readonly placeholder="Calculado auto." class="bg-gray-100 dark:bg-neutral-800 cursor-not-allowed border-gray-300 dark:border-neutral-700 dark:text-neutral-500 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
-                                    </div>
-                                    
-                                    <div class="w-full">
-                                        <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Armazém</label>
-                                        <select name="produtos[{{ $index }}][armazem]" class="border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
-                                            <option value="">Selecione um Armazém</option>
-                                            @foreach($armazens as $armazem)
-                                                <option value="{{ $armazem->nome }}" {{ ($item['armazem'] ?? ($item['endereco'] ?? '')) == $armazem->nome ? 'selected' : '' }}>{{ $armazem->nome }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="w-full">
-                                        <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Corredor</label>
-                                        <input name="produtos[{{ $index }}][corredor]" value="{{ $item['corredor'] ?? '' }}" type="text" class="border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
-                                    </div>
-                                    
-                                    <div class="w-full">
-                                        <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Posição</label>
-                                        <input name="produtos[{{ $index }}][posicao]" value="{{ $item['posicao'] ?? '' }}" type="text" class="border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
-                                    </div>
+                    <!-- Tabela de Itens Selecionados -->
+                    <div class="space-y-4 pt-4 border-t border-gray-200 dark:border-neutral-700">
+                        <h3 class="text-lg font-medium flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                            <x-heroicon-o-archive-box class="w-5 h-5 text-indigo-600" />                             
+                            Itens da Movimentação
+                        </h3>
 
-                                    <div class="w-full md:col-span-3">
-                                        <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Observação (Ex: pacote, em caixa, defeito leve)</label>
-                                        <input name="produtos[{{ $index }}][observacao]" value="{{ $item['observacao'] ?? '' }}" type="text" placeholder="Opcional..." class="border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
-                                    </div>
-                                    
-                                    @if(count($itensAnteriores) > 1)
-                                    <button type="button" onclick="removeProduto(this)" class="absolute top-2 right-2 px-2 py-1 text-xs font-semibold text-red-600 bg-red-100 rounded hover:bg-red-200">
-                                        Remover
-                                    </button>
-                                    @endif
-                                </div>
-                            @endforeach
+                        <div class="ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10 rounded-lg overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-neutral-800">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Produto</th>
+                                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase w-20">Qtd.</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase w-32">V. Unit.</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Localização</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Obs.</th>
+                                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase w-20">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="produtos-selecionados" class="divide-y divide-gray-200 dark:divide-neutral-700">
+                                    {{-- Preenchido via JS --}}
+                                </tbody>
+                            </table>
                         </div>
-
-                        <x-button type="button" onclick="addProduto()">
-                            + Adicionar mais um Produto
-                        </x-button>
                     </div>
 
                     <div class="flex gap-4 pt-4">
@@ -185,207 +149,231 @@
             </div>
         </div>
     </div>
-    
-    <!-- Template oculto do Blade para clonar com JS -->
-    <template id="produto-template">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-xl dark:border-neutral-700 relative mt-4 produto-item">
-            <div class="w-full">
-                <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Fornecedor *</label>
-                <select name="produtos[__INDEX__][fornecedor_id]" onchange="filtrarProdutos(this)" class="fornecedor-select border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
-                    <option value="">Selecione um Fornecedor</option>
-                    @foreach($fornecedores as $fornecedor)
-                        <option value="{{ $fornecedor->id }}">{{ $fornecedor->nome_fantasia }}</option>
-                    @endforeach
-                </select>
+
+    {{-- Modal Confirmação de Item --}}
+    <div id="modal-confirmacao" class="fixed inset-0 bg-black/50 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white dark:bg-zinc-900 rounded-lg p-6 w-full max-w-2xl shadow-xl relative overflow-y-auto max-h-[90vh]">
+            <button onclick="fecharModal()" class="absolute top-3 right-3 text-gray-400 hover:text-red-600">
+                <x-heroicon-o-x-mark class="w-6 h-6" />
+            </button>
+            <h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Detalhes do Item</h3>
+            <p id="modal-produto-nome" class="text-sm text-indigo-600 dark:text-indigo-400 font-medium mb-4"></p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Quantidade *</label>
+                    <input id="modal-quantidade-input" type="number" step="0.001" value="1"
+                        class="mt-1 block w-full border border-gray-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white rounded-md px-3 py-2" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Valor Unitário (R$)</label>
+                    <input id="modal-preco-input" type="number" step="0.01" value="0.00" readonly
+                        class="mt-1 block w-full border border-gray-300 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 text-gray-500 rounded-md px-3 py-2 cursor-not-allowed" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Armazém</label>
+                    <select id="modal-armazem-select" class="mt-1 block w-full border border-gray-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white rounded-md px-3 py-2">
+                        <option value="">Selecione</option>
+                        @foreach($armazens as $az)
+                            <option value="{{ $az->nome }}">{{ $az->nome }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Corredor</label>
+                        <input id="modal-corredor-input" type="text" placeholder="Ex: A" class="mt-1 block w-full border border-gray-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white rounded-md px-3 py-2" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Posição</label>
+                        <input id="modal-posicao-input" type="text" placeholder="Ex: 01" class="mt-1 block w-full border border-gray-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white rounded-md px-3 py-2" />
+                    </div>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Observação do Item</label>
+                    <input id="modal-obs-input" type="text" placeholder="Ex: pacote aberto, cor alterada..." class="mt-1 block w-full border border-gray-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white rounded-md px-3 py-2" />
+                </div>
             </div>
 
-            <div class="w-full">
-                <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Produto *</label>
-                <select name="produtos[__INDEX__][produto_id]" class="produto-select border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
-                    <option value="">Selecione um Produto</option>
-                    @foreach($produtos as $produto)
-                        <option value="{{ $produto->id }}" data-fornecedor="{{ $produto->fornecedor_id }}">
-                            {{ $produto->nome }} ({{ $produto->sku }}) @if(optional($produto->cor)->nome) - Cor: {{ $produto->cor->nome }} @endif
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            
-            <div class="w-full">
-                <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Quantidade *</label>
-                <input name="produtos[__INDEX__][quantidade]" type="number" step="0.01" placeholder="Ex. 10" class="border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
-            </div>
-            
-            <div class="w-full">
-                <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Valor Unitário</label>
-                <input name="produtos[__INDEX__][valor]" type="number" step="0.01" placeholder="Ex. 15.50" class="border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
-            </div>
-            
-            <div class="w-full">
-                <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Valor Total</label>
-                <input name="produtos[__INDEX__][valor_total]" type="number" step="0.01" placeholder="Calculado auto." readonly class="bg-gray-100 dark:bg-neutral-800 cursor-not-allowed border-gray-300 dark:border-neutral-700 dark:text-neutral-500 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
-            </div>
-            
-            <div class="w-full">
-                <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Armazém</label>
-                <select name="produtos[__INDEX__][armazem]" class="border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
-                    <option value="">Selecione um Armazém</option>
-                    @foreach($armazens as $armazem)
-                        <option value="{{ $armazem->nome }}">{{ $armazem->nome }}</option>
-                    @endforeach
-                </select>
-            </div>
-            
-            <div class="w-full">
-                <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Corredor</label>
-                <input name="produtos[__INDEX__][corredor]" type="text" placeholder="Corredor" class="border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
-            </div>
-            
-            <div class="w-full">
-                <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Posição</label>
-                <input name="produtos[__INDEX__][posicao]" type="text" placeholder="Posição" class="border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
-            </div>
-            
-            <div class="w-full md:col-span-3">
-                <label class="block font-medium text-sm text-gray-700 dark:text-gray-300">Observação (Ex: pacote, em caixa, defeito leve)</label>
-                <input name="produtos[__INDEX__][observacao]" type="text" placeholder="Opcional..." class="border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
-            </div>
-
-            <button type="button" onclick="removeProduto(this)" class="absolute top-2 right-2 px-2 py-1 text-xs font-semibold text-red-600 bg-red-100 rounded hover:bg-red-200">
-                Remover
+            <button onclick="confirmarAdicao()" 
+                class="w-full mt-6 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 font-medium">
+                Adicionar Item
             </button>
         </div>
-    </template>
+    </div>
 
-    <script>
-        let produtoIndex = {{ max(1, count($itensAnteriores)) }};
-
-        function addProduto() {
-            const wrapper = document.getElementById('produtos-wrapper');
-            const template = document.getElementById('produto-template').innerHTML;
-            
-            const novoElemento = template.replace(/__INDEX__/g, produtoIndex);
-            wrapper.insertAdjacentHTML('beforeend', novoElemento);
-            produtoIndex++;
-            const recemCriado = wrapper.lastElementChild;
-            const selectFornecedor = recemCriado.querySelector('.fornecedor-select'); 
-            filtrarProdutos(selectFornecedor);
-        }
-
-        function removeProduto(button) {
-            button.closest('.produto-item').remove();
-        }
-
-        function filtrarProdutos(fornecedorSelect) {
-            if(!fornecedorSelect) return;
-            const container = fornecedorSelect.closest('.produto-item');
-            const produtoSelect = container.querySelector('.produto-select');
-            const fornecedorId = fornecedorSelect.value;
-            
-            Array.from(produtoSelect.options).forEach(option => {
-                if(option.value === "") {
-                    option.style.display = 'block'; 
-                } else {
-                    const dataFornecedor = option.getAttribute('data-fornecedor');
-                    if(fornecedorId === "" || dataFornecedor === fornecedorId) {
-                        option.hidden = false;
-                        option.disabled = false;
-                    } else {
-                        option.hidden = true;
-                        option.disabled = true;
-                    }
-                }
-            });
-
-            const selectedOption = produtoSelect.options[produtoSelect.selectedIndex];
-            if(selectedOption && selectedOption.hidden === true) {
-                produtoSelect.value = "";
-            }
-        }
-
-        // Executar filtro inicial nos selects que já estão na tela quando carregar a pag
-        document.addEventListener('DOMContentLoaded', () => {
-            const boxes = document.querySelectorAll('.fornecedor-select');
-            boxes.forEach(item => filtrarProdutos(item));
-        });
-
-        // Automatizar o cálculo do Valor Total baseado na Quantidade e Valor
-        document.addEventListener('input', function(e) {
-            if(e.target.name && (e.target.name.includes('[quantidade]') || e.target.name.includes('[valor]'))) {
-                const container = e.target.closest('.produto-item');
-                if(container) {
-                    const qtdInput = container.querySelector('input[name*="[quantidade]"]');
-                    const valorInput = container.querySelector('input[name*="[valor]"]:not([name*="[valor_total]"])');
-                    const totalInput = container.querySelector('input[name*="[valor_total]"]');
-                    
-                    if(qtdInput && valorInput && totalInput) {
-                        const q = parseFloat(qtdInput.value);
-                        const v = parseFloat(valorInput.value);
-                        if(!isNaN(q) && !isNaN(v)) {
-                            totalInput.value = (q * v).toFixed(2);
-                        } else {
-                            totalInput.value = '';
-                        }
-                    }
-                }
-            }
-        });
-    </script>
-    
     @push('scripts')
-    <!-- jQuery Necessário ao Select2 -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <!-- JS Select2 -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    
     <script>
-        // Função para instanciar Select2 pesquisáveis nos combos de "Produto"
-        function initSelect2() {
-            $('.produto-select:not(.select2-hidden-accessible)').select2({
-                placeholder: "Digite para pesquisar o Produto (Nome, SKU ou Cor)",
-                language: "pt-BR",
-                width: '100%',
-                matcher: function(params, data) {
-                    // Ignora options vazios
-                    if ($.trim(params.term) === '') return data;
-                    if (typeof data.text === 'undefined') return null;
-                    // Ignora filtragem em options escondidos/desativados pelo JS pai
-                    if (data.element && (data.element.hidden || data.element.disabled)) return null;
+        @php
+            // Se houver dados de falha de validação (old), use-os. Senão, use os itens da movimentação.
+            $rawItems = old('produtos');
+            if ($rawItems) {
+                $initialItems = $rawItems;
+            } else {
+                $initialItems = $movimentacao->itens->map(function($i) {
+                    return [
+                        'produto_id' => $i->produto_id,
+                        'nome' => $i->produto->nome,
+                        'cor' => optional($i->produto->cor)->nome,
+                        'fornecedor' => optional($i->fornecedor)->name_fantasia ?? optional($i->fornecedor)->nome_fantasia,
+                        'fornecedor_id' => $i->fornecedor_id,
+                        'quantidade' => $i->quantidade,
+                        'valor_unitario' => $i->valor_unitario,
+                        'armazem' => $i->endereco,
+                        'corredor' => $i->corredor,
+                        'posicao' => $i->posicao,
+                        'observacao' => $i->observacao,
+                    ];
+                })->toArray();
+            }
+        @endphp
 
-                    var term = params.term.toLowerCase();
-                    var text = data.text.toLowerCase();
-                    if (text.indexOf(term) > -1) {
-                        return data;
-                    }
-                    return null;
-                }
-            });
-        }
-        
-        $(document).ready(function() {
-            initSelect2();
+        let produtosSelecionados = @json($initialItems);
+        let produtoSendoAdicionado = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (produtosSelecionados.length > 0) {
+                produtosSelecionados.forEach(p => {
+                    p.quantidade = parseFloat(p.quantidade) || 0;
+                    // Tratar divergência de nomes de campos entre Request e Model
+                    p.valor_unitario = parseFloat(p.valor) || parseFloat(p.valor_unitario) || 0;
+                    p.nome = p.nome || '';
+                    p.cor = p.cor || '';
+                    p.fornecedor = p.fornecedor || p.fornecedor_nome || '';
+                    p.armazem = p.armazem || 'HUB';
+                });
+                renderTable();
+            }
         });
 
-        // Adicionar chamadas de initSelect2 no addProduto pra pegar o novo combo
-        const _addProdutoOrig = addProduto;
-        addProduto = function() {
-            _addProdutoOrig();
-            initSelect2();
+        // Bridge com o Livewire lista-produto-orcamento
+        function selecionarProdutoComQuantidade(id, nome, preco, fornecedor, cor, partNumber, liberarDesconto, estoque) {
+            produtoSendoAdicionado = { 
+                id: id, 
+                nome: nome, 
+                preco: preco, 
+                fornecedor: fornecedor, 
+                cor: cor,
+                maxQtd: null 
+            };
+
+            document.getElementById('modal-produto-nome').textContent = nome + (cor ? ' ('+cor+')' : '');
+            document.getElementById('modal-preco-input').value = preco || 0;
+            document.getElementById('modal-quantidade-input').value = 1;
+            document.getElementById('modal-armazem-select').value = 'HUB';
+            document.getElementById('modal-corredor-input').value = '';
+            document.getElementById('modal-posicao-input').value = '';
+            document.getElementById('modal-obs-input').value = '';
+            
+            document.getElementById('modal-confirmacao').classList.remove('hidden');
         }
 
-        // Corrigir filtragem: como o Select2 altera a view, precisamos avisar ele pra se redesenhar
-        const _filtrarProdutosOrig = filtrarProdutos;
-        filtrarProdutos = function(fornecedorSelect) {
-            _filtrarProdutosOrig(fornecedorSelect);
-            const container = fornecedorSelect.closest('.produto-item');
-            if(container) {
-                const pSelect = container.querySelector('.produto-select');
-                if($(pSelect).hasClass('select2-hidden-accessible')) {
-                    // Dispara evento pro Select2 redesenhar os resultados
-                    $(pSelect).select2('destroy');
-                    initSelect2();
-                }
+        function fecharModal() {
+            document.getElementById('modal-confirmacao').classList.add('hidden');
+            produtoSendoAdicionado = null;
+        }
+
+        function confirmarAdicao() {
+            if (!produtoSendoAdicionado) return;
+
+            const qtd = parseFloat(document.getElementById('modal-quantidade-input').value) || 0;
+            if (qtd <= 0) {
+                alert('A quantidade deve ser maior que zero.');
+                return;
             }
+
+            const item = {
+                produto_id: produtoSendoAdicionado.id,
+                nome: produtoSendoAdicionado.nome,
+                cor: produtoSendoAdicionado.cor,
+                fornecedor: produtoSendoAdicionado.fornecedor,
+                quantidade: qtd,
+                valor_unitario: parseFloat(document.getElementById('modal-preco-input').value) || 0,
+                armazem: document.getElementById('modal-armazem-select').value || 'HUB',
+                corredor: document.getElementById('modal-corredor-input').value,
+                posicao: document.getElementById('modal-posicao-input').value,
+                observacao: document.getElementById('modal-obs-input').value,
+                maxQtd: produtoSendoAdicionado.maxQtd,
+                locked: produtoSendoAdicionado.locked || false 
+            };
+
+            produtosSelecionados.push(item);
+            renderTable();
+            fecharModal();
+        }
+
+        function removerItem(index) {
+            produtosSelecionados.splice(index, 1);
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('produtos-selecionados');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            produtosSelecionados.forEach((p, i) => {
+                const totalItem = p.quantidade * p.valor_unitario;
+                let alertClass = "";
+                if (p.maxQtd && p.quantidade > p.maxQtd) {
+                    alertClass = "bg-red-50 text-red-700 border-red-200";
+                }
+
+                const row = `
+                    <tr class="${alertClass} dark:border-neutral-700">
+                        <td class="px-4 py-2">
+                            <span class="font-medium text-sm block">${p.nome}</span>
+                            <small class="text-xs text-gray-400">${p.cor || 'Sem cor'} / ${p.fornecedor || 'S/F'}</small>
+                            <input type="hidden" name="produtos[${i}][produto_id]" value="${p.produto_id}">
+                            <input type="hidden" name="produtos[${i}][valor_total]" value="${totalItem.toFixed(2)}">
+                            <input type="hidden" name="produtos[${i}][fornecedor_id]" value="${p.fornecedor_id || ''}">
+                            <input type="hidden" name="produtos[${i}][nome]" value="${p.nome || ''}">
+                            <input type="hidden" name="produtos[${i}][cor]" value="${p.cor || ''}">
+                            <input type="hidden" name="produtos[${i}][fornecedor_nome]" value="${p.fornecedor || ''}">
+                        </td>
+                        <td class="px-4 py-2 text-center">
+                            <input type="number" step="0.001" name="produtos[${i}][quantidade]" value="${p.quantidade}" 
+                                onchange="updateItem(${i}, 'quantidade', this.value)"
+                                class="w-20 text-center border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 rounded text-sm p-1">
+                        </td>
+                        <td class="px-4 py-2">
+                            <input type="number" step="0.01" name="produtos[${i}][valor]" value="${p.valor_unitario.toFixed(2)}" 
+                                readonly
+                                class="w-full border-gray-300 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 text-gray-500 rounded text-sm p-1 cursor-not-allowed">
+                        </td>
+                        <td class="px-4 py-2">
+                            <div class="flex flex-col gap-1">
+                                <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400">${p.armazem || 'HUB'}</span>
+                                <span class="text-xs text-gray-400">${p.corredor || '-'}/${p.posicao || '-'}</span>
+                                <input type="hidden" name="produtos[${i}][armazem]" value="${p.armazem || 'HUB'}">
+                                <input type="hidden" name="produtos[${i}][corredor]" value="${p.corredor || ''}">
+                                <input type="hidden" name="produtos[${i}][posicao]" value="${p.posicao || ''}">
+                            </div>
+                        </td>
+                        <td class="px-4 py-2">
+                            <input type="text" name="produtos[${i}][observacao]" value="${p.observacao || ''}" 
+                                onchange="updateItem(${i}, 'observacao', this.value)"
+                                class="w-full border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 rounded text-sm p-1">
+                        </td>
+                        <td class="px-4 py-2 text-center">
+                            <button type="button" onclick="removerItem(${i})" class="text-red-500 hover:text-red-700">
+                                <x-heroicon-o-trash class="w-5 h-5" />
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        function updateItem(index, field, value) {
+            if (field === 'quantidade') {
+                const val = parseFloat(value) || 0;
+                produtosSelecionados[index][field] = val;
+            } else {
+                produtosSelecionados[index][field] = value;
+            }
+            renderTable();
         }
     </script>
     @endpush

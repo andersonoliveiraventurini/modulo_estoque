@@ -28,8 +28,12 @@
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Descrição</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Part Number</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Fornecedor</th>
-                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Estoque atual</th>
-                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Permite desconto</th>
+                    @if($showStock)
+                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Estoque atual</th>
+                    @endif
+                    @if($showDiscount)
+                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Permite desconto</th>
+                    @endif
                     <th class="px-4 py-2 text-center text-sm font-medium text-gray-600">Ações</th>
                 </tr>
             </thead>
@@ -56,10 +60,14 @@
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             {{ $produto->fornecedor?->nome_fantasia ?? 'Sem fornecedor' }}
                         </td>
-                        <td class="px-4 py-2 text-sm">{{ $produto->estoque_atual }}</td>
-                        <td class="px-4 py-2 text-sm">{{ $produto->liberar_desconto == 0 ? 'Não' : 'Sim' }}</td>
+                        @if($showStock)
+                            <td class="px-4 py-2 text-sm">{{ $produto->estoque_atual }}</td>
+                        @endif
+                        @if($showDiscount)
+                            <td class="px-4 py-2 text-sm">{{ $produto->liberar_desconto == 0 ? 'Não' : 'Sim' }}</td>
+                        @endif
                         <td class="px-4 py-2 text-center">
-                            <x-button variant="primary"
+                            <x-button type="button" variant="primary"
                                 onclick="selecionarProdutoComQuantidade(
                                             '{{ $produto->id }}',
                                             '{{ addslashes($produto->nome) }}',

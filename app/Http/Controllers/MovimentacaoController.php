@@ -5,11 +5,19 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreMovimentacaoRequest;
 use App\Http\Requests\UpdateMovimentacaoRequest;
 use App\Models\Armazem;
+use App\Models\Corredor;
 use App\Models\Fornecedor;
 use App\Models\Movimentacao;
 use App\Models\Pedido;
+use App\Models\PedidoCompra;
+use App\Models\Posicao;
 use App\Models\Produto;
+use App\Models\InconsistenciaRecebimento;
+use App\Models\User;
+use App\Mail\InconsistenciaRecebimentoMail;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
 
 class MovimentacaoController extends Controller
 {
@@ -23,9 +31,13 @@ class MovimentacaoController extends Controller
     {
         $fornecedores = Fornecedor::all();
         $pedidos = Pedido::all();
+        $pedidoCompras = PedidoCompra::whereIn('status', ['aguardando', 'parcialmente_recebido'])
+            ->with('fornecedor')
+            ->latest()
+            ->get();
         $armazens = Armazem::all();
         $produtos = Produto::with('cor')->where('ativo', true)->get(['id', 'nome', 'sku', 'fornecedor_id', 'cor_id']);
-        return view('paginas.movimentacao.create', compact('fornecedores', 'pedidos', 'armazens', 'produtos'));
+        return view('paginas.movimentacao.create', compact('fornecedores', 'pedidos', 'pedidoCompras', 'armazens', 'produtos'));
     }
 
     public function store(StoreMovimentacaoRequest $request)
@@ -33,10 +45,18 @@ class MovimentacaoController extends Controller
         try {
             DB::beginTransaction();
 
+            $nfPath = null;
+            if ($request->hasFile('arquivo_nota_fiscal')) {
+                $nfPath = $request->file('arquivo_nota_fiscal')->store('notas_fiscais', 'public');
+            }
+
             $movimentacao = Movimentacao::create([
                 'tipo' => $request->tipo_entrada,
+                'data_movimentacao' => $request->data_movimentacao ?: now()->toDateString(),
                 'pedido_id' => $request->pedido_id,
+                'pedido_compra_id' => $request->pedido_compra_id,
                 'nota_fiscal_fornecedor' => $request->nota_fiscal_fornecedor,
+                'arquivo_nota_fiscal' => $nfPath,
                 'romaneiro' => $request->romaneiro,
                 'observacao' => $request->observacao,
                 'usuario_id' => auth()->id(),
@@ -60,6 +80,51 @@ class MovimentacaoController extends Controller
                 if ($produto) {
                     if ($request->tipo_entrada == 'entrada') {
                         $produto->addEstoque($produtoData['quantidade']);
+                        
+                        // Checar Inconsistência se houver Pedido de Compra vinculado
+                        if ($request->pedido_compra_id) {
+                            $pcItem = DB::table('pedido_compra_itens')
+                                ->where('pedido_compra_id', $request->pedido_compra_id)
+                                ->where('produto_id', $produtoData['produto_id'])
+                                ->first();
+
+                            if ($pcItem) {
+                                // Qtd já recebida anteriormente (exclua a atual da conta)
+                                $qtdRecebidaJa = DB::table('movimentacao_produtos')
+                                    ->join('movimentacoes', 'movimentacoes.id', '=', 'movimentacao_produtos.movimentacao_id')
+                                    ->where('movimentacoes.pedido_compra_id', $request->pedido_compra_id)
+                                    ->where('movimentacao_produtos.produto_id', $produtoData['produto_id'])
+                                    ->where('movimentacoes.id', '<>', $movimentacao->id)
+                                    ->sum('movimentacao_produtos.quantidade');
+
+                                $totalEsperado = $pcItem->quantidade;
+                                $totalRecebidoComEsta = $qtdRecebidaJa + $produtoData['quantidade'];
+
+                                if ($totalRecebidoComEsta > $totalEsperado) {
+                                    // Registrar Inconsistência
+                                    $inconsistencia = InconsistenciaRecebimento::create([
+                                        'pedido_compra_id' => $request->pedido_compra_id,
+                                        'produto_id' => $produtoData['produto_id'],
+                                        'quantidade_esperada' => $totalEsperado,
+                                        'quantidade_recebida' => $totalRecebidoComEsta,
+                                        'usuario_id' => auth()->id(),
+                                        'movimentacao_id' => $movimentacao->id,
+                                        'observacao' => "Recebimento excedente: {$totalRecebidoComEsta} vs esperado {$totalEsperado}",
+                                    ]);
+
+                                    // Enviar e-mail para Administradores
+                                    $admins = User::permission('admin')->get(); 
+                                    if ($admins->isEmpty()) {
+                                        // Fallback para admin role se permission falhar ou não existirem usuários diretos
+                                        $admins = User::role('admin')->get();
+                                    }
+
+                                    if ($admins->isNotEmpty()) {
+                                        Mail::to($admins)->send(new InconsistenciaRecebimentoMail($inconsistencia));
+                                    }
+                                }
+                            }
+                        }
                     } else {
                         $produto->removerEstoque($produtoData['quantidade']);
                     }
@@ -67,11 +132,65 @@ class MovimentacaoController extends Controller
             }
 
             DB::commit();
+
+            // Atualizar status do Pedido de Compra se houver
+            if ($request->pedido_compra_id) {
+                $this->atualizarStatusPedidoCompra(PedidoCompra::find($request->pedido_compra_id));
+            }
+
             return redirect()->route('movimentacao.index')->with('success', 'Movimentação criada com sucesso!');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withInput()->withErrors(['error' => 'Erro ao salvar: ' . $e->getMessage()]);
         }
+    }
+
+    private function atualizarStatusPedidoCompra(PedidoCompra $pedido)
+    {
+        $pedido->load('itens');
+        
+        $recebidoTotalmente = true;
+        $recebidoParcialmente = false;
+        $pendencias = [];
+
+        foreach ($pedido->itens as $item) {
+            // Soma todas as movimentações de ENTRADA para este produto vinculadas a este pedido
+            $qtdRecebida = DB::table('movimentacao_produtos')
+                ->join('movimentacoes', 'movimentacoes.id', '=', 'movimentacao_produtos.movimentacao_id')
+                ->where('movimentacoes.pedido_compra_id', $pedido->id)
+                ->where('movimentacao_produtos.produto_id', $item->produto_id)
+                ->where('movimentacoes.tipo', 'entrada')
+                ->whereNull('movimentacoes.deleted_at')
+                ->sum('movimentacao_produtos.quantidade');
+
+            if ($qtdRecebida < $item->quantidade) {
+                $recebidoTotalmente = false;
+                if ($qtdRecebida > 0) {
+                    $recebidoParcialmente = true;
+                }
+                $falta = $item->quantidade - $qtdRecebida;
+                $pendencias[] = "- " . ($item->produto->nome ?? 'Produto ID '.$item->produto_id) . ": Falta {$falta}";
+            } else if ($qtdRecebida > 0) {
+                $recebidoParcialmente = true;
+            }
+        }
+
+        $novoStatus = 'aguardando';
+        if ($recebidoTotalmente) {
+            $novoStatus = 'recebido';
+        } elseif ($recebidoParcialmente) {
+            $novoStatus = 'parcialmente_recebido';
+        }
+
+        $obsAdicional = "";
+        if ($novoStatus === 'parcialmente_recebido' && !empty($pendencias)) {
+            $obsAdicional = "\n\n[RECEBIMENTO PARCIAL - " . now()->format('d/m/Y H:i') . "]\n" . implode("\n", $pendencias);
+        }
+
+        $pedido->update([
+            'status' => $novoStatus,
+            'observacao' => $pedido->observacao . $obsAdicional
+        ]);
     }
 
     public function show(Movimentacao $movimentacao)
@@ -162,10 +281,19 @@ class MovimentacaoController extends Controller
             $movimentacao->itens()->delete();
 
             // Atualizar movimentação pai
+            $nfPath = $movimentacao->arquivo_nota_fiscal;
+            if ($request->hasFile('arquivo_nota_fiscal')) {
+                // Apaga o arquivo antigo se existir
+                if ($nfPath) Storage::disk('public')->delete($nfPath);
+                $nfPath = $request->file('arquivo_nota_fiscal')->store('notas_fiscais', 'public');
+            }
+
             $movimentacao->update([
                 'tipo' => $request->tipo_entrada,
+                'data_movimentacao' => $request->data_movimentacao ?: $movimentacao->data_movimentacao,
                 'pedido_id' => $request->pedido_id,
                 'nota_fiscal_fornecedor' => $request->nota_fiscal_fornecedor,
+                'arquivo_nota_fiscal' => $nfPath,
                 'romaneiro' => $request->romaneiro,
                 'observacao' => $request->observacao,
                 'resumo_edicao' => $resumoEdicao,
@@ -198,6 +326,11 @@ class MovimentacaoController extends Controller
             }
 
             DB::commit();
+
+            if ($movimentacao->pedido_compra_id) {
+                $this->atualizarStatusPedidoCompra(PedidoCompra::find($movimentacao->pedido_compra_id));
+            }
+
             return redirect()->route('movimentacao.index')->with('success', 'Movimentação atualizada com sucesso!');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -226,6 +359,11 @@ class MovimentacaoController extends Controller
             $movimentacao->delete();
 
             DB::commit();
+
+            if ($movimentacao->pedido_compra_id) {
+                $this->atualizarStatusPedidoCompra(PedidoCompra::find($movimentacao->pedido_compra_id));
+            }
+
             return redirect()->route('movimentacao.index')->with('success', 'Movimentação deletada com sucesso!');
         } catch (\Exception $e) {
             DB::rollBack();

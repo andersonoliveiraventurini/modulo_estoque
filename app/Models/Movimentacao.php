@@ -15,13 +15,19 @@ class Movimentacao extends Model
 
     protected $fillable = [
         'tipo',
-        'pedido_id',
+        'data_movimentacao',
+        'pedido_compra_id',
         'usuario_id',
         'nota_fiscal_fornecedor',
+        'arquivo_nota_fiscal',
         'romaneiro',
         'observacao',
         'resumo_edicao',
         'usuario_editou_id',
+    ];
+
+    protected $casts = [
+        'data_movimentacao' => 'date',
     ];
 
 
@@ -33,6 +39,11 @@ class Movimentacao extends Model
     public function pedido()
     {
         return $this->belongsTo(Pedido::class);
+    }
+
+    public function pedidoCompra()
+    {
+        return $this->belongsTo(PedidoCompra::class, 'pedido_compra_id');
     }
 
     public function usuario()

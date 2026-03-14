@@ -15,8 +15,11 @@ class UpdateMovimentacaoRequest extends FormRequest
     {
         return [
             'tipo_entrada' => 'required|in:entrada,saida',
+            'data_movimentacao' => 'nullable|date',
             'pedido_id' => 'nullable|exists:pedidos,id',
+            'pedido_compra_id' => 'nullable|exists:pedido_compras,id',
             'nota_fiscal_fornecedor' => 'nullable|string',
+            'arquivo_nota_fiscal' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
             'romaneiro' => 'nullable|string',
             'observacao' => 'nullable|string',
             'produtos' => 'required|array|min:1',
@@ -29,6 +32,9 @@ class UpdateMovimentacaoRequest extends FormRequest
             'produtos.*.corredor' => 'nullable|string',
             'produtos.*.posicao' => 'nullable|string',
             'produtos.*.observacao' => 'nullable|string|max:1000',
+            'produtos.*.nome' => 'nullable|string',
+            'produtos.*.cor' => 'nullable|string',
+            'produtos.*.fornecedor_nome' => 'nullable|string',
         ];
     }
 }

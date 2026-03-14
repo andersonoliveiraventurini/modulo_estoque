@@ -26,6 +26,9 @@ use App\Http\Controllers\NotaFiscalController;
 use App\Http\Controllers\VendedorController;
 use App\Http\Controllers\SubCategoriaController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\CorredorController;
+use App\Http\Controllers\PosicaoController;
+use App\Http\Controllers\PedidoCompraController;
 use  App\Http\Controllers\CorController;
 use App\Http\Controllers\CategoriaController;
 use App\Livewire\OrcamentoShow;
@@ -37,6 +40,7 @@ use App\Http\Controllers\SolicitacaoPagamentoController;
 use App\Livewire\ListaConferencia;
 use App\Livewire\ListaSeparacao;
 use App\Livewire\Logistica\SeparacaoListaPage;
+use App\Http\Controllers\InconsistenciaRecebimentoController;
 
 Volt::route('/', 'auth.login')
     ->name('home');
@@ -275,6 +279,25 @@ Route::middleware(['auth'])->group(function () {
 
 
     Route::resource('armazens', ArmazemController::class)->names('armazens');
+    Route::resource('corredores', CorredorController::class)->names('corredores')->parameters(['corredores' => 'corredor']);
+    Route::resource('posicoes', PosicaoController::class)->names('posicoes');
+    Route::resource('inconsistencias', InconsistenciaRecebimentoController::class)->names('inconsistencias')->only(['index', 'show', 'destroy']);
+    // Pedidos de Compras
+    Route::get('pedido_compras/{pedidoCompra}/itens', [\App\Http\Controllers\PedidoCompraController::class, 'getItensApi'])->name('pedido_compras.itens.api');
+    Route::resource('pedido_compras', PedidoCompraController::class)->names('pedido_compras');
+    Route::get('/pedido_compras/{pedidoCompra}/itens-json', [PedidoCompraController::class, 'itensJson'])->name('pedido_compras.itens_json');
+
+    // Carregar corredores dinamicamente para JS
+    Route::get('/corredores-by-armazem/{armazem_id}', function($armazem_id) {
+        $corredores = \App\Models\Corredor::where('armazem_id', $armazem_id)->get(['id', 'nome']);
+        return response()->json($corredores);
+    })->name('corredores.by_armazem');
+
+    // Carregar posicoes dinamicamente para JS
+    Route::get('/posicoes-by-corredor/{corredor_id}', function($corredor_id) {
+        $posicoes = \App\Models\Posicao::where('corredor_id', $corredor_id)->get(['id', 'nome']);
+        return response()->json($posicoes);
+    })->name('posicoes.by_corredor');
 
     Route::resource('vendedores', VendedorController::class)
         ->parameters(['vendedores' => 'vendedor']);
