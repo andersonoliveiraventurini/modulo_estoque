@@ -568,6 +568,44 @@
             </tr>
         </table>
 
+        {{-- ══════════════════════════════════════════════════════════════
+             COMPROVANTES
+        ══════════════════════════════════════════════════════════════ --}}
+        @if($pagamento->comprovantes && $pagamento->comprovantes->count() > 0)
+            <div style="page-break-before: always;"></div>
+            <div class="section">
+                <div class="section-title" style="text-align: center; font-size: 14px; margin-bottom: 20px;">
+                    Comprovantes Anexados
+                </div>
+                
+                @foreach($pagamento->comprovantes as $comprovante)
+                    @if($comprovante->isImagem())
+                        <div style="text-align: center; margin-bottom: 30px; page-break-inside: avoid;">
+                            <div style="font-size: 11px; font-weight: bold; margin-bottom: 10px; color: #444;">
+                                {{ $comprovante->nome_original }}
+                                @if($comprovante->pagamentoForma && $comprovante->pagamentoForma->condicaoPagamento)
+                                    — {{ $comprovante->pagamentoForma->condicaoPagamento->nome }}
+                                @endif
+                            </div>
+                            @php
+                                $src = '';
+                                if (\Illuminate\Support\Facades\Storage::disk('private')->exists($comprovante->path)) {
+                                    $mime = $comprovante->mime_type ?? 'image/jpeg';
+                                    $data = \Illuminate\Support\Facades\Storage::disk('private')->get($comprovante->path);
+                                    $src = 'data:' . $mime . ';base64,' . base64_encode($data);
+                                }
+                            @endphp
+                            @if($src)
+                                <img src="{{ $src }}" style="max-width: 100%; max-height: 700px; border: 1px solid #ccc; border-radius: 4px;" alt="Comprovante">
+                            @else
+                                <div class="obs-box" style="display: inline-block;">Imagem indisponível ou não encontrada.</div>
+                            @endif
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+        @endif
+
     </div>{{-- /content --}}
 
     {{-- ══════════════════════════════════════════════════════════════
