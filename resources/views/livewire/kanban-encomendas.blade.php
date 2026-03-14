@@ -80,6 +80,7 @@
                     @foreach ($columns as $column)
                         @php
                             $dotColor = match($column['color']) {
+                                'orange'  => 'bg-orange-500',
                                 'blue'    => 'bg-blue-500',
                                 'yellow'  => 'bg-yellow-500',
                                 'purple'  => 'bg-purple-500',
@@ -88,11 +89,13 @@
                                 default   => 'bg-zinc-500',
                             };
                             $borderTop = match($column['color']) {
+                                'orange'  => 'border-t-2 border-t-orange-500',
                                 'blue'    => 'border-t-2 border-t-blue-500',
                                 'yellow'  => 'border-t-2 border-t-yellow-500',
                                 'purple'  => 'border-t-2 border-t-purple-500',
                                 'green'   => 'border-t-2 border-t-green-500',
                                 'emerald' => 'border-t-2 border-t-emerald-500',
+                                'orange'  => 'border-t-2 border-t-orange-500',  
                                 default   => 'border-t-2 border-t-zinc-400',
                             };
                         @endphp

@@ -59,13 +59,13 @@ class KanbanEncomendas extends Component
     private function colunas(): array
     {
         return [
-            ['id' => 'solicitada', 'title' => 'Encomenda Solicitada', 'description' => 'Pedidos recebidos aguardando cotação',  'color' => 'zinc',    'workflow_status' => 'solicitada'],
-            ['id' => 'cotando',    'title' => 'Sendo Cotado',          'description' => 'Compras preenchendo preços',             'color' => 'blue',    'workflow_status' => 'cotando'],
-            ['id' => 'aprovado',   'title' => 'Aprovado',              'description' => 'Cotação aprovada pelo vendedor',         'color' => 'yellow',  'workflow_status' => 'aprovado'],
-            ['id' => 'aguardando', 'title' => 'Aguardando Recebimento','description' => 'Comprado, aguardando chegada',           'color' => 'purple',  'workflow_status' => 'aguardando'],
-            ['id' => 'recebido',   'title' => 'Recebido',              'description' => 'Material recebido no estoque',           'color' => 'green',   'workflow_status' => 'recebido'],
-            ['id' => 'entregue',   'title' => 'Entregue ao Cliente',   'description' => 'Entregue ao vendedor/cliente',           'color' => 'emerald', 'workflow_status' => 'entregue'],
-        ];
+            ['id' => 'solicitada',         'title' => 'Encomenda Solicitada',   'description' => 'Pedidos recebidos aguardando cotação',       'color' => 'zinc',   'workflow_status' => 'solicitada'],
+            ['id' => 'cotando',            'title' => 'Sendo Cotado',            'description' => 'Compras preenchendo preços',                 'color' => 'blue',   'workflow_status' => 'cotando'],
+            ['id' => 'aguardando_cliente', 'title' => 'Ag. Aprovação do Cliente','description' => 'Orçamento enviado, aguardando pagamento',    'color' => 'orange', 'workflow_status' => 'aguardando_cliente'],
+            ['id' => 'aprovado',           'title' => 'Aprovado',                'description' => 'Cotação aprovada pelo vendedor',            'color' => 'yellow', 'workflow_status' => 'aprovado'],
+            ['id' => 'aguardando',         'title' => 'Aguardando Recebimento',  'description' => 'Comprado, aguardando chegada',               'color' => 'purple', 'workflow_status' => 'aguardando'],
+            ['id' => 'recebido',           'title' => 'Recebido',                'description' => 'Material recebido no estoque',              'color' => 'green',  'workflow_status' => 'recebido'],
+            ['id' => 'entregue',           'title' => 'Entregue ao Cliente',     'description' => 'Entregue ao vendedor/cliente',              'color' => 'emerald','workflow_status' => 'entregue'],   ];
     }
 
     private function resolverColuna(ConsultaPrecoGrupo $grupo): string
@@ -76,6 +76,10 @@ class KanbanEncomendas extends Component
         if ($grupo->entradas->contains(fn($e) => in_array($e->status, ['Recebido completo', 'Recebido parcialmente']))) return 'recebido';
         if ($status === 'Aprovado' && $grupo->entradas->isEmpty()) return 'aguardando';
         if ($status === 'Aprovado') return 'aprovado';
+
+        // Orçamento gerado mas cliente ainda não aprovou/pagou
+        if ($grupo->orcamento_id && $grupo->orcamento?->status === 'Pendente') return 'aguardando_cliente';
+
         if (in_array($status, ['Aguardando preços', 'Preços preenchidos', 'Em revisão'])) return 'cotando';
         return 'solicitada';
     }
@@ -149,7 +153,7 @@ class KanbanEncomendas extends Component
         // ── Dados do kanban ──────────────────────────────────
         $columns = collect();
         if ($this->aba === 'kanban') {
-            $query = ConsultaPrecoGrupo::with(['cliente', 'usuario', 'itens', 'entradas.itens'])->latest();
+            $query = ConsultaPrecoGrupo::with(['cliente', 'usuario', 'itens', 'entradas.itens','orcamento'])->latest();
 
             if ($this->search) {
                 $query->where(fn($q) =>
