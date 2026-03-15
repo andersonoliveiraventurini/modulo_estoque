@@ -9,10 +9,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('requisicao_compras', function (Blueprint $table) {
-            $table->integer('nivel_aprovacao')->default(1)->after('status')->comment('1: Supervisor, 2: Gerente, 3: Diretor');
-            $table->json('aprovacoes_json')->nullable()->after('nivel_aprovacao');
-            $table->timestamp('rejeitado_em')->nullable()->after('aprovado_em');
-            $table->foreignId('rejeitado_por_id')->nullable()->after('rejeitado_em')->constrained('users');
+            if (!Schema::hasColumn('requisicao_compras', 'nivel_aprovacao')) {
+                $table->integer('nivel_aprovacao')->default(1)->after('status')->comment('1: Supervisor, 2: Gerente, 3: Diretor');
+            }
+            if (!Schema::hasColumn('requisicao_compras', 'aprovacoes_json')) {
+                $table->json('aprovacoes_json')->nullable()->after('nivel_aprovacao');
+            }
+            if (!Schema::hasColumn('requisicao_compras', 'rejeitado_em')) {
+                $table->timestamp('rejeitado_em')->nullable()->after('aprovado_em');
+            }
+            if (!Schema::hasColumn('requisicao_compras', 'rejeitado_por_id')) {
+                $table->foreignId('rejeitado_por_id')->nullable()->after('rejeitado_em')->constrained('users');
+            }
         });
     }
 

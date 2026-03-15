@@ -12,8 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('pedido_compras', function (Blueprint $table) {
-            $table->unsignedBigInteger('requisicao_compra_id')->nullable()->after('usuario_id');
-            $table->foreign('requisicao_compra_id')->references('id')->on('requisicao_compras')->onDelete('set null');
+            if (!Schema::hasColumn('pedido_compras', 'requisicao_compra_id')) {
+                $table->foreignId('requisicao_compra_id')->nullable()->after('usuario_id')->constrained('requisicao_compras')->nullOnDelete();
+            }
         });
     }
 

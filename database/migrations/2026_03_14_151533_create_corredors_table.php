@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('corredors', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('armazem_id')->constrained('armazens')->cascadeOnDelete();
-            $table->string('nome');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('corredors')) {
+            Schema::create('corredors', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('armazem_id')->constrained('armazens')->cascadeOnDelete();
+                $table->string('nome');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

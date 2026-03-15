@@ -12,8 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('pedido_compras', function (Blueprint $table) {
-            $table->foreignId('editor_usuario_id')->nullable()->constrained('users')->onDelete('set null');
-            $table->timestamp('editado_em')->nullable();
+            if (!Schema::hasColumn('pedido_compras', 'editor_usuario_id')) {
+                $table->foreignId('editor_usuario_id')->nullable()->constrained('users')->onDelete('set null');
+            }
+            if (!Schema::hasColumn('pedido_compras', 'editado_em')) {
+                $table->timestamp('editado_em')->nullable();
+            }
         });
     }
 

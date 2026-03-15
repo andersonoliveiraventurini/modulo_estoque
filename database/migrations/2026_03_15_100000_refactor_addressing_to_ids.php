@@ -9,9 +9,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('movimentacao_produtos', function (Blueprint $table) {
-            $table->foreignId('armazem_id')->nullable()->after('produto_id')->constrained('armazens')->nullOnDelete();
-            $table->foreignId('corredor_id')->nullable()->after('armazem_id')->constrained('corredors')->nullOnDelete();
-            $table->foreignId('posicao_id')->nullable()->after('corredor_id')->constrained('posicaos')->nullOnDelete();
+            if (!Schema::hasColumn('movimentacao_produtos', 'armazem_id')) {
+                $table->foreignId('armazem_id')->nullable()->after('produto_id')->constrained('armazens')->nullOnDelete();
+            }
+            if (!Schema::hasColumn('movimentacao_produtos', 'corredor_id')) {
+                $table->foreignId('corredor_id')->nullable()->after('armazem_id')->constrained('corredors')->nullOnDelete();
+            }
+            if (!Schema::hasColumn('movimentacao_produtos', 'posicao_id')) {
+                $table->foreignId('posicao_id')->nullable()->after('corredor_id')->constrained('posicaos')->nullOnDelete();
+            }
         });
     }
 

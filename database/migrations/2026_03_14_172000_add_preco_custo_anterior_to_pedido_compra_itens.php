@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('pedido_compra_itens', function (Blueprint $table) {
-            $table->decimal('preco_custo_anterior', 15, 2)->nullable()->after('valor_unitario');
+            if (!Schema::hasColumn('pedido_compra_itens', 'preco_custo_anterior')) {
+                $table->decimal('preco_custo_anterior', 15, 2)->nullable()->after('valor_unitario');
+            }
         });
     }
 
