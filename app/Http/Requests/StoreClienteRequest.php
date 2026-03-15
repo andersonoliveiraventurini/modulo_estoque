@@ -32,13 +32,18 @@ class StoreClienteRequest extends FormRequest
     {
        return [
             // Pessoa Jurídica
-            'cnpj'           => ['required', 'string', 'max:14', 'unique:clientes,cnpj'], 
+            'cnpj'           => ['required', 'string', 'max:14'], 
             'razao_social'   => ['nullable', 'string', 'max:255'],
             'nome_fantasia'  => ['nullable', 'string', 'max:255'],
             'tratamento'     => ['nullable', 'string', 'max:100'],
+            'inscricao_estadual' => ['nullable', 'string', 'max:50'],
+            'inscricao_municipal'=> ['nullable', 'string', 'max:50'],
+            'data_abertura'      => ['nullable', 'date'],
+            'cnae'               => ['nullable', 'string', 'max:100'],
+            'regime_tributario'  => ['nullable', 'string', 'max:50'],
 
             // Pessoa Física
-            'cpf'            => ['nullable', 'string', 'max:14'],
+            'cpf'            => ['nullable', 'string', 'max:11'],
             'nome'           => ['nullable', 'string', 'max:255'],
             'data_nascimento'=> ['nullable', 'date'],
 

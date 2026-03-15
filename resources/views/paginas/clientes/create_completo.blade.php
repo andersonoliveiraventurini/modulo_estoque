@@ -12,6 +12,22 @@
                     Preencha as informações do cliente para realizar o cadastro.
                 </p>
 
+                @if (session('duplicate_client_id'))
+                    <div class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl dark:bg-amber-900/30 dark:border-amber-800">
+                        <div class="flex items-center gap-3">
+                            <x-heroicon-s-exclamation-triangle class="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-amber-800 dark:text-amber-200">
+                                    {{ session('error') }}
+                                </p>
+                            </div>
+                            <x-button href="{{ route('clientes.show', session('duplicate_client_id')) }}" variant="secondary" size="sm">
+                                Acessar Cadastro Existente
+                            </x-button>
+                        </div>
+                    </div>
+                @endif
+
                 <form action="{{ route('clientes.store') }}" method="POST" class="space-y-8" enctype="multipart/form-data">
                     @csrf
 

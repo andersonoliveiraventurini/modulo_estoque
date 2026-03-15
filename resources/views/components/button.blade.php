@@ -41,6 +41,10 @@
 ];
 @endphp
 
-<button {{ $attributes->merge(['class' => "$base {$sizes[$size]} {$variants[$variant]}"]) }}>
+@php
+    $tag = $attributes->has('href') ? 'a' : 'button';
+@endphp
+
+<{{ $tag }} {{ $attributes->merge(['class' => "$base {$sizes[$size]} {$variants[$variant]}"]) }}>
     {{ $slot }}
-</button>
+</{{ $tag }}>

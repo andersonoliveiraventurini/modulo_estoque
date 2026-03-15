@@ -15,6 +15,7 @@ class SeparacaoListaPage extends Component
     // Filtros (sem tipagem para máxima compatibilidade)
     public $f_cliente = '';
     public $f_sku = '';
+    public $f_status_item = '';
     public $f_status_lote = 'em_separacao';// aberto|em_separacao
     public $f_busca = '';
     public $f_armazem_id = null;

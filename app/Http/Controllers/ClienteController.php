@@ -47,6 +47,25 @@ class ClienteController extends Controller
 
     public function store(StoreClienteRequest $request)
     {
+        // 1. Verificar duplicidade manual para permitir limpar o form e mostrar link
+        $cnpj = $request->filled('cnpj') ? preg_replace('/\D/', '', $request->cnpj) : null;
+        $cpf  = $request->filled('cpf') ? preg_replace('/\D/', '', $request->cpf) : null;
+        $cpf_resp = $request->filled('cpf_responsavel') ? preg_replace('/\D/', '', $request->cpf_responsavel) : null;
+        $cpf_final = $cpf ?? $cpf_resp;
+
+        $clienteExistente = null;
+        if ($cnpj) {
+            $clienteExistente = Cliente::where('cnpj', $cnpj)->first();
+        } elseif ($cpf_final) {
+            $clienteExistente = Cliente::where('cpf', $cpf_final)->first();
+        }
+
+        if ($clienteExistente) {
+            return redirect()->back()
+                ->with('duplicate_client_id', $clienteExistente->id)
+                ->with('error', 'O valor indicado para o campo cnpj/cpf já se encontra registrado.');
+        }
+
         $cliente_id = DB::transaction(function () use ($request) {
 
             $dadosCliente = array_filter($request->only([
