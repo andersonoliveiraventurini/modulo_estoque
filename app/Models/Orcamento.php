@@ -218,4 +218,12 @@ class Orcamento extends Model
             ->whereNull('rejeitado_em')
             ->exists();
     }
+
+    /**
+     * Relacionamento com Conferências
+     */
+    public function conferencias()
+    {
+        return $this->hasMany(Conferencia::class);
+    }
 }

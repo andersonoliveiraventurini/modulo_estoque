@@ -750,6 +750,22 @@
                         ) !!}
                         {!! $step('Em Conferência / Finalização', $is(['em_conferencia']), $is(['conferido', 'finalizado'])) !!}
                     </div>
+
+                    {{-- Link para o PDF de Conferência quando executada --}}
+                    @php
+                        $temConferenciaConcluida = $orcamento->conferencias()->where('status', 'concluida')->exists();
+                    @endphp
+
+                    @if ($temConferenciaConcluida)
+                        <div class="mt-4 flex justify-end">
+                            <a href="{{ route('orcamentos.conferencia.pdf', $orcamento->id) }}" target="_blank"
+                                class="inline-flex items-center gap-2 px-4 py-2 border border-sky-600 rounded-lg text-sky-600 hover:bg-sky-600 hover:text-white dark:text-sky-400 dark:border-sky-400 dark:hover:bg-sky-400 dark:hover:text-zinc-900 text-sm font-semibold transition-all duration-200 group">
+                                <x-heroicon-o-document-text
+                                    class="w-5 h-5 transition-transform group-hover:scale-110" />
+                                Visualizar PDF de Conferência
+                            </a>
+                        </div>
+                    @endif
                 </div>
             @endif
 

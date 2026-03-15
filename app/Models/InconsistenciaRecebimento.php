@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 use Illuminate\Database\Eloquent\Model;
 
-class InconsistenciaRecebimento extends Model
-{
+class InconsistenciaRecebimento extends Model {
+    use SoftDeletes;
     protected $table = 'inconsistencia_recebimentos';
 
     protected $fillable = [

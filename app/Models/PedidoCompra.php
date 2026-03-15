@@ -15,6 +15,7 @@ class PedidoCompra extends Model
 
     protected $fillable = [
         'fornecedor_id',
+        'requisicao_compra_id',
         'usuario_id',
         'data_pedido',
         'previsao_entrega',
@@ -38,6 +39,11 @@ class PedidoCompra extends Model
     public function fornecedor(): BelongsTo
     {
         return $this->belongsTo(Fornecedor::class);
+    }
+
+    public function requisicaoCompra(): BelongsTo
+    {
+        return $this->belongsTo(RequisicaoCompra::class, 'requisicao_compra_id');
     }
 
     public function usuario(): BelongsTo

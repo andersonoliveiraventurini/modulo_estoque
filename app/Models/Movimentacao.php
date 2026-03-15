@@ -14,20 +14,15 @@ class Movimentacao extends Model
     protected $table = 'movimentacoes';
 
     protected $fillable = [
-        'tipo',
-        'data_movimentacao',
-        'pedido_compra_id',
-        'usuario_id',
-        'nota_fiscal_fornecedor',
-        'arquivo_nota_fiscal',
-        'romaneiro',
-        'observacao',
-        'resumo_edicao',
+        'status',
+        'supervisor_id',
+        'aprovado_em',
         'usuario_editou_id',
     ];
 
     protected $casts = [
         'data_movimentacao' => 'date',
+        'aprovado_em' => 'datetime',
     ];
 
 
@@ -54,5 +49,10 @@ class Movimentacao extends Model
     public function usuarioEditou()
     {
         return $this->belongsTo(User::class, 'usuario_editou_id');
+    }
+
+    public function supervisor()
+    {
+        return $this->belongsTo(User::class, 'supervisor_id');
     }
 }

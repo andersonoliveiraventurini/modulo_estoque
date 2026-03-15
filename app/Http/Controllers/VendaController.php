@@ -13,7 +13,10 @@ class VendaController extends Controller
      */
     public function index()
     {
-        $vendas = Venda::paginate();
+        $vendas = Venda::with(['orcamento', 'cliente', 'vendedor'])
+            ->latest('data_venda')
+            ->paginate();
+
         return view('paginas.vendas.index', compact('vendas'));
     }
 

@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class EntradaEncomendaItem extends Model
-{
+class EntradaEncomendaItem extends Model {
+    use SoftDeletes;
     protected $table = 'entrada_encomenda_itens';
 
     protected $fillable = [

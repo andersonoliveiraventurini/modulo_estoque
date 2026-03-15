@@ -19,11 +19,15 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 
+use Illuminate\Support\Facades\Log;
+
 class MovimentacaoController extends Controller
 {
     public function index()
     {
-        $movimentacoes = Movimentacao::with(['itens.produto', 'itens.fornecedor', 'pedido', 'usuario', 'usuarioEditou'])->orderBy('id', 'desc')->get();
+        $movimentacoes = Movimentacao::with(['itens.produto', 'itens.fornecedor', 'pedido', 'usuario', 'usuarioEditou', 'supervisor'])
+            ->orderBy('id', 'desc')
+            ->paginate(20);
         return view('paginas.movimentacao.index', compact('movimentacoes'));
     }
 
@@ -42,6 +46,11 @@ class MovimentacaoController extends Controller
 
     public function store(StoreMovimentacaoRequest $request)
     {
+        Log::info('Iniciando criação de movimentação de estoque', [
+            'user' => auth()->user()->name,
+            'payload' => $request->except(['arquivo_nota_fiscal'])
+        ]);
+
         try {
             DB::beginTransaction();
 
@@ -52,6 +61,7 @@ class MovimentacaoController extends Controller
 
             $movimentacao = Movimentacao::create([
                 'tipo' => $request->tipo_entrada,
+                'status' => 'pendente', // Sempre pendente na criação
                 'data_movimentacao' => $request->data_movimentacao ?: now()->toDateString(),
                 'pedido_id' => $request->pedido_id,
                 'pedido_compra_id' => $request->pedido_compra_id,
@@ -69,80 +79,114 @@ class MovimentacaoController extends Controller
                     'quantidade' => $produtoData['quantidade'],
                     'valor_unitario' => $produtoData['valor'] ?? 0,
                     'valor_total' => $produtoData['valor_total'] ?? 0,
+                    'armazem_id' => $produtoData['armazem_id'] ?? null,
+                    'corredor_id' => $produtoData['corredor_id'] ?? null,
+                    'posicao_id' => $produtoData['posicao_id'] ?? null,
                     'endereco' => $produtoData['armazem'] ?? null,
                     'corredor' => $produtoData['corredor'] ?? null,
                     'posicao' => $produtoData['posicao'] ?? null,
                     'observacao' => $produtoData['observacao'] ?? null,
                 ]);
-
-                // Atualizar o estoque
-                $produto = Produto::find($produtoData['produto_id']);
-                if ($produto) {
-                    if ($request->tipo_entrada == 'entrada') {
-                        $produto->addEstoque($produtoData['quantidade']);
-                        
-                        // Checar Inconsistência se houver Pedido de Compra vinculado
-                        if ($request->pedido_compra_id) {
-                            $pcItem = DB::table('pedido_compra_itens')
-                                ->where('pedido_compra_id', $request->pedido_compra_id)
-                                ->where('produto_id', $produtoData['produto_id'])
-                                ->first();
-
-                            if ($pcItem) {
-                                // Qtd já recebida anteriormente (exclua a atual da conta)
-                                $qtdRecebidaJa = DB::table('movimentacao_produtos')
-                                    ->join('movimentacoes', 'movimentacoes.id', '=', 'movimentacao_produtos.movimentacao_id')
-                                    ->where('movimentacoes.pedido_compra_id', $request->pedido_compra_id)
-                                    ->where('movimentacao_produtos.produto_id', $produtoData['produto_id'])
-                                    ->where('movimentacoes.id', '<>', $movimentacao->id)
-                                    ->sum('movimentacao_produtos.quantidade');
-
-                                $totalEsperado = $pcItem->quantidade;
-                                $totalRecebidoComEsta = $qtdRecebidaJa + $produtoData['quantidade'];
-
-                                if ($totalRecebidoComEsta > $totalEsperado) {
-                                    // Registrar Inconsistência
-                                    $inconsistencia = InconsistenciaRecebimento::create([
-                                        'pedido_compra_id' => $request->pedido_compra_id,
-                                        'produto_id' => $produtoData['produto_id'],
-                                        'quantidade_esperada' => $totalEsperado,
-                                        'quantidade_recebida' => $totalRecebidoComEsta,
-                                        'usuario_id' => auth()->id(),
-                                        'movimentacao_id' => $movimentacao->id,
-                                        'observacao' => "Recebimento excedente: {$totalRecebidoComEsta} vs esperado {$totalEsperado}",
-                                    ]);
-
-                                    // Enviar e-mail para Administradores
-                                    $admins = User::permission('admin')->get(); 
-                                    if ($admins->isEmpty()) {
-                                        // Fallback para admin role se permission falhar ou não existirem usuários diretos
-                                        $admins = User::role('admin')->get();
-                                    }
-
-                                    if ($admins->isNotEmpty()) {
-                                        Mail::to($admins)->send(new InconsistenciaRecebimentoMail($inconsistencia));
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        $produto->removerEstoque($produtoData['quantidade']);
-                    }
-                }
+                
+                // O estoque NÃO é alterado aqui. Aguarda aprovação.
             }
 
             DB::commit();
 
-            // Atualizar status do Pedido de Compra se houver
-            if ($request->pedido_compra_id) {
-                $this->atualizarStatusPedidoCompra(PedidoCompra::find($request->pedido_compra_id));
-            }
+            Log::info('Movimentação criada com sucesso (aguardando aprovação)', [
+                'movimentacao_id' => $movimentacao->id
+            ]);
 
-            return redirect()->route('movimentacao.index')->with('success', 'Movimentação criada com sucesso!');
+            return redirect()->route('movimentacao.index')->with('success', 'Movimentação enviada para aprovação da supervisão!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->withErrors(['error' => 'Erro ao salvar: ' . $e->getMessage()]);
+            Log::error('Falha crítica ao criar movimentação de estoque', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+                'stack' => $e->getTraceAsString()
+            ]);
+            return back()->withInput()->withErrors(['error' => 'Erro interno ao processar movimentação. Por favor, tente novamente.']);
         }
+    }
+
+    /**
+     * Aprova uma movimentação e efetiva a alteração no estoque.
+     */
+    public function aprovar(Movimentacao $movimentacao)
+    {
+        Log::info('Solicitação de aprovação de movimentação', [
+            'movimentacao_id' => $movimentacao->id,
+            'supervisor' => auth()->user()->name
+        ]);
+
+        if ($movimentacao->status !== 'pendente') {
+            Log::warning('Tentativa de aprovar movimentação não pendente', ['movimentacao_id' => $movimentacao->id]);
+            return back()->with('error', 'Esta movimentação já foi processada.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            foreach ($movimentacao->itens as $item) {
+                $produto = $item->produto;
+                if (!$produto) {
+                    throw new \Exception("Produto ID {$item->produto_id} não encontrado.");
+                }
+
+                if ($movimentacao->tipo == 'entrada') {
+                    $produto->addEstoque($item->quantidade);
+                } else {
+                    $produto->removerEstoque($item->quantidade);
+                    app(\App\Services\EstoqueService::class)->verificarAlertaEstoqueBaixo($produto);
+                }
+            }
+
+            $movimentacao->update([
+                'status' => 'aprovado',
+                'supervisor_id' => auth()->id(),
+                'aprovado_em' => now(),
+            ]);
+
+            // Atualizar status do Pedido de Compra se houver
+            if ($movimentacao->pedido_compra_id) {
+                $this->atualizarStatusPedidoCompra($movimentacao->pedidoCompra);
+            }
+
+            DB::commit();
+
+            Log::info('Movimentação aprovada e estoque atualizado', ['movimentacao_id' => $movimentacao->id]);
+
+            return redirect()->route('movimentacao.index')->with('success', 'Movimentação aprovada com sucesso!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Erro ao aprovar movimentação', [
+                'movimentacao_id' => $movimentacao->id,
+                'error' => $e->getMessage()
+            ]);
+            return back()->with('error', 'Erro ao aprovar: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Rejeita uma movimentação.
+     */
+    public function rejeitar(Movimentacao $movimentacao)
+    {
+        if ($movimentacao->status !== 'pendente') {
+            return back()->with('error', 'Esta movimentação já foi processada.');
+        }
+
+        $movimentacao->update([
+            'status' => 'rejeitado',
+            'supervisor_id' => auth()->id(),
+        ]);
+
+        Log::info('Movimentação rejeitada pelo supervisor', [
+            'movimentacao_id' => $movimentacao->id,
+            'supervisor' => auth()->user()->name
+        ]);
+
+        return redirect()->route('movimentacao.index')->with('success', 'Movimentação rejeitada.');
     }
 
     private function atualizarStatusPedidoCompra(PedidoCompra $pedido)
@@ -154,12 +198,12 @@ class MovimentacaoController extends Controller
         $pendencias = [];
 
         foreach ($pedido->itens as $item) {
-            // Soma todas as movimentações de ENTRADA para este produto vinculadas a este pedido
             $qtdRecebida = DB::table('movimentacao_produtos')
                 ->join('movimentacoes', 'movimentacoes.id', '=', 'movimentacao_produtos.movimentacao_id')
                 ->where('movimentacoes.pedido_compra_id', $pedido->id)
                 ->where('movimentacao_produtos.produto_id', $item->produto_id)
                 ->where('movimentacoes.tipo', 'entrada')
+                ->where('movimentacoes.status', 'aprovado') // Apenas aprovadas contam
                 ->whereNull('movimentacoes.deleted_at')
                 ->sum('movimentacao_produtos.quantidade');
 
@@ -195,12 +239,16 @@ class MovimentacaoController extends Controller
 
     public function show(Movimentacao $movimentacao)
     {
-        $movimentacao->load(['itens.produto', 'itens.fornecedor', 'pedido']);
+        $movimentacao->load(['itens.produto', 'itens.fornecedor', 'pedido', 'supervisor']);
         return view('paginas.movimentacao.show', compact('movimentacao'));
     }
 
     public function edit(Movimentacao $movimentacao)
     {
+        if ($movimentacao->status !== 'pendente') {
+            return redirect()->route('movimentacao.index')->with('error', 'Apenas movimentações pendentes podem ser editadas.');
+        }
+
         $fornecedores = Fornecedor::all();
         $pedidos = Pedido::all();
         $armazens = Armazem::all();
@@ -211,79 +259,31 @@ class MovimentacaoController extends Controller
 
     public function update(UpdateMovimentacaoRequest $request, Movimentacao $movimentacao)
     {
+        if ($movimentacao->status !== 'pendente') {
+             return redirect()->route('movimentacao.index')->with('error', 'Apenas movimentações pendentes podem ser editadas.');
+        }
+
+        Log::info('Iniciando atualização de movimentação pendente', [
+            'movimentacao_id' => $movimentacao->id,
+            'user' => auth()->user()->name
+        ]);
+
         try {
             DB::beginTransaction();
 
-            // Mapearemos o que tinha no banco (por NOME Produto) e qtd
-            $estoqueAntigo = [];
-            
-            // Estornar estoque antigo e guardar referências
-            foreach ($movimentacao->itens as $itemAntigo) {
-                $produto = Produto::find($itemAntigo->produto_id);
-                if ($produto) {
-                    // Armazena pro relatorio: "Produto Y" => qtd
-                    if(!isset($estoqueAntigo[$produto->nome])) {
-                        $estoqueAntigo[$produto->nome] = 0;
-                    }
-                    $estoqueAntigo[$produto->nome] += $itemAntigo->quantidade;
+            // Como ainda é pendente, não houve alteração de estoque real.
+            // Apenas atualizamos os dados.
 
-                    if ($movimentacao->tipo == 'entrada') {
-                        $produto->removerEstoque($itemAntigo->quantidade);
-                    } else {
-                        $produto->addEstoque($itemAntigo->quantidade);
-                    }
-                }
-            }
-
-            // Mapear o que está vindo no request
-            $estoqueNovo = [];
-            foreach ($request->produtos as $produtoData) {
-                $produto = Produto::find($produtoData['produto_id']);
-                if ($produto) {
-                    if(!isset($estoqueNovo[$produto->nome])) {
-                        $estoqueNovo[$produto->nome] = 0;
-                    }
-                    $estoqueNovo[$produto->nome] += $produtoData['quantidade'];
-                }
-            }
-
-            // Criar o resumo comparativo escrito
+            // 1. Calcular resumo para log de auditoria
+            $estoqueAntigo = $movimentacao->itens->pluck('quantidade', 'produto_id')->toArray();
             $mudancas = [];
-            
-            // 1. Produtos que já existiam (mudaram de qtd ou foram removidos)
-            foreach ($estoqueAntigo as $nomeProd => $qtdAntiga) {
-                $qtdNova = $estoqueNovo[$nomeProd] ?? 0;
-                
-                if ($qtdAntiga != $qtdNova) {
-                    if ($qtdNova == 0) {
-                        $mudancas[] = "{$nomeProd} (removido)";
-                    } else {
-                        $mudancas[] = "{$nomeProd} de {$qtdAntiga} para {$qtdNova}";
-                    }
-                }
-                // Tira do array novo pra sobrar apenas os recém inseridos
-                unset($estoqueNovo[$nomeProd]);
-            }
 
-            // 2. Sobraram apenas produtos que são novidades (não estavam na movimentacao antes)
-            foreach ($estoqueNovo as $nomeProd => $qtdNova) {
-                if ($qtdNova > 0) {
-                    $mudancas[] = "{$nomeProd} (adicionado +{$qtdNova})";
-                }
-            }
-
-            $resumoEdicao = null;
-            if (count($mudancas) > 0) {
-                $resumoEdicao = "Alterou itens: " . implode(', ', $mudancas);
-            }
-
-            // Deletar os itens antigos (forçamos limpar pra recriar)
+            // Deletar os itens antigos
             $movimentacao->itens()->delete();
 
             // Atualizar movimentação pai
             $nfPath = $movimentacao->arquivo_nota_fiscal;
             if ($request->hasFile('arquivo_nota_fiscal')) {
-                // Apaga o arquivo antigo se existir
                 if ($nfPath) Storage::disk('public')->delete($nfPath);
                 $nfPath = $request->file('arquivo_nota_fiscal')->store('notas_fiscais', 'public');
             }
@@ -296,7 +296,6 @@ class MovimentacaoController extends Controller
                 'arquivo_nota_fiscal' => $nfPath,
                 'romaneiro' => $request->romaneiro,
                 'observacao' => $request->observacao,
-                'resumo_edicao' => $resumoEdicao,
                 'usuario_editou_id' => auth()->id(),
             ]);
 
@@ -313,46 +312,44 @@ class MovimentacaoController extends Controller
                     'posicao' => $produtoData['posicao'] ?? null,
                     'observacao' => $produtoData['observacao'] ?? null,
                 ]);
-
-                // Ajustar novo saldo de estoque
-                $produto = Produto::find($produtoData['produto_id']);
-                if ($produto) {
-                    if ($request->tipo_entrada == 'entrada') {
-                        $produto->addEstoque($produtoData['quantidade']);
-                    } else {
-                        $produto->removerEstoque($produtoData['quantidade']);
-                    }
-                }
             }
 
             DB::commit();
 
-            if ($movimentacao->pedido_compra_id) {
-                $this->atualizarStatusPedidoCompra(PedidoCompra::find($movimentacao->pedido_compra_id));
-            }
+            Log::info('Movimentação atualizada com sucesso', ['movimentacao_id' => $movimentacao->id]);
 
-            return redirect()->route('movimentacao.index')->with('success', 'Movimentação atualizada com sucesso!');
+            return redirect()->route('movimentacao.index')->with('success', 'Movimentação atualizada e aguardando aprovação!');
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Erro ao atualizar movimentação', ['error' => $e->getMessage()]);
             return back()->withInput()->withErrors(['error' => 'Erro ao atualizar: ' . $e->getMessage()]);
         }
     }
 
     public function destroy(Movimentacao $movimentacao)
     {
+        Log::info('Solicitação de exclusão de movimentação', [
+            'movimentacao_id' => $movimentacao->id,
+            'status' => $movimentacao->status,
+            'user' => auth()->user()->name
+        ]);
+
         try {
             DB::beginTransaction();
 
-            // Estornar estoque antes de deletar
-            foreach ($movimentacao->itens as $item) {
-                $produto = Produto::find($item->produto_id);
-                if ($produto) {
-                    if ($movimentacao->tipo == 'entrada') {
-                        $produto->removerEstoque($item->quantidade);
-                    } else {
-                        $produto->addEstoque($item->quantidade);
+            // Se for aprovada, precisa estornar o estoque
+            if ($movimentacao->status == 'aprovado') {
+                foreach ($movimentacao->itens as $item) {
+                    $produto = $item->produto;
+                    if ($produto) {
+                        if ($movimentacao->tipo == 'entrada') {
+                            $produto->removerEstoque($item->quantidade);
+                        } else {
+                            $produto->addEstoque($item->quantidade);
+                        }
                     }
                 }
+                Log::info('Estoque estornado devido a exclusão de movimentação aprovada', ['movimentacao_id' => $movimentacao->id]);
             }
 
             $movimentacao->itens()->delete();
@@ -360,13 +357,14 @@ class MovimentacaoController extends Controller
 
             DB::commit();
 
-            if ($movimentacao->pedido_compra_id) {
-                $this->atualizarStatusPedidoCompra(PedidoCompra::find($movimentacao->pedido_compra_id));
+            if ($movimentacao->pedido_compra_id && $movimentacao->status == 'aprovado') {
+                $this->atualizarStatusPedidoCompra($movimentacao->pedidoCompra);
             }
 
-            return redirect()->route('movimentacao.index')->with('success', 'Movimentação deletada com sucesso!');
+            return redirect()->route('movimentacao.index')->with('success', 'Movimentação removida com sucesso!');
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Erro ao excluir movimentação', ['error' => $e->getMessage()]);
             return back()->withErrors(['error' => 'Erro ao deletar: ' . $e->getMessage()]);
         }
     }

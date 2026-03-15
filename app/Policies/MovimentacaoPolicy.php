@@ -13,7 +13,7 @@ class MovimentacaoPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('visualizar_movimentacao');
     }
 
     /**
@@ -21,7 +21,7 @@ class MovimentacaoPolicy
      */
     public function view(User $user, Movimentacao $movimentacao): bool
     {
-        return false;
+        return $user->hasPermissionTo('visualizar_movimentacao');
     }
 
     /**
@@ -29,7 +29,7 @@ class MovimentacaoPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('criar_movimentacao');
     }
 
     /**
@@ -37,7 +37,7 @@ class MovimentacaoPolicy
      */
     public function update(User $user, Movimentacao $movimentacao): bool
     {
-        return false;
+        return $user->hasPermissionTo('criar_movimentacao') && $movimentacao->status === 'pendente';
     }
 
     /**
@@ -45,7 +45,7 @@ class MovimentacaoPolicy
      */
     public function delete(User $user, Movimentacao $movimentacao): bool
     {
-        return false;
+        return $user->hasRole('admin');
     }
 
     /**

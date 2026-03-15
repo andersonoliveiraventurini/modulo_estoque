@@ -17,7 +17,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // 1. Criar Papéis e Permissões Primeiro
+        $this->call(RolesAndPermissionsSeeder::class);
 
         /*User::create([
             'name' => 'Anderson',
@@ -27,57 +28,58 @@ class DatabaseSeeder extends Seeder
         ]);*/
 
          $users = [
-        // Usuários existentes (mantidos)
-        ['name' => 'Anderson', 'email' => 'anderson@gmail.com'],
-        ['name' => 'Cezar', 'email' => 'cezar@acav.com'],
-        ['name' => 'Thiago', 'email' => 'thiago@acav.com'],
+            // Administradores
+            ['name' => 'Anderson', 'email' => 'anderson@gmail.com', 'role' => 'admin'],
+            ['name' => 'Cezar', 'email' => 'cezar@acav.com', 'role' => 'admin'],
+            ['name' => 'Thiago', 'email' => 'thiago@acav.com', 'role' => 'admin'],
 
-        // Financeiro
-        ['name' => 'Alline', 'email' => 'alline@acav.com'],
-        ['name' => 'Jaqueline', 'email' => 'jaqueline@acav.com'],
-        ['name' => 'Ana Claudia', 'email' => 'ana.claudia@acav.com'],
-        ['name' => 'Juliane', 'email' => 'juliane@acav.com'],
-        ['name' => 'Emily', 'email' => 'emily@acav.com'],
+            // Financeiro (Supervisor)
+            ['name' => 'Alline', 'email' => 'alline@acav.com', 'role' => 'supervisor'],
+            ['name' => 'Jaqueline', 'email' => 'jaqueline@acav.com', 'role' => 'supervisor'],
+            ['name' => 'Ana Claudia', 'email' => 'ana.claudia@acav.com', 'role' => 'supervisor'],
+            ['name' => 'Juliane', 'email' => 'juliane@acav.com', 'role' => 'supervisor'],
+            ['name' => 'Emily', 'email' => 'emily@acav.com', 'role' => 'supervisor'],
 
-        // Compras
-        ['name' => 'Fabio', 'email' => 'fabio@acav.com'],
+            // Compras
+            ['name' => 'Fabio', 'email' => 'fabio@acav.com', 'role' => 'compras'],
 
-        // Estoque
-        ['name' => 'Sandro', 'email' => 'sandro@acav.com'],
-        ['name' => 'Adenilson', 'email' => 'adenilson@acav.com'],
+            // Estoque / Conferência / Expedição
+            ['name' => 'Sandro', 'email' => 'sandro@acav.com', 'role' => 'estoquista'],
+            ['name' => 'Adenilson', 'email' => 'adenilson@acav.com', 'role' => 'estoquista'],
+            ['name' => 'Lucas', 'email' => 'lucas@acav.com', 'role' => 'estoquista'],
+            ['name' => 'Matheus', 'email' => 'matheus@acav.com', 'role' => 'estoquista'],
+            ['name' => 'Victor', 'email' => 'victor@acav.com', 'role' => 'estoquista'],
+            ['name' => 'Pedro', 'email' => 'pedro@acav.com', 'role' => 'estoquista'],
+            ['name' => 'Carlos Eduardo', 'email' => 'carlos.eduardo@acav.com', 'role' => 'estoquista'],
+            ['name' => 'Aylam', 'email' => 'aylam@acav.com', 'role' => 'estoquista'],
 
-        // Conferência / Expedição / Separação
-        ['name' => 'Lucas', 'email' => 'lucas@acav.com'],
-        ['name' => 'Matheus', 'email' => 'matheus@acav.com'],
-        ['name' => 'Victor', 'email' => 'victor@acav.com'],
-        ['name' => 'Pedro', 'email' => 'pedro@acav.com'],
-        ['name' => 'Carlos Eduardo', 'email' => 'carlos.eduardo@acav.com'],
+            // Vendas
+            ['name' => 'Pamela', 'email' => 'pamela@acav.com', 'role' => 'vendedor'],
+            ['name' => 'Gustavo', 'email' => 'gustavo@acav.com', 'role' => 'vendedor'],
+            ['name' => 'Aline Maia', 'email' => 'aline.maia@acav.com', 'role' => 'vendedor'],
+            ['name' => 'Leticia Loretti', 'email' => 'leticia.loretti@acav.com', 'role' => 'vendedor'],
+            ['name' => 'Miria', 'email' => 'miria@acav.com', 'role' => 'vendedor'],
+            ['name' => 'Eduardo', 'email' => 'eduardo@acav.com', 'role' => 'vendedor'],
+            ['name' => 'Silvane', 'email' => 'silvane@acav.com', 'role' => 'vendedor'],
+            ['name' => 'Leticia Dusso', 'email' => 'leticia.dusso@acav.com', 'role' => 'vendedor'],
+            ['name' => 'Alessandro', 'email' => 'alessandro@acav.com', 'role' => 'vendedor'],
+        ];
 
-        // Vendas / Logística
-        ['name' => 'Aylam', 'email' => 'aylam@acav.com'],
-
-        // Vendas
-        ['name' => 'Pamela', 'email' => 'pamela@acav.com'],
-        ['name' => 'Gustavo', 'email' => 'gustavo@acav.com'],
-        ['name' => 'Aline Maia', 'email' => 'aline.maia@acav.com'],
-        ['name' => 'Leticia Loretti', 'email' => 'leticia.loretti@acav.com'],
-        ['name' => 'Miria', 'email' => 'miria@acav.com'],
-        ['name' => 'Eduardo', 'email' => 'eduardo@acav.com'],
-        ['name' => 'Silvane', 'email' => 'silvane@acav.com'],
-        ['name' => 'Leticia Dusso', 'email' => 'leticia.dusso@acav.com'],
-        ['name' => 'Alessandro', 'email' => 'alessandro@acav.com'],
-    ];
-
-    foreach ($users as $user) {
-        User::firstOrCreate(
-            ['email' => $user['email']],
-            [
-                'name' => $user['name'],
-                'password' => Hash::make('12345'),
-                'email_verified_at' => Carbon::now(),
-            ]
-        );
-    }
+        foreach ($users as $userData) {
+            $user = User::firstOrCreate(
+                ['email' => $userData['email']],
+                [
+                    'name' => $userData['name'],
+                    'password' => Hash::make('12345'),
+                    'email_verified_at' => Carbon::now(),
+                ]
+            );
+            
+            // Atribui o cargo se o usuário não tiver nenhum
+            if ($user->roles->isEmpty()) {
+                $user->assignRole($userData['role']);
+            }
+        }
         //$this->call(FornecedorSeeder::class);
 
         $this->call(NcmSeeder::class);

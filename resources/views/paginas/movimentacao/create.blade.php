@@ -135,24 +135,8 @@
                     <input id="modal-preco-input" type="number" step="0.01" value="0.00" readonly
                         class="mt-1 block w-full border border-gray-300 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 text-gray-500 rounded-md px-3 py-2 cursor-not-allowed" />
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Armazém</label>
-                    <select id="modal-armazem-select" class="mt-1 block w-full border border-gray-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white rounded-md px-3 py-2">
-                        <option value="">Selecione</option>
-                        @foreach($armazens as $az)
-                            <option value="{{ $az->nome }}">{{ $az->nome }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Corredor</label>
-                        <input id="modal-corredor-input" type="text" placeholder="Ex: A" class="mt-1 block w-full border border-gray-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white rounded-md px-3 py-2" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Posição</label>
-                        <input id="modal-posicao-input" type="text" placeholder="Ex: 01" class="mt-1 block w-full border border-gray-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white rounded-md px-3 py-2" />
-                    </div>
+                <div class="md:col-span-2">
+                    <livewire:seletor-enderecamento />
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Observação do Item</label>
@@ -171,6 +155,15 @@
     <script>
         let produtosSelecionados = @json(old('produtos', []));
         let produtoSendoAdicionado = null;
+        let enderecamentoAtual = { armazem_id: null, corredor_id: null, posicao_id: null };
+
+        document.addEventListener('livewire:initialized', () => {
+            Livewire.on('enderecamento-atualizado', (data) => {
+                // data é um array se for Livewire 3
+                const values = Array.isArray(data) ? data[0] : data;
+                enderecamentoAtual = values;
+            });
+        });
 
         document.addEventListener('DOMContentLoaded', () => {
             if (produtosSelecionados.length > 0) {
@@ -230,9 +223,9 @@
                 fornecedor: produtoSendoAdicionado.fornecedor,
                 quantidade: qtd,
                 valor_unitario: parseFloat(document.getElementById('modal-preco-input').value) || 0,
-                armazem: document.getElementById('modal-armazem-select').value || 'HUB',
-                corredor: document.getElementById('modal-corredor-input').value,
-                posicao: document.getElementById('modal-posicao-input').value,
+                armazem_id: enderecamentoAtual.armazem_id,
+                corredor_id: enderecamentoAtual.corredor_id,
+                posicao_id: enderecamentoAtual.posicao_id,
                 observacao: document.getElementById('modal-obs-input').value,
                 maxQtd: produtoSendoAdicionado.maxQtd,
                 locked: produtoSendoAdicionado.locked || false // Se vem de Pedido, bloqueia seleção de produto
@@ -287,9 +280,9 @@
                             <div class="flex flex-col gap-1">
                                 <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400">${p.armazem || 'HUB'}</span>
                                 <span class="text-xs text-gray-400">${p.corredor || '-'}/${p.posicao || '-'}</span>
-                                <input type="hidden" name="produtos[${i}][armazem]" value="${p.armazem || 'HUB'}">
-                                <input type="hidden" name="produtos[${i}][corredor]" value="${p.corredor || ''}">
-                                <input type="hidden" name="produtos[${i}][posicao]" value="${p.posicao || ''}">
+                                <input type="hidden" name="produtos[${i}][armazem_id]" value="${p.armazem_id || ''}">
+                                <input type="hidden" name="produtos[${i}][corredor_id]" value="${p.corredor_id || ''}">
+                                <input type="hidden" name="produtos[${i}][posicao_id]" value="${p.posicao_id || ''}">
                             </div>
                         </td>
                         <td class="px-4 py-2">

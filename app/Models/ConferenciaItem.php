@@ -14,6 +14,7 @@ class ConferenciaItem extends Model
     protected $fillable = [
         'conferencia_id',
         'picking_item_id',
+        'pedido_compra_item_id',
         'produto_id',
         'consulta_preco_id',  // ✅
         'is_encomenda',       // ✅
@@ -47,7 +48,12 @@ class ConferenciaItem extends Model
 
     public function pickingItem(): BelongsTo
     {
-        return $this->belongsTo(PickingItem::class);
+        return $this->belongsTo(PickingItem::class, 'picking_item_id');
+    }
+
+    public function pedidoCompraItem(): BelongsTo
+    {
+        return $this->belongsTo(PedidoCompraItem::class, 'pedido_compra_item_id');
     }
 
     public function produto(): BelongsTo

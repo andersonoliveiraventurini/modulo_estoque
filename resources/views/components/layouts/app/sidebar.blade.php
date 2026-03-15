@@ -13,8 +13,8 @@
         <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
             <x-app-logo />
         </a>
-        <flux:navlist.item icon="home" :href="route('clientes.index')" :current="request()->routeIs('clientes.index')"
-            wire:navigate>{{ __('Criar orçamento') }}
+        <flux:navlist.item icon="pencil-square" :href="route('clientes.index')" :current="request()->routeIs('clientes.index')"
+            wire:navigate>{{ __('Novo Orçamento') }}
         </flux:navlist.item>
         <flux:navlist.item icon="calculator" :href="route('orcamentos.index')"
             :current="request()->routeIs('orcamentos.index')" wire:navigate>{{ __('Orçamentos') }}
@@ -26,72 +26,82 @@
             :current="request()->routeIs('orcamentos.status_orcamentos')" wire:navigate>{{ __('Status Pedido') }}
         </flux:navlist.item>
         <flux:navlist.group heading="Balcão" expandable :expanded="false">
-            <flux:navlist.item icon="home" :href="route('orcamentos.balcao')"
+            <flux:navlist.item icon="banknotes" :href="route('orcamentos.balcao')"
                 :current="request()->routeIs('orcamentos.balcao')" wire:navigate>{{ __('Caixa') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('orcamentos.balcao_concluidos')"
+            <flux:navlist.item icon="check-badge" :href="route('orcamentos.balcao_concluidos')"
                 :current="request()->routeIs('orcamentos.balcao_concluidos')" wire:navigate>
                 {{ __('Pedidos Finalizados') }}</flux:navlist.item>
         </flux:navlist.group>
         <flux:navlist.group heading="Clientes" expandable :expanded="false">
-            <flux:navlist.item icon="home" :href="route('clientes.create')"
+            <flux:navlist.item icon="user-plus" :href="route('clientes.create')"
                 :current="request()->routeIs('clientes.create')" wire:navigate>{{ __('Pré-cadastro') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('clientes.create_completo')"
+            <flux:navlist.item icon="user-group" :href="route('clientes.create_completo')"
                 :current="request()->routeIs('clientes.create-completo')" wire:navigate>
-                {{ __('Cadastrar cliente') }}</flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('clientes.index')"
-                :current="request()->routeIs('clientes.index')" wire:navigate>{{ __('Clientes') }}
+                {{ __('Cadastrar Cliente') }}</flux:navlist.item>
+            <flux:navlist.item icon="users" :href="route('clientes.index')"
+                :current="request()->routeIs('clientes.index')" wire:navigate>{{ __('Lista de Clientes') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('orcamentos.index')"
+            <flux:navlist.item icon="document-text" :href="route('orcamentos.index')"
                 :current="request()->routeIs('orcamentos.index')" wire:navigate>{{ __('Orçamentos') }}
             </flux:navlist.item>
             <flux:navlist.item icon="document-duplicate" :href="route('orcamentos.copiar')"
-                :current="request()->routeIs('orcamentos.copiar')" wire:navigate>{{ __('Copiar orçamento') }}
+                :current="request()->routeIs('orcamentos.copiar')" wire:navigate>{{ __('Copiar Orçamento') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('bloqueios.index')"
-                :current="request()->routeIs('bloqueios.index')" wire:navigate>{{ __('Bloqueados') }}
+            <flux:navlist.item icon="no-symbol" :href="route('bloqueios.index')"
+                :current="request()->routeIs('bloqueios.index')" wire:navigate>{{ __('Clientes Bloqueados') }}
             </flux:navlist.item>
         </flux:navlist.group>
 
         <flux:navlist.group heading="Logística" expandable :expanded="false">
-            <flux:navlist.item icon="home" :href="route('separacao.index')"
+            <flux:navlist.item icon="list-bullet" :href="route('separacao.index')"
                 :current="request()->routeIs('separacao.index')" wire:navigate>{{ __('Separação') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('conferencia.index')"
+            <flux:navlist.item icon="check-circle" :href="route('conferencia.index')"
                 :current="request()->routeIs('conferencia.index')" wire:navigate>{{ __('Conferência') }}
             </flux:navlist.item>
         </flux:navlist.group>
 
         <flux:navlist.group heading="Compras" expandable :expanded="false">
-            <flux:navlist.item icon="home" :href="route('fornecedores.index')"
-                :current="request()->routeIs('fornecedores.index')" wire:navigate>{{ __('Listar fornecedores') }}
+            <flux:navlist.item icon="building-office-2" :href="route('fornecedores.index')"
+                :current="request()->routeIs('fornecedores.index')" wire:navigate>{{ __('Fornecedores') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="truck" :href="route('fornecedores.create')"
+            <flux:navlist.item icon="user-plus" :href="route('fornecedores.create')"
                 :current="request()->routeIs('fornecedores.create')" wire:navigate>
-                {{ __('Cadastrar fornecedor') }}</flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('consulta_preco.index')"
-                :current="request()->routeIs('consulta_preco.index')" wire:navigate>{{ __('Encomendas') }}
+                {{ __('Cadastrar Fornecedor') }}</flux:navlist.item>
+            <flux:navlist.item icon="magnifying-glass" :href="route('consulta_preco.index')"
+                :current="request()->routeIs('consulta_preco.index')" wire:navigate>{{ __('Cotações de Preço') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="shopping-bag" :href="route('entrada_encomendas.index')" :current="request()->routeIs('entrada_encomendas.index')" wire:navigate>
-                {{ __('Receber encomendas') }}</flux:navlist.item>
+            <flux:navlist.item icon="arrow-down-tray" :href="route('entrada_encomendas.index')" :current="request()->routeIs('entrada_encomendas.index')" wire:navigate>
+                {{ __('Receber Encomendas') }}</flux:navlist.item>
             <flux:navlist.item icon="clipboard-document-list" :href="route('pedido_compras.index')" :current="request()->routeIs('pedido_compras.*')" wire:navigate>
-                {{ __('Pedidos de Compras') }}
+                {{ __('Pedidos de Compra') }}
             </flux:navlist.item>
+            <flux:navlist.item icon="pencil-square" :href="route('requisicao_compras.index')" :current="request()->routeIs('requisicao_compras.*')" wire:navigate>
+                {{ __('Requisições de Compra') }}
+            </flux:navlist.item>
+
+            <flux:navlist.group heading="Relatórios de Compra" expandable :expanded="false">
+                <flux:navlist.item icon="document-chart-bar" :href="route('relatorios.historico_compras')" wire:navigate>Histórico de Compras</flux:navlist.item>
+                <flux:navlist.item icon="user-group" :href="route('relatorios.fornecedores_frequentes')" wire:navigate>Fornecedores Comuns</flux:navlist.item>
+                <flux:navlist.item icon="arrows-right-left" :href="route('relatorios.comparativo_precos')" wire:navigate>Comparativo de Preços</flux:navlist.item>
+                <flux:navlist.item icon="exclamation-triangle" :href="route('relatorios.estoque_critico')" wire:navigate>Estoque Crítico</flux:navlist.item>
+            </flux:navlist.group>
         </flux:navlist.group>
 
         <flux:navlist.group heading="Estoque" expandable :expanded="false">
-            <flux:navlist.item icon="home" :href="route('movimentacao.index')"
-                :current="request()->routeIs('movimentacao.index')" wire:navigate>{{ __('Movimentações') }}
+            <flux:navlist.item icon="arrows-right-left" :href="route('movimentacao.index')"
+                :current="request()->routeIs('movimentacao.index')" wire:navigate>{{ __('Histórico de Movimentações') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="archive-box-arrow-down" :href="route('movimentacao.create')" :current="request()->routeIs('movimentacao.create')" wire:navigate>
-                {{ __('Receber produto') }}</flux:navlist.item>
+            <flux:navlist.item icon="plus-circle" :href="route('movimentacao.create')" :current="request()->routeIs('movimentacao.create')" wire:navigate>
+                {{ __('Nova Movimentação (Entrada/Saída)') }}</flux:navlist.item>
 
             <flux:navlist.group heading="Endereços Físicos" expandable :expanded="false">
                 <flux:navlist.item icon="building-office" :href="route('armazens.index')" :current="request()->routeIs('armazens.*')" wire:navigate>
                     {{ __('Armazéns') }}
                 </flux:navlist.item>
-                <flux:navlist.item icon="arrows-right-left" :href="route('corredores.index')" :current="request()->routeIs('corredores.*')" wire:navigate>
+                <flux:navlist.item icon="map" :href="route('corredores.index')" :current="request()->routeIs('corredores.*')" wire:navigate>
                     {{ __('Corredores') }}
                 </flux:navlist.item>
                 <flux:navlist.item icon="map-pin" :href="route('posicoes.index')" :current="request()->routeIs('posicoes.*')" wire:navigate>
@@ -99,107 +109,79 @@
                 </flux:navlist.item>
             </flux:navlist.group>
             <flux:navlist.item icon="exclamation-triangle" :href="route('inconsistencias.index')" :current="request()->routeIs('inconsistencias.*')" wire:navigate>
-                {{ __('Inconsistências') }}
+                {{ __('Inconsistências no Recebimento') }}
             </flux:navlist.item>
         </flux:navlist.group>
 
         <flux:navlist.group heading="Produtos" expandable :expanded="false">
-            <flux:navlist.item icon="home" :href="route('produtos.index')"
-                :current="request()->routeIs('produtos.index')" wire:navigate>{{ __('Listar produtos') }}
+            <flux:navlist.item icon="cube" :href="route('produtos.index')"
+                :current="request()->routeIs('produtos.index')" wire:navigate>{{ __('Lista de Produtos') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('produtos.create')"
-                :current="request()->routeIs('produtos.create')" wire:navigate>{{ __('Criar produto') }}
+            <flux:navlist.item icon="plus" :href="route('produtos.create')"
+                :current="request()->routeIs('produtos.create')" wire:navigate>{{ __('Novo Produto') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('consulta_preco.index')"
-                :current="request()->routeIs('consulta_preco.index')" wire:navigate>{{ __('Encomendas') }}
+        </flux:navlist.group>
+
+        <flux:navlist.group heading="Indústria" expandable :expanded="false">
+            <flux:navlist.item icon="wrench-screwdriver" :href="route('blocok.index')"
+                :current="request()->routeIs('blocok.*')" wire:navigate>{{ __('Ordens de Produção (Bloco K)') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="home" wire:navigate>{{ __('Relatórios - Cezar') }}
+            <flux:navlist.item icon="trash" :href="route('blocok.descartes.index')"
+                :current="request()->routeIs('blocok.descartes.*')" wire:navigate>{{ __('Descartes de Produção') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="view-columns" :href="route('blocok.insumos.index')"
+                :current="request()->routeIs('blocok.insumos.*')" wire:navigate>{{ __('Insumos de Produção') }}
             </flux:navlist.item>
         </flux:navlist.group>
 
         <flux:navlist.group heading="Financeiro" expandable :expanded="false">
-            <flux:navlist.item icon="home" :href="route('clientes.index')"
-                :current="request()->routeIs('clientes.index')" wire:navigate>{{ __('Clientes') }}
+            <flux:navlist.item icon="users" :href="route('clientes.index')"
+                :current="request()->routeIs('clientes.index')" wire:navigate>{{ __('Clientes e Créditos') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('orcamentos.concluidos')"
-                :current="request()->routeIs('orcamentos.concluidos')" wire:navigate>{{ __('Movimentações') }}
+            <flux:navlist.item icon="currency-dollar" :href="route('orcamentos.concluidos')"
+                :current="request()->routeIs('orcamentos.concluidos')" wire:navigate>{{ __('Movimentações Financeiras') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="home" wire:navigate>{{ __('Creditos/débitos - Cezar') }}
-            </flux:navlist.item>
-            <flux:navlist.item icon="home" wire:navigate>{{ __('A receber - Cezar') }}
-            </flux:navlist.item>
-            <flux:navlist.item icon="home" wire:navigate>{{ __('Funcionários - Cezar') }}
-            </flux:navlist.item>
-            <flux:navlist.item icon="home" wire:navigate>{{ __('Guia de recolhimento - Cezar') }}
-            </flux:navlist.item>
-            <flux:navlist.item icon="home" wire:navigate>{{ __('Relatórios - Cezar') }}
+            <flux:navlist.item icon="presentation-chart-line" wire:navigate>{{ __('Relatórios Financeiros') }}
             </flux:navlist.item>
         </flux:navlist.group>
-        <flux:navlist.group heading="Decontos" expandable :expanded="false">
-            <flux:navlist.item icon="home" :href="route('descontos.aprovados')"
+        <flux:navlist.group heading="Descontos" expandable :expanded="false">
+            <flux:navlist.item icon="check-circle" :href="route('descontos.aprovados')"
                 :current="request()->routeIs('descontos.aprovados')" wire:navigate>{{ __('Descontos Aprovados') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('descontos.index')"
-                :current="request()->routeIs('descontos.index')" wire:navigate>{{ __('Descontos Solicitados') }}
-            </flux:navlist.item>
-            <flux:navlist.item icon="home" :href="route('descontos.index')"
-                :current="request()->routeIs('descontos.index')" wire:navigate>
-                {{ __('Cezar - Descontos por cliente') }}
+            <flux:navlist.item icon="clock" :href="route('descontos.index')"
+                :current="request()->routeIs('descontos.index')" wire:navigate>{{ __('Solicitações Pendentes') }}
             </flux:navlist.item>
         </flux:navlist.group>
         <flux:navlist.group heading="Administração" expandable :expanded="false">
 
-            <flux:navlist.group heading="Usuários e perfis" expandable :expanded="false">
-                <flux:navlist.item icon="home" :href="route('usuarios.index')"
-                    :current="request()->routeIs('usuarios.index')" wire:navigate>{{ __('Usuários') }}
+            <flux:navlist.group heading="Configurações" expandable :expanded="false">
+                <flux:navlist.item icon="user-circle" :href="route('usuarios.index')"
+                    :current="request()->routeIs('usuarios.index')" wire:navigate>{{ __('Gerenciar Usuários') }}
                 </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('usuarios.create')"
-                    :current="request()->routeIs('usuarios.create')" wire:navigate>{{ __('Criar usuário') }}
+                <flux:navlist.item icon="plus" :href="route('usuarios.create')"
+                    :current="request()->routeIs('usuarios.create')" wire:navigate>{{ __('Criar Usuário') }}
                 </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('vendedores.index')"
+                <flux:navlist.item icon="identification" :href="route('vendedores.index')"
                     :current="request()->routeIs('vendedores.index')" wire:navigate>{{ __('Vendedores') }}
                 </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('vendedores.create')"
-                    :current="request()->routeIs('vendedores.create')" wire:navigate>{{ __('Criar vendedor') }}
+                <flux:navlist.item icon="lock-closed" :href="route('filament.admin.pages.dashboard')" wire:navigate>
+                    {{ __('Permissões e Níveis') }}
                 </flux:navlist.item>
             </flux:navlist.group>
-            <flux:navlist.item icon="lock-closed" :href="route('filament.admin.pages.dashboard')" wire:navigate>
-                {{ __('Permissões') }}
-            </flux:navlist.item>
-            <flux:navlist.group heading="Cores" expandable :expanded="false">
-                <flux:navlist.item icon="home" :href="route('cores.index')"
-                    :current="request()->routeIs('cores.index')" wire:navigate>{{ __('Cores produtos') }}
+            <flux:navlist.group heading="Cadastros Auxiliares" expandable :expanded="false">
+                <flux:navlist.item icon="swatch" :href="route('cores.index')"
+                    :current="request()->routeIs('cores.index')" wire:navigate>{{ __('Cores e Acabamentos') }}
                 </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('cores.create')"
-                    :current="request()->routeIs('cores.create')" wire:navigate>{{ __('Criar cor') }}
+                <flux:navlist.item icon="tag" :href="route('categorias.index')"
+                    :current="request()->routeIs('categorias.index')" wire:navigate>{{ __('Categorias') }}
                 </flux:navlist.item>
-            </flux:navlist.group>
-
-            <flux:navlist.group heading="Categorias" expandable :expanded="false">
-                <flux:navlist.item icon="home" :href="route('categorias.index')"
-                    :current="request()->routeIs('categorias.index')" wire:navigate>{{ __('Listar categorias') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('categorias.create')"
-                    :current="request()->routeIs('categorias.create')" wire:navigate>{{ __('Criar categoria') }}
-                </flux:navlist.item>
-            </flux:navlist.group>
-            <flux:navlist.group heading="Subcategorias" expandable :expanded="false">
-                <flux:navlist.item icon="home" :href="route('subcategorias.index')"
+                <flux:navlist.item icon="list-bullet" :href="route('subcategorias.index')"
                     :current="request()->routeIs('subcategorias.index')" wire:navigate>
-                    {{ __('Listar subcategorias') }}
+                    {{ __('Subcategorias') }}
                 </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('subcategorias.create')"
-                    :current="request()->routeIs('subcategorias.create')" wire:navigate>{{ __('Criar subcategoria') }}
-                </flux:navlist.item>
-            </flux:navlist.group>
-
-            <flux:navlist.group heading="NCM" expandable :expanded="false">
-                <flux:navlist.item icon="home" :href="route('ncm.index')"
+                <flux:navlist.item icon="key" :href="route('ncm.index')"
                     :current="request()->routeIs('ncm.index')" wire:navigate>
-                    {{ __('Listar NCMs') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="home" :href="route('ncm.create')"
-                    :current="request()->routeIs('ncm.create')" wire:navigate>{{ __('Criar NCM') }}
+                    {{ __('NCMs (Fiscal)') }}
                 </flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist.group>

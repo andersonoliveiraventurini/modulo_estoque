@@ -8,13 +8,43 @@
                          <x-heroicon-o-eye class="w-5 h-5" /> 
                         Detalhes da Movimentação #{{ $movimentacao->id }}
                     </h2>
-                    <div class="flex gap-3">
-                        <a href="{{ route('movimentacao.edit', $movimentacao->id) }}" class="text-sm px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-md font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition">
-                            Editar Movimentação
-                        </a>
-                        <a href="{{ route('movimentacao.index') }}" class="text-sm px-4 py-2 bg-indigo-600 text-white rounded-md font-semibold hover:bg-indigo-700 transition">
-                            Voltar para Listagem
-                        </a>
+                    <div class="flex items-center gap-4">
+                        @php
+                            $statusClasses = [
+                                'pendente' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-500',
+                                'aprovado' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-500',
+                                'rejeitado' => 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-500',
+                            ];
+                        @endphp
+                        <span class="px-3 py-1 inline-flex text-sm leading-5 font-bold rounded-lg {{ $statusClasses[$movimentacao->status] ?? 'bg-gray-100 text-gray-800' }}">
+                            {{ strtoupper($movimentacao->status) }}
+                        </span>
+
+                        <div class="flex gap-2">
+                            @if($movimentacao->status === 'pendente')
+                                @can('aprovar movimentacao')
+                                    <form action="{{ route('movimentacao.aprovar', $movimentacao->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" class="text-sm px-4 py-2 bg-emerald-600 text-white rounded-md font-semibold hover:bg-emerald-700 transition flex items-center gap-2">
+                                            <x-heroicon-o-check-circle class="w-4 h-4" /> Aprovar
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('movimentacao.rejeitar', $movimentacao->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" class="text-sm px-4 py-2 bg-rose-600 text-white rounded-md font-semibold hover:bg-rose-700 transition flex items-center gap-2">
+                                            <x-heroicon-o-x-circle class="w-4 h-4" /> Rejeitar
+                                        </button>
+                                    </form>
+                                @endcan
+                            @endif
+
+                            <a href="{{ route('movimentacao.edit', $movimentacao->id) }}" class="text-sm px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-md font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition">
+                                Editar
+                            </a>
+                            <a href="{{ route('movimentacao.index') }}" class="text-sm px-4 py-2 bg-indigo-600 text-white rounded-md font-semibold hover:bg-indigo-700 transition">
+                                <x-heroicon-o-arrow-left class="w-4 h-4 inline" /> Voltar
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -94,7 +124,7 @@
                                 </dd>
                             </div>
 
-                            @if($movimentacao->usuario_editou_id)
+                             @if($movimentacao->usuario_editou_id)
                             <div>
                                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Última Edição Por</dt>
                                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 truncate">
@@ -106,6 +136,18 @@
                                     <x-heroicon-o-information-circle class="w-4 h-4 inline" /> {{ $movimentacao->resumo_edicao }}
                                 </dd>
                                 @endif
+                            </div>
+                            @endif
+
+                            @if($movimentacao->supervisor_id)
+                            <div class="pt-2 border-t border-gray-100 dark:border-neutral-700">
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Processado Por (Supervisor)</dt>
+                                <dd class="mt-1 text-sm font-bold {{ $movimentacao->status === 'aprovado' ? 'text-emerald-600' : 'text-rose-600' }}">
+                                    <x-heroicon-s-check-badge class="w-4 h-4 inline" /> {{ optional($movimentacao->supervisor)->name }}
+                                    @if($movimentacao->aprovado_em)
+                                        <span class="text-xs text-neutral-400 ml-2">em {{ $movimentacao->aprovado_em->format('d/m/Y H:i:s') }}</span>
+                                    @endif
+                                </dd>
                             </div>
                             @endif
 

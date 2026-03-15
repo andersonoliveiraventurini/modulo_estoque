@@ -6,6 +6,8 @@ use App\Models\Orcamento;
 use App\Models\PickingBatch;
 use App\Models\Conferencia;
 use App\Models\ConferenciaItem;
+use App\Models\PedidoCompra;
+use App\Models\Movimentacao;
 use App\Services\EstoqueService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -46,6 +48,20 @@ class ConferenciaController extends Controller
         ]);
     }
 
+    public function showCompra(int $pedidoId)
+    {
+        $pedido = PedidoCompra::findOrFail($pedidoId);
+        $conf = Conferencia::with(['itens.produto'])
+            ->where('pedido_compra_id', $pedidoId)
+            ->whereIn('status', ['aberta', 'em_conferencia'])
+            ->first();
+
+        return view('paginas.conferencia.create_compra', [
+            'pedido' => $pedido,
+            'conferencia' => $conf,
+        ]);
+    }
+
     public function iniciar(int $orcamentoId)
     {
         $orcamento = Orcamento::findOrFail($orcamentoId);
@@ -82,6 +98,36 @@ class ConferenciaController extends Controller
         return back()->with('success', 'Conferência iniciada.');
     }
 
+    public function iniciarCompra(int $pedidoId)
+    {
+        $pedido = PedidoCompra::with('itens')->findOrFail($pedidoId);
+        
+        DB::transaction(function () use ($pedido) {
+            $conf = Conferencia::create([
+                'pedido_compra_id' => $pedido->id,
+                'status' => 'em_conferencia',
+                'conferente_id' => auth()->id(),
+                'started_at' => now(),
+            ]);
+
+            foreach ($pedido->itens as $item) {
+                ConferenciaItem::create([
+                    'conferencia_id' => $conf->id,
+                    'pedido_compra_item_id' => $item->id,
+                    'produto_id' => $item->produto_id,
+                    'qty_separada' => $item->quantidade, // Qtd esperada do pedido
+                    'qty_conferida' => 0,
+                    'status' => 'ok',
+                    'divergencia' => 0,
+                ]);
+            }
+
+            $pedido->update(['status' => 'em_conferencia']);
+        });
+
+        return back()->with('success', 'Conferência de recebimento iniciada.');
+    }
+
     public function conferirItem(Conferencia $conf, ConferenciaItem $item, Request $request)
     {
         $data = $request->validate([
@@ -114,18 +160,49 @@ class ConferenciaController extends Controller
                 'finished_at' => now(),
             ]);
 
-            if ($divergente) {
-                // mantém workflow em conferido, mas sem baixa total
-                $conf->orcamento->update(['workflow_status' => 'conferido']);
-                // aqui você pode abrir uma pendência/tarefa interna
+            if ($conf->pedido_compra_id) {
+                // FLUXO DE COMPRA (Entrada)
+                $this->gerarMovimentacaoEntrada($conf);
+                $conf->pedidoCompra->update(['status' => ($divergente ? 'parcialmente_recebido' : 'recebido')]);
             } else {
-                // tudo ok, baixa estoque e finaliza
-                $estoque->baixarSaida($conf);
-                $conf->orcamento->update(['workflow_status' => 'finalizado']);
-                $conf->orcamento->save();
+                // FLUXO DE ORÇAMENTO (Saída)
+                if ($divergente) {
+                    $conf->orcamento->update(['workflow_status' => 'conferido']);
+                } else {
+                    $estoque->baixarSaida($conf);
+                    $conf->orcamento->update(['workflow_status' => 'finalizado']);
+                }
             }
         });
 
-        return back()->with('success', 'Conferência concluída.');
+        return back()->with('success', 'Conferência concluída e processada.');
+    }
+
+    private function gerarMovimentacaoEntrada(Conferencia $conf)
+    {
+        $movimentacao = Movimentacao::create([
+            'tipo' => 'entrada',
+            'status' => 'pendente', // Segue o fluxo de aprovação
+            'data_movimentacao' => now()->toDateString(),
+            'pedido_compra_id' => $conf->pedido_compra_id,
+            'observacao' => "Entrada gerada via Conferência #{$conf->id}",
+            'usuario_id' => auth()->id(),
+        ]);
+
+        foreach ($conf->itens as $item) {
+            if ($item->qty_conferida <= 0) continue;
+
+            $movimentacao->itens()->create([
+                'produto_id' => $item->produto_id,
+                'quantidade' => $item->qty_conferida,
+                'valor_unitario' => $item->pedidoCompraItem->valor_unitario ?? 0,
+                'valor_total' => $item->qty_conferida * ($item->pedidoCompraItem->valor_unitario ?? 0),
+                'observacao' => $item->motivo_divergencia,
+            ]);
+        }
+
+        \Illuminate\Support\Facades\Log::info("Movimentação de entrada gerada a partir da conferência #{$conf->id}", [
+            'movimentacao_id' => $movimentacao->id
+        ]);
     }
 }

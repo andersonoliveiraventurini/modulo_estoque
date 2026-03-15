@@ -11,6 +11,7 @@ use App\Models\Imagem;
 use App\Models\Produto;
 use App\Models\SubCategoria;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 
 class ProdutoController extends Controller
@@ -85,6 +86,13 @@ class ProdutoController extends Controller
     {
         $produto = Produto::create($request->except('_token'));
 
+        Log::info('Produto criado com sucesso', [
+            'user' => auth()->user()->name,
+            'produto_id' => $produto->id,
+            'sku' => $produto->sku,
+            'payload' => $request->except(['images'])
+        ]);
+
         // Processar múltiplas imagens
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $index => $image) {
@@ -126,7 +134,16 @@ class ProdutoController extends Controller
      */
     public function update(UpdateProdutoRequest $request, Produto $produto)
     {
+        $payloadOld = $produto->getOriginal();
         $produto->update($request->validated());
+
+        Log::info('Produto atualizado com sucesso', [
+            'user' => auth()->user()->name,
+            'produto_id' => $produto->id,
+            'sku' => $produto->sku,
+            'changes' => $produto->getChanges(),
+            'payload_old' => $payloadOld
+        ]);
 
         // Upload de novas imagens
         if ($request->hasFile('images')) {
@@ -167,6 +184,13 @@ class ProdutoController extends Controller
     public function destroy($produto_id)
     {
         $produto = Produto::findOrFail($produto_id);
+        
+        Log::warning('Produto deletado (SoftDelete)', [
+            'user' => auth()->user()->name,
+            'produto_id' => $produto->id,
+            'sku' => $produto->sku
+        ]);
+
         $produto->delete();
 
         return redirect()
@@ -179,6 +203,11 @@ class ProdutoController extends Controller
         $produto = Produto::findOrFail($produto_id);
         $produto->update(['status' => 'inativo']);
 
+        Log::info('Produto inativado', [
+            'user' => auth()->user()->name,
+            'produto_id' => $produto->id
+        ]);
+
         return redirect()
             ->route('produtos.index')
             ->with('success', 'Produto desativado com sucesso!');
@@ -188,6 +217,11 @@ class ProdutoController extends Controller
     {
         $produto = Produto::findOrFail($produto_id);
         $produto->update(['status' => 'ativo']);
+
+        Log::info('Produto ativado', [
+            'user' => auth()->user()->name,
+            'produto_id' => $produto->id
+        ]);
 
         return redirect()
             ->route('produtos.index')

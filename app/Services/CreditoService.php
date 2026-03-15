@@ -59,66 +59,85 @@ class CreditoService
      */
     public function utilizarCreditos($clienteId, $valorUtilizar, $referenciaId, $referenciaTipo, $usuarioId, $motivo)
     {
-        return DB::transaction(function () use ($clienteId, $valorUtilizar, $referenciaId, $referenciaTipo, $usuarioId, $motivo) {
-            $valorRestante = $valorUtilizar;
-            $creditosUtilizados = [];
+        \Illuminate\Support\Facades\Log::info("Iniciando utilização de créditos do cliente", [
+            'cliente_id' => $clienteId,
+            'valor' => $valorUtilizar,
+            'referencia' => "{$referenciaTipo} #{$referenciaId}"
+        ]);
 
-            // Busca créditos disponíveis (FIFO - primeiro que vence primeiro)
-            $creditos = $this->getCreditosAtivos($clienteId);
+        try {
+            return DB::transaction(function () use ($clienteId, $valorUtilizar, $referenciaId, $referenciaTipo, $usuarioId, $motivo) {
+                $valorRestante = $valorUtilizar;
+                $creditosUtilizados = [];
 
-            if ($creditos->isEmpty()) {
-                throw new \Exception('Cliente não possui créditos disponíveis');
-            }
+                // Busca créditos disponíveis (FIFO - primeiro que vence primeiro)
+                $creditos = $this->getCreditosAtivos($clienteId);
 
-            $saldoTotal = $creditos->sum('valor_disponivel');
-            if ($saldoTotal < $valorUtilizar) {
-                throw new \Exception('Créditos insuficientes. Disponível: R$ ' . number_format($saldoTotal, 2, ',', '.'));
-            }
+                if ($creditos->isEmpty()) {
+                    throw new \Exception('Cliente não possui créditos disponíveis');
+                }
 
-            foreach ($creditos as $credito) {
-                if ($valorRestante <= 0) break;
+                $saldoTotal = $creditos->sum('valor_disponivel');
+                if ($saldoTotal < $valorUtilizar) {
+                    throw new \Exception('Créditos insuficientes. Disponível: R$ ' . number_format($saldoTotal, 2, ',', '.'));
+                }
 
-                $valorUsar = min($credito->valor_disponivel, $valorRestante);
-                $saldoAnterior = $credito->valor_disponivel;
-                $saldoPosterior = $saldoAnterior - $valorUsar;
+                foreach ($creditos as $credito) {
+                    if ($valorRestante <= 0) break;
 
-                // Registra a movimentação
-                $movimentacao = ClienteCreditoMovimentacoes::create([
-                    'credito_id' => $credito->id,
+                    $valorUsar = min($credito->valor_disponivel, $valorRestante);
+                    $saldoAnterior = $credito->valor_disponivel;
+                    $saldoPosterior = $saldoAnterior - $valorUsar;
+
+                    // Registra a movimentação
+                    $movimentacao = ClienteCreditoMovimentacoes::create([
+                        'credito_id' => $credito->id,
+                        'cliente_id' => $clienteId,
+                        'tipo_movimentacao' => 'utilizacao',
+                        'valor_movimentado' => $valorUsar,
+                        'saldo_anterior' => $saldoAnterior,
+                        'saldo_posterior' => $saldoPosterior,
+                        'motivo' => $motivo,
+                        'referencia_tipo' => $referenciaTipo,
+                        'referencia_id' => $referenciaId,
+                        'usuario_id' => $usuarioId,
+                    ]);
+
+                    // Atualiza o crédito
+                    $credito->valor_disponivel = $saldoPosterior;
+                    if ($saldoPosterior == 0) {
+                        $credito->status = 'utilizado';
+                    }
+                    $credito->save();
+
+                    $creditosUtilizados[] = [
+                        'credito_id' => $credito->id,
+                        'valor_usado' => $valorUsar,
+                        'movimentacao_id' => $movimentacao->id,
+                    ];
+
+                    $valorRestante -= $valorUsar;
+                }
+
+                \Illuminate\Support\Facades\Log::info("Utilização de créditos concluída", [
                     'cliente_id' => $clienteId,
-                    'tipo_movimentacao' => 'utilizacao',
-                    'valor_movimentado' => $valorUsar,
-                    'saldo_anterior' => $saldoAnterior,
-                    'saldo_posterior' => $saldoPosterior,
-                    'motivo' => $motivo,
-                    'referencia_tipo' => $referenciaTipo,
-                    'referencia_id' => $referenciaId,
-                    'usuario_id' => $usuarioId,
+                    'valor_total_utilizado' => $valorUtilizar
                 ]);
 
-                // Atualiza o crédito
-                $credito->valor_disponivel = $saldoPosterior;
-                if ($saldoPosterior == 0) {
-                    $credito->status = 'utilizado';
-                }
-                $credito->save();
-
-                $creditosUtilizados[] = [
-                    'credito_id' => $credito->id,
-                    'valor_usado' => $valorUsar,
-                    'movimentacao_id' => $movimentacao->id,
+                return [
+                    'sucesso' => $valorRestante == 0,
+                    'valor_utilizado' => $valorUtilizar - $valorRestante,
+                    'valor_restante' => $valorRestante,
+                    'creditos_utilizados' => $creditosUtilizados,
                 ];
-
-                $valorRestante -= $valorUsar;
-            }
-
-            return [
-                'sucesso' => $valorRestante == 0,
-                'valor_utilizado' => $valorUtilizar - $valorRestante,
-                'valor_restante' => $valorRestante,
-                'creditos_utilizados' => $creditosUtilizados,
-            ];
-        });
+            });
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Erro na utilização de créditos", [
+                'cliente_id' => $clienteId,
+                'erro' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -130,7 +149,7 @@ class CreditoService
      * @param string $referenciaTipo
      * @param int $usuarioId
      * @param string $motivoOrigem
-     * @return ClienteCredito
+     * @return ClienteCreditos
      */
     public function gerarCreditoTroco($clienteId, $valorTroco, $referenciaId, $referenciaTipo, $usuarioId, $motivoOrigem)
     {
@@ -176,7 +195,7 @@ class CreditoService
      * @param string $referenciaTipo
      * @param int $usuarioId
      * @param string $motivo
-     * @return ClienteCredito
+     * @return ClienteCreditos
      */
     public function gerarCreditoDevolucao($clienteId, $valorDevolucao, $referenciaId, $referenciaTipo, $usuarioId, $motivo)
     {
@@ -218,7 +237,7 @@ class CreditoService
      * @param float $valorBonificacao
      * @param int $usuarioId
      * @param string $motivo
-     * @return ClienteCredito
+     * @return ClienteCreditos
      */
     public function gerarCreditoBonificacao($clienteId, $valorBonificacao, $usuarioId, $motivo)
     {
@@ -259,7 +278,7 @@ class CreditoService
      * @param int $creditoId
      * @param int $usuarioId
      * @param string $motivo
-     * @return ClienteCredito
+     * @return ClienteCreditos
      */
     public function cancelarCredito($creditoId, $usuarioId, $motivo)
     {
@@ -390,7 +409,8 @@ class CreditoService
                     'usuario_id' => 1, // Sistema
                 ]);
 
-                $credito->valor_disponivel = 0;
+                 /** @var ClienteCreditos $credito */
+                $credito->valor_disponivel = 0.00;
                 $credito->status = 'expirado';
                 $credito->save();
 

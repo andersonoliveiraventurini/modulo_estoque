@@ -60,6 +60,16 @@ class Fornecedor extends Model
         return $this->hasMany(Contato::class);
     }
 
+    public function produtos()
+    {
+        return $this->hasMany(Produto::class);
+    }
+
+    public function pedidosCompra()
+    {
+        return $this->hasMany(PedidoCompra::class);
+    }
+
     public function endereco()
     {
         return $this->hasOne(Endereco::class);

@@ -12,6 +12,7 @@ class Conferencia extends Model
     protected $fillable = [
         'orcamento_id',
         'picking_batch_id',
+        'pedido_compra_id',
         'status',
         'conferente_id',
         'observacoes',
@@ -32,6 +33,11 @@ class Conferencia extends Model
     public function orcamento()
     {
         return $this->belongsTo(Orcamento::class);
+    }
+
+    public function pedidoCompra()
+    {
+        return $this->belongsTo(PedidoCompra::class);
     }
 
     public function batch()

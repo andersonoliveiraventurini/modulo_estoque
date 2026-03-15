@@ -15,14 +15,17 @@ use Illuminate\Validation\ValidationException;
 class PagamentoService
 {
     protected CreditoService $creditoService;
-    protected PagamentoPdfService $pdfService;   
- 
+    protected PagamentoPdfService $pdfService;
+    protected FaturaService $faturaService;
+
     public function __construct(
         CreditoService $creditoService,
-        PagamentoPdfService $pdfService          
+        PagamentoPdfService $pdfService,
+        FaturaService $faturaService
     ) {
         $this->creditoService = $creditoService;
-        $this->pdfService     = $pdfService;     
+        $this->pdfService     = $pdfService;
+        $this->faturaService  = $faturaService;
     }
 
     /**
@@ -35,70 +38,93 @@ class PagamentoService
      */
    public function salvarPagamentoVenda(array $dados): array
     {
-        $dadosValidados = $this->validarDadosPagamento($dados);
- 
-        // A transaction retorna o array de resultado com o pagamento já salvo.
-        $resultado = \Illuminate\Support\Facades\DB::transaction(
-            function () use ($dadosValidados) {
-                $registro  = $this->buscarRegistro($dadosValidados);
-                $clienteId = $registro->cliente_id;
- 
-                $this->validarRegistroNaoPago($registro);
- 
-                $valoresVenda = $this->calcularValoresVenda($registro, $dadosValidados);
- 
-                $this->validarMetodosPagamento(
-                    $dadosValidados['metodos_pagamento'],
-                    $valoresVenda,
-                    $clienteId
-                );
- 
-                $this->validarValorPago($dadosValidados['metodos_pagamento'], $valoresVenda);
- 
-                $pagamento = $this->criarPagamento($registro, $dadosValidados, $valoresVenda);
- 
-                $resultadoProcessamento = $this->processarMetodosPagamento(
-                    $pagamento,
-                    $dadosValidados['metodos_pagamento'],
-                    $clienteId,
-                    $dadosValidados
-                );
- 
-                $creditoTroco = null;
-                if ($valoresVenda['troco'] > 0 && ($dadosValidados['gerar_troco_como_credito'] ?? false)) {
-                    $creditoTroco = $this->processarTrocoComoCredito(
-                        $clienteId,
-                        $valoresVenda['troco'],
+        \Illuminate\Support\Facades\Log::info("Iniciando processo de salvamento de pagamento para Venda", [
+            'orcamento_id' => $dados['orcamento_id'] ?? null,
+            'pedido_id' => $dados['pedido_id'] ?? null,
+            'user_id' => \Illuminate\Support\Facades\Auth::id()
+        ]);
+
+        try {
+            $dadosValidados = $this->validarDadosPagamento($dados);
+     
+            // A transaction retorna o array de resultado com o pagamento já salvo.
+            $resultado = \Illuminate\Support\Facades\DB::transaction(
+                function () use ($dadosValidados) {
+                    $registro  = $this->buscarRegistro($dadosValidados);
+                    $clienteId = $registro->cliente_id;
+     
+                    $this->validarRegistroNaoPago($registro);
+     
+                    $valoresVenda = $this->calcularValoresVenda($registro, $dadosValidados);
+     
+                    $this->validarMetodosPagamento(
+                        $dadosValidados['metodos_pagamento'],
+                        $valoresVenda,
+                        $clienteId
+                    );
+     
+                    $this->validarValorPago($dadosValidados['metodos_pagamento'], $valoresVenda);
+     
+                    $pagamento = $this->criarPagamento($registro, $dadosValidados, $valoresVenda);
+     
+                    $resultadoProcessamento = $this->processarMetodosPagamento(
                         $pagamento,
+                        $dadosValidados['metodos_pagamento'],
+                        $clienteId,
                         $dadosValidados
                     );
+
+                    // Geração automática de faturas para controle financeiro
+                    $this->faturaService->gerarFaturasVenda($registro, $dadosValidados);
+     
+                    $creditoTroco = null;
+                    if ($valoresVenda['troco'] > 0 && ($dadosValidados['gerar_troco_como_credito'] ?? false)) {
+                        $creditoTroco = $this->processarTrocoComoCredito(
+                            $clienteId,
+                            $valoresVenda['troco'],
+                            $pagamento,
+                            $dadosValidados
+                        );
+                    }
+     
+                    $this->atualizarStatusRegistro($registro, 'pago');
+     
+                    return [
+                        'sucesso'              => true,
+                        'mensagem'             => 'Pagamento salvo com sucesso!',
+                        'pagamento'            => $pagamento->fresh(['metodos.metodoPagamento', 'condicaoPagamento']),
+                        'creditos_utilizados'  => $resultadoProcessamento['creditos_utilizados'],
+                        'credito_troco_gerado' => $creditoTroco,
+                        'valores'              => [
+                            'valor_total'    => $valoresVenda['valor_total'],
+                            'desconto_total' => $valoresVenda['desconto_total'],
+                            'valor_final'    => $valoresVenda['valor_final'],
+                            'valor_pago'     => $valoresVenda['valor_pago'],
+                            'troco'          => $valoresVenda['troco'],
+                        ],
+                    ];
                 }
- 
-                $this->atualizarStatusRegistro($registro, 'pago');
- 
-                return [
-                    'sucesso'              => true,
-                    'mensagem'             => 'Pagamento salvo com sucesso!',
-                    'pagamento'            => $pagamento->fresh(['metodos.metodoPagamento', 'condicaoPagamento']),
-                    'creditos_utilizados'  => $resultadoProcessamento['creditos_utilizados'],
-                    'credito_troco_gerado' => $creditoTroco,
-                    'valores'              => [
-                        'valor_total'    => $valoresVenda['valor_total'],
-                        'desconto_total' => $valoresVenda['desconto_total'],
-                        'valor_final'    => $valoresVenda['valor_final'],
-                        'valor_pago'     => $valoresVenda['valor_pago'],
-                        'troco'          => $valoresVenda['troco'],
-                    ],
-                ];
-            }
-        );
- 
-        // ── PDF gerado FORA da transaction ───────────────────────────────────
-        // Falha de I/O no PDF não reverte o pagamento já commitado.
-        // O caminho fica em $resultado['pagamento']->pdf_path após o gerar().
-        $this->pdfService->gerar($resultado['pagamento']);
- 
-        return $resultado;
+            );
+     
+            // ── PDF gerado FORA da transaction ───────────────────────────────────
+            // Falha de I/O no PDF não reverte o pagamento já commitado.
+            // O caminho fica em $resultado['pagamento']->pdf_path após o gerar().
+            $this->pdfService->gerar($resultado['pagamento']);
+     
+            \Illuminate\Support\Facades\Log::info("Pagamento finalizado com sucesso", [
+                'pagamento_id' => $resultado['pagamento']->id,
+                'valor' => $resultado['valores']['valor_pago']
+            ]);
+
+            return $resultado;
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Erro crítico no salvamento do pagamento", [
+                'erro' => $e->getMessage(),
+                'stack' => $e->getTraceAsString(),
+                'dados' => $dados
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -477,85 +503,101 @@ class PagamentoService
         ]);
     }
 
-    /**
-     * Estorna um pagamento completo
-     */
     public function estornarPagamento($pagamentoId, $motivo)
     {
+        \Illuminate\Support\Facades\Log::info("Iniciando estorno de pagamento", [
+            'pagamento_id' => $pagamentoId,
+            'motivo' => $motivo,
+            'user_id' => \Illuminate\Support\Facades\Auth::id()
+        ]);
+
         if (strlen($motivo) < 10) {
             throw new \Exception('O motivo do estorno deve ter pelo menos 10 caracteres');
         }
 
-        return DB::transaction(function () use ($pagamentoId, $motivo) {
-            $pagamento = Pagamento::with(['metodos', 'orcamento', 'pedido'])->findOrFail($pagamentoId);
+        try {
+            return DB::transaction(function () use ($pagamentoId, $motivo) {
+                $pagamento = Pagamento::with(['metodos', 'orcamento', 'pedido'])->findOrFail($pagamentoId);
 
-            if ($pagamento->estornado) {
-                throw new \Exception('Este pagamento já foi estornado anteriormente');
-            }
+                if ($pagamento->estornado) {
+                    throw new \Exception('Este pagamento já foi estornado anteriormente');
+                }
 
-            $estornosCredito = [];
-            $creditoDevolucao = null;
+                $estornosCredito = [];
+                $creditoDevolucao = null;
 
-            // Estorna os créditos utilizados
-            $metodosComCredito = $pagamento->metodos()->where('usa_credito', true)->get();
-            
-            foreach ($metodosComCredito as $metodo) {
-                $movimentacoes = \App\Models\ClienteCreditoMovimentacoes::where('referencia_tipo', 'pagamento')
-                    ->where('referencia_id', $pagamento->id)
-                    ->where('tipo_movimentacao', 'utilizacao')
-                    ->get();
+                // Estorna os créditos utilizados
+                $metodosComCredito = $pagamento->metodos()->where('usa_credito', true)->get();
+                
+                foreach ($metodosComCredito as $metodo) {
+                    $movimentacoes = \App\Models\ClienteCreditoMovimentacoes::where('referencia_tipo', 'pagamento')
+                        ->where('referencia_id', $pagamento->id)
+                        ->where('tipo_movimentacao', 'utilizacao')
+                        ->get();
 
-                foreach ($movimentacoes as $movimentacao) {
-                    $resultadoEstorno = $this->creditoService->estornarUtilizacao(
-                        $movimentacao->id,
+                    foreach ($movimentacoes as $movimentacao) {
+                        $resultadoEstorno = $this->creditoService->estornarUtilizacao(
+                            $movimentacao->id,
+                            Auth::id(),
+                            "Estorno de pagamento: {$motivo}"
+                        );
+
+                        $estornosCredito[] = $resultadoEstorno;
+                    }
+                }
+
+                // Gera crédito de devolução para outros métodos
+                $valorDevolucao = $pagamento->metodos()
+                    ->where('usa_credito', false)
+                    ->sum('valor');
+
+                if ($valorDevolucao > 0) {
+                    $registro = $pagamento->orcamento ?? $pagamento->pedido;
+                    
+                    $creditoDevolucao = $this->creditoService->gerarCreditoDevolucao(
+                        $registro->cliente_id,
+                        $valorDevolucao,
+                        $pagamento->id,
+                        'pagamento',
                         Auth::id(),
                         "Estorno de pagamento: {$motivo}"
                     );
-
-                    $estornosCredito[] = $resultadoEstorno;
                 }
-            }
 
-            // Gera crédito de devolução para outros métodos
-            $valorDevolucao = $pagamento->metodos()
-                ->where('usa_credito', false)
-                ->sum('valor');
+                // Marca o pagamento como estornado
+                $pagamento->update([
+                    'estornado' => true,
+                    'data_estorno' => now(),
+                    'motivo_estorno' => $motivo,
+                    'usuario_estorno_id' => Auth::id(),
+                ]);
 
-            if ($valorDevolucao > 0) {
+                // Atualiza o status do registro
                 $registro = $pagamento->orcamento ?? $pagamento->pedido;
-                
-                $creditoDevolucao = $this->creditoService->gerarCreditoDevolucao(
-                    $registro->cliente_id,
-                    $valorDevolucao,
-                    $pagamento->id,
-                    'pagamento',
-                    Auth::id(),
-                    "Estorno de pagamento: {$motivo}"
-                );
-            }
+                if ($registro) {
+                    $this->atualizarStatusRegistro($registro, 'pendente');
+                }
 
-            // Marca o pagamento como estornado
-            $pagamento->update([
-                'estornado' => true,
-                'data_estorno' => now(),
-                'motivo_estorno' => $motivo,
-                'usuario_estorno_id' => Auth::id(),
+                \Illuminate\Support\Facades\Log::info("Estorno de pagamento realizado com sucesso", [
+                    'pagamento_id' => $pagamento->id,
+                    'status_venda' => 'pendente'
+                ]);
+
+                return [
+                    'sucesso' => true,
+                    'mensagem' => 'Pagamento estornado com sucesso!',
+                    'pagamento' => $pagamento->fresh(),
+                    'estornos_credito' => $estornosCredito,
+                    'credito_devolucao' => $creditoDevolucao,
+                    'valor_devolvido' => $valorDevolucao,
+                ];
+            });
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Erro crítico no estorno de pagamento", [
+                'pagamento_id' => $pagamentoId,
+                'erro' => $e->getMessage()
             ]);
-
-            // Atualiza o status do registro
-            $registro = $pagamento->orcamento ?? $pagamento->pedido;
-            if ($registro) {
-                $this->atualizarStatusRegistro($registro, 'pendente');
-            }
-
-            return [
-                'sucesso' => true,
-                'mensagem' => 'Pagamento estornado com sucesso!',
-                'pagamento' => $pagamento->fresh(),
-                'estornos_credito' => $estornosCredito,
-                'credito_devolucao' => $creditoDevolucao,
-                'valor_devolvido' => $valorDevolucao,
-            ];
-        });
+            throw $e;
+        }
     }
 }

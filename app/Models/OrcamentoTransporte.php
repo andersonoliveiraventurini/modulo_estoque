@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class OrcamentoTransporte extends Model
 {
     /** @use HasFactory<\Database\Factories\OrcamentoTransporteFactory> */
-    use HasFactory, softDeletes;
+    use HasFactory, softDeletes, SoftDeletes;
 
     protected $fillable = [
         'orcamento_id',

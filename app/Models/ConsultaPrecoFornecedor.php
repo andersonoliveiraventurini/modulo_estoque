@@ -5,9 +5,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ConsultaPrecoFornecedor extends Model
-{
-    use softDeletes;
+class ConsultaPrecoFornecedor extends Model {
+    use SoftDeletes;
     protected $table = 'consulta_preco_fornecedores';
 
     protected $fillable = [

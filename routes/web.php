@@ -5,6 +5,7 @@ use App\Http\Controllers\BlocokController;
 use App\Http\Controllers\BlocokDescartesController;
 use App\Http\Controllers\BlocokInsumosController;
 use App\Http\Controllers\BlocokItemController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use App\Http\Controllers\ClienteController;
@@ -41,11 +42,13 @@ use App\Livewire\ListaConferencia;
 use App\Livewire\ListaSeparacao;
 use App\Livewire\Logistica\SeparacaoListaPage;
 use App\Http\Controllers\InconsistenciaRecebimentoController;
+use App\Http\Controllers\RelatorioController;
+use App\Http\Controllers\RequisicaoCompraController;
 
 Volt::route('/', 'auth.login')
     ->name('home');
 
-Route::view('dashboard', 'dashboard')
+Route::get('dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
@@ -77,7 +80,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('categorias', CategoriaController::class)->names('categorias');
     Route::resource('subcategorias', SubCategoriaController::class)->names('subcategorias');
 
-    Route::resource('movimentacao', MovimentacaoController::class)->names('movimentacao');
+    // Estoque - Movimentações
+    Route::resource('movimentacao', MovimentacaoController::class);
+    Route::post('movimentacao/{movimentacao}/aprovar', [MovimentacaoController::class, 'aprovar'])->name('movimentacao.aprovar');
+    Route::post('movimentacao/{movimentacao}/rejeitar', [MovimentacaoController::class, 'rejeitar'])->name('movimentacao.rejeitar');
 
     // cotação de produto
     // Grupo de cotação
@@ -215,6 +221,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/orcamentos/{orcamento}/conferencia/pdf', [ConferenciaController::class, 'downloadPdf'])
         ->name('orcamentos.conferencia.pdf');
 
+    // CONFERÊNCIA DE COMPRAS (Módulo 2)
+    Route::get('/pedido-compras/{pedido}/conferencia', [ConferenciaController::class, 'showCompra'])
+        ->name('pedido-compras.conferencia.show');
+    Route::post('/pedido-compras/{pedido}/conferencia/iniciar', [ConferenciaController::class, 'iniciarCompra'])
+        ->name('pedido-compras.conferencia.iniciar');
+
     // fim rotas separação e conferência
 
     //Route::resource('pagamentos', PagamentoController::class)->names('pagamentos');
@@ -287,6 +299,12 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('pedido_compras', PedidoCompraController::class)->names('pedido_compras');
     Route::get('/pedido_compras/{pedidoCompra}/itens-json', [PedidoCompraController::class, 'itensJson'])->name('pedido_compras.itens_json');
 
+    // Requisições de Compras
+    Route::resource('requisicao_compras', RequisicaoCompraController::class)->names('requisicao_compras');
+    Route::post('/requisicao_compras/{requisicao_compra}/aprovar', [RequisicaoCompraController::class, 'aprovar'])->name('requisicao_compras.aprovar');
+    Route::post('/requisicao_compras/{requisicao_compra}/rejeitar', [RequisicaoCompraController::class, 'rejeitar'])->name('requisicao_compras.rejeitar');
+    Route::post('/requisicao_compras/{requisicao_compra}/gerar-pedido', [RequisicaoCompraController::class, 'gerarPedido'])->name('requisicao_compras.gerar_pedido');
+
     // Carregar corredores dinamicamente para JS
     Route::get('/corredores-by-armazem/{armazem_id}', function($armazem_id) {
         $corredores = \App\Models\Corredor::where('armazem_id', $armazem_id)->get(['id', 'nome']);
@@ -311,7 +329,21 @@ Route::middleware(['auth'])->group(function () {
     Route::get('rdstation/checar-token', [RdstationController::class, 'checarToken'])->name('rdstation.checar-token');
     Route::get('rdstation/listar-empresas', [RdstationController::class, 'listarEmpresas'])->name('rdstation.listar-empresas');
     Route::get('rdstation/listar-negociacoes', [RdstationController::class, 'listarNegociacoes'])->name('rdstation.listar-negociacoes');
-    Route::any('rdstation/criar-empresa/{id}', [RdstationController::class, 'criarEmpresa'])->name('rdstation.criar-empresa.id');
+    Route::get('rdstation/criar-empresa/{id}', [RdstationController::class, 'criarEmpresa'])->name('rdstation.criar-empresa.id');
+
+    // Relatórios de Compras
+    Route::prefix('relatorios')->group(function () {
+        Route::get('/estoque-critico', [RelatorioController::class, 'estoqueCritico'])->name('relatorios.estoque_critico');
+        Route::get('/historico-compras', [RelatorioController::class, 'historicoCompras'])->name('relatorios.historico_compras');
+        Route::get('/fornecedores-frequentes', [RelatorioController::class, 'fornecedoresFrequentes'])->name('relatorios.fornecedores_frequentes');
+        Route::get('/comparativo-precos', [RelatorioController::class, 'comparativoPrecos'])->name('relatorios.comparativo_precos');
+    });
+    // ── Faturamento e Inadimplência ──────────────────────────────────────────
+    Route::prefix('faturamento')->name('faturamento.')->group(function () {
+        Route::get('/', [FaturamentoController::class, 'index'])->name('index');
+        Route::get('/inadimplencia', [FaturamentoController::class, 'inadimplencia'])->name('inadimplencia');
+        Route::get('/cliente/{cliente}', [FaturamentoController::class, 'historicoCliente'])->name('cliente');
+    });
 });
 
 require __DIR__ . '/auth.php';

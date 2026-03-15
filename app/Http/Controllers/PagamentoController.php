@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Cache;
 use App\Models\CondicoesPagamento;
 use App\Models\ClienteCreditos;
 use App\Models\ClienteCreditoMovimentacoes;
+use App\Events\OrcamentoPago;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -252,7 +253,10 @@ class PagamentoController extends Controller
  
             // Atualiza status do orçamento
             $orcamento->update(['status' => 'Pago', 'data_pagamento' => now()]);
- 
+
+            // ── Dispara evento de pagamento (baixa automática no estoque, integração e-commerce, etc) ──
+            event(new OrcamentoPago($orcamento));
+
             // Retorna o pagamento criado para uso fora da transaction
             return $pagamento;
         });
@@ -367,6 +371,16 @@ class PagamentoController extends Controller
                     'motivo_estorno'     => $request->motivo_estorno,
                     'usuario_estorno_id' => Auth::id(),
                 ]);
+
+                // ── Retorno automático ao estoque no estorno ────────────────────
+                if ($pagamento->orcamento) {
+                    $pagamento->orcamento->load('itens.produto');
+                    foreach ($pagamento->orcamento->itens->whereNotNull('produto_id') as $item) {
+                        if ($item->produto) {
+                            $item->produto->increment('estoque_atual', $item->quantidade);
+                        }
+                    }
+                }
 
                 $pagamento->orcamento?->update(['status' => 'Aprovado']);
 

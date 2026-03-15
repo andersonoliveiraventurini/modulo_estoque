@@ -9,6 +9,15 @@
                         Pedido de Compra #{{ $pedidoCompra->id }}
                     </h2>
                     <div class="flex gap-3">
+                        @if(in_array($pedidoCompra->status, ['aguardando', 'parcialmente_recebido']))
+                            <form action="{{ route('pedido-compras.conferencia.iniciar', $pedidoCompra->id) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 font-bold shadow-sm">Iniciar Recebimento</button>
+                            </form>
+                        @elseif($pedidoCompra->status == 'em_conferencia')
+                            <a href="{{ route('pedido-compras.conferencia.show', $pedidoCompra->id) }}" class="px-4 py-2 bg-yellow-500 text-white text-sm rounded-md hover:bg-yellow-600 font-bold shadow-sm">Continuar Conferência</a>
+                        @endif
+
                         <a href="{{ route('pedido_compras.edit', $pedidoCompra->id) }}" class="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700">Editar</a>
                         <form action="{{ route('pedido_compras.destroy', $pedidoCompra->id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja deletar este pedido? O preço de custo dos produtos será revertido ao valor anterior.')">
                             @csrf
