@@ -13,6 +13,7 @@ class ListaSeparacao extends Component
     public $search = '';
     public $cliente = '';
     public $vendedor = '';
+    public $roteiro = '';
     public $dataInicio = '';
     public $dataFim = '';
     public $workflowStatus = '';
@@ -24,6 +25,7 @@ class ListaSeparacao extends Component
         'search' => ['except' => ''],
         'cliente' => ['except' => ''],
         'vendedor' => ['except' => ''],
+        'roteiro' => ['except' => ''],
         'dataInicio' => ['except' => ''],
         'dataFim' => ['except' => ''],
         'workflowStatus' => ['except' => ''],
@@ -46,6 +48,11 @@ class ListaSeparacao extends Component
         $this->resetPage();
     }
 
+    public function updatingRoteiro()
+    {
+        $this->resetPage();
+    }
+
     public function updatingDataInicio()
     {
         $this->resetPage();
@@ -63,7 +70,7 @@ class ListaSeparacao extends Component
 
     public function limparFiltros()
     {
-        $this->reset(['search', 'cliente', 'vendedor', 'dataInicio', 'dataFim', 'workflowStatus']);
+        $this->reset(['search', 'cliente', 'vendedor', 'roteiro', 'dataInicio', 'dataFim', 'workflowStatus']);
         $this->resetPage();
     }
 
@@ -100,8 +107,26 @@ class ListaSeparacao extends Component
         $orcamentos = Orcamento::query()
             ->with(['cliente', 'vendedor', 'endereco'])
             
-            // Filtrar apenas orçamentos em separação
+            // Filtro de workflow base
             ->whereIn('workflow_status', ['aguardando_separacao', 'em_separacao'])
+
+            // Regra de Negócio: Encomendas precisam estar pagas antes de iniciar a separação.
+            // Orçamentos normais (pronta-entrega) são separados e pagos depois.
+            ->where(function ($q) {
+                // Caso 1: Não é encomenda (passa livre)
+                $q->whereNull('encomenda')
+                  ->orWhere('encomenda', '')
+                  // Caso 2: É encomenda E tem pagamentos que cobrem o total (ou tem desconto aprovado abatendo tudo)
+                  ->orWhere(function ($sub) {
+                      $sub->whereNotNull('encomenda')
+                          ->where('encomenda', '!=', '')
+                          ->whereHas('pagamentos', function ($pag) {
+                              $pag->select(\Illuminate\Support\Facades\DB::raw('SUM(valor_pago)'))
+                                  ->groupBy('orcamento_id')
+                                  ->havingRaw('SUM(valor_pago) >= (orcamentos.valor_total_itens - COALESCE((SELECT SUM(valor) FROM descontos WHERE orcamento_id = orcamentos.id AND aprovado_por IS NOT NULL), 0))');
+                          });
+                  });
+            })
 
             // Busca geral
             ->when($this->search, function ($query) {
@@ -131,6 +156,12 @@ class ListaSeparacao extends Component
             ->when($this->vendedor, function ($query) {
                 $query->whereHas('vendedor', fn($q) =>
                     $q->where('name', 'like', "%{$this->vendedor}%"));
+            })
+
+            // Filtro por Roteiro (Rota) vindo do relacionamento Endereco
+            ->when($this->roteiro, function ($query) {
+                $query->whereHas('endereco', fn($q) =>
+                    $q->where('roteiro', 'like', "%{$this->roteiro}%"));
             })
 
             // Filtro por workflow_status

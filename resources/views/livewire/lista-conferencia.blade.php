@@ -184,7 +184,7 @@
                                 </a>
                             @endif
                         </td>
-                        <td class="px-6 py-4 flex gap-2">
+                        <td class="px-6 py-4 flex gap-2 flex-wrap">
                             <a href="{{ route('orcamentos.show', $o->id) }}">
                                 <x-button size="sm" variant="secondary">
                                     <x-heroicon-o-eye class="w-4 h-4" />
@@ -204,6 +204,20 @@
                                     <x-button size="sm" variant="primary">
                                         <x-heroicon-o-play class="w-4 h-4" />
                                         Acompanhar Conferência
+                                    </x-button>
+                                </a>
+                            @elseif($o->workflow_status === 'conferido')
+                                <a href="{{ route('orcamentos.conferencia.show', $o->id) }}">
+                                    <x-button size="sm" variant="secondary">
+                                        <x-heroicon-o-exclamation-triangle class="w-4 h-4 text-amber-500" />
+                                        Revisar Divergências
+                                    </x-button>
+                                </a>
+                            @elseif($o->workflow_status === 'finalizado')
+                                <a href="{{ route('faturamento.index') }}?search={{ $o->cliente->nome ?? '' }}">
+                                    <x-button size="sm" variant="primary">
+                                        <x-heroicon-o-banknotes class="w-4 h-4" />
+                                        Ver Fatura
                                     </x-button>
                                 </a>
                             @endif

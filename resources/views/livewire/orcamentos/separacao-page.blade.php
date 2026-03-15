@@ -253,7 +253,6 @@
                                         Concluído em: {{ optional($cBatch->finished_at)->format('d/m/Y H:i') }} por
                                         {{ optional($cBatch->criadoPor)->name ?? 'N/A' }}
                                     </p>
-                                    @if ($cBatch->qtd_caixas || $cBatch->qtd_sacos || $cBatch->qtd_sacolas || $cBatch->outros_embalagem)
                                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                             Embalagem:
                                             @if($cBatch->qtd_caixas) {{ $cBatch->qtd_caixas }} caixas @endif
@@ -261,7 +260,11 @@
                                             @if($cBatch->qtd_sacolas) {{ $cBatch->qtd_sacolas }} sacolas @endif
                                             @if($cBatch->outros_embalagem) {{ $cBatch->outros_embalagem }} @endif
                                         </p>
-                                    @endif
+                                        <div class="mt-2 text-left">
+                                            <a target="_blank" href="{{ route('picking.etiquetas', $cBatch->id) }}" class="inline-flex items-center px-3 py-1.5 rounded bg-blue-100 hover:bg-blue-200 text-blue-800 text-xs font-semibold shadow-sm transition-colors">
+                                                <x-heroicon-o-printer class="w-4 h-4 mr-1" /> Imprimir Etiquetas
+                                            </a>
+                                        </div>
                                 </div>
                                 <svg class="w-5 h-5 text-gray-500 transform transition-transform"
                                     :class="{ 'rotate-180': open === {{ $cBatch->id }} }" fill="none"

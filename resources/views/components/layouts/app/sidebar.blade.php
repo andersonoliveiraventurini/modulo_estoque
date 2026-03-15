@@ -56,10 +56,16 @@
 
         <flux:navlist.group heading="Logística" expandable :expanded="false">
             <flux:navlist.item icon="list-bullet" :href="route('separacao.index')"
-                :current="request()->routeIs('separacao.index')" wire:navigate>{{ __('Separação') }}
+                :current="request()->routeIs('separacao.index')" wire:navigate>{{ __('Painel de Separação') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="queue-list" :href="route('logistica.separacao.lista')"
+                :current="request()->routeIs('logistica.separacao.lista')" wire:navigate>{{ __('Fila de Itens') }}
             </flux:navlist.item>
             <flux:navlist.item icon="check-circle" :href="route('conferencia.index')"
                 :current="request()->routeIs('conferencia.index')" wire:navigate>{{ __('Conferência') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="document-chart-bar" :href="route('relatorios.separacao_por_roteiro')"
+                :current="request()->routeIs('relatorios.separacao_por_roteiro')" wire:navigate>{{ __('Relatório por Roteiro') }}
             </flux:navlist.item>
         </flux:navlist.group>
 
@@ -137,6 +143,21 @@
         <flux:navlist.group heading="Financeiro" expandable :expanded="false">
             <flux:navlist.item icon="users" :href="route('clientes.index')"
                 :current="request()->routeIs('clientes.index')" wire:navigate>{{ __('Clientes e Créditos') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="clipboard-document-check" :href="route('analise_creditos.index')"
+                :current="request()->routeIs('analise_creditos.*')" wire:navigate>{{ __('Análise de Crédito') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="banknotes" :href="route('faturamento.index')"
+                :current="request()->routeIs('faturamento.index')" wire:navigate>{{ __('Contas a Receber (Faturas)') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="credit-card" :href="route('solicitacoes-pagamento.index')"
+                :current="request()->routeIs('solicitacoes-pagamento.*')" wire:navigate>{{ __('Contas a Pagar') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="exclamation-triangle" :href="route('faturamento.inadimplencia')"
+                :current="request()->routeIs('faturamento.inadimplencia')" wire:navigate>{{ __('Inadimplência') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="document-text" :href="route('notas.index')"
+                :current="request()->routeIs('notas.*')" wire:navigate>{{ __('Notas Fiscais') }}
             </flux:navlist.item>
             <flux:navlist.item icon="currency-dollar" :href="route('orcamentos.concluidos')"
                 :current="request()->routeIs('orcamentos.concluidos')" wire:navigate>{{ __('Movimentações Financeiras') }}

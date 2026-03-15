@@ -24,6 +24,12 @@ class FaturaService
         $metodos = $dadosPagamento['metodos_pagamento'];
         $clienteId = $registro->cliente_id;
 
+        foreach ($metodos as $metodoPag) {
+            $valorTotalMetodo = (float) $metodoPag['valor'];
+            $parcelas = (int) ($metodoPag['parcelas'] ?? 1);
+            $valorParcela = round($valorTotalMetodo / $parcelas, 2);
+            $diferenca = $valorTotalMetodo - ($valorParcela * $parcelas);
+            
             for ($i = 1; $i <= $parcelas; $i++) {
                 $valorFinalParcela = ($i === $parcelas) ? ($valorParcela + $diferenca) : $valorParcela;
                 
@@ -46,6 +52,7 @@ class FaturaService
                     'status' => $isPago ? 'pago' : 'pendente',
                 ]);
             }
+        }
     }
 
     /**
@@ -64,5 +71,34 @@ class FaturaService
         }
 
         return $faturasAtrasadas->count();
+    }
+
+    /**
+     * Gera uma Fatura simples para um Orçamento finalizado (sem condição de pagamento parcelada).
+     * Caso já exista uma Fatura vinculada ao orçamento, não cria duplicata.
+     */
+    public function gerarFaturaPorOrcamento(Orcamento $orcamento): ?Fatura
+    {
+        if (Fatura::where('orcamento_id', $orcamento->id)->exists()) {
+            Log::info("Fatura já existe para Orçamento #{$orcamento->id}. Pulando geração.");
+            return null;
+        }
+
+        $vencimento = now()->addDays(30);
+
+        $fatura = Fatura::create([
+            'cliente_id'      => $orcamento->cliente_id,
+            'orcamento_id'    => $orcamento->id,
+            'valor_total'     => $orcamento->valor_total,
+            'valor_pago'      => 0,
+            'numero_parcela'  => 1,
+            'total_parcelas'  => 1,
+            'data_vencimento' => $vencimento,
+            'status'          => 'pendente',
+        ]);
+
+        Log::info("Fatura #{$fatura->id} gerada automaticamente para Orçamento #{$orcamento->id}");
+
+        return $fatura;
     }
 }

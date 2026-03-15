@@ -17,41 +17,17 @@ class FaturamentoController extends Controller
         $this->faturaService = $faturaService;
     }
 
-    /**
-     * Listagem geral de faturas (Contas a Receber)
-     */
     public function index(Request $request)
     {
-        $query = Fatura::with(['cliente', 'orcamento', 'pedido']);
-
-        if ($request->has('status') && $request->status) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->has('cliente_id') && $request->cliente_id) {
-            $query->where('cliente_id', $request->cliente_id);
-        }
-
-        $faturas = $query->latest('data_vencimento')->paginate(20);
-
-        return view('paginas.faturamento.index', compact('faturas'));
+        return view('faturamento.index');
     }
 
     /**
-     * Relatório de Inadimplência
+     * Relatório de Inadimplência via Tela (poderá abrigar outro LW Component)
      */
     public function inadimplencia()
     {
-        $this->faturaService->verificarInadimplencia();
-
-        $faturas = Fatura::with('cliente')
-            ->where('status', 'vencido')
-            ->latest('data_vencimento')
-            ->get();
-
-        $totalVencido = $faturas->sum('valor_total');
-
-        return view('paginas.faturamento.inadimplencia', compact('faturas', 'totalVencido'));
+        return view('faturamento.inadimplencia');
     }
 
     /**

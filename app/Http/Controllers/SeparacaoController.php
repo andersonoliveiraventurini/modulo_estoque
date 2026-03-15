@@ -99,8 +99,15 @@ class SeparacaoController extends Controller
         return response()->json(['ok' => true]);
     }
 
-    public function concluir(PickingBatch $batch)
+    public function concluir(PickingBatch $batch, Request $request)
     {
+        $data = $request->validate([
+            'qtd_caixas' => 'nullable|integer|min:0',
+            'qtd_sacos' => 'nullable|integer|min:0',
+            'qtd_sacolas' => 'nullable|integer|min:0',
+            'outros_embalagem' => 'nullable|string|max:255',
+        ]);
+
         $itens = $batch->items;
 
         // todos com status coerente e, se zero, motivo presente
@@ -110,16 +117,22 @@ class SeparacaoController extends Controller
             }
         }
 
-        DB::transaction(function () use ($batch) {
+        DB::transaction(function () use ($batch, $data) {
             $batch->update([
                 'status' => 'concluido',
                 'finished_at' => now(),
+                'qtd_caixas' => $data['qtd_caixas'] ?? 0,
+                'qtd_sacos' => $data['qtd_sacos'] ?? 0,
+                'qtd_sacolas' => $data['qtd_sacolas'] ?? 0,
+                'outros_embalagem' => $data['outros_embalagem'],
             ]);
 
             $batch->orcamento->update([
                 'workflow_status' => 'aguardando_conferencia'
             ]);
         });
+
+        \Illuminate\Support\Facades\Log::info("Lote {$batch->id} de separacao finalizado. Volumes registrados.");
 
         return back()->with('success', 'Separação concluída. Aguardando conferência.');
     }

@@ -7,6 +7,8 @@ use App\Models\ConferenciaItem;
 use App\Models\ConferenciaItemFoto;
 use App\Models\Orcamento;
 use App\Models\PickingBatch;
+use App\Services\EstoqueService;
+use App\Services\FaturaService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -132,10 +134,12 @@ class ConferenciaOrcamento extends Component
 
     private function podeEditar(): bool
     {
-        $aprovados = ['aprovado', 'approved'];
-
-        return $this->orcamento->validade >= now()
-            || in_array(strtolower($this->orcamento->status ?? ''), $aprovados);
+        // Pode editar enquanto a conferência estiver em andamento
+        return in_array($this->orcamento->workflow_status, [
+            'aguardando_conferencia',
+            'em_conferencia',
+            'em_separacao',
+        ]);
     }
 
     // ─── Validação de embalagem ────────────────────────────────────────────────
@@ -244,8 +248,12 @@ class ConferenciaOrcamento extends Component
             return;
         }
 
-        DB::transaction(function () {
-            $this->conferencia->update([
+        $conf = $this->conferencia;
+        $conf->load('itens');
+        $temDivergencia = $conf->itens->contains('status', 'divergente');
+
+        DB::transaction(function () use ($conf, $temDivergencia) {
+            $conf->update([
                 'status'           => 'concluida',
                 'finished_at'      => now(),
                 'qtd_caixas'       => $this->caixas  ?: null,
@@ -254,13 +262,25 @@ class ConferenciaOrcamento extends Component
                 'outros_embalagem' => trim($this->outros ?? '') ?: null,
             ]);
 
-            $this->orcamento->update(['workflow_status' => 'conferido']);
+            if ($temDivergencia) {
+                // Mantém como 'conferido' para revisão manual antes de finalizar
+                $this->orcamento->update(['workflow_status' => 'conferido']);
+            } else {
+                // Sem divergências: baixa o estoque, finaliza e gera Fatura automaticamente
+                app(EstoqueService::class)->baixarSaida($conf);
+                $this->orcamento->update(['workflow_status' => 'finalizado']);
+                app(FaturaService::class)->gerarFaturaPorOrcamento($this->orcamento);
+            }
         });
 
         $this->conferencia = null;
         $this->carregarConferencia();
 
-        session()->flash('success', 'Conferência concluída com sucesso!');
+        $msg = $temDivergencia
+            ? 'Conferência concluída com divergências — orçamento aguarda revisão.'
+            : 'Conferência concluída! Estoque baixado e orçamento finalizado.';
+
+        session()->flash('success', $msg);
     }
 
     // ─── Upload ────────────────────────────────────────────────────────────────

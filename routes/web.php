@@ -199,6 +199,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/orcamentos/{id}/separacao/iniciar', [SeparacaoController::class, 'iniciar'])->name('orcamentos.separacao.iniciar');
     Route::patch('/picking/{batch}/item/{item}/separar', [SeparacaoController::class, 'separarItem'])->name('picking.item.separar');
     Route::post('/picking/{batch}/concluir', [SeparacaoController::class, 'concluir'])->name('picking.concluir');
+    Route::get('/picking/{batch}/etiquetas', [\App\Http\Controllers\EtiquetaController::class, 'gerarEtiquetas'])->name('picking.etiquetas');
 
     /*  Route::get('/orcamentos/{id}/conferencia', [ConferenciaController::class, 'show'])->name('orcamentos.conferencia.show');
      Route::post('/orcamentos/{id}/conferencia/iniciar', [ConferenciaController::class, 'iniciar'])->name('orcamentos.conferencia.iniciar');
@@ -337,12 +338,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/historico-compras', [RelatorioController::class, 'historicoCompras'])->name('relatorios.historico_compras');
         Route::get('/fornecedores-frequentes', [RelatorioController::class, 'fornecedoresFrequentes'])->name('relatorios.fornecedores_frequentes');
         Route::get('/comparativo-precos', [RelatorioController::class, 'comparativoPrecos'])->name('relatorios.comparativo_precos');
+        // ── Logística / Separação ───────────────────────────────────────────
+        Route::get('/separacao-por-roteiro', [RelatorioController::class, 'separacaoPorRoteiro'])->name('relatorios.separacao_por_roteiro');
+        Route::get('/separacao-por-roteiro/exportar', [RelatorioController::class, 'exportarSeparacaoPorRoteiro'])->name('relatorios.separacao_roteiro_export');
     });
     // ── Faturamento e Inadimplência ──────────────────────────────────────────
     Route::prefix('faturamento')->name('faturamento.')->group(function () {
-        Route::get('/', [FaturamentoController::class, 'index'])->name('index');
-        Route::get('/inadimplencia', [FaturamentoController::class, 'inadimplencia'])->name('inadimplencia');
-        Route::get('/cliente/{cliente}', [FaturamentoController::class, 'historicoCliente'])->name('cliente');
+        Route::get('/', \App\Livewire\Faturas\ListaFaturas::class)->name('index');
+        Route::get('/inadimplencia', \App\Livewire\Faturas\RelatorioInadimplencia::class)->name('inadimplencia');
     });
 });
 

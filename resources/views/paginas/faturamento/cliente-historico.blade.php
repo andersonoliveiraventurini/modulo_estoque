@@ -1,75 +1,84 @@
-<x-layouts.app :title="__('Histórico Financeiro')">
-    <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl">
-        
+<x-app-layout>
+    <x-slot name="header">
         <div class="flex items-center justify-between">
-            <div>
-                <flux:heading size="xl">Histórico Financeiro: {{ $cliente->nome }}</flux:heading>
-                <flux:text>{{ $cliente->documento }} | {{ $cliente->email }}</flux:text>
-            </div>
-            <flux:button variant="outline" icon="arrow-left" href="{{ route('faturamento.index') }}">Voltar</flux:button>
+            <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
+                {{ __('Histórico de Faturas: ') }} {{ $cliente->nome }}
+            </h2>
+            <flux:button variant="primary" href="{{ route('faturamento.index') }}">Voltar</flux:button>
         </div>
+    </x-slot>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="p-6 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-sm">
-                <flux:heading size="sm" class="mb-2">Total Recebido</flux:heading>
-                <div class="text-3xl font-bold text-lime-600 dark:text-lime-400">R$ {{ number_format($stats['total_pago'], 2, ',', '.') }}</div>
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            
+            <!-- Cards de Informação -->
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <x-info-card label="Total Pago" value="R$ {{ number_format($stats['total_pago'], 2, ',', '.') }}" class="text-green-600 dark:text-green-400 font-semibold" />
+                <x-info-card label="Total Pendente" value="R$ {{ number_format($stats['total_pendente'], 2, ',', '.') }}" class="text-yellow-600 dark:text-yellow-400 font-semibold" />
+                <x-info-card label="Total Vencido" value="R$ {{ number_format($stats['total_vencido'], 2, ',', '.') }}" class="text-red-600 dark:text-red-400 font-bold" />
             </div>
-            <div class="p-6 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-sm">
-                <flux:heading size="sm" class="mb-2">A Receber</flux:heading>
-                <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">R$ {{ number_format($stats['total_pendente'], 2, ',', '.') }}</div>
+
+            <!-- Tabela de Histórico -->
+            <div class="bg-white border text-sm rounded-2xl dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 overflow-hidden">
+                <table class="w-full text-left">
+                    <thead class="bg-zinc-50 dark:bg-zinc-900">
+                        <tr>
+                            <th class="px-6 py-3 font-medium text-neutral-500 dark:text-neutral-400">Origem</th>
+                            <th class="px-6 py-3 font-medium text-neutral-500 dark:text-neutral-400">Fatura #</th>
+                            <th class="px-6 py-3 font-medium text-neutral-500 dark:text-neutral-400">Valor Total</th>
+                            <th class="px-6 py-3 font-medium text-neutral-500 dark:text-neutral-400">Vencimento</th>
+                            <th class="px-6 py-3 font-medium text-neutral-500 dark:text-neutral-400">Pagamento</th>
+                            <th class="px-6 py-3 font-medium text-neutral-500 dark:text-neutral-400">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700 text-neutral-700 dark:text-neutral-300">
+                        @forelse ($faturas as $fatura)
+                            <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-700/50">
+                                <td class="px-6 py-4">
+                                    @if($fatura->orcamento_id)
+                                        Orc. #{{ $fatura->orcamento_id }}
+                                    @elseif($fatura->pedido_id)
+                                        Ped. #{{ $fatura->pedido_id }}
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4">FAT-{{ str_pad($fatura->id, 5, '0', STR_PAD_LEFT) }} ({{ $fatura->numero_parcela }}/{{ $fatura->total_parcelas }})</td>
+                                <td class="px-6 py-4 font-medium">R$ {{ number_format($fatura->valor_total, 2, ',', '.') }}</td>
+                                <td class="px-6 py-4 {{ $fatura->isAtrasada() ? 'text-red-600 font-bold dark:text-red-400' : '' }}">
+                                    {{ $fatura->data_vencimento->format('d/m/Y') }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    {{ $fatura->data_pagamento ? $fatura->data_pagamento->format('d/m/Y') : '-' }} <br/>
+                                    <span class="text-xs text-neutral-500">R$ {{ number_format($fatura->valor_pago, 2, ',', '.') }}</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    @php
+                                        $statusColors = [
+                                            'pendente' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+                                            'parcial' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+                                            'pago' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+                                            'vencido' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+                                            'cancelado' => 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
+                                        ];
+                                        $color = $statusColors[$fatura->status] ?? 'bg-gray-100 text-gray-800';
+                                    @endphp
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $color }}">
+                                        {{ ucfirst($fatura->status) }}
+                                    </span>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-6 py-8 text-center text-neutral-500 dark:text-neutral-400">
+                                    Nenhuma fatura encontrada.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-            <div class="p-6 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-sm ring-2 ring-red-500/20">
-                <flux:heading size="sm" class="mb-2 text-red-600">Total Vencido</flux:heading>
-                <div class="text-3xl font-bold text-red-600">R$ {{ number_format($stats['total_vencido'], 2, ',', '.') }}</div>
-            </div>
+
         </div>
-
-        <flux:card class="p-0 overflow-hidden">
-            <flux:table>
-                <flux:table.columns>
-                    <flux:table.column>Ref</flux:table.column>
-                    <flux:table.column>Vencimento</flux:table.column>
-                    <flux:table.column>Parcela</flux:table.column>
-                    <flux:table.column>Valor</flux:table.column>
-                    <flux:table.column>Status</flux:table.column>
-                    <flux:table.column>Origem</flux:table.column>
-                </flux:table.columns>
-
-                <flux:table.rows>
-                    @forelse ($faturas as $fatura)
-                        <flux:table.row :key="$fatura->id">
-                            <flux:table.cell>#{{ $fatura->id }}</flux:table.cell>
-                            <flux:table.cell>{{ $fatura->data_vencimento->format('d/m/Y') }}</flux:table.cell>
-                            <flux:table.cell>{{ $fatura->numero_parcela }} / {{ $fatura->total_parcelas }}</flux:table.cell>
-                            <flux:table.cell class="font-bold">R$ {{ number_format($fatura->valor_total, 2, ',', '.') }}</flux:table.cell>
-                            <flux:table.cell>
-                                @php
-                                    $color = match($fatura->status) {
-                                        'pago' => 'lime',
-                                        'vencido' => 'red',
-                                        'parcial' => 'orange',
-                                        default => 'indigo'
-                                    };
-                                @endphp
-                                <flux:badge :color="$color" size="sm">{{ ucfirst($fatura->status) }}</flux:badge>
-                            </flux:table.cell>
-                            <flux:table.cell>
-                                @if($fatura->orcamento_id)
-                                    Orc #{{ $fatura->orcamento_id }}
-                                @else
-                                    Ped #{{ $fatura->pedido_id }}
-                                @endif
-                            </flux:table.cell>
-                        </flux:table.row>
-                    @empty
-                        <flux:table.row>
-                            <flux:table.cell colspan="6" class="text-center py-8 text-neutral-500">
-                                Sem histórico financeiro registrado.
-                            </flux:table.cell>
-                        </flux:table.row>
-                    @endforelse
-                </flux:table.rows>
-            </flux:table>
-        </flux:card>
     </div>
-</x-layouts.app>
+</x-app-layout>

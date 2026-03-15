@@ -20,6 +20,7 @@ class Endereco extends Model
         'estado',
         'cep',
         'tipo',
+        'roteiro',
         'cliente_id',
         'fornecedor_id',
     ];

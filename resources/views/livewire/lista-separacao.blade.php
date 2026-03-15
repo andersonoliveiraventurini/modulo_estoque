@@ -51,6 +51,14 @@
                 <x-input id="vendedor" wire:model.live.debounce.300ms="vendedor" placeholder="Nome do vendedor..." />
             </div>
 
+            <!-- Roteiro -->
+            <div class="flex flex-col flex-[2] min-w-[180px]">
+                <label for="roteiro" class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                    Rota/Roteiro
+                </label>
+                <x-input id="roteiro" wire:model.live.debounce.300ms="roteiro" placeholder="Ex: Rota Sul, Zona Norte..." />
+            </div>
+
             <!-- Status Workflow -->
             <div class="flex flex-col w-48">
                 <label for="workflowStatus" class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
@@ -143,9 +151,12 @@
                 @forelse($orcamentos as $o)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            <a href="{{ route('orcamentos.show', $o) }}" class="hover:underline">
+                            <a href="{{ route('orcamentos.show', $o) }}" class="hover:underline font-bold">
                                 {{ $o->obra }}
                             </a>
+                            <div class="text-xs text-zinc-500 mt-1">
+                                Rota: <span class="font-semibold text-zinc-700 dark:text-zinc-300">{{ $o->endereco->roteiro ?? 'Não definida' }}</span>
+                            </div>
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->cliente->nome }}</td>
                         <td class="px-6 py-4">
