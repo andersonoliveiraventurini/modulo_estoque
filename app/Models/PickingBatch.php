@@ -44,4 +44,9 @@ class PickingBatch extends Model
     {
         return $this->belongsTo(User::class, 'criado_por_id');
     }
+
+    public function conferencias()
+    {
+        return $this->hasMany(Conferencia::class, 'picking_batch_id');
+    }
 }
