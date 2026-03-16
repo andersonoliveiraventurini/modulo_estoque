@@ -48,20 +48,22 @@ final class EstoqueService
     public function liberarReservas(Orcamento $orcamento, array $consumos): void
     {
         Log::info("Liberando reservas para Orçamento #{$orcamento->id}");
-        $reservas = EstoqueReserva::where('orcamento_id', $orcamento->id)
-            ->where('status', 'ativa')->get();
+        
+        foreach ($consumos as $produtoId => $quantidadeConsumida) {
+            if ($quantidadeConsumida <= 0) continue;
 
-        foreach ($reservas as $reserva) {
-            /** @var \App\Models\EstoqueReserva $reserva */
-            $consumir = (float) ($consumos[$reserva->produto_id] ?? 0);
-            if ($consumir > 0) {
-                $reserva->status = 'consumida';
-                Log::info("Reserva consumida: Produto #{$reserva->produto_id}");
-            } else {
-                $reserva->status = 'cancelada';
-                Log::info("Reserva cancelada: Produto #{$reserva->produto_id}");
+            $reservas = EstoqueReserva::where('orcamento_id', $orcamento->id)
+                ->where('produto_id', $produtoId)
+                ->where('status', 'ativa')
+                ->get();
+
+            foreach ($reservas as $reserva) {
+                // Para simplificar, estamos marcando a reserva como consumida.
+                // Em um cenário perfeito, poderíamos subtrair a quantidade se fosse parcial,
+                // mas aqui o sistema parece tratar a reserva como um bloco por orçamento/produto.
+                $reserva->update(['status' => 'consumida']);
+                Log::info("Reserva consumida: Produto #{$produtoId}, Qtd Consumida: {$quantidadeConsumida}");
             }
-            $reserva->save();
         }
     }
 
@@ -157,10 +159,10 @@ final class EstoqueService
 
     public function liberarReservaDoOrcamento(Orcamento $orcamento): void
     {
-        // Reutilizamos a lógica do método liberarReservas, informando que
-        // o consumo de todos os produtos foi zero.
-        // Ao passar um array de consumos vazio, a lógica interna do liberarReservas
-        // irá automaticamente marcar todas as reservas como 'cancelada'.
-        $this->liberarReservas($orcamento, []);
+        Log::info("Cancelando todas as reservas ativas para Orçamento #{$orcamento->id}");
+        
+        EstoqueReserva::where('orcamento_id', $orcamento->id)
+            ->where('status', 'ativa')
+            ->update(['status' => 'cancelada']);
     }
 }

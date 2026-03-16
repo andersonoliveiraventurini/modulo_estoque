@@ -196,14 +196,24 @@ class ConferenciaOrcamento extends Component
         }
 
         if (!$batch) {
-            session()->flash('error', 'Nenhum lote de separação com itens pendentes de conferência foi encontrado.');
+            // Se ainda não achamos um lote, mas há itens no orçamento que faltam conferir, 
+            // permitimos iniciar uma conferência "virtual" (sem lote de separação direto)
+            foreach ($this->orcamentoItens as $item) {
+                if ($item->quantidade_conferida < $item->quantidade) {
+                    $batch = null; // Confirmamos que não temos lote
+                    goto iniciar;
+                }
+            }
+
+            session()->flash('error', 'Todos os itens já foram totalmente conferidos.');
             return;
         }
 
+        iniciar:
         DB::transaction(function () use ($batch) {
             $conf = Conferencia::create([
                 'orcamento_id'     => $this->orcamento->id,
-                'picking_batch_id' => $batch->id,
+                'picking_batch_id' => $batch?->id,
                 'status'           => 'em_conferencia',
                 'conferente_id'    => Auth::id(),
                 'started_at'       => now(),
@@ -211,19 +221,39 @@ class ConferenciaOrcamento extends Component
 
             $this->orcamento->update(['workflow_status' => 'em_conferencia']);
 
-            foreach ($batch->items as $pi) {
-                ConferenciaItem::create([
-                    'conferencia_id'     => $conf->id,
-                    'picking_item_id'    => $pi->id,
-                    'produto_id'         => $pi->produto_id,         // null para encomendas
-                    'consulta_preco_id'  => $pi->consulta_preco_id,  // ✅
-                    'is_encomenda'       => $pi->is_encomenda,        // ✅
-                    'descricao_encomenda'=> $pi->descricao_encomenda, // ✅
-                    'qty_separada'       => $pi->qty_separada,
-                    'qty_conferida'      => 0,
-                    'status'             => 'pendente',
-                    'divergencia'        => 0,
-                ]);
+            if ($batch) {
+                // Fluxo com Lote: Adiciona todos os itens do lote
+                foreach ($batch->items as $pi) {
+                    ConferenciaItem::create([
+                        'conferencia_id'     => $conf->id,
+                        'picking_item_id'    => $pi->id,
+                        'orcamento_item_id'  => $pi->orcamento_item_id,
+                        'produto_id'         => $pi->produto_id,
+                        'consulta_preco_id'  => $pi->consulta_preco_id,
+                        'is_encomenda'       => $pi->is_encomenda,
+                        'descricao_encomenda'=> $pi->descricao_encomenda,
+                        'qty_separada'       => $pi->qty_separada,
+                        'qty_conferida'      => 0,
+                        'status'             => 'pendente',
+                        'divergencia'        => 0,
+                    ]);
+                }
+            } else {
+                // Fluxo Virtual: Adiciona itens do orçamento que ainda faltam conferir
+                foreach ($this->orcamentoItens as $oi) {
+                    $falta = $oi->quantidade - $oi->quantidade_conferida;
+                    if ($falta > 0) {
+                        ConferenciaItem::create([
+                            'conferencia_id'     => $conf->id,
+                            'orcamento_item_id'  => $oi->id,
+                            'produto_id'         => $oi->produto_id,
+                            'qty_separada'       => $falta, // O alvo é o que resta conferir
+                            'qty_conferida'      => 0,
+                            'status'             => 'pendente',
+                            'divergencia'        => 0,
+                        ]);
+                    }
+                }
             }
         });
 

@@ -181,8 +181,9 @@
                                 </p>
 
                                 @php
-                                    $solicitadoTotal = $it->pickingItem->orcamentoItem->quantidade ?? 0;
-                                    $jaConferidoAnterior = $it->pickingItem->orcamentoItem->quantidade_conferida ?? 0;
+                                    $oItem = $it->orcamentoItem ?? ($it->pickingItem->orcamentoItem ?? null);
+                                    $solicitadoTotal = $oItem->quantidade ?? 0;
+                                    $jaConferidoAnterior = $oItem->quantidade_conferida ?? 0;
                                     $conferidoAgora = $it->qty_conferida;
                                     $totalConfirmado = $jaConferidoAnterior + $conferidoAgora;
                                     $faltaConferir = max(0, $solicitadoTotal - $totalConfirmado);
@@ -599,10 +600,14 @@
                                     @if ($cConf->conferente)
                                         por {{ $cConf->conferente->name }}
                                     @endif
-                                    • Lote #{{ $cConf->picking_batch_id }}
-                                    <a href="{{ route('picking.etiqueta_simples', $cConf->picking_batch_id) }}" target="_blank" class="ml-2 text-indigo-600 hover:text-indigo-800 underline">
-                                        🏷️ Etiqueta Simples
-                                    </a>
+                                    @if ($cConf->picking_batch_id)
+                                        • Lote #{{ $cConf->picking_batch_id }}
+                                        <a href="{{ route('picking.etiqueta_simples', $cConf->picking_batch_id) }}" target="_blank" class="ml-2 text-indigo-600 hover:text-indigo-800 underline">
+                                            🏷️ Etiqueta Simples
+                                        </a>
+                                    @else
+                                        • Conferência Direta (Saldo do Orçamento)
+                                    @endif
                                 </p>
                                 @if ($cConf->qtd_caixas || $cConf->qtd_sacos || $cConf->qtd_sacolas || $cConf->outros_embalagem)
                                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">

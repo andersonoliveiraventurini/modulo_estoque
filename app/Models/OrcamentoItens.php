@@ -51,8 +51,11 @@ class OrcamentoItens extends Model
                 $query->where('orcamento_id', $this->orcamento_id)
                       ->where('status', 'concluida');
             })
-            ->whereHas('pickingItem', function ($query) {
-                $query->where('orcamento_item_id', $this->id);
+            ->where(function($query) {
+                $query->where('orcamento_item_id', $this->id)
+                      ->orWhereHas('pickingItem', function ($q) {
+                          $q->where('orcamento_item_id', $this->id);
+                      });
             })
             ->sum('qty_conferida');
     }

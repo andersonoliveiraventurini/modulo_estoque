@@ -14,6 +14,7 @@ class ConferenciaItem extends Model
     protected $fillable = [
         'conferencia_id',
         'picking_item_id',
+        'orcamento_item_id',
         'pedido_compra_item_id',
         'produto_id',
         'consulta_preco_id',  // ✅
@@ -61,9 +62,9 @@ class ConferenciaItem extends Model
         return $this->belongsTo(Produto::class);
     }
 
-    public function orcamentoItem()
+    public function orcamentoItem(): BelongsTo
     {
-        return $this->pickingItem ? $this->pickingItem->orcamentoItem() : null;
+        return $this->belongsTo(OrcamentoItens::class, 'orcamento_item_id');
     }
 
     public function conferidoPor(): BelongsTo
