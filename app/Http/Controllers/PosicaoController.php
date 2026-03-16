@@ -23,8 +23,9 @@ class PosicaoController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'corredor_id' => 'required|exists:corredors,id',
+            'corredor_id' => 'required|exists:corredores,id',
             'nome' => 'required|string|max:255',
+            'descricao' => 'nullable|string',
         ]);
 
         Posicao::create($request->all());
@@ -40,8 +41,9 @@ class PosicaoController extends Controller
     public function update(Request $request, Posicao $posicao)
     {
         $request->validate([
-            'corredor_id' => 'required|exists:corredors,id',
+            'corredor_id' => 'required|exists:corredores,id',
             'nome' => 'required|string|max:255',
+            'descricao' => 'nullable|string',
         ]);
 
         $posicao->update($request->all());

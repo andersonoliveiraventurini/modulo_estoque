@@ -23,6 +23,7 @@
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Armazém</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Corredor</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
                                 <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Qtd. Posições</th>
                                 <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
                             </tr>
@@ -33,10 +34,12 @@
                                     <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{{ $corredor->id }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 font-medium">{{ optional($corredor->armazem)->nome }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{{ $corredor->nome }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $corredor->descricao ? Str::limit($corredor->descricao, 30) : '---' }}</td>
                                     <td class="px-4 py-3 text-center text-sm text-gray-500 dark:text-gray-400">
                                         {{ $corredor->posicoes_count }}
                                     </td>
                                     <td class="px-4 py-3 text-right text-sm">
+                                        <a href="{{ route('corredores.show', $corredor->id) }}" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-3">Ver Detalhes</a>
                                         <a href="{{ route('corredores.edit', $corredor->id) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3">Editar</a>
                                         <form action="{{ route('corredores.destroy', $corredor->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Tem certeza? Isso pode afetar estoques.');">
                                             @csrf
@@ -47,7 +50,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">Nenhum corredor cadastrado.</td>
+                                    <td colspan="6" class="px-4 py-8 text-center text-sm text-gray-500">Nenhum corredor cadastrado.</td>
                                 </tr>
                             @endforelse
                         </tbody>

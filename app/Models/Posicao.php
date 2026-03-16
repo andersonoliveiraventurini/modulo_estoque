@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Posicao extends Model {
     use SoftDeletes;
-    protected $fillable = ['corredor_id', 'nome'];
+    protected $table = 'posicoes';
+    protected $fillable = ['corredor_id', 'nome', 'descricao'];
 
     public function corredor()
     {

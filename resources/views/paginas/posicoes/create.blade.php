@@ -26,6 +26,11 @@
                         @error('nome') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                     </div>
 
+                    <div>
+                        <x-input name="descricao" label="Descrição" placeholder="Detalhes adicionais da Posição" value="{{ old('descricao') }}" />
+                        @error('descricao') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                    </div>
+
                     <div class="flex gap-3 pt-4">
                         <x-button type="submit">Salvar</x-button>
                         <a href="{{ route('posicoes.index') }}" class="px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-md font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition">Cancelar</a>

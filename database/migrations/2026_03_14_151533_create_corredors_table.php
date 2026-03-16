@@ -14,7 +14,10 @@ return new class extends Migration
         if (!Schema::hasTable('corredors')) {
             Schema::create('corredors', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('armazem_id')->constrained('armazens')->cascadeOnDelete();
+                // Custom constraint name
+                $table->foreignId('armazem_id')
+                      ->constrained('armazens', 'id', 'fk_corredors_armazem_id')
+                      ->cascadeOnDelete();
                 $table->string('nome');
                 $table->timestamps();
             });

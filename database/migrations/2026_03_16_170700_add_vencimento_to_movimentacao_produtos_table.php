@@ -11,10 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('movimentacao_produtos', function (Blueprint $table) {
-            $table->date('data_vencimento')->nullable()->after('quantidade')
-                ->comment('Data de vencimento do lote do produto nesta movimentação.');
-        });
+        if (!Schema::hasColumn('movimentacao_produtos', 'data_vencimento')) {
+            Schema::table('movimentacao_produtos', function (Blueprint $table) {
+                $table->date('data_vencimento')->nullable()->after('quantidade')
+                    ->comment('Data de vencimento do lote do produto nesta movimentação.');
+            });
+        }
     }
 
     /**
@@ -22,8 +24,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('movimentacao_produtos', function (Blueprint $table) {
-            $table->dropColumn('data_vencimento');
-        });
+        if (Schema::hasColumn('movimentacao_produtos', 'data_vencimento')) {
+            Schema::table('movimentacao_produtos', function (Blueprint $table) {
+                $table->dropColumn('data_vencimento');
+            });
+        }
     }
 };

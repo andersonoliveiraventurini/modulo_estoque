@@ -25,6 +25,7 @@ class CorredorController extends Controller
         $request->validate([
             'armazem_id' => 'required|exists:armazens,id',
             'nome' => 'required|string|max:255',
+            'descricao' => 'nullable|string',
         ]);
 
         Corredor::create($request->all());
@@ -34,10 +35,9 @@ class CorredorController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Corredor $corredor)
     {
-        // This method was not provided in the new content, keeping it as is or removing it based on user's intent.
-        // For this instruction, I will remove it as it's not in the provided "Code Edit".
+        return view('paginas.corredores.show', compact('corredor'));
     }
 
     public function edit(Corredor $corredor)
@@ -51,6 +51,7 @@ class CorredorController extends Controller
         $request->validate([
             'armazem_id' => 'required|exists:armazens,id',
             'nome' => 'required|string|max:255',
+            'descricao' => 'nullable|string',
         ]);
 
         $corredor->update($request->all());

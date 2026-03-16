@@ -301,9 +301,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/cnpj/{cnpj}', [FornecedorController::class, 'checkCnpjApi'])->name('api.cnpj.check');
 
 
-    Route::resource('armazens', ArmazemController::class)->names('armazens');
+    Route::resource('armazens', ArmazemController::class)->names('armazens')->parameters(['armazens' => 'armazem']);
     Route::resource('corredores', CorredorController::class)->names('corredores')->parameters(['corredores' => 'corredor']);
-    Route::resource('posicoes', PosicaoController::class)->names('posicoes');
+    Route::resource('posicoes', PosicaoController::class)->names('posicoes')->parameters(['posicoes' => 'posicao']);
     Route::resource('inconsistencias', InconsistenciaRecebimentoController::class)->names('inconsistencias')->only(['index', 'show', 'destroy']);
     // Pedidos de Compras
     Route::get('pedido_compras/{pedidoCompra}/itens', [\App\Http\Controllers\PedidoCompraController::class, 'getItensApi'])->name('pedido_compras.itens.api');

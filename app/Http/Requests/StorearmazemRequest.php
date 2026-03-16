@@ -24,6 +24,7 @@ class StorearmazemRequest extends FormRequest
         return [
             'nome' => 'required|string|max:255',
             'localizacao' => 'nullable|string|max:255',
+            'descricao' => 'nullable|string',
         ];
     }
 }

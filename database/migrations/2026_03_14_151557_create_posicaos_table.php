@@ -14,7 +14,10 @@ return new class extends Migration
         if (!Schema::hasTable('posicaos')) {
             Schema::create('posicaos', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('corredor_id')->constrained('corredors')->cascadeOnDelete();
+                // Custom constraint name to avoid duplicate names if it failed halfway in the past
+                $table->foreignId('corredor_id')
+                      ->constrained('corredors', 'id', 'fk_posicaos_corredor_id')
+                      ->cascadeOnDelete();
                 $table->string('nome');
                 $table->timestamps();
             });

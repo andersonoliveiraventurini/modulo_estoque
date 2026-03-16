@@ -12,4 +12,10 @@ class Armazem extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'armazens';
+
+    protected $fillable = [
+        'nome',
+        'localizacao',
+        'descricao',
+    ];
 }

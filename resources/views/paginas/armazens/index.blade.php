@@ -24,6 +24,7 @@
                             <th class="py-3 px-4 font-semibold text-sm text-gray-700 dark:text-gray-300">ID</th>
                             <th class="py-3 px-4 font-semibold text-sm text-gray-700 dark:text-gray-300">Nome</th>
                             <th class="py-3 px-4 font-semibold text-sm text-gray-700 dark:text-gray-300">Localização</th>
+                            <th class="py-3 px-4 font-semibold text-sm text-gray-700 dark:text-gray-300">Descrição</th>
                             <th class="py-3 px-4 font-semibold text-sm text-gray-700 dark:text-gray-300 text-right">Ações</th>
                         </tr>
                     </thead>
@@ -33,7 +34,11 @@
                                 <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">#{{ $armazem->id }}</td>
                                 <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-gray-100">{{ $armazem->nome }}</td>
                                 <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{{ $armazem->localizacao ?: '---' }}</td>
+                                <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{{ $armazem->descricao ? Str::limit($armazem->descricao, 40) : '---' }}</td>
                                 <td class="py-3 px-4 text-right flex justify-end gap-2">
+                                    <a href="{{ route('armazens.show', $armazem->id) }}" class="p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition" title="Ver Detalhes">
+                                        <x-heroicon-o-eye class="w-5 h-5" />
+                                    </a>
                                     <a href="{{ route('armazens.edit', $armazem->id) }}" class="p-2 text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-900/30 rounded-lg transition" title="Editar">
                                         <x-heroicon-o-pencil-square class="w-5 h-5" />
                                     </a>
@@ -48,7 +53,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="py-8 text-center text-gray-500 dark:text-gray-400">
+                                <td colspan="5" class="py-8 text-center text-gray-500 dark:text-gray-400">
                                     Nenhum armazém cadastrado.
                                 </td>
                             </tr>
