@@ -7,6 +7,19 @@
                 Nova Cotação — Cliente: {{ $cliente->nome_fantasia }}
             </h2>
 
+            @if($cliente->bloqueado)
+                <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 text-red-800 dark:text-red-300 rounded-md">
+                    <div class="flex items-center">
+                        <x-heroicon-s-lock-closed class="h-5 w-5 mr-2" />
+                        <p class="font-bold text-lg">Atenção: Cliente Bloqueado</p>
+                    </div>
+                    <p class="mt-2 text-sm">Este cliente está bloqueado. Descontos exigirão aprovação (independente do limite do vendedor) e opções de pagamento faturadas não devem estar disponíveis ao gerar o pedido futuro.</p>
+                    @if($cliente->ultimoBloqueio)
+                        <p class="mt-1 text-sm font-medium">Motivo: {{ $cliente->ultimoBloqueio->motivo }}</p>
+                    @endif
+                </div>
+            @endif
+
             <form action="{{ route('consulta_preco.store') }}" method="POST" id="form-cotacao">
                 @csrf
                 <input type="hidden" name="cliente_id" value="{{ $cliente->id }}">

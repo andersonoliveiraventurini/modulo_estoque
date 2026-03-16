@@ -530,7 +530,10 @@ class OrcamentoController extends Controller
         $temDescontoEspecifico = $descontoEspecifico > 0;
         $temQualquerDesconto = $temDescontoPercentual || $temDescontoEspecifico || $itenscomdesconto;
 
+        $clienteBloqueado = $orcamento->cliente->bloqueado ?? false;
+
         $necessitaAprovacaoDesconto = $temQualquerDesconto && (
+            $clienteBloqueado ||
             $descontoPercentual > (float)($request->desconto_aprovado ?? 0) ||
             (Auth()->user()->vendedor->desconto ?? 0) < $descontoPercentual ||
             $itenscomdesconto

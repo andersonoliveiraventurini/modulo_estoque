@@ -25,6 +25,7 @@ class CnpjService
         return Cache::remember("cnpj_v2_{$cnpj}", now()->addHours(24), function () use ($cnpj) {
             try {
                 // Tentamos a V2 primeiro (mais completa)
+                /** @var \Illuminate\Http\Client\Response $response */
                 $response = Http::timeout(10)->get("https://brasilapi.com.br/api/cnpj/v2/{$cnpj}");
 
                 if ($response->successful()) {
@@ -32,6 +33,7 @@ class CnpjService
                 }
 
                 // Fallback para V1 se a V2 falhar
+                /** @var \Illuminate\Http\Client\Response $responseV1 */
                 $responseV1 = Http::timeout(10)->get("https://brasilapi.com.br/api/cnpj/v1/{$cnpj}");
 
                 if ($responseV1->successful()) {

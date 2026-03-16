@@ -49,7 +49,8 @@ class ListaBloqueiosCliente extends Component
 
     public function render()
     {
-        $bloqueios = Bloqueio::query()
+        $bloqueios = Bloqueio::withTrashed()
+        ->with(['user', 'desbloqueadoPor'])
         ->where('cliente_id', $this->clienteId)
         ->when($this->search, function ($query) {
             // Divide a busca em palavras (tokens)

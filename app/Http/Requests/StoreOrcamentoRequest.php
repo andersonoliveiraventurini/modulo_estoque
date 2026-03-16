@@ -59,6 +59,24 @@ class StoreOrcamentoRequest extends FormRequest
         ];
     }
 
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            if ($this->cliente_id && $this->condicao_id) {
+                $cliente = \App\Models\Cliente::find($this->cliente_id);
+                if ($cliente && $cliente->bloqueado) {
+                    $condicao = \App\Models\CondicoesPagamento::find($this->condicao_id);
+                    if ($condicao) {
+                        $tiposPermitidos = ['pix', 'dinheiro', 'cartao_credito', 'cartao_debito'];
+                        if (!in_array($condicao->tipo, $tiposPermitidos)) {
+                            $validator->errors()->add('condicao_id', 'Cliente bloqueado: Pagamento restrito a PIX, Dinheiro ou Cartão de Crédito/Débito.');
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     protected function prepareForValidation()
     {
         // Função helper para normalizar valores brasileiros

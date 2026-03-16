@@ -30,9 +30,38 @@ class BloqueioController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreBloqueioRequest $request)
+    public function store(\Illuminate\Http\Request $request)
     {
-        //
+        $request->validate([
+            'cliente_id' => 'required|exists:clientes,id',
+            'bloqueado' => 'required|boolean',
+            'motivo_bloqueio' => 'required_if:bloqueado,1|nullable|string|max:1000',
+        ]);
+
+        $cliente = Cliente::findOrFail($request->cliente_id);
+
+        if ($request->bloqueado) {
+            Bloqueio::create([
+                'cliente_id' => $cliente->id,
+                'motivo' => $request->motivo_bloqueio,
+                'user_id' => auth()->id(),
+            ]);
+
+            $cliente->update(['bloqueado' => true]);
+            $mensagem = 'Cliente bloqueado com sucesso.';
+        } else {
+            // Se enviar 0, significa que o usuário quer garantir o desbloqueio
+            $bloqueioAtivo = $cliente->ultimoBloqueio;
+            if ($bloqueioAtivo && is_null($bloqueioAtivo->desbloqueado_por_id)) {
+                $bloqueioAtivo->update(['desbloqueado_por_id' => auth()->id()]);
+                $bloqueioAtivo->delete();
+            }
+            $cliente->update(['bloqueado' => false]);
+            $mensagem = 'Cliente mantido/definido como desbloqueado.';
+        }
+
+        return redirect()->route('bloqueios.mostrar', $cliente->id)
+            ->with('success', $mensagem);
     }
 
     /**
@@ -76,6 +105,16 @@ class BloqueioController extends Controller
      */
     public function destroy(Bloqueio $bloqueio)
     {
-        //
+        $bloqueio->update(['desbloqueado_por_id' => auth()->id()]);
+        $bloqueio->delete();
+
+        $cliente = $bloqueio->cliente;
+        $bloqueiosAtivos = $cliente->bloqueios()->whereNull('desbloqueado_por_id')->count();
+
+        if ($bloqueiosAtivos === 0) {
+            $cliente->update(['bloqueado' => false]);
+        }
+
+        return redirect()->back()->with('success', 'Bloqueio desfeito com sucesso.');
     }
 }

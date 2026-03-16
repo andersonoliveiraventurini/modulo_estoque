@@ -38,6 +38,26 @@
                     </p>
                 </div>
 
+                {{-- Alerta de Cliente Bloqueado --}}
+                @if ($orcamento->cliente && $orcamento->cliente->bloqueado)
+                    <div class="mb-6 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-r-xl p-4 shadow-sm">
+                        <div class="flex gap-3">
+                            <x-heroicon-s-lock-closed class="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0" />
+                            <div class="flex-1">
+                                <h4 class="font-bold text-red-900 dark:text-red-200">Atenção: Cliente Bloqueado</h4>
+                                <p class="text-sm text-red-800 dark:text-red-300 mt-1">
+                                    Este cliente possui restrições ativas. Lembre-se que o pagamento padrão para clientes bloqueados é restrito a PIX, Dinheiro ou Cartão. Verifique atentamente esta solicitação especial.
+                                </p>
+                                @if ($orcamento->cliente->bloqueio && $orcamento->cliente->bloqueio->motivos)
+                                    <p class="text-xs text-red-700 dark:text-red-400 mt-2 font-medium bg-red-100 dark:bg-red-900/40 inline-block px-2 py-1 rounded">
+                                        Motivo: {{ $orcamento->cliente->bloqueio->motivos }}
+                                    </p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <!-- Alertas de Erro -->
                 @if ($errors->any())
                     <div

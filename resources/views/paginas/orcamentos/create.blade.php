@@ -28,6 +28,19 @@
                 <input type="hidden" name="desconto_aprovado" id="desconto_aprovado"
                     value="{{ $cliente->desconto_aprovado ?? 0 }}" />
 
+                @if($cliente->bloqueado)
+                    <div class="mt-4 p-4 bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 text-red-800 dark:text-red-300 rounded-md">
+                        <div class="flex items-center">
+                            <x-heroicon-s-lock-closed class="h-5 w-5 mr-2" />
+                            <p class="font-bold text-lg">Atenção: Cliente Bloqueado</p>
+                        </div>
+                        <p class="mt-2 text-sm">Este cliente está bloqueado. Descontos exigirão aprovação (independente do limite do vendedor) e opções de pagamento faturadas não devem estar disponíveis.</p>
+                        @if($cliente->ultimoBloqueio)
+                            <p class="mt-1 text-sm font-medium">Motivo: {{ $cliente->ultimoBloqueio->motivo }}</p>
+                        @endif
+                    </div>
+                @endif
+
                 <!-- Pesquisa de Produtos -->
                 <div class="space-y-4">
                     <hr />

@@ -140,7 +140,9 @@ class PagamentoBalcao extends Component
     {
         $valorTotal = $this->orcamento->valor_total_itens ?? 0;
         
-        $maxDescontoBalcao = $valorTotal * 0.03;
+        $isBlocked = $this->orcamento->cliente->bloqueado ?? false;
+        $maxDescontoBalcao = $isBlocked ? 0 : ($valorTotal * 0.03);
+        
         if ($this->descontoBalcao > $maxDescontoBalcao) {
             $this->descontoBalcao = $maxDescontoBalcao;
         }
@@ -280,8 +282,13 @@ class PagamentoBalcao extends Component
             );
         }
 
-        $maxDesconto = $this->orcamento->valor_total_itens * 0.03;
+        $isBlocked = $this->orcamento->cliente->bloqueado ?? false;
+        $maxDesconto = $isBlocked ? 0 : ($this->orcamento->valor_total_itens * 0.03);
+        
         if ($this->descontoBalcao > $maxDesconto) {
+            if ($isBlocked) {
+                throw new \Exception('Cliente bloqueado: desconto de balcão não é permitido.');
+            }
             throw new \Exception(
                 'Desconto de balcão não pode ser maior que 3% do valor total.'
             );

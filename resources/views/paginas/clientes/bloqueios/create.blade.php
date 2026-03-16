@@ -42,10 +42,10 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <x-select name="bloqueado" label="Bloquear">
                                 <option value="">Selecione</option>
-                                <option value="0">Não</option>
-                                <option value="1">Sim</option>
+                                <option value="0" {{ old('bloqueado', $cliente->bloqueado ? '1' : '0') === '0' ? 'selected' : '' }}>Não</option>
+                                <option value="1" {{ old('bloqueado', $cliente->bloqueado ? '1' : '0') === '1' ? 'selected' : '' }}>Sim</option>
                             </x-select>
-                            <x-input name="motivo_bloqueio" label="Motivo do Bloqueio" />
+                            <x-input name="motivo_bloqueio" label="Motivo do Bloqueio" value="{{ old('motivo_bloqueio', $cliente->bloqueado && $cliente->ultimoBloqueio ? $cliente->ultimoBloqueio->motivo : '') }}" />
                         </div>
                     </div>
                     <x-textarea name="observacoes" label="Observações" placeholder="Informações adicionais..." />

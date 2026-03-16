@@ -49,10 +49,19 @@
                     </th>
                     <th class="px-6 py-3 text-left">
                         <button wire:click="sortBy('created_at')" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Data
+                            Data Bloqueio
                         </button>
                     </th>
-                    
+                    <th class="px-6 py-3 text-left">
+                        <span class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 transition">
+                            Status
+                        </span>
+                    </th>
+                    <th class="px-6 py-3 text-left">
+                        <span class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 transition">
+                            Desbloqueado por
+                        </span>
+                    </th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
@@ -61,14 +70,37 @@
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             {{ $b->motivo }}
                         </td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/users/{{ $b->user_id }}" class="hover:underline">>{{ $b->user_id }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
+                            <span class="font-medium">{{ $b->user->name ?? $b->user_id }}</span>
+                        </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             {{ $b->created_at->format('d/m/Y H:i') }}
+                        </td>
+                        <td class="px-6 py-4">
+                            @if (!$b->trashed())
+                                <span class="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                                    <x-heroicon-s-lock-closed class="h-3 w-3" />
+                                    Ativo
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                    <x-heroicon-s-lock-open class="h-3 w-3" />
+                                    Removido
+                                </span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200 text-sm">
+                            @if ($b->trashed() && $b->desbloqueadoPor)
+                                {{ $b->desbloqueadoPor->name }} <br/>
+                                <span class="text-xs text-zinc-500">{{ $b->deleted_at->format('d/m/Y H:i') }}</span>
+                            @else
+                                -
+                            @endif
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
+                        <td colspan="5" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
                             Nenhum bloqueio encontrado.
                         </td>
                     </tr>

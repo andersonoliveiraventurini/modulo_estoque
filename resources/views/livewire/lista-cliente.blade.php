@@ -141,10 +141,21 @@
                             </a>
                         </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            <a href="/clientes/{{ $c->id }}" class="hover:underline">{{ $c->nome }}</a>
+                            <a href="/clientes/{{ $c->id }}" class="hover:underline flex items-center gap-1">
+                                @if($c->bloqueado)
+                                    <x-heroicon-s-lock-closed class="w-4 h-4 text-red-600" title="Cliente Bloqueado" />
+                                @endif
+                                {{ $c->nome }}
+                            </a>
                         </td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/clientes/{{ $c->id }}"
-                                class="hover:underline">{{ $c->nome_fantasia }}</a></td>
+                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
+                            <a href="/clientes/{{ $c->id }}" class="hover:underline flex items-center gap-1">
+                                @if($c->bloqueado)
+                                    <x-heroicon-s-lock-closed class="w-4 h-4 text-red-600" title="Cliente Bloqueado" />
+                                @endif
+                                {{ $c->nome_fantasia }}
+                            </a>
+                        </td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/clientes/{{ $c->id }}"
                                 class="hover:underline">{{ $c->razao_social }}</a></td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a href="/clientes/{{ $c->id }}"

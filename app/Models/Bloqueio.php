@@ -15,6 +15,7 @@ class Bloqueio extends Model
         'cliente_id',
         'motivo',
         'user_id',
+        'desbloqueado_por_id',
     ];
 
     public function cliente()
@@ -25,5 +26,10 @@ class Bloqueio extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function desbloqueadoPor()
+    {
+        return $this->belongsTo(User::class, 'desbloqueado_por_id');
     }
 }

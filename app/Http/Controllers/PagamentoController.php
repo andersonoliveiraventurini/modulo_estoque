@@ -177,8 +177,13 @@ class PagamentoController extends Controller
                 throw new \Exception('Desconto de balcão só é permitido quando parte do pagamento for em Dinheiro ou PIX.');
             }
  
-            $maxDesconto = $valorPixDinheiro * 0.03;
+            $isBlocked = $orcamento->cliente->bloqueado ?? false;
+            $maxDesconto = $isBlocked ? 0 : ($valorPixDinheiro * 0.03);
+            
             if ($descontoBalcao > $maxDesconto + 0.01) {
+                if ($isBlocked) {
+                    throw new \Exception('Cliente bloqueado: desconto de balcão não é permitido.');
+                }
                 throw new \Exception(
                     'Desconto máximo é 3% do valor em Dinheiro/PIX (R$ ' . number_format($maxDesconto, 2, ',', '.') . ').'
                 );
