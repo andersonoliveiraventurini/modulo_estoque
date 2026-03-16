@@ -55,6 +55,15 @@ Controle de produção e transformação de insumos.
 - **Consumo de Insumos**: Baixa automática de matéria-prima baseada na ficha técnica.
 - **Descartes e Perdas**: Registro de desperdícios durante o processo produtivo para conformidade fiscal.
 
+### 8. Inteligência e Relatórios (BI)
+Dashboards e relatórios detalhados para suporte à decisão.
+- **Dashboard Central**: Rota unificada para acesso a todos os relatórios do sistema.
+- **Gestão de Validade**: Relatórios de vencimento por lote e alertas de proximidade.
+- **Análise de Movimentação**: Histórico detalhado de reposições e fluxos internos.
+- **Recebimento e N.C**: Auditoria de recebimento com vínculo a NF/Romaneio e registros de não conformidade.
+- **Vendas e Margem**: Análise de lucratividade por produto, descontos concedidos e volume de vendas no período.
+- **Estoque Crítico**: Visualização de itens abaixo do estoque mínimo.
+
 ---
 
 ## 🛠 Comandos Técnicos e Manutenção

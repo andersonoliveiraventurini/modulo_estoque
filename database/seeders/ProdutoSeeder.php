@@ -7,6 +7,8 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SeederDuplicateNotification;
 
 class ProdutoSeeder extends Seeder
 {
@@ -41,9 +43,9 @@ class ProdutoSeeder extends Seeder
         $header[0] = preg_replace('/^\xEF\xBB\xBF/', '', $header[0] ?? '');
         $header = array_map(fn($h) => mb_strtolower(trim($h)), $header);
 
-        $line = 1;          // linha do cabeçalho
         $ok   = 0;
         $fail = 0;
+        $skippedRecords = [];
         $startedAt = microtime(true);
 
         $this->command->info("Iniciando importação de produtos a partir de: {$this->csvPath}");
@@ -134,6 +136,34 @@ class ProdutoSeeder extends Seeder
                             $produtoData['fornecedor_id'] = $fornecedorId;
                         }
 
+                        // Verificações de Unicidade
+                        $sku = $produtoData['sku'];
+                        $partNumber = $trimOrNull($data['part_number'] ?? null); // Preciso garantir que pego part_number se existir
+                        $nome = $produtoData['nome'];
+                        $corId = $toInt($data['cor_id'] ?? null);
+
+                        // 1. SKU Único
+                        if ($sku && DB::table('produtos')->where('sku', $sku)->exists()) {
+                            throw new \Exception("SKU Duplicado: {$sku}");
+                        }
+
+                        // 2. Part Number Único
+                        if ($partNumber && DB::table('produtos')->where('part_number', $partNumber)->exists()) {
+                            throw new \Exception("Part Number Duplicado: {$partNumber}");
+                        }
+
+                        // 3. Nome + Fornecedor + Cor Único
+                        if (DB::table('produtos')
+                            ->where('nome', $nome)
+                            ->where('fornecedor_id', $fornecedorId)
+                            ->where('cor_id', $corId)
+                            ->exists()) {
+                            throw new \Exception("Combinação Nome+Fornecedor+Cor já existe");
+                        }
+
+                        $produtoData['part_number'] = $partNumber;
+                        $produtoData['cor_id'] = $corId;
+
                         // Insere produto
                         DB::table('produtos')->insert($produtoData);
                     });
@@ -145,9 +175,20 @@ class ProdutoSeeder extends Seeder
                         $this->command->info("Progresso: {$ok} produtos importados...");
                     }
                 } catch (\Throwable $e) {
-                    $fail++;
-                    Log::error("Linha {$line}: falha ao inserir produto. Erro: {$e->getMessage()}");
-                    Log::error("Dados da linha: " . json_encode($data));
+                    if (str_contains($e->getMessage(), 'Duplicado') || str_contains($e->getMessage(), 'já existe')) {
+                        $skippedRecords[] = [
+                            'line' => $line,
+                            'sku' => $data['referencia'] ?? 'N/A',
+                            'referencia' => $data['codigo'] ?? 'N/A',
+                            'nome' => $data['descrição'] ?? 'N/A',
+                            'reason' => $e->getMessage()
+                        ];
+                        $this->command->warn("Linha {$line}: Ignorado - " . $e->getMessage());
+                    } else {
+                        $fail++;
+                        Log::error("Linha {$line}: falha ao inserir produto. Erro: {$e->getMessage()}");
+                        Log::error("Dados da linha: " . json_encode($data));
+                    }
                 }
             }
         } finally {
@@ -238,6 +279,12 @@ class ProdutoSeeder extends Seeder
 
         if ($fail > 0) {
             $this->command->warn("Houveram {$fail} falhas. Consulte storage/logs/laravel.log para detalhes.");
+        }
+
+        if (!empty($skippedRecords)) {
+            $this->command->warn("Enviando e-mail com " . count($skippedRecords) . " registros ignorados...");
+            Mail::to('anderson.oliveira.venturini@gmail.com')->send(new SeederDuplicateNotification($skippedRecords));
+            $this->command->info("E-mail enviado com sucesso.");
         }
     }
 }

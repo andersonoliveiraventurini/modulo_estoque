@@ -14,15 +14,28 @@ class Movimentacao extends Model
     protected $table = 'movimentacoes';
 
     protected $fillable = [
+        'tipo',
         'status',
+        'data_movimentacao',
+        'pedido_id',
+        'pedido_compra_id',
+        'nota_fiscal_fornecedor',
+        'arquivo_nota_fiscal',
+        'romaneiro',
+        'observacao',
+        'usuario_id',
+        'usuario_editou_id',
         'supervisor_id',
         'aprovado_em',
-        'usuario_editou_id',
+        'is_reposicao',
+        'is_devolucao',
     ];
 
     protected $casts = [
         'data_movimentacao' => 'date',
         'aprovado_em' => 'datetime',
+        'is_reposicao' => 'boolean',
+        'is_devolucao' => 'boolean',
     ];
 
 

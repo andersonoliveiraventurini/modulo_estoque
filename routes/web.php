@@ -341,12 +341,23 @@ Route::middleware(['auth'])->group(function () {
     Route::get('rdstation/listar-negociacoes', [RdstationController::class, 'listarNegociacoes'])->name('rdstation.listar-negociacoes');
     Route::get('rdstation/criar-empresa/{id}', [RdstationController::class, 'criarEmpresa'])->name('rdstation.criar-empresa.id');
 
-    // Relatórios de Compras
+    // Relatórios de Estoques e Compras
     Route::prefix('relatorios')->group(function () {
+        Route::get('/', [RelatorioController::class, 'index'])->name('relatorios.index');
         Route::get('/estoque-critico', [RelatorioController::class, 'estoqueCritico'])->name('relatorios.estoque_critico');
         Route::get('/historico-compras', [RelatorioController::class, 'historicoCompras'])->name('relatorios.historico_compras');
         Route::get('/fornecedores-frequentes', [RelatorioController::class, 'fornecedoresFrequentes'])->name('relatorios.fornecedores_frequentes');
         Route::get('/comparativo-precos', [RelatorioController::class, 'comparativoPrecos'])->name('relatorios.comparativo_precos');
+        
+        // Novos Relatórios Solicidados
+        Route::get('/vencimento-produtos', [RelatorioController::class, 'vencimentoProdutos'])->name('relatorios.vencimento_produtos');
+        Route::get('/reposicao-estoque', [RelatorioController::class, 'reposicaoEstoque'])->name('relatorios.reposicao_estoque');
+        Route::get('/recebimento-produtos', [RelatorioController::class, 'recebimentoProdutos'])->name('relatorios.recebimento_produtos');
+        Route::get('/devolucoes', [RelatorioController::class, 'devolucoes'])->name('relatorios.devolucoes');
+        Route::get('/nao-conformidade', [RelatorioController::class, 'naoConformidade'])->name('relatorios.nao_conformidade');
+        Route::get('/saida-produtos', [RelatorioController::class, 'saidaProdutos'])->name('relatorios.saida_produtos');
+        Route::get('/vendas-margem', [RelatorioController::class, 'vendasMargem'])->name('relatorios.vendas_margem');
+
         // ── Logística / Separação ───────────────────────────────────────────
         Route::get('/separacao-por-roteiro', [RelatorioController::class, 'separacaoPorRoteiro'])->name('relatorios.separacao_por_roteiro');
         Route::get('/separacao-por-roteiro/exportar', [RelatorioController::class, 'exportarSeparacaoPorRoteiro'])->name('relatorios.separacao_roteiro_export');

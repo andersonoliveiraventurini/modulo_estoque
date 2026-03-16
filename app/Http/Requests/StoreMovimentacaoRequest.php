@@ -25,6 +25,8 @@ class StoreMovimentacaoRequest extends FormRequest
             'arquivo_nota_fiscal' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
             'romaneiro' => 'nullable|string',
             'observacao' => 'nullable|string',
+            'is_reposicao' => 'nullable|boolean',
+            'is_devolucao' => 'nullable|boolean',
             'produtos' => 'required|array|min:1',
             'produtos.*.fornecedor_id' => 'nullable|exists:fornecedores,id',
             'produtos.*.produto_id' => 'required|exists:produtos,id',
@@ -41,6 +43,7 @@ class StoreMovimentacaoRequest extends FormRequest
             'produtos.*.nome' => 'nullable|string',
             'produtos.*.cor' => 'nullable|string',
             'produtos.*.fornecedor_nome' => 'nullable|string',
+            'produtos.*.data_vencimento' => 'nullable|date',
         ];
     }
 }

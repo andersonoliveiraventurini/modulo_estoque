@@ -64,6 +64,18 @@
                             </div>
 
                             <x-input name="romaneiro" label="Romaneiro" placeholder="(opcional)" value="{{ old('romaneiro') }}" />
+                            
+                            <div class="flex items-center gap-6 mt-6 md:mt-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" name="is_reposicao" value="1" {{ old('is_reposicao') ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">É Reposição?</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" name="is_devolucao" value="1" {{ old('is_devolucao') ? 'checked' : '' }} class="rounded border-gray-300 text-orange-600 focus:ring-orange-500">
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">É Devolução?</span>
+                                </label>
+                            </div>
+
                             <div class="md:col-span-3">
                                 <x-input name="observacao" label="Observação Geral" placeholder="..." value="{{ old('observacao') }}" />
                             </div>
@@ -93,6 +105,7 @@
                                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Produto</th>
                                         <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase w-20">Qtd.</th>
                                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase w-32">V. Unit.</th>
+                                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Vencimento</th>
                                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Localização</th>
                                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Obs.</th>
                                         <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase w-20">Ações</th>
@@ -138,9 +151,13 @@
                 <div class="md:col-span-2">
                     <livewire:seletor-enderecamento />
                 </div>
-                <div class="md:col-span-2">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Data de Vencimento</label>
+                    <input id="modal-vencimento-input" type="date" class="mt-1 block w-full border border-gray-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white rounded-md px-3 py-2" />
+                </div>
+                <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Observação do Item</label>
-                    <input id="modal-obs-input" type="text" placeholder="Ex: pacote aberto, cor alterada..." class="mt-1 block w-full border border-gray-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white rounded-md px-3 py-2" />
+                    <input id="modal-obs-input" type="text" placeholder="Ex: pacote aberto..." class="mt-1 block w-full border border-gray-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white rounded-md px-3 py-2" />
                 </div>
             </div>
 
@@ -198,6 +215,7 @@
             document.getElementById('modal-corredor-input').value = '';
             document.getElementById('modal-posicao-input').value = '';
             document.getElementById('modal-obs-input').value = '';
+            document.getElementById('modal-vencimento-input').value = '';
             
             document.getElementById('modal-confirmacao').classList.remove('hidden');
         }
@@ -227,6 +245,7 @@
                 corredor_id: enderecamentoAtual.corredor_id,
                 posicao_id: enderecamentoAtual.posicao_id,
                 observacao: document.getElementById('modal-obs-input').value,
+                data_vencimento: document.getElementById('modal-vencimento-input').value,
                 maxQtd: produtoSendoAdicionado.maxQtd,
                 locked: produtoSendoAdicionado.locked || false // Se vem de Pedido, bloqueia seleção de produto
             };
@@ -284,6 +303,11 @@
                                 <input type="hidden" name="produtos[${i}][corredor_id]" value="${p.corredor_id || ''}">
                                 <input type="hidden" name="produtos[${i}][posicao_id]" value="${p.posicao_id || ''}">
                             </div>
+                        </td>
+                        <td class="px-4 py-2 text-center">
+                            <input type="date" name="produtos[${i}][data_vencimento]" value="${p.data_vencimento || ''}" 
+                                onchange="updateItem(${i}, 'data_vencimento', this.value)"
+                                class="w-32 text-xs border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 rounded p-1">
                         </td>
                         <td class="px-4 py-2">
                             <input type="text" name="produtos[${i}][observacao]" value="${p.observacao || ''}" 

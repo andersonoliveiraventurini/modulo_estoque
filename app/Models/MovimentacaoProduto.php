@@ -27,6 +27,11 @@ class MovimentacaoProduto extends Model
         'corredor',
         'posicao',
         'observacao',
+        'data_vencimento',
+    ];
+
+    protected $casts = [
+        'data_vencimento' => 'date',
     ];
 
     public function movimentacao()

@@ -13,9 +13,22 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use App\Models\PickingItem;
 use App\Models\ConferenciaItem;
 use Illuminate\Support\Facades\DB;
+use App\Models\Movimentacao;
+use App\Models\MovimentacaoProduto;
+use App\Models\InconsistenciaRecebimento;
+use App\Models\OrcamentoItens;
+use App\Models\User;
 
 class RelatorioController extends Controller
 {
+    /**
+     * Dashboard de relatórios.
+     */
+    public function index()
+    {
+        return view('paginas.relatorios.index');
+    }
+
     /**
      * Lista produtos com estoque abaixo do mínimo.
      */
@@ -291,5 +304,172 @@ class RelatorioController extends Controller
         $divergencias = $separacoes->concat($conferencias)->sortByDesc('data');
 
         return view('paginas.relatorios.divergencias', compact('divergencias'));
+    }
+
+    /**
+     * Relatório de Data de Vencimento de Produtos.
+     */
+    public function vencimentoProdutos(Request $request)
+    {
+        $query = MovimentacaoProduto::query()
+            ->join('movimentacoes', 'movimentacoes.id', '=', 'movimentacao_produtos.movimentacao_id')
+            ->join('produtos', 'produtos.id', '=', 'movimentacao_produtos.produto_id')
+            ->where('movimentacoes.status', 'aprovado')
+            ->whereNotNull('movimentacao_produtos.data_vencimento')
+            ->select('movimentacao_produtos.*');
+
+        if ($request->filled('fornecedor_id')) {
+            $query->where('movimentacao_produtos.fornecedor_id', $request->fornecedor_id);
+        }
+
+        if ($request->filled('produto_nome')) {
+            $query->where('produtos.nome', 'like', '%' . $request->produto_nome . '%');
+        }
+
+        if ($request->filled('sku')) {
+            $query->where('produtos.sku', 'like', '%' . $request->sku . '%');
+        }
+
+        if ($request->filled('data_inicio')) {
+            $query->where('movimentacao_produtos.data_vencimento', '>=', $request->data_inicio);
+        }
+
+        if ($request->filled('data_fim')) {
+            $query->where('movimentacao_produtos.data_vencimento', '<=', $request->data_fim);
+        }
+
+        $vencimentos = $query->with(['produto', 'fornecedor'])->paginate(20);
+        $fornecedores = Fornecedor::all(['id', 'nome_fantasia']);
+
+        return view('paginas.relatorios.vencimento_produtos', compact('vencimentos', 'fornecedores'));
+    }
+
+    /**
+     * Relatório de Movimentação de Estoque - Reposição de Estoque.
+     */
+    public function reposicaoEstoque(Request $request)
+    {
+        $query = Movimentacao::where('is_reposicao', true)
+            ->where('status', 'aprovado')
+            ->with(['itens.produto', 'fornecedor', 'usuario', 'supervisor']);
+
+        if ($request->filled('data_inicio')) {
+            $query->where('data_movimentacao', '>=', $request->data_inicio);
+        }
+        if ($request->filled('data_fim')) {
+            $query->where('data_movimentacao', '<=', $request->data_fim);
+        }
+        if ($request->filled('fornecedor_id')) {
+            $query->where('fornecedor_id', $request->fornecedor_id);
+        }
+        if ($request->filled('repositor_id')) {
+            $query->where('usuario_id', $request->repositor_id);
+        }
+        if ($request->filled('supervisor_id')) {
+            $query->where('supervisor_id', $request->supervisor_id);
+        }
+
+        $movimentacoes = $query->latest('data_movimentacao')->paginate(20);
+        $fornecedores = Fornecedor::all(['id', 'nome_fantasia']);
+        $usuarios = User::all(['id', 'name']);
+
+        return view('paginas.relatorios.reposicao_estoque', compact('movimentacoes', 'fornecedores', 'usuarios'));
+    }
+
+    /**
+     * Relatório de Recebimento de Produtos.
+     */
+    public function recebimentoProdutos(Request $request)
+    {
+        $query = Movimentacao::where('tipo', 'entrada')
+            ->where('status', 'aprovado')
+            ->with(['itens.produto', 'fornecedor', 'usuario', 'pedidoCompra']);
+
+        if ($request->filled('data_inicio')) $query->where('data_movimentacao', '>=', $request->data_inicio);
+        if ($request->filled('data_fim')) $query->where('data_movimentacao', '<=', $request->data_fim);
+        if ($request->filled('fornecedor_id')) $query->where('fornecedor_id', $request->fornecedor_id);
+        if ($request->filled('nf')) $query->where('nota_fiscal_fornecedor', 'like', '%' . $request->nf . '%');
+        if ($request->filled('romaneio')) $query->where('romaneiro', 'like', '%' . $request->romaneio . '%');
+
+        $recebimentos = $query->latest('data_movimentacao')->paginate(20);
+        $fornecedores = Fornecedor::all(['id', 'nome_fantasia']);
+        $vendedores = User::all(['id', 'name']); // Assuming sellers are users
+
+        return view('paginas.relatorios.recebimento_produtos', compact('recebimentos', 'fornecedores', 'vendedores'));
+    }
+
+    /**
+     * Relatório de Devoluções.
+     */
+    public function devolucoes(Request $request)
+    {
+        $query = Movimentacao::where('is_devolucao', true)
+            ->where('status', 'aprovado')
+            ->with(['itens.produto', 'fornecedor', 'usuario']);
+
+        if ($request->filled('data_inicio')) $query->where('data_movimentacao', '>=', $request->data_inicio);
+        if ($request->filled('data_fim')) $query->where('data_movimentacao', '<=', $request->data_fim);
+
+        $devolucoes = $query->latest('data_movimentacao')->paginate(20);
+
+        return view('paginas.relatorios.devolucoes', compact('devolucoes'));
+    }
+
+    /**
+     * Relatório de Não Conformidade.
+     */
+    public function naoConformidade(Request $request)
+    {
+        $query = InconsistenciaRecebimento::with(['pedidoCompra', 'produto', 'usuario', 'movimentacao']);
+
+        if ($request->filled('data_inicio')) $query->where('created_at', '>=', $request->data_inicio);
+        if ($request->filled('data_fim')) $query->where('created_at', '<=', $request->data_fim);
+
+        $inconsistencias = $query->latest()->paginate(20);
+
+        return view('paginas.relatorios.nao_conformidade', compact('inconsistencias'));
+    }
+
+    /**
+     * Relatório de Saída de Produtos.
+     */
+    public function saidaProdutos(Request $request)
+    {
+        $query = Movimentacao::where('tipo', 'saida')
+            ->where('status', 'aprovado')
+            ->with(['itens.produto', 'usuario']);
+
+        if ($request->filled('data_inicio')) $query->where('data_movimentacao', '>=', $request->data_inicio);
+        if ($request->filled('data_fim')) $query->where('data_movimentacao', '<=', $request->data_fim);
+
+        $saidas = $query->latest('data_movimentacao')->paginate(20);
+
+        return view('paginas.relatorios.saida_produtos', compact('saidas'));
+    }
+
+    /**
+     * Relatório de Produtos Vendas Margem.
+     */
+    public function vendasMargem(Request $request)
+    {
+        $vendas = collect();
+        $produto = null;
+
+        if ($request->filled('produto_id')) {
+            $produto = Produto::find($request->produto_id);
+            $query = OrcamentoItens::where('produto_id', $request->produto_id)
+                ->whereHas('orcamento', function($q) use ($request) {
+                    $q->where('status', 'concluido');
+                    if ($request->filled('data_inicio')) $q->where('created_at', '>=', $request->data_inicio);
+                    if ($request->filled('data_fim')) $q->where('created_at', '<=', $request->data_fim);
+                })
+                ->with(['orcamento.cliente', 'orcamento.vendedor']);
+            
+            $vendas = $query->get();
+        }
+
+        $produtos = Produto::all(['id', 'nome', 'sku']);
+
+        return view('paginas.relatorios.vendas_margem', compact('vendas', 'produto', 'produtos'));
     }
 }

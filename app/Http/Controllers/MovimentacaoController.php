@@ -69,6 +69,8 @@ class MovimentacaoController extends Controller
                 'arquivo_nota_fiscal' => $nfPath,
                 'romaneiro' => $request->romaneiro,
                 'observacao' => $request->observacao,
+                'is_reposicao' => $request->boolean('is_reposicao'),
+                'is_devolucao' => $request->boolean('is_devolucao'),
                 'usuario_id' => auth()->id(),
             ]);
 
@@ -86,6 +88,7 @@ class MovimentacaoController extends Controller
                     'corredor' => $produtoData['corredor'] ?? null,
                     'posicao' => $produtoData['posicao'] ?? null,
                     'observacao' => $produtoData['observacao'] ?? null,
+                    'data_vencimento' => $produtoData['data_vencimento'] ?? null,
                 ]);
                 
                 // O estoque NÃO é alterado aqui. Aguarda aprovação.
@@ -296,6 +299,8 @@ class MovimentacaoController extends Controller
                 'arquivo_nota_fiscal' => $nfPath,
                 'romaneiro' => $request->romaneiro,
                 'observacao' => $request->observacao,
+                'is_reposicao' => $request->boolean('is_reposicao'),
+                'is_devolucao' => $request->boolean('is_devolucao'),
                 'usuario_editou_id' => auth()->id(),
             ]);
 
@@ -311,6 +316,7 @@ class MovimentacaoController extends Controller
                     'corredor' => $produtoData['corredor'] ?? null,
                     'posicao' => $produtoData['posicao'] ?? null,
                     'observacao' => $produtoData['observacao'] ?? null,
+                    'data_vencimento' => $produtoData['data_vencimento'] ?? null,
                 ]);
             }
 
