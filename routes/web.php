@@ -44,6 +44,7 @@ use App\Livewire\Logistica\SeparacaoListaPage;
 use App\Http\Controllers\InconsistenciaRecebimentoController;
 use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\RequisicaoCompraController;
+use App\Http\Controllers\RomaneioController;
 
 Volt::route('/', 'auth.login')
     ->name('home');
@@ -191,6 +192,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('status_orcamentos', [OrcamentoController::class, 'kanban_orcamentos'])->name('orcamentos.status_orcamentos');
     // rotas separação e conferência
     Route::get('/logistica/separacao', SeparacaoListaPage::class)->name('logistica.separacao.lista');
+
+    // ========== ROTA DE ROMANEIOS (ENTREGAS) ==========
+    Route::resource('romaneios', RomaneioController::class);
+    Route::post('romaneios/{romaneio}/add-batches', [RomaneioController::class, 'addBatches'])->name('romaneios.add_batches');
+    Route::delete('romaneios/{romaneio}/remove-batch/{batch}', [RomaneioController::class, 'removeBatch'])->name('romaneios.remove_batch');
+    Route::post('romaneios/{romaneio}/update-status', [RomaneioController::class, 'updateStatus'])->name('romaneios.update_status');
+    Route::get('romaneios/{romaneio}/pdf', [RomaneioController::class, 'exportPdf'])->name('romaneios.pdf');
 
     Route::get('/separacao', ListaSeparacao::class)->name('separacao.index');
     Route::get('/conferencia', ListaConferencia::class)->name('conferencia.index');
@@ -341,6 +349,7 @@ Route::middleware(['auth'])->group(function () {
         // ── Logística / Separação ───────────────────────────────────────────
         Route::get('/separacao-por-roteiro', [RelatorioController::class, 'separacaoPorRoteiro'])->name('relatorios.separacao_por_roteiro');
         Route::get('/separacao-por-roteiro/exportar', [RelatorioController::class, 'exportarSeparacaoPorRoteiro'])->name('relatorios.separacao_roteiro_export');
+        Route::get('/separacao-por-roteiro/pdf', [RelatorioController::class, 'exportarSeparacaoPorRoteiroPdf'])->name('relatorios.separacao_roteiro_pdf');
     });
     // ── Faturamento e Inadimplência ──────────────────────────────────────────
     Route::prefix('faturamento')->name('faturamento.')->group(function () {

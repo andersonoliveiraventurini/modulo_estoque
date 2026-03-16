@@ -5,9 +5,11 @@ namespace App\Livewire\Logistica;
 use App\Models\EstoqueReserva;
 use App\Models\PickingItem;
 use Illuminate\Database\Eloquent\Builder;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 
+#[Title('Itens em Separação')]
 class SeparacaoListaPage extends Component
 {
     use WithPagination;

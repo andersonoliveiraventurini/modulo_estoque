@@ -15,7 +15,10 @@ class PickingBatch extends Model
         'qtd_sacos',
         'qtd_sacolas',
         'outros_embalagem',
+        'romaneio_id',
     ];
+
+    public function romaneio() { return $this->belongsTo(Romaneio::class); }
 
     protected $casts = [
         'started_at' => 'datetime',

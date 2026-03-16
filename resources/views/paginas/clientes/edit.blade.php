@@ -156,6 +156,7 @@
                                     value="{{ old('endereco_compl', $cliente->enderecoComercial?->complemento) }}" />
                                 <x-input name="endereco_logradouro" readonly class="md:col-span-3" label="Logradouro"
                                     value="{{ old('endereco_logradouro', $cliente->enderecoComercial?->logradouro) }}" />
+                                    value="{{ old('endereco_compl', $cliente->enderecoComercial?->complemento) }}" />
                             </div>
                         </x-tab>
 
@@ -176,6 +177,7 @@
                                     value="{{ old('entrega_compl', $cliente->enderecoEntrega?->complemento) }}" />
                                 <x-input name="entrega_logradouro" readonly class="md:col-span-3" label="Logradouro"
                                     value="{{ old('entrega_logradouro', $cliente->enderecoEntrega?->logradouro) }}" />
+                                    value="{{ old('entrega_compl', $cliente->enderecoEntrega?->complemento) }}" />
                             </div>
                         </x-tab>
                     </x-tabs>

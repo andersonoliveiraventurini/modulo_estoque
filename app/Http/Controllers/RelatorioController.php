@@ -6,6 +6,8 @@ use App\Models\PickingBatch;
 use App\Models\Produto;
 use App\Models\PedidoCompra;
 use App\Models\Fornecedor;
+use App\Models\Cliente;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\DB;
@@ -92,29 +94,35 @@ class RelatorioController extends Controller
     // ── Logística / Separação ────────────────────────────────────────────────
 
     /**
-     * Relatório de Separações concluídas agrupadas por Roteiro.
+     * Relatório de Fila de Entrega (Pedidos concluídos aguardando romaneio).
      */
     public function separacaoPorRoteiro(Request $request)
     {
         $query = $this->buildSeparacaoQuery($request);
 
+        // Apenas lotes que NÃO estão em nenhum romaneio
+        $query->whereNull('romaneio_id');
+
         $batches = $query->with([
                 'orcamento.cliente.enderecos',
                 'orcamento.vendedor',
                 'criadoPor',
+                'items.produto'
             ])
-            ->paginate(25);
-
-        // Agrupa por roteiro para sumário
-        $roteiros = (clone $query->getQuery())
-            ->select('enderecos.roteiro', DB::raw('COUNT(picking_batches.id) as total_lotes'))
-            ->join('orcamentos', 'orcamentos.id', '=', 'picking_batches.orcamento_id')
-            ->join('enderecos', 'enderecos.cliente_id', '=', 'orcamentos.cliente_id')
-            ->groupBy('enderecos.roteiro')
-            ->orderBy('enderecos.roteiro')
             ->get();
 
-        return view('paginas.relatorios.separacao_por_roteiro', compact('batches', 'roteiros'));
+        // Agrupamos os lotes por Cidade/Bairro já que não usamos mais rota fixa no cliente
+        $groupedBatches = $batches->groupBy(function($batch) {
+            $cliente = $batch->orcamento?->cliente;
+            $endereco = $cliente?->enderecos->where('tipo', 'entrega')->first() 
+                     ?? $cliente?->enderecos->where('tipo', 'comercial')->first();
+            
+            return $endereco ? "{$endereco->cidade} - {$endereco->bairro}" : 'SEM ENDEREÇO';
+        });
+
+        $stats = $batches->count();
+
+        return view('paginas.relatorios.separacao_por_roteiro', compact('groupedBatches', 'stats'));
     }
 
     /**
@@ -123,6 +131,7 @@ class RelatorioController extends Controller
     public function exportarSeparacaoPorRoteiro(Request $request): StreamedResponse
     {
         $batches = $this->buildSeparacaoQuery($request)
+            ->whereNull('romaneio_id')
             ->with(['orcamento.cliente.enderecos', 'orcamento.vendedor', 'criadoPor'])
             ->get();
 
@@ -194,10 +203,11 @@ class RelatorioController extends Controller
     private function buildSeparacaoQuery(Request $request)
     {
         return PickingBatch::query()
-            ->where('status', 'concluido')
+            ->where('picking_batches.status', 'concluido')
             ->when($request->filled('roteiro'), function ($q) use ($request) {
                 $q->whereHas('orcamento.cliente.enderecos', function ($q2) use ($request) {
-                    $q2->where('roteiro', 'like', '%' . $request->roteiro . '%');
+                    $q2->where('cidade', 'like', '%' . $request->roteiro . '%')
+                       ->orWhere('bairro', 'like', '%' . $request->roteiro . '%');
                 });
             })
             ->when($request->filled('data_inicio'), function ($q) use ($request) {
@@ -206,12 +216,28 @@ class RelatorioController extends Controller
             ->when($request->filled('data_fim'), function ($q) use ($request) {
                 $q->whereDate('finished_at', '<=', $request->data_fim);
             })
-            ->orderByRaw("
-                (SELECT roteiro FROM enderecos
-                 JOIN orcamentos ON orcamentos.cliente_id = enderecos.cliente_id
-                 WHERE orcamentos.id = picking_batches.orcamento_id
-                 LIMIT 1) ASC
-            ")
-            ->latest('finished_at');
+            ->orderBy('finished_at', 'desc');
+    }
+
+    /**
+     * Exporta Separações concluídas em PDF para o motorista.
+     */
+    public function exportarSeparacaoPorRoteiroPdf(Request $request)
+    {
+        $batches = $this->buildSeparacaoQuery($request)
+            ->with([
+                'orcamento.cliente.enderecos',
+                'orcamento.vendedor',
+                'items.produto',
+                'criadoPor'
+            ])
+            ->get();
+
+        $pdf = Pdf::loadView('paginas.relatorios.pdf.separacao_roteiro_motorista', compact('batches'));
+
+        // Configurações para paisagem se houver muitas colunas ou papel A4 normal
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->download('separacao_roteiro_' . now()->format('Ymd_His') . '.pdf');
     }
 }

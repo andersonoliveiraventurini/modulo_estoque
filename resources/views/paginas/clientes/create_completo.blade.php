@@ -188,6 +188,7 @@
                                 <x-input id="endereco_compl" name="endereco_compl" label="Complemento"
                                     placeholder="Complemento - Apto, Bloco, etc."
                                     value="{{ old('endereco_compl') }}" />
+                                    value="{{ old('endereco_compl') }}" />
                             </div>
 
                         </div>
@@ -223,6 +224,7 @@
                                     value="{{ old('entrega_numero') }}" />
                                 <x-input id="entrega_compl" name="entrega_compl" label="Complemento"
                                     placeholder="Complemento - Apto, Bloco, etc."
+                                    value="{{ old('entrega_compl') }}" />
                                     value="{{ old('entrega_compl') }}" />
                             </div>
                         </div>

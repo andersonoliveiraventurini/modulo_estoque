@@ -64,8 +64,11 @@
             <flux:navlist.item icon="check-circle" :href="route('conferencia.index')"
                 :current="request()->routeIs('conferencia.index')" wire:navigate>{{ __('Conferência') }}
             </flux:navlist.item>
+            <flux:navlist.item icon="truck" :href="route('romaneios.index')"
+                :current="request()->routeIs('romaneios.*')" wire:navigate>{{ __('Romaneios (Entregas)') }}
+            </flux:navlist.item>
             <flux:navlist.item icon="document-chart-bar" :href="route('relatorios.separacao_por_roteiro')"
-                :current="request()->routeIs('relatorios.separacao_por_roteiro')" wire:navigate>{{ __('Relatório por Roteiro') }}
+                :current="request()->routeIs('relatorios.separacao_por_roteiro')" wire:navigate>{{ __('Fila de Carga') }}
             </flux:navlist.item>
         </flux:navlist.group>
 
