@@ -30,9 +30,9 @@
                             <x-input name="codigo_barras" label="Código de Barras"
                                 value="{{ old('codigo_barras', $produto->codigo_barras) }}" />
 
-                            <x-input name="sku" label="SKU/Código" value="{{ old('sku', $produto->sku) }}" />
+                            <x-input name="sku" label="SKU/Código" value="{{ old('sku', $produto->sku) }}" required />
 
-                            <x-select name="fornecedor_id" label="Fornecedor">
+                            <x-select name="fornecedor_id" label="Fornecedor" required>
                                 <option value="">Selecione...</option>
                                 @foreach ($fornecedores as $fornecedor)
                                     <option value="{{ $fornecedor->id }}" @selected(old('fornecedor_id', $produto->fornecedor_id) == $fornecedor->id)>
@@ -52,23 +52,26 @@
                                 @endforeach
                             </x-select>
 
+                            @php
+                                $unidades = [
+                                    'UN'  => 'UN - Unidade',
+                                    'PC'  => 'PC - Peça',
+                                    'CX'  => 'CX - Caixa',
+                                    'KG'  => 'KG - Quilograma',
+                                    'G'   => 'G - Grama',
+                                    'M'   => 'M - Metro',
+                                    'M2'  => 'M2 - Metro quadrado',
+                                    'M3'  => 'M3 - Metro cúbico',
+                                    'L'   => 'L - Litro',
+                                    'ML'  => 'ML - Mililitro',
+                                    'PAR' => 'PAR - Par',
+                                    'RL'  => 'RL - Rolo',
+                                    'PT'  => 'PT - Pacote',
+                                ];
+                            @endphp
                             <x-select name="unidade_medida" label="Unidade de Medida *" required>
                                 <option value="">Selecione...</option>
-                                @foreach ([
-                                        'UN - Unidade'     => 'UN - Unidade',
-                                        'PC - Peça'        => 'PC - Peça',
-                                        'CX - Caixa'       => 'CX - Caixa',
-                                        'KG - Quilograma'  => 'KG - Quilograma',
-                                        'G - Grama'        => 'G - Grama',
-                                        'M - Metro'        => 'M - Metro',
-                                        'M2 - Metro quadrado' => 'M2 - Metro quadrado',
-                                        'M3 - Metro cúbico'   => 'M3 - Metro cúbico',
-                                        'L - Litro'        => 'L - Litro',
-                                        'ML - Mililitro'   => 'ML - Mililitro',
-                                        'PAR - Par'        => 'PAR - Par',
-                                        'RL - Rolo'        => 'RL - Rolo',
-                                        'PT - Pacote'      => 'PT - Pacote',
-                                    ] as $val => $label)
+                                @foreach ($unidades as $val => $label)
                                     <option value="{{ $val }}" @selected(old('unidade_medida', $produto->unidade_medida) == $val)>
                                         {{ $label }}
                                     </option>
@@ -222,22 +225,25 @@
                                         Informações Fiscais - Saída
                                     </h3>
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                                        @php
+                                            $tiposSped = [
+                                                '00' => '00 - Mercadoria para Revenda',
+                                                '01' => '01 - Matéria-Prima',
+                                                '02' => '02 - Embalagem',
+                                                '03' => '03 - Produto em Processo',
+                                                '04' => '04 - Produto Acabado',
+                                                '05' => '05 - Subproduto',
+                                                '06' => '06 - Produto Intermediário',
+                                                '07' => '07 - Material de Uso e Consumo',
+                                                '08' => '08 - Ativo Imobilizado',
+                                                '09' => '09 - Serviços',
+                                                '10' => '10 - Outros Insumos',
+                                                '99' => '99 - Outras',
+                                            ];
+                                        @endphp
                                         <x-select name="tipo_sped" label="Tipo Produto SPED">
                                             <option value="">Selecione...</option>
-                                            @foreach ([
-        '00' => '00 - Mercadoria para Revenda',
-        '01' => '01 - Matéria-Prima',
-        '02' => '02 - Embalagem',
-        '03' => '03 - Produto em Processo',
-        '04' => '04 - Produto Acabado',
-        '05' => '05 - Subproduto',
-        '06' => '06 - Produto Intermediário',
-        '07' => '07 - Material de Uso e Consumo',
-        '08' => '08 - Ativo Imobilizado',
-        '09' => '09 - Serviços',
-        '10' => '10 - Outros Insumos',
-        '99' => '99 - Outras',
-    ] as $key => $label)
+                                            @foreach ($tiposSped as $key => $label)
                                                 <option value="{{ $key }}" @selected(old('tipo_sped', $produto->tipo_sped) == $key)>
                                                     {{ $label }}
                                                 </option>
@@ -310,26 +316,41 @@
     </div>
 
     <script>
-        // Image Previews
+        // Image Previews State
+        let selectedFiles = [];
         const imagesInput = document.getElementById('imagesInput');
         const imagePreviews = document.getElementById('imagePreviews');
 
         imagesInput.addEventListener('change', function() {
-            imagePreviews.innerHTML = '';
             for (const file of this.files) {
                 if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const div = document.createElement('div');
-                        div.className = 'relative border rounded-lg p-2 flex flex-col items-center shadow-sm';
-                        div.innerHTML = `<img src="${e.target.result}" class="w-full h-32 object-cover rounded shadow-sm">
-                                         <span class="text-xs text-center mt-2 truncate w-full" title="${file.name}">${file.name}</span>`;
-                        imagePreviews.appendChild(div);
-                    }
-                    reader.readAsDataURL(file);
+                    selectedFiles.push(file);
                 }
             }
+            imagesInput.value = ''; // Reset input to allow adding the same file again if desired
+            renderPreviews();
         });
+
+        function renderPreviews() {
+            imagePreviews.innerHTML = '';
+            selectedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'relative border rounded-lg p-2 flex flex-col items-center shadow-sm';
+                    div.innerHTML = `<img src="${e.target.result}" class="w-full h-32 object-cover rounded shadow-sm">
+                                     <span class="text-xs text-center mt-2 truncate w-full" title="${file.name}">${file.name}</span>
+                                     <button type="button" class="absolute top-2 right-2 text-red-600 text-sm font-bold bg-white rounded-full w-6 h-6 flex items-center justify-center shadow hover:bg-red-50" onclick="removeFile(${index})">✕</button>`;
+                    imagePreviews.appendChild(div);
+                }
+                reader.readAsDataURL(file);
+            });
+        }
+
+        window.removeFile = function(index) {
+            selectedFiles.splice(index, 1);
+            renderPreviews();
+        };
 
         // AJAX Form Submission
         document.getElementById('produtoForm').addEventListener('submit', async function(e) {
@@ -340,6 +361,13 @@
             submitBtn.innerText = 'Salvando...';
 
             document.querySelectorAll('.js-val-error').forEach(el => el.remove());
+
+            const formData = new FormData(form);
+            formData.delete('images[]'); // Remove any files mistakenly left in the default input
+            
+            selectedFiles.forEach(file => {
+                formData.append('images[]', file);
+            });
 
             try {
                 const response = await fetch(form.action, {

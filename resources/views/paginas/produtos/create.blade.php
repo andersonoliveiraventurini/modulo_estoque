@@ -61,7 +61,7 @@
 
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">SKU / Código</label>
-                                <input type="text" name="sku"
+                                <input type="text" name="sku" required
                                        value="{{ $p('sku') }}"
                                        placeholder="PRD123456"
                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
@@ -69,7 +69,7 @@
 
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Fornecedores ativos</label>
-                                <select name="fornecedor_id"
+                                <select name="fornecedor_id" required
                                         class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
                                     <option value="">Selecione...</option>
                                     @foreach ($fornecedores as $fornecedor)
@@ -100,28 +100,34 @@
                                             {{ $cor->nome }}
                                         </option>
                                     @endforeach
-                                <div>
+                                </select>  {{-- ← faltava </select> --}}
+                            </div>  {{-- ← estava <div> ao invés de </div> --}}
+
+                            <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                                     Unidade de Medida <span class="text-red-500">*</span>
                                 </label>
+                                @php
+                                    $unidades = [
+                                        'UN'  => 'UN - Unidade',
+                                        'PC'  => 'PC - Peça',
+                                        'CX'  => 'CX - Caixa',
+                                        'KG'  => 'KG - Quilograma',
+                                        'G'   => 'G - Grama',
+                                        'M'   => 'M - Metro',
+                                        'M2'  => 'M2 - Metro quadrado',
+                                        'M3'  => 'M3 - Metro cúbico',
+                                        'L'   => 'L - Litro',
+                                        'ML'  => 'ML - Mililitro',
+                                        'PAR' => 'PAR - Par',
+                                        'RL'  => 'RL - Rolo',
+                                        'PT'  => 'PT - Pacote',
+                                    ];
+                                @endphp
                                 <select name="unidade_medida" required
                                         class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
                                     <option value="">Selecione...</option>
-                                    @foreach ([
-                                        'UN - Unidade'     => 'UN - Unidade',
-                                        'PC - Peça'        => 'PC - Peça',
-                                        'CX - Caixa'       => 'CX - Caixa',
-                                        'KG - Quilograma'  => 'KG - Quilograma',
-                                        'G - Grama'        => 'G - Grama',
-                                        'M - Metro'        => 'M - Metro',
-                                        'M2 - Metro quadrado' => 'M2 - Metro quadrado',
-                                        'M3 - Metro cúbico'   => 'M3 - Metro cúbico',
-                                        'L - Litro'        => 'L - Litro',
-                                        'ML - Mililitro'   => 'ML - Mililitro',
-                                        'PAR - Par'        => 'PAR - Par',
-                                        'RL - Rolo'        => 'RL - Rolo',
-                                        'PT - Pacote'      => 'PT - Pacote',
-                                    ] as $val => $label)
+                                    @foreach ($unidades as $val => $label)
                                         <option value="{{ $val }}"
                                             {{ $p('unidade_medida') === $val ? 'selected' : '' }}>
                                             {{ $label }}
@@ -333,10 +339,8 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Tipo Produto SPED</label>
-                                <select name="tipo_sped"
-                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
-                                    <option value="">Selecione...</option>
-                                    @foreach ([
+                                @php
+                                    $tiposSped = [
                                         '00' => '00 - Mercadoria para Revenda',
                                         '01' => '01 - Matéria-Prima',
                                         '02' => '02 - Embalagem',
@@ -349,7 +353,12 @@
                                         '09' => '09 - Serviços',
                                         '10' => '10 - Outros Insumos',
                                         '99' => '99 - Outras',
-                                    ] as $val => $label)
+                                    ];
+                                @endphp
+                                <select name="tipo_sped"
+                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                                    <option value="">Selecione...</option>
+                                    @foreach ($tiposSped as $val => $label)
                                         <option value="{{ $val }}"
                                             {{ $p('tipo_sped') === $val ? 'selected' : '' }}>
                                             {{ $label }}
@@ -456,26 +465,41 @@
             }
         });
 
-        // Image Previews
+        // Image Previews State
+        let selectedFiles = [];
         const imagesInput = document.getElementById('imagesInput');
         const imagePreviews = document.getElementById('imagePreviews');
 
         imagesInput.addEventListener('change', function() {
-            imagePreviews.innerHTML = '';
             for (const file of this.files) {
                 if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const div = document.createElement('div');
-                        div.className = 'relative border rounded-lg p-2 flex flex-col items-center shadow-sm';
-                        div.innerHTML = `<img src="${e.target.result}" class="w-full h-32 object-cover rounded shadow-sm">
-                                         <span class="text-xs text-center mt-2 truncate w-full" title="${file.name}">${file.name}</span>`;
-                        imagePreviews.appendChild(div);
-                    }
-                    reader.readAsDataURL(file);
+                    selectedFiles.push(file);
                 }
             }
+            imagesInput.value = ''; // Reset input so user can add the same file again if desired
+            renderPreviews();
         });
+
+        function renderPreviews() {
+            imagePreviews.innerHTML = '';
+            selectedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'relative border rounded-lg p-2 flex flex-col items-center shadow-sm';
+                    div.innerHTML = `<img src="${e.target.result}" class="w-full h-32 object-cover rounded shadow-sm">
+                                     <span class="text-xs text-center mt-2 truncate w-full" title="${file.name}">${file.name}</span>
+                                     <button type="button" class="absolute top-2 right-2 text-red-600 text-sm font-bold bg-white rounded-full w-6 h-6 flex items-center justify-center shadow hover:bg-red-50" onclick="removeFile(${index})">✕</button>`;
+                    imagePreviews.appendChild(div);
+                }
+                reader.readAsDataURL(file);
+            });
+        }
+
+        window.removeFile = function(index) {
+            selectedFiles.splice(index, 1);
+            renderPreviews();
+        };
 
         // AJAX Form Submission
         document.querySelector('form').addEventListener('submit', async function(e) {
@@ -487,6 +511,13 @@
 
             // Clear previous frontend JS errors
             document.querySelectorAll('.js-val-error').forEach(el => el.remove());
+
+            const formData = new FormData(form);
+            formData.delete('images[]'); // Clean any stray inputs
+            
+            selectedFiles.forEach(file => {
+                formData.append('images[]', file);
+            });
 
             try {
                 const response = await fetch(form.action, {
