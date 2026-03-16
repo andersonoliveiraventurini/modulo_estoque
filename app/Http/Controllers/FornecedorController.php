@@ -306,4 +306,15 @@ class FornecedorController extends Controller
             ->route('fornecedores.index')
             ->with('success', 'Fornecedor deletado com sucesso!');
     }
+
+    public function checkCnpjApi(string $cnpj, \App\Services\CnpjService $cnpjService)
+    {
+        $data = $cnpjService->consultarCnpj($cnpj);
+        
+        if (!$data) {
+            return response()->json(['error' => 'CNPJ não encontrado ou erro na consulta'], 404);
+        }
+
+        return response()->json($data);
+    }
 }

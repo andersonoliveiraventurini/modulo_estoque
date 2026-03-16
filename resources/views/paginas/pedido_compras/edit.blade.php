@@ -27,10 +27,10 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Fornecedor *</label>
-                                <select name="fornecedor_id" class="mt-1 block w-full border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                <select name="fornecedor_id" id="fornecedor_id_select" class="mt-1 block w-full border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
                                     <option value="">Selecione um fornecedor</option>
                                     @foreach($fornecedores as $f)
-                                        <option value="{{ $f->id }}" {{ (old('fornecedor_id') ?? $pedidoCompra->fornecedor_id) == $f->id ? 'selected' : '' }}>{{ $f->nome_fantasia }}</option>
+                                        <option value="{{ $f->id }}" data-cnpj="{{ preg_replace('/\D/', '', $f->cnpj) }}" {{ (old('fornecedor_id') ?? $pedidoCompra->fornecedor_id) == $f->id ? 'selected' : '' }}>{{ $f->nome_fantasia }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -158,6 +158,16 @@
         </div>
     </div>
 
+    @if (isset($fornecedorStatus) && $fornecedorStatus)
+        @if (strtoupper(trim($fornecedorStatus['descricao_situacao_cadastral'] ?? '')) !== 'ATIVA')
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    alert('⚠️ Atenção: O fornecedor vinculado a este pedido não está com a situação ATIVA na Receita Federal.');
+                });
+            </script>
+        @endif
+    @endif
+
     @push('scripts')
     <script>
         let produtosNoPedido = @json($pedidoCompra->itens->map(function($item) {
@@ -283,10 +293,35 @@
         // Render inicial - Compatível com wire:navigate
         document.addEventListener('livewire:navigated', () => {
             renderTable();
+            initSupplierCheck();
         });
 
         // Fallback para primeiro carregamento
-        renderTable();
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTable();
+            initSupplierCheck();
+        });
+
+        function initSupplierCheck() {
+            const select = document.getElementById('fornecedor_id_select');
+            if (!select) return;
+
+            select.addEventListener('change', function() {
+                const option = this.options[this.selectedIndex];
+                const cnpj = option.dataset.cnpj;
+
+                if (!cnpj) return;
+
+                fetch(`/api/cnpj/${cnpj}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.descricao_situacao_cadastral && data.descricao_situacao_cadastral.toUpperCase() !== 'ATIVA') {
+                            alert('⚠️ Atenção: A situação do CNPJ deste fornecedor não está ATIVA na Receita Federal (' + data.descricao_situacao_cadastral + ').');
+                        }
+                    })
+                    .catch(error => console.error('Erro ao verificar CNPJ:', error));
+            });
+        }
     </script>
     @endpush
 </x-layouts.app>

@@ -22,13 +22,21 @@ class PedidoCompraController extends Controller
         return view('paginas.pedido_compras.index', compact('pedidos'));
     }
 
-    public function create()
+    public function create(Request $request, \App\Services\CnpjService $cnpjService)
     {
-        $fornecedores = Fornecedor::select('id', 'nome_fantasia', 'razao_social')->get();
+        $fornecedores = Fornecedor::select('id', 'nome_fantasia', 'razao_social', 'cnpj')->get();
         $produtos = Produto::select('id', 'nome', 'sku')->with('cor')->get();
         $condicoes = CondicoesPagamento::all();
 
-        return view('paginas.pedido_compras.create', compact('fornecedores', 'produtos', 'condicoes'));
+        $fornecedorStatus = null;
+        if ($request->has('fornecedor_id')) {
+            $fornecedor = Fornecedor::find($request->fornecedor_id);
+            if ($fornecedor && $fornecedor->cnpj) {
+                $fornecedorStatus = $cnpjService->consultarCnpj($fornecedor->cnpj);
+            }
+        }
+
+        return view('paginas.pedido_compras.create', compact('fornecedores', 'produtos', 'condicoes', 'fornecedorStatus'));
     }
 
     public function store(Request $request)
@@ -105,13 +113,19 @@ class PedidoCompraController extends Controller
         return view('paginas.pedido_compras.show', compact('pedidoCompra'));
     }
 
-    public function edit(PedidoCompra $pedidoCompra)
+    public function edit(PedidoCompra $pedidoCompra, \App\Services\CnpjService $cnpjService)
     {
         $pedidoCompra->load('itens');
-        $fornecedores = Fornecedor::select('id', 'nome_fantasia', 'razao_social')->get();
+        $fornecedores = Fornecedor::select('id', 'nome_fantasia', 'razao_social', 'cnpj')->get();
         $produtos = Produto::select('id', 'nome', 'sku')->with('cor')->get();
         $condicoes = CondicoesPagamento::all();
-        return view('paginas.pedido_compras.edit', compact('pedidoCompra', 'fornecedores', 'produtos', 'condicoes'));
+
+        $fornecedorStatus = null;
+        if ($pedidoCompra->fornecedor && $pedidoCompra->fornecedor->cnpj) {
+            $fornecedorStatus = $cnpjService->consultarCnpj($pedidoCompra->fornecedor->cnpj);
+        }
+
+        return view('paginas.pedido_compras.edit', compact('pedidoCompra', 'fornecedores', 'produtos', 'condicoes', 'fornecedorStatus'));
     }
 
     public function update(Request $request, PedidoCompra $pedidoCompra)

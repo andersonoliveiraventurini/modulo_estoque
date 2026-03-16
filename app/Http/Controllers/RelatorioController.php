@@ -315,8 +315,9 @@ class RelatorioController extends Controller
             ->join('movimentacoes', 'movimentacoes.id', '=', 'movimentacao_produtos.movimentacao_id')
             ->join('produtos', 'produtos.id', '=', 'movimentacao_produtos.produto_id')
             ->where('movimentacoes.status', 'aprovado')
+            ->where('produtos.estoque_atual', '>', 0)
             ->whereNotNull('movimentacao_produtos.data_vencimento')
-            ->select('movimentacao_produtos.*');
+            ->select('movimentacao_produtos.*', 'produtos.estoque_atual as estoque_total_produto');
 
         if ($request->filled('fornecedor_id')) {
             $query->where('movimentacao_produtos.fornecedor_id', $request->fornecedor_id);

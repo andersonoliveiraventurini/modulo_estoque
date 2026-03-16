@@ -17,9 +17,18 @@
                 </div>
             @endif
 
-            <form action="{{ route('entrada_encomendas.update', $entradaEncomenda->id) }}" method="POST">
-                @csrf
                 @method('PUT')
+
+                @if (isset($fornecedoresStatus) && !empty($fornecedoresStatus))
+                    @foreach ($fornecedoresStatus as $cnpj => $status)
+                        @if ($status && strtoupper(trim($status['descricao_situacao_cadastral'] ?? '')) !== 'ATIVA')
+                            <div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg text-sm text-red-700 dark:text-red-300">
+                                <x-heroicon-o-exclamation-triangle class="w-5 h-5 inline-block mr-1" />
+                                <strong>Aviso:</strong> O fornecedor de CNPJ {{ $cnpj }} não está com a situação ATIVA na Receita Federal ({{ $status['descricao_situacao_cadastral'] ?? 'N/A' }}).
+                            </div>
+                        @endif
+                    @endforeach
+                @endif
 
                 {{-- ── Cabeçalho ──────────────────────────────── --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-4 bg-zinc-50 dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700">

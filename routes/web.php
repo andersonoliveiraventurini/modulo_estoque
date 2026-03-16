@@ -298,6 +298,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('fornecedor/{fornecedor_id}/classificar', [ClassificarFornecedorController::class, 'create'])->name('fornecedores.classificar');
     Route::get('fornecedor/{fornecedor_id}/precos', [FornecedorController::class, 'tabelaPrecos'])->name('fornecedores.precos');
     Route::resource('enderecos', EnderecoController::class)->names('enderecos');
+    Route::get('/api/cnpj/{cnpj}', [FornecedorController::class, 'checkCnpjApi'])->name('api.cnpj.check');
 
 
     Route::resource('armazens', ArmazemController::class)->names('armazens');

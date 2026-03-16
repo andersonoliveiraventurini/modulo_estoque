@@ -36,6 +36,7 @@
                         <th class="px-6 py-4 font-semibold text-neutral-900 dark:text-white">Produto</th>
                         <th class="px-6 py-4 font-semibold text-neutral-900 dark:text-white">SKU</th>
                         <th class="px-6 py-4 font-semibold text-neutral-900 dark:text-white">Fornecedor</th>
+                        <th class="px-6 py-4 font-semibold text-neutral-900 dark:text-white text-center">Estoque Total</th>
                         <th class="px-6 py-4 font-semibold text-neutral-900 dark:text-white text-center">Data Vencimento</th>
                         <th class="px-6 py-4 font-semibold text-neutral-900 dark:text-white text-center">Status</th>
                     </tr>
@@ -48,6 +49,9 @@
                             </td>
                             <td class="px-6 py-4 text-neutral-500">{{ $item->produto->sku }}</td>
                             <td class="px-6 py-4 text-neutral-500">{{ $item->fornecedor->nome_fantasia ?? 'N/A' }}</td>
+                            <td class="px-6 py-4 text-center font-medium text-neutral-900 dark:text-white">
+                                {{ number_format($item->estoque_total_produto, 2, ',', '.') }}
+                            </td>
                             <td class="px-6 py-4 text-center">
                                 <span class="{{ $item->data_vencimento->isPast() ? 'text-red-600 font-bold' : ($item->data_vencimento->diffInDays(now()) < 30 ? 'text-orange-500 font-bold' : 'text-neutral-600') }}">
                                     {{ $item->data_vencimento->format('d/m/Y') }}

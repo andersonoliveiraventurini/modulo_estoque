@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-layouts.app>
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
@@ -12,4 +12,4 @@
             <livewire:faturas.relatorio-inadimplencia />
         </div>
     </div>
-</x-app-layout>
+</x-layouts.app>

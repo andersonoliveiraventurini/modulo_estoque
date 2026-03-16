@@ -8,11 +8,14 @@
 </head>
 
 <body class="min-h-screen bg-white dark:bg-zinc-800">
-    <flux:sidebar sticky stashable class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+    <flux:sidebar sticky collapsible stashable class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
         <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
-        <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
-            <x-app-logo />
-        </a>
+        <div class="flex items-center">
+            <flux:sidebar.toggle class="hidden lg:inline-flex" icon="bars-2" inset="left" />
+            <a href="{{ route('dashboard') }}" class="ms-2 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
+                <x-app-logo />
+            </a>
+        </div>
         <flux:navlist.item icon="pencil-square" :href="route('clientes.index')" :current="request()->routeIs('clientes.index')"
             wire:navigate>{{ __('Novo Orçamento') }}
         </flux:navlist.item>
@@ -56,7 +59,7 @@
 
         <flux:navlist.group heading="Logística" expandable :expanded="false">
             <flux:navlist.item icon="list-bullet" :href="route('separacao.index')"
-                :current="request()->routeIs('separacao.index')" wire:navigate>{{ __('Painel de Separação') }}
+                :current="request()->routeIs('separacao.index')" wire:navigate>{{ __('Separação') }}
             </flux:navlist.item>
             <flux:navlist.item icon="queue-list" :href="route('logistica.separacao.lista')"
                 :current="request()->routeIs('logistica.separacao.lista')" wire:navigate>{{ __('Fila de Itens') }}
@@ -65,13 +68,13 @@
                 :current="request()->routeIs('conferencia.index')" wire:navigate>{{ __('Conferência') }}
             </flux:navlist.item>
             <flux:navlist.item icon="truck" :href="route('romaneios.index')"
-                :current="request()->routeIs('romaneios.*')" wire:navigate>{{ __('Romaneios (Entregas)') }}
+                :current="request()->routeIs('romaneios.*')" wire:navigate>{{ __('Romaneios') }}
             </flux:navlist.item>
             <flux:navlist.item icon="document-chart-bar" :href="route('relatorios.separacao_por_roteiro')"
                 :current="request()->routeIs('relatorios.separacao_por_roteiro')" wire:navigate>{{ __('Fila de Carga') }}
             </flux:navlist.item>
             <flux:navlist.item icon="exclamation-triangle" :href="route('relatorios.divergencias')"
-                :current="request()->routeIs('relatorios.divergencias')" wire:navigate>{{ __('Divergências Logísticas') }}
+                :current="request()->routeIs('relatorios.divergencias')" wire:navigate>{{ __('Divergências') }}
             </flux:navlist.item>
         </flux:navlist.group>
 
@@ -104,10 +107,10 @@
 
         <flux:navlist.group heading="Estoque" expandable :expanded="false">
             <flux:navlist.item icon="arrows-right-left" :href="route('movimentacao.index')"
-                :current="request()->routeIs('movimentacao.index')" wire:navigate>{{ __('Histórico de Movimentações') }}
+                :current="request()->routeIs('movimentacao.index')" wire:navigate>{{ __('Movimentações') }}
             </flux:navlist.item>
             <flux:navlist.item icon="plus-circle" :href="route('movimentacao.create')" :current="request()->routeIs('movimentacao.create')" wire:navigate>
-                {{ __('Nova Movimentação (Entrada/Saída)') }}</flux:navlist.item>
+                {{ __('Nova Movimentação') }}</flux:navlist.item>
 
             <flux:navlist.group heading="Endereços Físicos" expandable :expanded="false">
                 <flux:navlist.item icon="building-office" :href="route('armazens.index')" :current="request()->routeIs('armazens.*')" wire:navigate>
@@ -121,7 +124,10 @@
                 </flux:navlist.item>
             </flux:navlist.group>
             <flux:navlist.item icon="exclamation-triangle" :href="route('inconsistencias.index')" :current="request()->routeIs('inconsistencias.*')" wire:navigate>
-                {{ __('Inconsistências no Recebimento') }}
+                {{ __('Inconsistências') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="presentation-chart-line" :href="route('relatorios.index')" :current="request()->routeIs('relatorios.*')" wire:navigate>
+                {{ __('Relatórios') }}
             </flux:navlist.item>
         </flux:navlist.group>
 
@@ -136,7 +142,7 @@
 
         <flux:navlist.group heading="Indústria" expandable :expanded="false">
             <flux:navlist.item icon="wrench-screwdriver" :href="route('blocok.index')"
-                :current="request()->routeIs('blocok.*')" wire:navigate>{{ __('Ordens de Produção (Bloco K)') }}
+                :current="request()->routeIs('blocok.*')" wire:navigate>{{ __('Ordens de Produção') }}
             </flux:navlist.item>
             <flux:navlist.item icon="trash" :href="route('blocok.descartes.index')"
                 :current="request()->routeIs('blocok.descartes.*')" wire:navigate>{{ __('Descartes de Produção') }}
@@ -154,7 +160,7 @@
                 :current="request()->routeIs('analise_creditos.*')" wire:navigate>{{ __('Análise de Crédito') }}
             </flux:navlist.item>
             <flux:navlist.item icon="banknotes" :href="route('faturamento.index')"
-                :current="request()->routeIs('faturamento.index')" wire:navigate>{{ __('Contas a Receber (Faturas)') }}
+                :current="request()->routeIs('faturamento.index')" wire:navigate>{{ __('Contas a Receber') }}
             </flux:navlist.item>
             <flux:navlist.item icon="credit-card" :href="route('solicitacoes-pagamento.index')"
                 :current="request()->routeIs('solicitacoes-pagamento.*')" wire:navigate>{{ __('Contas a Pagar') }}

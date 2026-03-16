@@ -36,10 +36,11 @@ class EntradaEncomendaController extends Controller
     // ──────────────────────────────────────────────────────────
     // CREATE — formulário de entrada a partir de um grupo aprovado/pago
     // ──────────────────────────────────────────────────────────
-    public function create(Request $request)
+    public function create(Request $request, \App\Services\CnpjService $cnpjService)
     {
         $grupoId = $request->get('grupo_id');
 
+        $fornecedoresStatus = [];
         $grupo = $grupoId
             ? ConsultaPrecoGrupo::with([
                 'cliente',
@@ -50,6 +51,17 @@ class EntradaEncomendaController extends Controller
                 'entradas.itens',
             ])->findOrFail($grupoId)
             : null;
+
+        if ($grupo) {
+            foreach ($grupo->itens as $item) {
+                if ($item->fornecedorSelecionado && $item->fornecedorSelecionado->fornecedor) {
+                    $f = $item->fornecedorSelecionado->fornecedor;
+                    if ($f->cnpj && !isset($fornecedoresStatus[$f->cnpj])) {
+                        $fornecedoresStatus[$f->cnpj] = $cnpjService->consultarCnpj($f->cnpj);
+                    }
+                }
+            }
+        }
 
         $gruposDisponiveis = ConsultaPrecoGrupo::with(['cliente', 'itens'])
             ->where('status', 'Aprovado')
@@ -65,7 +77,8 @@ class EntradaEncomendaController extends Controller
             'gruposDisponiveis',
             'usuarios',
             'categorias',
-            'subCategorias'
+            'subCategorias',
+            'fornecedoresStatus'
         ));
     }
 
@@ -213,7 +226,8 @@ class EntradaEncomendaController extends Controller
         return view('paginas.produtos.entrada_encomendas.complementar', compact(
             'entradaEncomenda',
             'itensPendentes',
-            'usuarios'
+            'usuarios',
+            'fornecedoresStatus'
         ));
     }
 
@@ -236,16 +250,29 @@ class EntradaEncomendaController extends Controller
     // ──────────────────────────────────────────────────────────
     // EDIT — editar/complementar uma entrada parcial
     // ──────────────────────────────────────────────────────────
-    public function edit(EntradaEncomenda $entradaEncomenda)
+    public function edit(EntradaEncomenda $entradaEncomenda, \App\Services\CnpjService $cnpjService)
     {
         $entradaEncomenda->load([
             'grupo.cliente',
             'recebedor',
             'destinatario',
             'itens.consultaPreco.cor',
+            'itens.consultaPreco.fornecedorSelecionado.fornecedor',
             'itens.categoria',
             'itens.subCategoria',
         ]);
+
+        $fornecedoresStatus = [];
+        if ($entradaEncomenda->grupo) {
+            foreach ($entradaEncomenda->grupo->itens as $item) {
+                if ($item->fornecedorSelecionado && $item->fornecedorSelecionado->fornecedor) {
+                    $f = $item->fornecedorSelecionado->fornecedor;
+                    if ($f->cnpj && !isset($fornecedoresStatus[$f->cnpj])) {
+                        $fornecedoresStatus[$f->cnpj] = $cnpjService->consultarCnpj($f->cnpj);
+                    }
+                }
+            }
+        }
 
         $usuarios      = \App\Models\User::orderBy('name')->get();
         $categorias    = \App\Models\Categoria::orderBy('nome')->get();
@@ -255,7 +282,8 @@ class EntradaEncomendaController extends Controller
             'entradaEncomenda',
             'usuarios',
             'categorias',
-            'subCategorias'
+            'subCategorias',
+            'fornecedoresStatus'
         ));
     }
 

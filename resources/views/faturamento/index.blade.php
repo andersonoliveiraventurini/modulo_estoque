@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-layouts.app>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
             {{ __('Faturamento') }}
@@ -10,4 +10,4 @@
             <livewire:faturas.lista-faturas />
         </div>
     </div>
-</x-app-layout>
+</x-layouts.app>
