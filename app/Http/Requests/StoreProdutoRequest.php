@@ -22,13 +22,21 @@ class StoreProdutoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nome' => 'required|string|max:255',
+            'nome' => [
+                'required',
+                'string',
+                'max:255',
+                \Illuminate\Validation\Rule::unique('produtos')->where(function ($query) {
+                    return $query->where('fornecedor_id', $this->fornecedor_id)
+                                 ->where('cor_id', $this->cor_id);
+                }),
+            ],
             'codigo_barras' => 'nullable|string|max:255',
-            'sku' => 'nullable|string|max:255',
+            'sku' => 'nullable|string|max:255|unique:produtos,sku',
             'fornecedor_id' => 'nullable|exists:fornecedores,id',
-            'part_number' => 'nullable|string|max:255',
-            'cor' => 'nullable|exists:cores,id',
-            'unidade_medid' => 'required|string|max:255',
+            'part_number' => 'nullable|string|max:255|unique:produtos,part_number',
+            'cor_id' => 'nullable|exists:cores,id',
+            'unidade_medida' => 'required|string|max:255',
             'peso' => 'nullable|numeric',
             'estoque_minimo' => 'nullable|numeric',
             'flag_encomenda' => 'nullable|boolean',

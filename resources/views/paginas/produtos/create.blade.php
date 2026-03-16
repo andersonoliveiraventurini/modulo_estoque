@@ -29,7 +29,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('produtos.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
+                <form id="produtoForm" action="{{ route('produtos.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
                     @csrf
 
                     {{-- ── Dados Básicos ───────────────────────────── --}}
@@ -502,7 +502,7 @@
         };
 
         // AJAX Form Submission
-        document.querySelector('form').addEventListener('submit', async function(e) {
+        document.getElementById('produtoForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const form = this;
             const submitBtn = document.getElementById('btnSubmit');
@@ -522,7 +522,7 @@
             try {
                 const response = await fetch(form.action, {
                     method: form.method,
-                    body: new FormData(form),
+                    body: formData,
                     headers: {
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'

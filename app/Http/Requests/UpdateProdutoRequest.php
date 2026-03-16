@@ -22,11 +22,19 @@ class UpdateProdutoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nome' => 'required|string|max:255',
+            'nome' => [
+                'required',
+                'string',
+                'max:255',
+                \Illuminate\Validation\Rule::unique('produtos')->where(function ($query) {
+                    return $query->where('fornecedor_id', $this->fornecedor_id)
+                                 ->where('cor_id', $this->cor_id);
+                })->ignore($this->input('id')),
+            ],
             'codigo_barras' => 'nullable|string|max:255',
-            'sku' => 'nullable|string|max:255',
+            'sku' => 'nullable|string|max:255|unique:produtos,sku,' . $this->input('id'),
             'fornecedor_id' => 'nullable|exists:fornecedores,id',
-            'part_number' => 'nullable|string|max:255',
+            'part_number' => 'nullable|string|max:255|unique:produtos,part_number,' . $this->input('id'),
             'cor_id' => 'nullable|exists:cores,id', // corrigido
             'unidade_medida' => 'required|string|max:255', // corrigido
             'peso' => 'nullable|numeric',

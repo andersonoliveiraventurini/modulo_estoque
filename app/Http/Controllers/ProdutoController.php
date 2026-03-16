@@ -84,12 +84,14 @@ class ProdutoController extends Controller
      */
     public function store(StoreProdutoRequest $request)
     {
-        $produto = Produto::create($request->except('_token'));
+        $produto = Produto::create($request->except(['_token', 'images']));
 
         Log::info('Produto criado com sucesso', [
             'user' => auth()->user()->name,
             'produto_id' => $produto->id,
             'sku' => $produto->sku,
+            'has_files' => $request->hasFile('images'),
+            'files_count' => $request->hasFile('images') ? count($request->file('images')) : 0,
             'payload' => $request->except(['images'])
         ]);
 

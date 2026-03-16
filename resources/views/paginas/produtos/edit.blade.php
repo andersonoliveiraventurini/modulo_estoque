@@ -372,7 +372,7 @@
             try {
                 const response = await fetch(form.action, {
                     method: form.method,
-                    body: new FormData(form),
+                    body: formData,
                     headers: {
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'

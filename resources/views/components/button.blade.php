@@ -38,6 +38,11 @@
     'ghost'         => 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 focus:ring-gray-300',
     'ghost-danger'  => 'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900 focus:ring-red-300',
     'ghost-success' => 'text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900 focus:ring-green-300',
+
+    // Variante texto simples (sem fundo nem borda)
+    'text'          => 'text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white focus:ring-gray-300',
+    'text-primary'  => 'text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 focus:ring-blue-300',
+    'text-danger'   => 'text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 focus:ring-red-300',
 ];
 @endphp
 
