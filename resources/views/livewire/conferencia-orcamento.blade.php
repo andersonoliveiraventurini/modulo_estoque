@@ -45,6 +45,76 @@
         </div>
     @endif
 
+    {{-- ═══════════════════════ PROGRESSO GERAL ════════════════════════════ --}}
+    <div class="mb-8 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+        <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-3">
+            Progresso Geral da Logística
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead>
+                    <tr class="text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                        <th class="pb-2 font-medium">Produto</th>
+                        <th class="pb-2 font-medium text-center">Solicitado</th>
+                        <th class="pb-2 font-medium text-center">Separado</th>
+                        <th class="pb-2 font-medium text-center">Conferido</th>
+                        <th class="pb-2 font-medium text-center">Pendente</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                    @foreach($orcamentoItens as $item)
+                        <tr>
+                            <td class="py-2 text-gray-900 dark:text-gray-100 font-medium">
+                                {{ $item->produto->nome }}
+                                <div class="text-[10px] text-gray-400 uppercase tracking-tighter">{{ $item->produto->sku }}</div>
+                            </td>
+                            <td class="py-2 text-center text-gray-600 dark:text-gray-400">
+                                {{ rtrim(rtrim(number_format($item->quantidade, 3, ',', '.'), '0'), ',') }}
+                            </td>
+                            <td class="py-2 text-center font-semibold {{ $item->quantidade_separada >= $item->quantidade ? 'text-emerald-600' : 'text-amber-600' }}">
+                                {{ rtrim(rtrim(number_format($item->quantidade_separada, 3, ',', '.'), '0'), ',') }}
+                            </td>
+                            <td class="py-2 text-center font-semibold {{ $item->quantidade_conferida >= $item->quantidade ? 'text-emerald-600' : 'text-amber-600' }}">
+                                {{ rtrim(rtrim(number_format($item->quantidade_conferida, 3, ',', '.'), '0'), ',') }}
+                            </td>
+                            <td class="py-2 text-center font-bold {{ ($item->quantidade - $item->quantidade_conferida) > 0 ? 'text-rose-500' : 'text-emerald-600' }}">
+                                {{ rtrim(rtrim(number_format(max(0, $item->quantidade - $item->quantidade_conferida), 3, ',', '.'), '0'), ',') }}
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {{-- ═══════════════════════ LOTES EM SEPARAÇÃO ══════════════════════════ --}}
+    @if($activeSeparationBatches && $activeSeparationBatches->isNotEmpty())
+        <div class="mb-8 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800/50">
+            <div class="flex items-center gap-2 mb-3">
+                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <h3 class="text-sm font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider">
+                    Lotes de Separação em Andamento
+                </h3>
+            </div>
+            <div class="space-y-3">
+                @foreach($activeSeparationBatches as $aBatch)
+                    <div class="flex items-center justify-between bg-white dark:bg-gray-900/50 p-3 rounded-lg border border-amber-100 dark:border-amber-800/30">
+                        <div>
+                            <p class="text-sm font-bold text-gray-800 dark:text-gray-200">Lote #{{ $aBatch->id }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Status: <span class="capitalize">{{ str_replace('_', ' ', $aBatch->status) }}</span> • Iniciado em {{ $aBatch->started_at?->format('d/m/Y H:i') }}</p>
+                        </div>
+                        <a href="{{ route('separacao.show', $orcamento->id) }}" 
+                           class="inline-flex items-center px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded shadow-sm transition">
+                            Finalizar Separação
+                        </a>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     {{-- ═══════════════════════ CONFERÊNCIA ATIVA ════════════════════════════ --}}
     @if ($conferencia)
 
@@ -104,11 +174,38 @@
                                 @endif
 
                                 <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                                    Separada:
+                                    Separada neste lote:
                                     <span class="font-semibold">
             {{ rtrim(rtrim(number_format($it->qty_separada, 3, ',', '.'), '0'), ',') }}
         </span>
                                 </p>
+
+                                @php
+                                    $solicitadoTotal = $it->pickingItem->orcamentoItem->quantidade ?? 0;
+                                    $jaConferidoAnterior = $it->pickingItem->orcamentoItem->quantidade_conferida ?? 0;
+                                    $conferidoAgora = $it->qty_conferida;
+                                    $totalConfirmado = $jaConferidoAnterior + $conferidoAgora;
+                                    $faltaConferir = max(0, $solicitadoTotal - $totalConfirmado);
+                                @endphp
+
+                                <div class="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg space-y-1">
+                                    <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                                        <span>Total Solicitado:</span>
+                                        <span class="font-bold">{{ rtrim(rtrim(number_format($solicitadoTotal, 3, ',', '.'), '0'), ',') }}</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm text-blue-700 dark:text-blue-300">
+                                        <span>Total Já Conferido:</span>
+                                        <span class="font-semibold">
+                                            {{ rtrim(rtrim(number_format($jaConferidoAnterior, 3, ',', '.'), '0'), ',') }} + 
+                                            {{ rtrim(rtrim(number_format($conferidoAgora, 3, ',', '.'), '0'), ',') }} = 
+                                            {{ rtrim(rtrim(number_format($totalConfirmado, 3, ',', '.'), '0'), ',') }}
+                                        </span>
+                                    </div>
+                                    <div class="flex justify-between text-sm {{ $faltaConferir > 0 ? 'text-amber-600' : 'text-emerald-600' }} font-bold border-t border-blue-100 dark:border-blue-800 pt-1">
+                                        <span>Falta Conferir:</span>
+                                        <span>{{ rtrim(rtrim(number_format($faltaConferir, 3, ',', '.'), '0'), ',') }}</span>
+                                    </div>
+                                </div>
 
                                 {{-- Badge status --}}
                                 @if ($it->status === 'divergente')
@@ -396,19 +493,32 @@
                                        focus:ring-indigo-500 focus:border-indigo-500 text-sm"/>
                         </div>
 
-                        <div class="shrink-0">
-                            <button wire:click="concluir" wire:loading.attr="disabled"
-                                    @if(!$embalagemOk) disabled title="Preencha ao menos um tipo de embalagem" @endif
-                                    class="px-5 py-2 rounded-md font-semibold text-sm shadow-sm transition-colors
-                                       {{ $embalagemOk
-                                           ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                                           : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' }}
-                                       disabled:opacity-60">
-                                <span wire:loading.remove wire:target="concluir">
-                                    {{ $embalagemOk ? '✓ Concluir Conferência' : '⚠ Preencha a embalagem' }}
-                                </span>
-                                <span wire:loading wire:target="concluir">Concluindo…</span>
-                            </button>
+                        <div class="shrink-0 flex gap-2">
+                            @if(!$conferencia && $orcamento->workflow_status === 'conferido' && !$orcamento->enviado_financeiro_em)
+                                <button wire:click="enviarFinanceiro" wire:loading.attr="disabled"
+                                        class="px-5 py-2 rounded-md font-semibold text-sm shadow-sm transition-colors
+                                           bg-blue-600 hover:bg-blue-700 text-white">
+                                    <span wire:loading.remove wire:target="enviarFinanceiro">
+                                        $ Enviar ao Financeiro
+                                    </span>
+                                    <span wire:loading wire:target="enviarFinanceiro">Enviando…</span>
+                                </button>
+                            @endif
+
+                            @if($conferencia)
+                                <button wire:click="concluir" wire:loading.attr="disabled"
+                                        @if(!$embalagemOk) disabled title="Preencha ao menos um tipo de embalagem" @endif
+                                        class="px-5 py-2 rounded-md font-semibold text-sm shadow-sm transition-colors
+                                           {{ $embalagemOk
+                                               ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                               : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' }}
+                                           disabled:opacity-60">
+                                    <span wire:loading.remove wire:target="concluir">
+                                        {{ $embalagemOk ? '✓ Concluir Conferência' : '⚠ Preencha a embalagem' }}
+                                    </span>
+                                    <span wire:loading wire:target="concluir">Concluindo…</span>
+                                </button>
+                            @endif
                         </div>
                     </div>
 
@@ -434,7 +544,12 @@
                 Nenhuma conferência em andamento
             </h3>
 
-            @if ($podeEditar)
+            @if ($activeSeparationBatches && $activeSeparationBatches->isNotEmpty())
+                <p class="text-amber-600 dark:text-amber-400 mt-2 mb-4 font-medium">
+                    Há processos de separação em andamento. <br> 
+                    Finalize a separação nos lotes listados acima antes de iniciar uma nova conferência.
+                </p>
+            @elseif ($podeEditar)
                 <p class="text-gray-500 dark:text-gray-400 mt-2 mb-4">
                     Clique no botão abaixo para criar uma nova conferência.
                 </p>
@@ -485,6 +600,9 @@
                                         por {{ $cConf->conferente->name }}
                                     @endif
                                     • Lote #{{ $cConf->picking_batch_id }}
+                                    <a href="{{ route('picking.etiqueta_simples', $cConf->picking_batch_id) }}" target="_blank" class="ml-2 text-indigo-600 hover:text-indigo-800 underline">
+                                        🏷️ Etiqueta Simples
+                                    </a>
                                 </p>
                                 @if ($cConf->qtd_caixas || $cConf->qtd_sacos || $cConf->qtd_sacolas || $cConf->outros_embalagem)
                                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">

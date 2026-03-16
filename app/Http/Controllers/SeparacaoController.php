@@ -39,14 +39,18 @@ class SeparacaoController extends Controller
             ]);
 
             foreach ($orcamento->itens as $oi) {
-                PickingItem::create([
-                    'picking_batch_id' => $batch->id,
-                    'orcamento_item_id' => $oi->id,
-                    'produto_id' => $oi->produto_id,
-                    'qty_solicitada' => $oi->quantidade,
-                    'qty_separada' => 0,
-                    'status' => 'pendente',
-                ]);
+                $restante = $oi->quantidade_restante;
+
+                if ($restante > 0) {
+                    PickingItem::create([
+                        'picking_batch_id' => $batch->id,
+                        'orcamento_item_id' => $oi->id,
+                        'produto_id' => $oi->produto_id,
+                        'qty_solicitada' => $restante,
+                        'qty_separada' => 0,
+                        'status' => 'pendente',
+                    ]);
+                }
             }
 
             // cria reservas

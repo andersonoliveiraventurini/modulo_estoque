@@ -1439,8 +1439,10 @@ class OrcamentoController extends Controller
             $novaVersao = $versaoAtual + 1;
 
             // ----------------------------------------------------------------
-            // Atualizar dados básicos do orçamento
+            // Atualizar dados básicos do orçamento e resetar logística
             // ----------------------------------------------------------------
+            $orcamento->resetLogistica();
+
             $orcamento->update([
                 'obra' => $request->obra,
                 'prazo_entrega' => $request->prazo_entrega,

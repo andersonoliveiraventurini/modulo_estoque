@@ -47,6 +47,8 @@ class ConferenciaOrcamento extends Component
 
     public ?Conferencia $conferencia      = null;
     public $concludedConferencias         = null;
+    public $activeSeparationBatches       = [];
+    public $orcamentoItens                = [];
 
     // ─── Validação ─────────────────────────────────────────────────────────────
 
@@ -96,6 +98,7 @@ class ConferenciaOrcamento extends Component
                 'itens.produto',
                 'itens.conferidoPor',
                 'itens.fotos.enviadoPor',
+                'itens.pickingItem.orcamentoItem',
                 'conferente',
             ])
             ->where('orcamento_id', $this->orcamento->id)
@@ -112,6 +115,12 @@ class ConferenciaOrcamento extends Component
             ->where('status', 'concluida')
             ->orderByDesc('finished_at')
             ->get();
+
+        $this->activeSeparationBatches = PickingBatch::where('orcamento_id', $this->orcamento->id)
+            ->whereIn('status', ['aberto', 'em_separacao'])
+            ->get();
+
+        $this->orcamentoItens = $this->orcamento->itens()->with('produto')->get();
 
         if ($this->conferencia) {
             foreach ($this->conferencia->itens as $it) {
@@ -139,6 +148,7 @@ class ConferenciaOrcamento extends Component
             'aguardando_conferencia',
             'em_conferencia',
             'em_separacao',
+            'conferido',
         ]);
     }
 
@@ -159,13 +169,34 @@ class ConferenciaOrcamento extends Component
 
     public function iniciarConferencia(): void
     {
+        // 1. Prioridade: Lotes concluídos que não possuem NENHUMA conferência
         $batch = PickingBatch::where('orcamento_id', $this->orcamento->id)
             ->where('status', 'concluido')
+            ->whereDoesntHave('conferencias')
             ->latest()
             ->first();
 
+        // 2. Segunda opção: Lotes concluídos que possuem conferência, mas ainda têm itens pendentes (separado > conferido)
         if (!$batch) {
-            session()->flash('error', 'Nenhum lote de separação concluído encontrado.');
+            $batches = PickingBatch::where('orcamento_id', $this->orcamento->id)
+                ->where('status', 'concluido')
+                ->with(['items.conferenciaItems' => fn($q) => $q->whereHas('conferencia', fn($sq) => $sq->where('status', 'concluida'))])
+                ->latest()
+                ->get();
+
+            foreach ($batches as $b) {
+                foreach ($b->items as $pi) {
+                    $conferidoNoItem = $pi->conferenciaItems->sum('qty_conferida');
+                    if ($pi->qty_separada > $conferidoNoItem) {
+                        $batch = $b;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        if (!$batch) {
+            session()->flash('error', 'Nenhum lote de separação com itens pendentes de conferência foi encontrado.');
             return;
         }
 
@@ -177,6 +208,8 @@ class ConferenciaOrcamento extends Component
                 'conferente_id'    => Auth::id(),
                 'started_at'       => now(),
             ]);
+
+            $this->orcamento->update(['workflow_status' => 'em_conferencia']);
 
             foreach ($batch->items as $pi) {
                 ConferenciaItem::create([
@@ -281,6 +314,17 @@ class ConferenciaOrcamento extends Component
             : 'Conferência concluída! Estoque baixado e orçamento finalizado.';
 
         session()->flash('success', $msg);
+    }
+
+    public function enviarFinanceiro(): void
+    {
+        $this->orcamento->update([
+            'enviado_financeiro_em' => now(),
+            'enviado_financeiro_por_id' => Auth::id(),
+            'workflow_status' => 'conferido', // ou manter o status se já for conferido
+        ]);
+
+        session()->flash('success', 'Orçamento enviado para o financeiro com sucesso!');
     }
 
     // ─── Upload ────────────────────────────────────────────────────────────────

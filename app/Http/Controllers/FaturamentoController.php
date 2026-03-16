@@ -48,4 +48,14 @@ class FaturamentoController extends Controller
 
         return view('paginas.faturamento.cliente-historico', compact('cliente', 'faturas', 'stats'));
     }
+
+    public function conferidos()
+    {
+        $orcamentos = \App\Models\Orcamento::whereNotNull('enviado_financeiro_em')
+            ->with(['cliente', 'vendedor'])
+            ->latest('enviado_financeiro_em')
+            ->get();
+
+        return view('paginas.faturamento.conferidos', compact('orcamentos'));
+    }
 }

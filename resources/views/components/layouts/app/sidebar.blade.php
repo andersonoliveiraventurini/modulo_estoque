@@ -156,6 +156,9 @@
             <flux:navlist.item icon="credit-card" :href="route('solicitacoes-pagamento.index')"
                 :current="request()->routeIs('solicitacoes-pagamento.*')" wire:navigate>{{ __('Contas a Pagar') }}
             </flux:navlist.item>
+            <flux:navlist.item icon="check-circle" :href="route('faturamento.conferidos')"
+                :current="request()->routeIs('faturamento.conferidos')" wire:navigate>{{ __('Orçamentos Conferidos') }}
+            </flux:navlist.item>
             <flux:navlist.item icon="exclamation-triangle" :href="route('faturamento.inadimplencia')"
                 :current="request()->routeIs('faturamento.inadimplencia')" wire:navigate>{{ __('Inadimplência') }}
             </flux:navlist.item>

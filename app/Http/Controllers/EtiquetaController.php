@@ -14,18 +14,14 @@ class EtiquetaController extends Controller
      */
     public function gerarEtiquetas(PickingBatch $batch)
     {
-        // Garante que o batch tem os dados carregados (orçamento e cliente)
         $batch->loadMissing(['orcamento.cliente', 'orcamento.endereco']);
 
         if ($batch->status !== 'concluido' && $batch->status !== 'em_separacao') {
              return back()->with('error', 'Etiquetas só podem ser geradas para lotes concluídos ou já em separação.');
         }
 
-        // Calcula quantos volumes totais foram embalados
-        // Se as quantidades via formulario forem zero, e o lote for velho, garantimos ao menos 1 volume como fallback
         $totalVolumes = ($batch->qtd_caixas ?? 0) + ($batch->qtd_sacos ?? 0) + ($batch->qtd_sacolas ?? 0);
         
-        // Trata os 'outros volumes' se preenchido. (Aqui assumimos cada entrada textual não-numérica como 1 extra bundle caso vazio os numericos)
         if ($totalVolumes === 0) {
             $totalVolumes = $batch->outros_embalagem ? 1 : 1; 
         }
@@ -44,11 +40,42 @@ class EtiquetaController extends Controller
             ];
         }
 
-        Log::info("Gerando PDF de {$totalVolumes} etiquetas para Lote {$batch->id}");
-
         $pdf = Pdf::loadView('paginas.separacao.etiqueta_pdf', compact('etiquetas', 'batch'))
-            ->setPaper('a6', 'landscape'); // A6 é comum para etiquetas (aprox 10x15cm)
+            ->setPaper('a6', 'landscape');
 
         return $pdf->stream("etiquetas-lote-{$batch->id}.pdf");
+    }
+
+    public function gerarEtiquetaSimples(PickingBatch $batch)
+    {
+        $batch->loadMissing(['orcamento.cliente', 'orcamento.endereco', 'orcamento.vendedor']);
+
+        $totalVolumes = ($batch->qtd_caixas ?? 0) + ($batch->qtd_sacos ?? 0) + ($batch->qtd_sacolas ?? 0);
+        if ($totalVolumes === 0) {
+            $totalVolumes = $batch->outros_embalagem ? 1 : 1; 
+        }
+
+        $etiquetas = [];
+        for ($i = 1; $i <= $totalVolumes; $i++) {
+            $orcamento = $batch->orcamento;
+            $endereco = $orcamento->endereco ?? null;
+
+            $etiquetas[] = [
+                'current' => $i,
+                'total' => $totalVolumes,
+                'orcamento_id' => $batch->orcamento_id,
+                'cliente_nome' => $orcamento->cliente->nome ?? 'N/A',
+                'endereco' => $endereco ? ($endereco->endereco . ', ' . $endereco->numero) : 'N/A',
+                'obra' => $orcamento->obra ?? 'N/A',
+                'vendedor' => $orcamento->vendedor->name ?? 'N/A',
+                'data' => now()->format('d/m/Y'),
+                'dados_entrega' => $endereco ? (($endereco->roteiro ?? '') . ' ' . ($endereco->bairro ?? '')) : 'N/A',
+            ];
+        }
+
+        $pdf = Pdf::loadView('paginas.conferencia.etiqueta_simples_pdf', compact('etiquetas', 'batch'))
+            ->setPaper('a6', 'landscape');
+
+        return $pdf->stream("etiqueta-simples-{$batch->id}.pdf");
     }
 }

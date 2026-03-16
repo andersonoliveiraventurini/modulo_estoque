@@ -42,7 +42,7 @@ class PickingItem extends Model
 
     public function orcamentoItem()
     {
-        return $this->belongsTo(OrcamentoItem::class, 'orcamento_item_id');
+        return $this->belongsTo(OrcamentoItens::class, 'orcamento_item_id');
     }
 
     public function separador()
@@ -71,5 +71,10 @@ class PickingItem extends Model
     public function inconsistenciaPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'inconsistencia_por_id');
+    }
+
+    public function conferenciaItems()
+    {
+        return $this->hasMany(ConferenciaItem::class, 'picking_item_id');
     }
 }

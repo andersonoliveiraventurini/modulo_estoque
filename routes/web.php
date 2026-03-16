@@ -208,6 +208,7 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/picking/{batch}/item/{item}/separar', [SeparacaoController::class, 'separarItem'])->name('picking.item.separar');
     Route::post('/picking/{batch}/concluir', [SeparacaoController::class, 'concluir'])->name('picking.concluir');
     Route::get('/picking/{batch}/etiquetas', [\App\Http\Controllers\EtiquetaController::class, 'gerarEtiquetas'])->name('picking.etiquetas');
+    Route::get('/picking/{batch}/etiqueta-simples', [\App\Http\Controllers\EtiquetaController::class, 'gerarEtiquetaSimples'])->name('picking.etiqueta_simples');
 
     /*  Route::get('/orcamentos/{id}/conferencia', [ConferenciaController::class, 'show'])->name('orcamentos.conferencia.show');
      Route::post('/orcamentos/{id}/conferencia/iniciar', [ConferenciaController::class, 'iniciar'])->name('orcamentos.conferencia.iniciar');
@@ -355,6 +356,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('faturamento')->name('faturamento.')->group(function () {
         Route::get('/', \App\Livewire\Faturas\ListaFaturas::class)->name('index');
         Route::get('/inadimplencia', \App\Livewire\Faturas\RelatorioInadimplencia::class)->name('inadimplencia');
+        Route::get('/conferidos', [FaturamentoController::class, 'conferidos'])->name('conferidos');
     });
 });
 

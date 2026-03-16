@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class Orcamento extends Model
 {
@@ -191,6 +192,40 @@ class Orcamento extends Model
             $orcamento->update(['workflow_status' => 'cancelado']);
 
             return true; // Indica que a operação de cancelamento foi bem-sucedida.
+        });
+    }
+
+    /**
+     * Reseta toda a logística do orçamento (limpa separações e conferências)
+     * para que o processo possa ser reiniciado após uma edição.
+     */
+    public function resetLogistica(): void
+    {
+        DB::transaction(function () {
+            // 1. Deletar Conferências e seus itens
+            foreach ($this->conferencias as $conferencia) {
+                foreach ($conferencia->itens as $item) {
+                    $item->fotos()->delete();
+                    $item->delete();
+                }
+                $conferencia->delete();
+            }
+
+            // 2. Deletar Lotes de Separação (PickingBatch) e seus itens
+            $lotes = PickingBatch::where('orcamento_id', $this->id)->get();
+            foreach ($lotes as $lote) {
+                // Removemos os itens do lote (PickingItem)
+                // Se houver soft deletes, o delete() cuidará disso.
+                $lote->items()->delete();
+                $lote->delete();
+            }
+
+            // 3. Resetar status de workflow do orçamento
+            $this->update([
+                'workflow_status' => 'aguardando_separacao'
+            ]);
+
+            Log::info("Logística resetada para o orçamento #{$this->id} devido a edição.");
         });
     }
 

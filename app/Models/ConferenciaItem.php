@@ -61,6 +61,11 @@ class ConferenciaItem extends Model
         return $this->belongsTo(Produto::class);
     }
 
+    public function orcamentoItem()
+    {
+        return $this->pickingItem ? $this->pickingItem->orcamentoItem() : null;
+    }
+
     public function conferidoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'conferido_por_id');
