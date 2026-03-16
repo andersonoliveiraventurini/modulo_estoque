@@ -89,7 +89,7 @@ class FaturaService
         $fatura = Fatura::create([
             'cliente_id'      => $orcamento->cliente_id,
             'orcamento_id'    => $orcamento->id,
-            'valor_total'     => $orcamento->valor_total,
+            'valor_total'     => $orcamento->valor_com_desconto > 0 ? $orcamento->valor_com_desconto : $orcamento->valor_total_itens,
             'valor_pago'      => 0,
             'numero_parcela'  => 1,
             'total_parcelas'  => 1,

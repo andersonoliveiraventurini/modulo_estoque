@@ -10,6 +10,8 @@ use App\Models\Cliente;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use App\Models\PickingItem;
+use App\Models\ConferenciaItem;
 use Illuminate\Support\Facades\DB;
 
 class RelatorioController extends Controller
@@ -239,5 +241,55 @@ class RelatorioController extends Controller
         $pdf->setPaper('a4', 'portrait');
 
         return $pdf->download('separacao_roteiro_' . now()->format('Ymd_His') . '.pdf');
+    }
+
+    /**
+     * Relatório de Divergências Logísticas (Inconsistências de Separação e Conferência).
+     */
+    public function divergencias(Request $request)
+    {
+        // 1. Inconsistências na Separação (PickingItem onde qty_separada < qty_solicitada)
+        $separacoes = PickingItem::where('qty_separada', '<', DB::raw('qty_solicitada'))
+            ->where('status', 'concluido')
+            ->with(['produto', 'batch.orcamento.cliente', 'separador'])
+            ->get()
+            ->map(function ($item) {
+                return (object) [
+                    'data' => $item->updated_at,
+                    'tipo' => 'Separação',
+                    'produto_nome' => $item->produto->nome ?? 'N/A',
+                    'produto_sku' => $item->produto->sku ?? 'N/A',
+                    'orcamento_id' => $item->batch->orcamento_id ?? 'N/A',
+                    'cliente' => $item->batch->orcamento->cliente->nome ?? 'N/A',
+                    'qtd_esperada' => $item->qty_solicitada,
+                    'qtd_real' => $item->qty_separada,
+                    'motivo' => $item->motivo_nao_separado ?? 'Não informado',
+                    'responsavel' => $item->separador->name ?? 'N/A',
+                ];
+            });
+
+        // 2. Divergências na Conferência (ConferenciaItem onde divergencia = true)
+        $conferencias = ConferenciaItem::where('divergencia', true)
+            ->with(['produto', 'conferencia.orcamento.cliente', 'conferidoPor'])
+            ->get()
+            ->map(function ($item) {
+                return (object) [
+                    'data' => $item->created_at,
+                    'tipo' => 'Conferência',
+                    'produto_nome' => $item->produto->nome ?? 'N/A',
+                    'produto_sku' => $item->produto->sku ?? 'N/A',
+                    'orcamento_id' => $item->conferencia->orcamento_id ?? 'N/A',
+                    'cliente' => $item->conferencia->orcamento->cliente->nome ?? 'N/A',
+                    'qtd_esperada' => $item->qty_separada,
+                    'qtd_real' => $item->qty_conferida,
+                    'motivo' => $item->motivo_divergencia ?? 'Não informado',
+                    'responsavel' => $item->conferidoPor->name ?? 'N/A',
+                ];
+            });
+
+        // Unificar e ordenar por data decrescente
+        $divergencias = $separacoes->concat($conferencias)->sortByDesc('data');
+
+        return view('paginas.relatorios.divergencias', compact('divergencias'));
     }
 }

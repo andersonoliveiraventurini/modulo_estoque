@@ -238,8 +238,8 @@ class PagamentoService
      */
     protected function calcularValoresVenda($registro, array $dados)
     {
-        $valorTotal = (float) $registro->valor_total;
-        $descontoAplicado = (float) ($registro->desconto ?? 0);
+        $valorTotal = (float) ($registro instanceof \App\Models\Orcamento ? $registro->valor_total_itens : $registro->valor_total);
+        $descontoAplicado = (float) ($registro instanceof \App\Models\Orcamento ? $registro->desconto_total : ($registro->desconto ?? 0));
         $descontoBalcao = (float) ($dados['desconto_balcao'] ?? 0);
         $descontoTotal = $descontoAplicado + $descontoBalcao;
 

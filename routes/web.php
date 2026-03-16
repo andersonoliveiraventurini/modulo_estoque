@@ -351,6 +351,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/separacao-por-roteiro', [RelatorioController::class, 'separacaoPorRoteiro'])->name('relatorios.separacao_por_roteiro');
         Route::get('/separacao-por-roteiro/exportar', [RelatorioController::class, 'exportarSeparacaoPorRoteiro'])->name('relatorios.separacao_roteiro_export');
         Route::get('/separacao-por-roteiro/pdf', [RelatorioController::class, 'exportarSeparacaoPorRoteiroPdf'])->name('relatorios.separacao_roteiro_pdf');
+        Route::get('/divergencias', [RelatorioController::class, 'divergencias'])->name('relatorios.divergencias');
     });
     // ── Faturamento e Inadimplência ──────────────────────────────────────────
     Route::prefix('faturamento')->name('faturamento.')->group(function () {

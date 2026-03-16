@@ -70,6 +70,9 @@
             <flux:navlist.item icon="document-chart-bar" :href="route('relatorios.separacao_por_roteiro')"
                 :current="request()->routeIs('relatorios.separacao_por_roteiro')" wire:navigate>{{ __('Fila de Carga') }}
             </flux:navlist.item>
+            <flux:navlist.item icon="exclamation-triangle" :href="route('relatorios.divergencias')"
+                :current="request()->routeIs('relatorios.divergencias')" wire:navigate>{{ __('Divergências Logísticas') }}
+            </flux:navlist.item>
         </flux:navlist.group>
 
         <flux:navlist.group heading="Compras" expandable :expanded="false">

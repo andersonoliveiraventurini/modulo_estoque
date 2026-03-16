@@ -261,4 +261,20 @@ class Orcamento extends Model
     {
         return $this->hasMany(Conferencia::class);
     }
+    /**
+     * Acessador para compatibilidade com Pedido e FaturaService.
+     * Retorna o valor com desconto se houver, caso contrário o valor total dos itens.
+     */
+    public function getValorTotalAttribute()
+    {
+        return $this->valor_com_desconto > 0 ? $this->valor_com_desconto : $this->valor_total_itens;
+    }
+
+    /**
+     * Acessador para compatibilidade com Pedido e PagamentoService.
+     */
+    public function getDescontoAttribute()
+    {
+        return $this->desconto_total;
+    }
 }
