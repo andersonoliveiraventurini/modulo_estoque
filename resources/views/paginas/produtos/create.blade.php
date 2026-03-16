@@ -100,14 +100,11 @@
                                             {{ $cor->nome }}
                                         </option>
                                     @endforeach
-                                </select>
-                            </div>
-
-                            <div>
+                                <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                                     Unidade de Medida <span class="text-red-500">*</span>
                                 </label>
-                                <select name="unidade"
+                                <select name="unidade_medida" required
                                         class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
                                     <option value="">Selecione...</option>
                                     @foreach ([
@@ -126,12 +123,12 @@
                                         'PT - Pacote'      => 'PT - Pacote',
                                     ] as $val => $label)
                                         <option value="{{ $val }}"
-                                            {{ $p('unidade') === $val ? 'selected' : '' }}>
+                                            {{ $p('unidade_medida') === $val ? 'selected' : '' }}>
                                             {{ $label }}
                                         </option>
                                     @endforeach
                                 </select>
-                                @error('unidade') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                @error('unidade_medida') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                             </div>
 
                             <div>
@@ -317,9 +314,11 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Imagem do Produto</label>
-                                <input type="file" name="images[]" multiple accept="image/png,image/jpeg,image/gif"
+                                <input type="file" name="images[]" id="imagesInput" multiple accept="image/png,image/jpeg,image/gif"
                                        class="mt-1 block w-full text-sm text-gray-600 border border-zinc-300 dark:border-zinc-600 rounded-lg p-2 dark:bg-zinc-800">
                                 <p class="text-xs text-gray-500 mt-1">Selecione uma ou mais imagens (PNG, JPG ou GIF até 5MB cada)</p>
+                                
+                                <div id="imagePreviews" class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4"></div>
                             </div>
                         </div>
                     </div>
@@ -403,7 +402,7 @@
 
                     {{-- ── Ações ─────────────────────────────────────── --}}
                     <div class="flex gap-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
-                        <x-button type="submit" variant="primary">Cadastrar Produto</x-button>
+                        <x-button type="submit" variant="primary" id="btnSubmit">Cadastrar Produto</x-button>
                         <x-button type="reset" variant="secondary">Limpar Formulário</x-button>
                         @if (!empty($pre['_origem_grupo_id']))
                             <a href="{{ route('consulta_preco.show_grupo', $pre['_origem_grupo_id']) }}"
@@ -454,6 +453,99 @@
             } else {
                 subcategoriaSelect.innerHTML = '<option value="">Selecione...</option>';
                 subcategoriaSelect.style.display = 'none';
+            }
+        });
+
+        // Image Previews
+        const imagesInput = document.getElementById('imagesInput');
+        const imagePreviews = document.getElementById('imagePreviews');
+
+        imagesInput.addEventListener('change', function() {
+            imagePreviews.innerHTML = '';
+            for (const file of this.files) {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const div = document.createElement('div');
+                        div.className = 'relative border rounded-lg p-2 flex flex-col items-center shadow-sm';
+                        div.innerHTML = `<img src="${e.target.result}" class="w-full h-32 object-cover rounded shadow-sm">
+                                         <span class="text-xs text-center mt-2 truncate w-full" title="${file.name}">${file.name}</span>`;
+                        imagePreviews.appendChild(div);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            }
+        });
+
+        // AJAX Form Submission
+        document.querySelector('form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = this;
+            const submitBtn = document.getElementById('btnSubmit');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Salvando...';
+
+            // Clear previous frontend JS errors
+            document.querySelectorAll('.js-val-error').forEach(el => el.remove());
+
+            try {
+                const response = await fetch(form.action, {
+                    method: form.method,
+                    body: new FormData(form),
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.ok || response.redirected) {
+                    if (response.url && response.url !== window.location.href) {
+                        window.location.href = response.url; // Following Laravel redirect transparently
+                    } else {
+                        // In case it didn't redirect per URL change hook
+                        const resData = await response.json().catch(() => null);
+                        if (resData && resData.redirect) {
+                            window.location.href = resData.redirect;
+                        } else {
+                            window.location.href = "{{ route('produtos.index') }}"; // Fallback
+                        }
+                    }
+                } else if (response.status === 422) {
+                    const data = await response.json();
+                    
+                    let firstErrorInput = null;
+                    
+                    for (const [field, messages] of Object.entries(data.errors)) {
+                        let inputName = field;
+                        // Handle array fields
+                        if (field.includes('.')) {
+                            const [base, idx] = field.split('.');
+                            inputName = `${base}[${idx}]`;
+                        }
+                        
+                        let input = form.querySelector(`[name="${inputName}"]`) || form.querySelector(`[name="${inputName}[]"]`);
+                        
+                        if (input) {
+                            const err = document.createElement('p');
+                            err.className = 'text-red-500 text-xs mt-1 js-val-error mb-2';
+                            err.innerText = messages[0];
+                            input.parentNode.appendChild(err);
+                            if (!firstErrorInput) firstErrorInput = input;
+                        }
+                    }
+                    
+                    if (firstErrorInput) {
+                        firstErrorInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                } else {
+                    alert('Ocorreu um erro ao processar sua requisição.');
+                }
+            } catch (error) {
+                console.error('Submit error', error);
+                alert('Erro na conexão com o servidor.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Cadastrar Produto';
             }
         });
     </script>

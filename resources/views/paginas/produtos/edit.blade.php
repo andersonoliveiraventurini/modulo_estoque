@@ -11,7 +11,7 @@
                     Editar Produto
                 </h2>
 
-                <form action="{{ route('produtos.update', $produto) }}" method="POST" enctype="multipart/form-data"
+                <form id="produtoForm" action="{{ route('produtos.update', $produto) }}" method="POST" enctype="multipart/form-data"
                     class="space-y-8">
                     @csrf
                     @method('PUT')
@@ -52,11 +52,25 @@
                                 @endforeach
                             </x-select>
 
-                            <x-select name="unidade_medida" label="Unidade de Medida *">
+                            <x-select name="unidade_medida" label="Unidade de Medida *" required>
                                 <option value="">Selecione...</option>
-                                @foreach (['UN - Unidade', 'KG - Quilograma', 'PT - Pacote'] as $opt)
-                                    <option value="{{ $opt }}" @selected(old('unidade_medida', $produto->unidade_medida) == $opt)>
-                                        {{ $opt }}
+                                @foreach ([
+                                        'UN - Unidade'     => 'UN - Unidade',
+                                        'PC - Peça'        => 'PC - Peça',
+                                        'CX - Caixa'       => 'CX - Caixa',
+                                        'KG - Quilograma'  => 'KG - Quilograma',
+                                        'G - Grama'        => 'G - Grama',
+                                        'M - Metro'        => 'M - Metro',
+                                        'M2 - Metro quadrado' => 'M2 - Metro quadrado',
+                                        'M3 - Metro cúbico'   => 'M3 - Metro cúbico',
+                                        'L - Litro'        => 'L - Litro',
+                                        'ML - Mililitro'   => 'ML - Mililitro',
+                                        'PAR - Par'        => 'PAR - Par',
+                                        'RL - Rolo'        => 'RL - Rolo',
+                                        'PT - Pacote'      => 'PT - Pacote',
+                                    ] as $val => $label)
+                                    <option value="{{ $val }}" @selected(old('unidade_medida', $produto->unidade_medida) == $val)>
+                                        {{ $label }}
                                     </option>
                                 @endforeach
                             </x-select>
@@ -183,34 +197,21 @@
                                                 @if ($img->principal)
                                                     <span class="text-green-600 font-semibold">Principal</span>
                                                 @else
-                                                    <form
-                                                        action="{{ route('produtos.imagens.principal', [$produto, $img]) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                        @method('PATCH')
-                                                        <button type="submit"
-                                                            class="text-blue-600 underline text-xs">Definir como
-                                                            Principal</button>
-                                                    </form>
+                                                    <x-button type="button" 
+                                                        onclick="event.preventDefault(); document.getElementById('form-principal-{{$img->id}}').submit();"
+                                                        class="text-blue-600 underline text-xs" variant="text">Definir como Principal</x-button>
                                                 @endif
                                             </div>
-
-                                            <form action="{{ route('produtos.imagens.destroy', [$produto, $img]) }}"
-                                                method="POST" class="absolute top-2 right-2">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit"
-                                                    class="text-red-600 text-sm font-bold">✕</button>
-                                            </form>
                                         </div>
                                     @endforeach
                                 </div>
 
                                 <div class="mt-6">
                                     <label class="text-sm font-medium">Adicionar Novas Imagens</label>
-                                    <input type="file" name="images[]" multiple
+                                    <input type="file" name="images[]" id="imagesInput" multiple
                                         accept="image/png,image/jpeg,image/gif"
                                         class="mt-2 block w-full text-sm text-gray-600 border rounded-lg p-2">
+                                    <div id="imagePreviews" class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4"></div>
                                 </div>
 
                                 <!-- Informações Fiscais - Saída -->
@@ -270,10 +271,131 @@
 
                                 <!-- Ações -->
                                 <div class="flex gap-4">
-                                    <x-button type="submit">Salvar Alterações</x-button>
+                                    <x-button type="submit" id="btnSubmit">Salvar Alterações</x-button>
                                 </div>
                 </form>
+
+                {{-- Hidden forms for destroying and setting principal images so they aren't nested --}}
+                @foreach ($produto->images as $img)
+                    @if (!$img->principal)
+                        <form id="form-principal-{{$img->id}}" action="{{ route('produtos.imagens.principal', [$produto, $img]) }}" method="POST" class="hidden">
+                            @csrf
+                            @method('PATCH')
+                        </form>
+                    @endif
+                    <form id="form-destroy-{{$img->id}}" action="{{ route('produtos.imagens.destroy', [$produto, $img]) }}" method="POST" class="hidden">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                    
+                    {{-- Add a delete button using standard absolute positioning from outside the main form via script --}}
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const container = document.querySelector('img[src="{{ asset('storage/' . $img->caminho) }}"]').parentElement;
+                            const deleteBtn = document.createElement('button');
+                            deleteBtn.type = 'button';
+                            deleteBtn.className = 'absolute top-2 right-2 text-red-600 text-sm font-bold bg-white rounded-full w-6 h-6 flex items-center justify-center shadow hover:bg-red-50';
+                            deleteBtn.innerHTML = '✕';
+                            deleteBtn.onclick = function(e) {
+                                e.preventDefault();
+                                document.getElementById('form-destroy-{{$img->id}}').submit();
+                            };
+                            container.appendChild(deleteBtn);
+                        });
+                    </script>
+                @endforeach
+
             </div>
         </div>
     </div>
+
+    <script>
+        // Image Previews
+        const imagesInput = document.getElementById('imagesInput');
+        const imagePreviews = document.getElementById('imagePreviews');
+
+        imagesInput.addEventListener('change', function() {
+            imagePreviews.innerHTML = '';
+            for (const file of this.files) {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const div = document.createElement('div');
+                        div.className = 'relative border rounded-lg p-2 flex flex-col items-center shadow-sm';
+                        div.innerHTML = `<img src="${e.target.result}" class="w-full h-32 object-cover rounded shadow-sm">
+                                         <span class="text-xs text-center mt-2 truncate w-full" title="${file.name}">${file.name}</span>`;
+                        imagePreviews.appendChild(div);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            }
+        });
+
+        // AJAX Form Submission
+        document.getElementById('produtoForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = this;
+            const submitBtn = document.getElementById('btnSubmit');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Salvando...';
+
+            document.querySelectorAll('.js-val-error').forEach(el => el.remove());
+
+            try {
+                const response = await fetch(form.action, {
+                    method: form.method,
+                    body: new FormData(form),
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.ok || response.redirected) {
+                    if (response.url && response.url !== window.location.href) {
+                        window.location.href = response.url; // Seguindo o redirect
+                    } else {
+                        const resData = await response.json().catch(() => null);
+                        if (resData && resData.redirect) {
+                            window.location.href = resData.redirect;
+                        } else {
+                            window.location.href = "{{ route('produtos.index') }}"; 
+                        }
+                    }
+                } else if (response.status === 422) {
+                    const data = await response.json();
+                    let firstErrorInput = null;
+                    
+                    for (const [field, messages] of Object.entries(data.errors)) {
+                        let inputName = field;
+                        if (field.includes('.')) {
+                            const [base, idx] = field.split('.');
+                            inputName = `${base}[${idx}]`;
+                        }
+                        
+                        let input = form.querySelector(`[name="${inputName}"]`) || form.querySelector(`[name="${inputName}[]"]`);
+                        
+                        if (input) {
+                            const err = document.createElement('p');
+                            err.className = 'text-red-500 text-xs mt-1 js-val-error mb-2';
+                            err.innerText = messages[0];
+                            input.parentNode.appendChild(err);
+                            if (!firstErrorInput) firstErrorInput = input;
+                        }
+                    }
+                    if (firstErrorInput) {
+                        firstErrorInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                } else {
+                    alert('Ocorreu um erro ao processar sua requisição.');
+                }
+            } catch (error) {
+                console.error('Submit error', error);
+                alert('Erro na conexão com o servidor.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Salvar Alterações';
+            }
+        });
+    </script>
 </x-layouts.app>

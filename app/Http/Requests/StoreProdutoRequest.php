@@ -28,7 +28,7 @@ class StoreProdutoRequest extends FormRequest
             'fornecedor_id' => 'nullable|exists:fornecedores,id',
             'part_number' => 'nullable|string|max:255',
             'cor' => 'nullable|exists:cores,id',
-            'unidade' => 'required|string|max:255',
+            'unidade_medid' => 'required|string|max:255',
             'peso' => 'nullable|numeric',
             'estoque_minimo' => 'nullable|numeric',
             'flag_encomenda' => 'nullable|boolean',

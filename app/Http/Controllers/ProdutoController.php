@@ -68,7 +68,7 @@ class ProdutoController extends Controller
             'ncm'           => $itemRecebimento?->ncm        ?? $consultaPreco->ncm ?? null,
             'codigo_barras' => $itemRecebimento?->codigo_barras ?? null,
             'sku'           => $itemRecebimento?->sku           ?? null,
-            'unidade'       => $itemRecebimento?->unidade_medida ?? null,
+            'unidade_medida'=> $itemRecebimento?->unidade_medida ?? null,
             'peso'          => $itemRecebimento?->peso           ?? null,
             'categoria_id'  => $itemRecebimento?->categoria_id  ?? null,
             'subcategoria_id' => $itemRecebimento?->sub_categoria_id ?? null,
@@ -105,7 +105,7 @@ class ProdutoController extends Controller
             }
         }
 
-        return redirect()->route('produtos.index')
+        return redirect()->route('produtos.show', $produto)
             ->with('success', 'Produto cadastrado com sucesso!');
     }
 
@@ -156,7 +156,7 @@ class ProdutoController extends Controller
             }
         }
 
-        return redirect()->route('produtos.index')->with('success', 'Produto atualizado com sucesso!');
+        return redirect()->route('produtos.show', $produto)->with('success', 'Produto atualizado com sucesso!');
     }
 
     // Definir imagem principal
