@@ -81,6 +81,7 @@
                         @php
                             $dotColor = match($column['color']) {
                                 'orange'  => 'bg-orange-500',
+                                'amber'   => 'bg-amber-500',
                                 'blue'    => 'bg-blue-500',
                                 'yellow'  => 'bg-yellow-500',
                                 'purple'  => 'bg-purple-500',
@@ -90,12 +91,12 @@
                             };
                             $borderTop = match($column['color']) {
                                 'orange'  => 'border-t-2 border-t-orange-500',
+                                'amber'   => 'border-t-2 border-t-amber-500',
                                 'blue'    => 'border-t-2 border-t-blue-500',
                                 'yellow'  => 'border-t-2 border-t-yellow-500',
                                 'purple'  => 'border-t-2 border-t-purple-500',
                                 'green'   => 'border-t-2 border-t-green-500',
                                 'emerald' => 'border-t-2 border-t-emerald-500',
-                                'orange'  => 'border-t-2 border-t-orange-500',  
                                 default   => 'border-t-2 border-t-zinc-400',
                             };
                         @endphp
@@ -148,6 +149,32 @@
                                                             <span class="text-xs px-1.5 py-0.5 rounded {{ $grupo->status === 'Aprovado' ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300' }}">
                                                                 {{ $grupo->status ?? 'Novo' }}
                                                             </span>
+                                                            @if ($grupo->orcamento && $grupo->orcamento->workflow_status)
+                                                                @php
+                                                                    $wfStatus = $grupo->orcamento->workflow_status;
+                                                                    $wfLabel = match($wfStatus) {
+                                                                        'aguardando_separacao' => 'Ag. Separação',
+                                                                        'em_separacao' => 'Em Separação',
+                                                                        'separado' => 'Separado',
+                                                                        'aguardando_conferencia' => 'Ag. Conferência',
+                                                                        'em_conferencia' => 'Em Conferência',
+                                                                        'conferido' => 'Conferido',
+                                                                        'aguardando_pagamento' => 'Ag. Pagamento',
+                                                                        'aguardando_faturamento' => 'Ag. Faturamento',
+                                                                        'finalizado' => 'Finalizado',
+                                                                        default => ucfirst(str_replace('_', ' ', $wfStatus))
+                                                                    };
+                                                                    $wfColor = match($wfStatus) {
+                                                                        'aguardando_separacao', 'aguardando_conferencia', 'aguardando_pagamento', 'aguardando_faturamento' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800',
+                                                                        'em_separacao', 'em_conferencia' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800',
+                                                                        'separado', 'conferido', 'finalizado' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800',
+                                                                        default => 'bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700'
+                                                                    };
+                                                                @endphp
+                                                                <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded font-medium {{ $wfColor }}" title="Status de O.S (Workflow)">
+                                                                    {{ $wfLabel }}
+                                                                </span>
+                                                            @endif
                                                         </div>
                                                         <p class="text-sm font-semibold text-zinc-800 dark:text-zinc-100 truncate">
                                                             {{ $grupo->cliente->nome_fantasia ?? $grupo->cliente->nome ?? 'Cliente não informado' }}

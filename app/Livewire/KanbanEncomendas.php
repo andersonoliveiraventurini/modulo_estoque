@@ -65,7 +65,10 @@ class KanbanEncomendas extends Component
             ['id' => 'aprovado',           'title' => 'Aprovado',                'description' => 'Cotação aprovada pelo vendedor',            'color' => 'yellow', 'workflow_status' => 'aprovado'],
             ['id' => 'aguardando',         'title' => 'Aguardando Recebimento',  'description' => 'Comprado, aguardando chegada',               'color' => 'purple', 'workflow_status' => 'aguardando'],
             ['id' => 'recebido',           'title' => 'Recebido',                'description' => 'Material recebido no estoque',              'color' => 'green',  'workflow_status' => 'recebido'],
-            ['id' => 'entregue',           'title' => 'Entregue ao Cliente',     'description' => 'Entregue ao vendedor/cliente',              'color' => 'emerald','workflow_status' => 'entregue'],   ];
+            ['id' => 'em_separacao',       'title' => 'Em Separação',            'description' => 'Itens da OS em separação',                  'color' => 'blue',   'workflow_status' => 'em_separacao'],
+            ['id' => 'em_conferencia',     'title' => 'Em Conferência',          'description' => 'Itens da OS em conferência',                'color' => 'amber',  'workflow_status' => 'em_conferencia'],
+            ['id' => 'entregue',           'title' => 'Entregue ao Cliente',     'description' => 'Entregue ao vendedor/cliente',              'color' => 'emerald','workflow_status' => 'entregue'],
+        ];
     }
 
     private function resolverColuna(ConsultaPrecoGrupo $grupo): string
@@ -73,6 +76,18 @@ class KanbanEncomendas extends Component
         $status = $grupo->status ?? '';
 
         if ($grupo->entradas->contains(fn($e) => $e->status === 'Entregue')) return 'entregue';
+        
+        // Verifica o workflow vinculado do Orçamento
+        if ($grupo->orcamento) {
+            $wf = $grupo->orcamento->workflow_status;
+            if (in_array($wf, ['aguardando_conferencia', 'em_conferencia', 'conferido'])) {
+                return 'em_conferencia';
+            }
+            if (in_array($wf, ['aguardando_separacao', 'em_separacao', 'separado'])) {
+                return 'em_separacao';
+            }
+        }
+
         if ($grupo->entradas->contains(fn($e) => in_array($e->status, ['Recebido completo', 'Recebido parcialmente']))) return 'recebido';
         if ($status === 'Aprovado' && $grupo->entradas->isEmpty()) return 'aguardando';
         if ($status === 'Aprovado') return 'aprovado';
