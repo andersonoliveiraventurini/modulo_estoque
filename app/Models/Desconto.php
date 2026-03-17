@@ -11,6 +11,30 @@ class Desconto extends Model
     /** @use HasFactory<\Database\Factories\DescontoFactory> */
     use HasFactory, SoftDeletes;
 
+    protected static function booted()
+    {
+        static::created(function ($desconto) {
+            $desconto->saveHistory();
+        });
+
+        static::updated(function ($desconto) {
+            if ($desconto->isDirty(['valor', 'porcentagem'])) {
+                $desconto->saveHistory();
+            }
+        });
+    }
+
+    public function saveHistory()
+    {
+        CustomerDiscountHistory::create([
+            'customer_discount_id' => $this->id,
+            'previous_value' => $this->getOriginal('valor') ?? $this->getOriginal('porcentagem'),
+            'new_value' => $this->valor ?? $this->porcentagem,
+            'changed_by' => auth()->id() ?? $this->user_id,
+            'reason' => $this->motivo,
+        ]);
+    }
+
     protected $fillable = [
         'motivo',
         'valor',

@@ -44,6 +44,7 @@ use App\Livewire\Logistica\SeparacaoListaPage;
 use App\Http\Controllers\InconsistenciaRecebimentoController;
 use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\RequisicaoCompraController;
+use App\Http\Controllers\RomaneioController;
 use App\Livewire\Estoque\ReposicaoIndex;
 use App\Http\Controllers\Estoque\ReposicaoPdfController;
 
@@ -288,6 +289,11 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('clientes', ClienteController::class)->names('clientes');
     Route::get('cliente/create_completo', [ClienteController::class, 'create_completo'])->name('clientes.create_completo');
     Route::get('historico-financeiro', \App\Livewire\HistoricoFinanceiroIndex::class)->name('historico.financeiro');
+
+    // Fluxo de Devoluções
+    Route::get('devolucoes/solicitar/{pedidoId}', \App\Livewire\Returns\ReturnSolicitation::class)->name('devolucoes.solicitar');
+    Route::get('devolucoes/aprovacao-vendas', \App\Livewire\Returns\ReturnApprovalSales::class)->name('devolucoes.aprovacao-vendas');
+    Route::get('devolucoes/aprovacao-estoque', \App\Livewire\Returns\ReturnApprovalStock::class)->name('devolucoes.aprovacao-estoque');
     Route::resource('bloqueios', BloqueioController::class)->names('bloqueios');
     Route::get('bloquear/{cliente_id}/cliente', [BloqueioController::class, 'bloquear'])->name('bloquear.cliente');
     Route::get('bloqueios/{cliente_id}/mostrar', [BloqueioController::class, 'bloqueios'])->name('bloqueios.mostrar');

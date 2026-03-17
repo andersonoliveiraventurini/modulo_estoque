@@ -182,20 +182,21 @@ public function vendedorAssistente()
 
     public function getLimiteUtilizadoAttribute(): float
     {
-        // Limite contabilizado por: Boletos em aberto + Pedidos em aberto pendentes de faturamento
-        // 1. Faturas em aberto (boletos pendentes)
+        // Limite disponível = Limite total - (boletos em aberto + pedidos a faturar + débitos em aberto)
+        
+        // 1. Faturas em aberto (boletos pendentes/vencidos/parciais)
         $valorFaturasAberto = $this->faturas()
-            ->where('status', '!=', 'pago')
+            ->whereIn('status', ['pendente', 'parcial', 'vencido'])
             ->sum('valor_total');
         
-        // 2. Pedidos pendentes (Aprovado, Em Expedição, etc. que ainda não foram faturados)
-        // Isso pode variar conforme a regra de negócio do app. 
-        // Assumiremos status != Cancelado e != Faturado.
-        $valorPedidosAberto = $this->pedidos()
-            ->whereNotIn('status', ['Cancelado', 'Entregue', 'Faturado'])
+        // 2. Pedidos a faturar (Aprovado, Aguardando, etc. que ainda não viraram fatura)
+        $valorPedidosAFaturar = $this->pedidos()
+            ->whereNotIn('status', ['Cancelado', 'Faturado', 'Concluído', 'Entregue'])
             ->sum('valor_total');
 
-        return (float) ($valorFaturasAberto + $valorPedidosAberto);
+        // Nota: "débitos em aberto" geralmente se refere às faturas, mas se houver outra tabela de débitos, somar aqui.
+        
+        return (float) ($valorFaturasAberto + $valorPedidosAFaturar);
     }
 
     public function getLimiteDisponivelAttribute(): float
