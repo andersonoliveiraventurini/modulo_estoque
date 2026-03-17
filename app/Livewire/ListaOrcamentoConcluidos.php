@@ -14,6 +14,7 @@ class ListaOrcamentoConcluidos extends Component
     public $cliente = '';
     public $cidade = '';
     public $vendedor = '';
+    public $loadingDay = '';
     public $dataInicio = '';
     public $dataFim = '';
     public $sortField = 'id';
@@ -25,6 +26,7 @@ class ListaOrcamentoConcluidos extends Component
         'cliente'       => ['except' => ''],
         'cidade'        => ['except' => ''],
         'vendedor'      => ['except' => ''],
+        'loadingDay'    => ['except' => ''],
         'dataInicio'    => ['except' => ''],
         'dataFim'       => ['except' => ''],
         'sortField'     => ['except' => 'id'],
@@ -35,12 +37,13 @@ class ListaOrcamentoConcluidos extends Component
     public function updatingCliente()   { $this->resetPage(); }
     public function updatingCidade()    { $this->resetPage(); }
     public function updatingVendedor()  { $this->resetPage(); }
+    public function updatingLoadingDay() { $this->resetPage(); }
     public function updatingDataInicio(){ $this->resetPage(); }
     public function updatingDataFim()   { $this->resetPage(); }
 
     public function limparFiltros()
     {
-        $this->reset(['search', 'cliente', 'cidade', 'vendedor', 'dataInicio', 'dataFim']);
+        $this->reset(['search', 'cliente', 'cidade', 'vendedor', 'loadingDay', 'dataInicio', 'dataFim']);
         $this->resetPage();
     }
 
@@ -101,6 +104,10 @@ class ListaOrcamentoConcluidos extends Component
             ->when($this->vendedor, function ($query) {
                 $query->whereHas('vendedor', fn ($q) =>
                     $q->where('name', 'like', "%{$this->vendedor}%"));
+            })
+
+            ->when($this->loadingDay, function ($query) {
+                $query->where('loading_day', $this->loadingDay);
             })
 
             ->when($this->dataInicio, fn ($q) => $q->whereDate('created_at', '>=', $this->dataInicio))

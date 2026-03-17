@@ -39,7 +39,8 @@ class Orcamento extends Model
         'homologacao',
         'desconto_total',
         'valor_com_desconto',
-        'encomenda'
+        'encomenda',
+        'loading_day',
     ];
 
     // Model Orcamento
@@ -276,5 +277,21 @@ class Orcamento extends Model
     public function getDescontoAttribute()
     {
         return $this->desconto_total;
+    }
+
+    public function getLoadingDayFormattedAttribute()
+    {
+        $dias = [
+            'monday' => 'Segunda-feira',
+            'tuesday' => 'Terça-feira',
+            'wednesday' => 'Quarta-feira',
+            'thursday' => 'Quinta-feira',
+            'friday' => 'Sexta-feira',
+            'express' => 'Express',
+            'sedex' => 'Sedex',
+            'carrier' => 'Transportadora'
+        ];
+
+        return $this->loading_day ? ($dias[$this->loading_day] ?? $this->loading_day) : null;
     }
 }

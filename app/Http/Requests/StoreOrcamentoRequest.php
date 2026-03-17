@@ -45,6 +45,7 @@ class StoreOrcamentoRequest extends FormRequest
             'cnpj_triangular' => 'required_if:venda_triangular,1|nullable|string|max:18',
 
             'outros_meios_pagamento' => 'required_if:condicao_id,20|nullable|string|max:255',
+            'loading_day' => 'nullable|string|in:monday,tuesday,wednesday,thursday,friday,express,sedex,carrier',
         ];
     }
 

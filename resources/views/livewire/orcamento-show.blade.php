@@ -103,8 +103,10 @@
     <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
         <h3 class="text-lg font-semibold mb-3">Transporte</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <p><strong>Transportadora:</strong> {{ $orcamento->transporte->nome ?? '—' }}</p>
-            <p><strong>Valor:</strong> R$ {{ number_format($orcamento->transporte_valor ?? 0, 2, ',', '.') }}</p>
+            <p><strong>Nº Rota / Transportadora:</strong> {{ $orcamento->transportes->first()->nome ?? '—' }}</p>
+            @if(in_array($orcamento->transportes->first()->id ?? null, [1, 2, 3, 6, 7]))
+                <p><strong>Dia de Carregamento:</strong> {{ $orcamento->loading_day_formatted ?? 'Não definido' }}</p>
+            @endif
         </div>
     </div>
 

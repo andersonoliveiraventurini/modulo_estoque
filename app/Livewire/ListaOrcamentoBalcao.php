@@ -14,6 +14,7 @@ class ListaOrcamentoBalcao extends Component
     public $cliente = '';
     public $cidade = '';
     public $vendedor = '';
+    public $loadingDay = '';
     public $dataInicio = '';
     public $dataFim = '';
     public $sortField = 'id';
@@ -25,6 +26,7 @@ class ListaOrcamentoBalcao extends Component
         'cliente' => ['except' => ''],
         'cidade' => ['except' => ''],
         'vendedor' => ['except' => ''],
+        'loadingDay' => ['except' => ''],
         'dataInicio' => ['except' => ''],
         'dataFim' => ['except' => ''],
         'sortField' => ['except' => 'id'],
@@ -46,6 +48,11 @@ class ListaOrcamentoBalcao extends Component
         $this->resetPage();
     }
 
+    public function updatingLoadingDay()
+    {
+        $this->resetPage();
+    }
+
     public function updatingDataInicio()
     {
         $this->resetPage();
@@ -58,7 +65,7 @@ class ListaOrcamentoBalcao extends Component
 
     public function limparFiltros()
     {
-        $this->reset(['search', 'cliente', 'vendedor', 'dataInicio', 'dataFim']);
+        $this->reset(['search', 'cliente', 'vendedor', 'loadingDay', 'dataInicio', 'dataFim']);
         $this->resetPage();
     }
 
@@ -128,6 +135,11 @@ class ListaOrcamentoBalcao extends Component
             ->when($this->vendedor, function ($query) {
                 $query->whereHas('vendedor', fn($q) =>
                 $q->where('name', 'like', "%{$this->vendedor}%"));
+            })
+
+            // 🚛 Filtro específico por dia de carregamento (Rota)
+            ->when($this->loadingDay, function ($query) {
+                $query->where('loading_day', $this->loadingDay);
             })
 
             // 📅 Filtro por intervalo de datas (created_at)

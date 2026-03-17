@@ -59,6 +59,24 @@
                 <x-input id="vendedor" wire:model.live.debounce.300ms="vendedor" placeholder="Nome do vendedor..." />
             </div>
 
+            <!-- Dia de Carregamento -->
+            <div class="flex flex-col flex-[2] min-w-[150px]">
+                <label for="loadingDay" class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                    Dia Carreg.
+                </label>
+                <x-select id="loadingDay" wire:model.live="loadingDay">
+                    <option value="">Todos</option>
+                    <option value="monday">Segunda-feira</option>
+                    <option value="tuesday">Terça-feira</option>
+                    <option value="wednesday">Quarta-feira</option>
+                    <option value="thursday">Quinta-feira</option>
+                    <option value="friday">Sexta-feira</option>
+                    <option value="express">Express</option>
+                    <option value="sedex">Sedex</option>
+                    <option value="carrier">Transportadora</option>
+                </x-select>
+            </div>
+
             <!-- Data início -->
             <div class="flex flex-col w-40">
                 <label for="dataInicio" class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">

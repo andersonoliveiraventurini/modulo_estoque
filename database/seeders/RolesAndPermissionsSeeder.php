@@ -37,6 +37,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'aprovar_requisicao_nivel_2',
             'aprovar_requisicao_nivel_3',
             'gerenciar_pedido_compra',
+            
+            // Permissões de Faturamento da Rota
+            'route_billing_attach',
+            'route_billing_approve',
+            'route_billing_deny',
+            'route_billing_validate_attachment',
+            'route_billing_view_billing',
+            'route_billing_view_loading',
         ];
 
         foreach ($permissions as $permission) {
@@ -58,6 +66,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'visualizar_requisicao_compra',
             'aprovar_requisicao_nivel_1',
             'aprovar_requisicao_nivel_2',
+            'route_billing_view_billing',
         ]);
 
         // COMPRAS: Operação comercial
@@ -80,6 +89,29 @@ class RolesAndPermissionsSeeder extends Seeder
         $roleVendedor = Role::findOrCreate('vendedor', 'web');
         $roleVendedor->syncPermissions([
             'view_user',
+            'route_billing_attach',
+        ]);
+
+        // FINANCEIRO: Operação financeira e Faturamento da Rota
+        $roleFinanceiro = Role::findOrCreate('financeiro', 'web');
+        $roleFinanceiro->syncPermissions([
+            'route_billing_view_billing',
+            'route_billing_approve',
+            'route_billing_deny',
+            'route_billing_validate_attachment',
+            'route_billing_view_loading',
+        ]);
+
+        // SEPARAÇÃO: Operação de separação (Faturamento da Rota)
+        $roleSeparacao = Role::findOrCreate('separacao', 'web');
+        $roleSeparacao->syncPermissions([
+            'route_billing_view_loading',
+        ]);
+
+        // CONFERÊNCIA: Operação de conferência (Faturamento da Rota)
+        $roleConferencia = Role::findOrCreate('conferencia', 'web');
+        $roleConferencia->syncPermissions([
+            'route_billing_view_loading',
         ]);
 
         // 3. Atribuir Admin ao Primeiro Usuário (se existir)

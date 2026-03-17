@@ -33,6 +33,7 @@ class UpdateOrcamentoRequest extends FormRequest
             'venda_triangular'            => 'required|boolean',
             'cnpj_triangular'             => 'required_if:venda_triangular,1|nullable|string|max:18',
             'tipos_transporte'            => 'required|integer|exists:tipos_transportes,id',
+            'loading_day'                 => 'nullable|string|in:monday,tuesday,wednesday,thursday,friday,express,sedex,carrier',
             'condicao_id'                 => 'required|exists:condicoes_pagamento,id',
             'outros_meios_pagamento'      => 'required_if:condicao_id,20|nullable|string|max:255',
 

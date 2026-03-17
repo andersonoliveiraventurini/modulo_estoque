@@ -322,6 +322,7 @@ class OrcamentoController extends Controller
             'venda_triangular' => $request->venda_triangular,
             'homologacao' => $request->homologacao,
             'validade' => Carbon::now()->addDays(2),
+            'loading_day' => in_array($request->tipos_transporte, [1, 2, 3, 6, 7]) ? $request->loading_day : null,
         ]);
 
         if ($request->venda_triangular == 1) {
@@ -1502,6 +1503,7 @@ class OrcamentoController extends Controller
                 'venda_triangular' => $request->venda_triangular,
                 'homologacao' => $request->homologacao,
                 'validade' => Carbon::now()->addDays(1),
+                'loading_day' => in_array($request->tipos_transporte, [1, 2, 3, 6, 7]) ? $request->loading_day : null,
             ]);
 
             if ($request->venda_triangular == 1) {
