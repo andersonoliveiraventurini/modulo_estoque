@@ -1,0 +1,16 @@
+--- a/src/Resources/RoleResource.php
++++ b/src/Resources/RoleResource.php
+@@ -52,11 +52,11 @@
+         return __('filament-spatie-roles-permissions::filament-spatie.section.role');
+     }
+ 
+-    public static function getNavigationGroup(): UnitEnum|string|null
++    public static function getNavigationGroup(): ?string
+     {
+         $navigationGroup = config('filament-spatie-roles-permissions.navigation_section_group', 'filament-spatie-roles-permissions::filament-spatie.section.roles_and_permissions');
+ 
+         return $navigationGroup instanceof UnitEnum
+-            ? $navigationGroup :
++            ? ($navigationGroup->value ?? $navigationGroup->name) :
+             __($navigationGroup);
+     }

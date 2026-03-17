@@ -4,18 +4,15 @@
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
             <div
                 class="bg-white p-6 shadow rounded-2xl border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-
-                <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
-                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                        </path>
-                    </svg>
-                    Criar Orçamento para Cliente {{ $cliente->id }} - {{ $cliente->nome ?? $cliente->nome_fantasia }}
-                    @if ($cliente->desconto != null)
-                        Autorizado desconto de até {{ $cliente->desconto }}%
-                    @endif
-                </h2>
+                <div class="flex items-center gap-2 mb-4">
+                    <x-heroicon-o-document-text class="w-6 h-6 text-accent" />
+                    <flux:heading size="xl">
+                        {{ __('Novo Orçamento para Cliente') }} {{ $cliente->id }} - {{ $cliente->nome ?? $cliente->nome_fantasia }}
+                    </flux:heading>
+                </div>
+                @if ($cliente->desconto != null)
+                    Autorizado desconto de até {{ $cliente->desconto }}%
+                @endif
                 @if ($cliente->vendedor_interno != null)
                     <p> Vendedor interno: {{ $cliente->vendedor_interno ?? 'Não atribuído' }} </p>
                 @endif
@@ -247,116 +244,74 @@
                     </div>
                     <hr />
                     <!-- Valores e descontos -->
-                    <div class="overflow-x-auto">
-                        <div class="flex gap-4 min-w-max">
-                            <div class="flex-1">
-                                <label class="block text-sm font-medium text-gray-700">Condição de pagamento</label>
-                                <x-select name="condicao_id" id="condicao_id" required
-                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
-                                    <option value="">Selecione...</option>
-                                    @foreach ($condicao as $c)
-                                        <option value="{{ $c->id }}">{{ $c->nome }}</option>
-                                    @endforeach
-                                </x-select>
-                            </div>
-                            <div class="flex-1">
-                                <x-input type="text" name="outros_meios_pagamento" id="outros_meios_pagamento"
-                                    disabled placeholder="Ex: Boleto 28/56/84/120, etc"
-                                    label="Outros meios pagamento" />
-                            </div>
-                            <div class="flex-1">
-                                <label class="block text-sm font-medium text-gray-700">Nota fiscal</label>
-                                <x-select name="tipo_documento" required
-                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
-                                    <option value="">Selecione...</option>
-                                    <option value="Nota fiscal">Nota fiscal</option>
-                                    <option value="Cupom Fiscal">Cupom Fiscal</option>
-                                </x-select>
-                            </div>
-                            <div class="flex-1">
-                                <label class="block text-sm font-medium text-gray-700">Homologação</label>
-                                <x-select name="homologacao" required
-                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
-                                    <option value="0" selected>Não</option>
-                                    <option value="1">Sim</option>
-                                </x-select>
-                            </div>
-                            <div class="flex-1">
-                                <label class="block text-sm font-medium text-gray-700">Venda triangular?</label>
-                                <x-select name="venda_triangular" id="venda_triangular" required
-                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
-                                    <option value="0" selected>Não</option>
-                                    <option value="1">Sim</option>
-                                </x-select>
-                            </div>
-                            <div class="flex-1">
-                                <x-input type="text" name="cnpj_triangular" id="cnpj_triangular" disabled
-                                    size="18" maxlength="18" onkeypress="mascara(this, '##.###.###/####-##')"
-                                    placeholder="00.000.000/0000-00" label="CNPJ venda triangular" />
-                            </div>
-                        </div>
-                        <br />
-                        <div class="flex gap-4 min-w-max">
-                            <div class="flex-1">
-                                <x-input type="text" name="desconto" value="0" min="0"
-                                    max="100" placeholder="Digite a porcentagem de desconto (0 a 100)"
-                                    label="Desconto na venda %"
-                                    oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
-                            </div>
+                    <hr />
+                    <!-- Seção de Pagamento e Impostos -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <flux:select name="condicao_id" id="condicao_id" label="Condição de pagamento" required>
+                            <option value="">Selecione...</option>
+                            @foreach ($condicao as $c)
+                                <option value="{{ $c->id }}">{{ $c->nome }}</option>
+                            @endforeach
+                        </flux:select>
 
-                            <div class="flex-1">
-                                <x-input type="text" name="desconto_especifico" value="0.00"
-                                    placeholder="Digite o valor do desconto específico" label="Desconto específico R$"
-                                    oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
-                            </div>
+                        <flux:input name="outros_meios_pagamento" id="outros_meios_pagamento" label="Outros meios pagamento" 
+                            disabled placeholder="Ex: Boleto 28/56/84..." />
 
-                            <div class="flex-1">
-                                <x-input type="text" step="0.01" name="guia_recolhimento" value="0"
-                                    label="Guia Recolhimento R$"
-                                    oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
-                            </div>
+                        <flux:select name="tipo_documento" label="Nota fiscal" required>
+                            <option value="">Selecione...</option>
+                            <option value="Nota fiscal">Nota fiscal</option>
+                            <option value="Cupom Fiscal">Cupom Fiscal</option>
+                        </flux:select>
 
-                            <div class="flex-1">
-                                <label class="block text-sm font-medium text-gray-700">Valor Total dos Itens s/
-                                    desconto</label>
-                                <input type="text" id="valor_total" name="valor_total" readonly value="0,00"
-                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" />
-                            </div>
+                        <flux:select name="homologacao" label="Homologação" required>
+                            <option value="0" selected>Não</option>
+                            <option value="1">Sim</option>
+                        </flux:select>
 
-                            <div class="flex-1">
-                                <label class="block text-sm font-medium text-gray-700">Valor Final c/ desconto
-                                    (R$)</label>
-                                <input type="text" id="valor_final"
-                                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 font-semibold text-green-700"
-                                    value="0.00" readonly />
-                            </div>
-                        </div>
+                        <flux:select name="venda_triangular" id="venda_triangular" label="Venda triangular?" required>
+                            <option value="0" selected>Não</option>
+                            <option value="1">Sim</option>
+                        </flux:select>
+
+                        <flux:input name="cnpj_triangular" id="cnpj_triangular" label="CNPJ venda triangular" 
+                            disabled placeholder="00.000.000/0000-00" 
+                            onkeypress="mascara(this, '##.###.###/####-##')" maxlength="18" />
                     </div>
+
+                    <!-- Seção de Valores e Descontos -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                        <flux:input name="desconto" label="Desconto na venda %" value="0" 
+                            oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
+
+                        <flux:input name="desconto_especifico" label="Desconto específico R$" value="0.00" 
+                            oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
+
+                        <flux:input name="guia_recolhimento" label="Guia Recolhimento R$" value="0" 
+                            oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
+
+                        <flux:input id="valor_total" name="valor_total" label="Total s/ desconto (R$)" readonly value="0,00" />
+
+                        <flux:input id="valor_final" label="Valor Final c/ desconto (R$)" readonly value="0.00" 
+                            class="font-semibold text-green-700 dark:text-green-400" />
+                    </div>
+
                     <div class="space-y-4">
                         <hr />
-                        <h3 class="text-lg font-medium flex items-center gap-2">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
-                                </path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                            Observações Gerais
-                        </h3>
-                        <x-textarea name="observacoes" placeholder="Digite as observações" label="Observações"
-                            rows="4"> {{ old('observacoes') }}</x-textarea>
+                        <div class="flex items-center gap-2">
+                             <x-heroicon-o-chat-bubble-bottom-center-text class="w-5 h-5 text-accent" />
+                             <flux:heading size="lg">Observações Gerais</flux:heading>
+                        </div>
+                        <flux:textarea name="observacoes" placeholder="Digite as observações" rows="4">{{ old('observacoes') }}</flux:textarea>
                     </div>
 
                     <!-- Ações -->
                     <div class="flex gap-4">
-                        <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
+                        <flux:button type="submit" variant="primary" class="px-8">
                             Salvar Orçamento
-                        </button>
-                        <button type="reset" class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">
+                        </flux:button>
+                        <flux:button type="reset" variant="ghost">
                             Limpar
-                        </button>
+                        </flux:button>
                     </div>
                 </form>
             </div>

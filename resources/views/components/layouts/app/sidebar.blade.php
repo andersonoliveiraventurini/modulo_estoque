@@ -187,7 +187,6 @@
             <flux:navlist.group heading="Relatórios Financeiros" expandable :expanded="false">
                 <flux:navlist.item icon="presentation-chart-line" :href="route('relatorios.fluxo_caixa')" :current="request()->routeIs('relatorios.fluxo_caixa')" wire:navigate>{{ __('Fluxo de Caixa') }}</flux:navlist.item>
                 <flux:navlist.item icon="document-chart-bar" :href="route('relatorios.vendas_margem')" :current="request()->routeIs('relatorios.vendas_margem')" wire:navigate>{{ __('Vendas e Margem') }}</flux:navlist.item>
-                <flux:navlist.item icon="users" :href="route('relatorios.ranking_clientes')" :current="request()->routeIs('relatorios.ranking_clientes')" wire:navigate>{{ __('Ranking de Clientes') }}</flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist.group>
         <flux:navlist.group heading="Descontos" expandable :expanded="false">

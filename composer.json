@@ -24,6 +24,7 @@
         "spatie/laravel-permission": "^6.21"
     },
     "require-dev": {
+        "cweagans/composer-patches": "^1.7",
         "fakerphp/faker": "^1.23",
         "laravel-lang/common": "^6.7",
         "laravel-lang/starter-kits": "^1.3",
@@ -78,6 +79,11 @@
     "extra": {
         "laravel": {
             "dont-discover": []
+        },
+        "patches": {
+            "althinect/filament-spatie-roles-permissions": {
+                "Fix type hint for getNavigationGroup for Filament 3.2+": "patches/filament-spatie-roles-permissions-type-hint.patch"
+            }
         }
     },
     "config": {
