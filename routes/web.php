@@ -286,6 +286,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('clientes', ClienteController::class)->names('clientes');
     Route::get('cliente/create_completo', [ClienteController::class, 'create_completo'])->name('clientes.create_completo');
+    Route::get('historico-financeiro', \App\Livewire\HistoricoFinanceiroIndex::class)->name('historico.financeiro');
     Route::resource('bloqueios', BloqueioController::class)->names('bloqueios');
     Route::get('bloquear/{cliente_id}/cliente', [BloqueioController::class, 'bloquear'])->name('bloquear.cliente');
     Route::get('bloqueios/{cliente_id}/mostrar', [BloqueioController::class, 'bloqueios'])->name('bloqueios.mostrar');

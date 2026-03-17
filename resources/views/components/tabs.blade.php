@@ -16,7 +16,18 @@
     }
 @endphp
 
-<div x-data="{ active: '{{ $default }}' }" class="w-full">
+<div x-data="{
+    active: (window.location.hash ? window.location.hash.slice(1) : '{{ $default }}'),
+    init() {
+        window.addEventListener('hashchange', () => {
+            if (window.location.hash) {
+                this.active = window.location.hash.slice(1);
+                const el = document.getElementById(window.location.hash.slice(1));
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+}" class="w-full">
     <!-- Botões das abas -->
     <div class="border-b border-zinc-200 dark:border-zinc-700 mb-4 flex space-x-2">
         @foreach($tabs as $tab)

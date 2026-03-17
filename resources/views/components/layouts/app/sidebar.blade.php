@@ -55,6 +55,9 @@
             <flux:navlist.item icon="no-symbol" :href="route('bloqueios.index')"
                 :current="request()->routeIs('bloqueios.index')" wire:navigate>{{ __('Clientes Bloqueados') }}
             </flux:navlist.item>
+            <flux:navlist.item icon="banknotes" :href="route('historico.financeiro')"
+                :current="request()->routeIs('historico.financeiro')" wire:navigate>{{ __('Histórico Financeiro') }}
+            </flux:navlist.item>
         </flux:navlist.group>
 
         <flux:navlist.group heading="Logística" expandable :expanded="false">
@@ -183,6 +186,9 @@
             </flux:navlist.item>
             <flux:navlist.item icon="currency-dollar" :href="route('orcamentos.concluidos')"
                 :current="request()->routeIs('orcamentos.concluidos')" wire:navigate>{{ __('Movimentações Financeiras') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="banknotes" :href="route('historico.financeiro')"
+                :current="request()->routeIs('historico.financeiro')" wire:navigate>{{ __('Histórico por Cliente') }}
             </flux:navlist.item>
             <flux:navlist.group heading="Relatórios Financeiros" expandable :expanded="false">
                 <flux:navlist.item icon="presentation-chart-line" :href="route('relatorios.fluxo_caixa')" :current="request()->routeIs('relatorios.fluxo_caixa')" wire:navigate>{{ __('Fluxo de Caixa') }}</flux:navlist.item>
