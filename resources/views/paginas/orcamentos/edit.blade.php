@@ -542,7 +542,6 @@
                             @endforeach
                         </div>
                     </div>
-
                     <hr />
                     <!-- Seção de Pagamento e Impostos -->
                     <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">

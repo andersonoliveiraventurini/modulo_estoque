@@ -105,124 +105,102 @@
         <table class="w-full text-sm">
             <thead class="bg-zinc-50 dark:bg-zinc-800">
                 <tr>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('obra')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                    <th class="px-3 py-3 text-left">
+                        <button wire:click="sortBy('obra')" class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Obra
                         </button>
                     </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('cliente_id')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                    <th class="px-3 py-3 text-left">
+                        <button wire:click="sortBy('cliente_id')" class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Cliente
                         </button>
                     </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('workflow_status')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Status Conferência
+                    <th class="px-3 py-3 text-left">
+                        <button wire:click="sortBy('workflow_status')" class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Status
                         </button>
                     </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('vendedor_id')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                    <th class="px-3 py-3 text-left">
+                        <button wire:click="sortBy('vendedor_id')" class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Vendedor
                         </button>
                     </th>
-                    <th class="px-6 py-3 text-left">
-                        <span class="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                            PDF
-                        </span>
-                    </th>
-                    <th class="px-6 py-3 text-left">
-                        <span class="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                            Ações
-                        </span>
-                    </th>
+                    <th class="px-3 py-3 text-left">Docs</th>
+                    <th class="px-3 py-3 text-left">Ações</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse($orcamentos as $o)
-                    <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            <a href="{{ route('orcamentos.show', $o) }}" class="hover:underline">
+                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
+                        <td class="px-3 py-4">
+                            <a href="{{ route('orcamentos.show', $o) }}" class="font-bold text-zinc-900 dark:text-zinc-50 hover:underline">
                                 {{ $o->obra }}
                             </a>
                         </td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->cliente->nome }}</td>
-                        <td class="px-6 py-4">
-                            @if ($o->workflow_status === 'aguardando_conferencia')
-                                <span
-                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                                    Aguardando Conferência
-                                </span>
-                            @elseif($o->workflow_status === 'em_conferencia')
-                                <span
-                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                    Em Conferência
-                                </span>
-                            @elseif($o->workflow_status === 'conferido')
-                                <span
-                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                    Conferido
-                                </span>
-                            @elseif($o->workflow_status === 'finalizado')
-                                <span
-                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
-                                    Finalizado
-                                </span>
-                            @endif
+                        <td class="px-3 py-4">
+                            <span class="text-xs font-bold text-zinc-800 dark:text-zinc-200 truncate max-w-[200px] inline-block">
+                                {{ $o->cliente->nome }}
+                            </span>
                         </td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->vendedor->name }}</td>
-                        <td class="px-6 py-4">
+                        <td class="px-3 py-4">
+                            @php
+                                $statusStyles = match($o->workflow_status) {
+                                    'aguardando_conferencia' => 'bg-amber-100 text-amber-700',
+                                    'em_conferencia'         => 'bg-blue-100 text-blue-700',
+                                    'conferido'              => 'bg-emerald-100 text-emerald-800',
+                                    'finalizado'            => 'bg-purple-100 text-purple-700',
+                                    default                  => 'bg-zinc-100 text-zinc-700'
+                                };
+                            @endphp
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase whitespace-nowrap {{ $statusStyles }}">
+                                {{ str_replace('_', ' ', $o->workflow_status) }}
+                            </span>
+                        </td>
+                        <td class="px-3 py-4 text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                            {{ $o->vendedor->name }}
+                        </td>
+                        <td class="px-3 py-4">
                             @if ($o->pdf_path)
-                                <a href="{{ asset('storage/' . $o->pdf_path) }}" target="_blank">
-                                    <x-button size="sm" variant="primary">
-                                        <x-heroicon-o-document-arrow-down class="w-4 h-4" />
-                                        PDF
-                                    </x-button>
+                                <a href="{{ asset('storage/' . $o->pdf_path) }}" target="_blank" title="Ver PDF" class="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition">
+                                    <x-heroicon-o-document-arrow-down class="w-5 h-5" />
                                 </a>
+                            @else
+                                <span class="text-zinc-300">—</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 flex gap-2 flex-wrap">
-                            <a href="{{ route('orcamentos.show', $o->id) }}">
-                                <x-button size="sm" variant="secondary">
-                                    <x-heroicon-o-eye class="w-4 h-4" />
-                                    Ver orçamento
-                                </x-button>
-                            </a>
+                        <td class="px-3 py-4">
+                            <div class="flex items-center gap-1">
+                                <a href="{{ route('orcamentos.show', $o->id) }}" title="Ver detalhes" class="p-1.5 text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg transition">
+                                    <x-heroicon-o-eye class="w-5 h-5" />
+                                </a>
 
-                            @if ($o->workflow_status === 'aguardando_conferencia')
-                                <a href="{{ route('orcamentos.conferencia.show', $o->id) }}">
-                                    <x-button size="sm" variant="primary">
-                                        <x-heroicon-o-play class="w-4 h-4" />
-                                        Iniciar Conferência
-                                    </x-button>
-                                </a>
-                            @elseif($o->workflow_status === 'em_conferencia')
-                                <a href="{{ route('orcamentos.conferencia.show', $o->id) }}">
-                                    <x-button size="sm" variant="primary">
-                                        <x-heroicon-o-play class="w-4 h-4" />
-                                        Acompanhar Conferência
-                                    </x-button>
-                                </a>
-                            @elseif($o->workflow_status === 'conferido')
-                                <a href="{{ route('orcamentos.conferencia.show', $o->id) }}">
-                                    <x-button size="sm" variant="secondary">
-                                        <x-heroicon-o-exclamation-triangle class="w-4 h-4 text-amber-500" />
-                                        Revisar Divergências
-                                    </x-button>
-                                </a>
-                            @elseif($o->workflow_status === 'finalizado')
-                                <a href="{{ route('faturamento.index') }}?search={{ $o->cliente->nome ?? '' }}">
-                                    <x-button size="sm" variant="primary">
-                                        <x-heroicon-o-banknotes class="w-4 h-4" />
-                                        Ver Fatura
-                                    </x-button>
-                                </a>
-                            @endif
+                                @if ($o->workflow_status === 'aguardando_conferencia')
+                                    <a href="{{ route('orcamentos.conferencia.show', $o->id) }}" title="Iniciar Conferência" class="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition">
+                                        <x-heroicon-o-play class="w-5 h-5" />
+                                    </a>
+                                @elseif($o->workflow_status === 'em_conferencia')
+                                    <a href="{{ route('orcamentos.conferencia.show', $o->id) }}" title="Acompanhar Conferência" class="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition">
+                                        <x-heroicon-o-play class="w-5 h-5" />
+                                    </a>
+                                @elseif($o->workflow_status === 'conferido')
+                                    <a href="{{ route('orcamentos.conferencia.show', $o->id) }}" title="Revisar Divergências" class="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition">
+                                        <x-heroicon-o-exclamation-triangle class="w-5 h-5" />
+                                    </a>
+                                @elseif($o->workflow_status === 'finalizado')
+                                    <a href="{{ route('faturamento.index') }}?search={{ $o->cliente->nome ?? '' }}" title="Ver Fatura" class="p-1.5 text-purple-500 hover:bg-purple-50 rounded-lg transition">
+                                        <x-heroicon-o-banknotes class="w-5 h-5" />
+                                    </a>
+                                @endif
+                            </div>
                         </td>
                     </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400 font-medium italic">
+                            Nenhum orçamento encontrado para conferência.
+                        </td>
+                    </tr>
+                @endforelse
                 @empty
                     <tr>
                         <td colspan="6" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">

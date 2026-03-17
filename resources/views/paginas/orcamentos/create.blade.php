@@ -242,7 +242,6 @@
                             @endforeach
                         </div>
                     </div>
-                    <hr />
                     <!-- Valores e descontos -->
                     <hr />
                     <!-- Seção de Pagamento e Impostos -->

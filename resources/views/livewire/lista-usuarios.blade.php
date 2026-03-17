@@ -36,49 +36,60 @@
         <table class="w-full text-sm">
             <thead class="bg-zinc-50 dark:bg-zinc-800">
                 <tr>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('nome')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Nome
+                    <th class="px-3 py-3 text-left">
+                        <button wire:click="sortBy('nome')" class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Usuário
                         </button>
                     </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('email')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                    <th class="px-3 py-3 text-left">
+                        <button wire:click="sortBy('email')" class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             E-mail
                         </button>
                     </th>
-                    <th class="px-6 py-3 text-left">
-                        <button class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">  
-                           Ações
-                        </button>
-                    </th>
+                    <th class="px-3 py-3 text-left">Ações</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse($usuarios as $u)
-                    <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            <a href="/usuarios/{{ $u->id }}" class="hover:underline">{{ $u->name }}</a>
+                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
+                        <td class="px-3 py-4">
+                            <div class="flex flex-col">
+                                <a href="/usuarios/{{ $u->id }}" class="font-bold text-zinc-900 dark:text-zinc-50 hover:underline">
+                                    {{ $u->name }}
+                                </a>
+                                @if($u->is_blocked)
+                                    <span class="text-[9px] font-bold text-red-500 uppercase">Bloqueado</span>
+                                @endif
+                            </div>
                         </td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="/usuarios/{{ $u->id }}" class="hover:underline">{{ $u->email }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            <a href="{{ route('usuarios.editPassword', $u) }}" class="text-blue-600 hover:underline">Alterar Senha</a>
+                        <td class="px-3 py-4 text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                            {{ $u->email }}
+                        </td>
+                        <td class="px-3 py-4">
+                            <div class="flex items-center gap-1">
+                                <a href="{{ route('usuarios.editPassword', $u) }}" title="Alterar Senha" class="p-1.5 text-zinc-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                                    <x-heroicon-o-key class="w-5 h-5" />
+                                </a>
 
-                            <form action="{{ route('usuarios.toggleBlock', $u) }}" method="POST" class="inline">
-                                @csrf
-                                @method('PUT')
-                                <button type="submit" class="text-red-600 hover:underline">
-                                    {{ $u->is_blocked ? 'Desbloquear' : 'Bloquear' }}
-                                </button>
-                            </form>
+                                <form action="{{ route('usuarios.toggleBlock', $u) }}" method="POST" class="inline">
+                                    @csrf
+                                    @method('PUT')
+                                    <button type="submit" title="{{ $u->is_blocked ? 'Desbloquear' : 'Bloquear' }}" 
+                                            class="p-1.5 {{ $u->is_blocked ? 'text-emerald-500 hover:bg-emerald-50' : 'text-red-400 hover:text-red-700 hover:bg-red-50' }} rounded-lg transition">
+                                        @if($u->is_blocked)
+                                            <x-heroicon-o-lock-open class="w-5 h-5" />
+                                        @else
+                                            <x-heroicon-o-lock-closed class="w-5 h-5" />
+                                        @endif
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
-                            Nenhum usuários encontrado.
+                        <td colspan="3" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400 font-medium italic">
+                            Nenhum usuário encontrado.
                         </td>
                     </tr>
                 @endforelse

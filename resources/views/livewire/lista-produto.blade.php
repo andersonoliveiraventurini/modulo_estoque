@@ -35,131 +35,96 @@
         <table class="w-full text-sm">
             <thead class="bg-zinc-50 dark:bg-zinc-800">
                 <tr>
-                    @foreach ([
-                        'id' => 'Código',
-                        'status' => 'Status',
-                        'cor' => 'Cor',
-                        'nome' => 'Nome',
-                        'descricao' => 'Descrição',
-                        'fornecedor_id' => 'Fornecedor',
-                        'part_number' => 'Part Number',
-                        'preco_venda' => 'Preço venda',
-                        'preco_custo' => 'Preço custo',
-                        'estoque_atual' => 'Quantidade atual',
-                        'estoque_minimo' => 'Estoque mínimo',
-                    ] as $field => $label)
-                        <th class="px-6 py-3 text-left">
-                            <button wire:click="sortBy('{{ $field }}')"
-                                class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                                {{ $label }}
-                            </button>
-                        </th>
-                    @endforeach
-                    <th class="px-6 py-3 text-left">Ações</th>
+                    <th class="px-3 py-3 text-left">
+                        <button wire:click="sortBy('id')" class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Produto
+                        </button>
+                    </th>
+                    <th class="px-3 py-3 text-left">
+                        <span class="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status / Cor</span>
+                    </th>
+                    <th class="px-3 py-3 text-left">
+                        <span class="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Fornecedor / PN</span>
+                    </th>
+                    <th class="px-3 py-3 text-left">
+                        <button wire:click="sortBy('preco_venda')" class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Valores (Venda/Custo)
+                        </button>
+                    </th>
+                    <th class="px-3 py-3 text-left">
+                        <button wire:click="sortBy('estoque_atual')" class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Estoque
+                        </button>
+                    </th>
+                    <th class="px-3 py-3 text-left">Ações</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse($produtos as $c)
-                   <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-200">
-                        <td class="px-6 py-4">
-                            <a href="/produtos/{{ $c->id }}" 
-                            class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition" class="hover:underline">
-                                {{ $c->id }}
-                            </a>
-                        </td>
-                        <td class="px-6 py-4">
-                            <a href="/produtos/{{ $c->id }}" 
-                            class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition" class="hover:underline">
-                                {{ $c->status }}
-                            </a>
-                        </td>
-                        <td class="px-6 py-4">
-                            @if ($c->cor)
-                                <span class="inline-flex items-center gap-2 text-zinc-800 dark:text-zinc-200">
-                                    <span class="w-5 h-5 border border-zinc-300 dark:border-zinc-600 rounded"
-                                        style="background-color: {{ $c->cor->codigo_hex }}"></span>
-                                    {{ $c->cor->nome }}
-                                </span>
-                            @else
-                                <span class="text-zinc-500 dark:text-zinc-400">Sem cor</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4">
-                            <a href="/produtos/{{ $c->id }}" class="hover:underline"
-                            class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition">
-                                {{ $c->nome }}
-                            </a>
-                        </td>
-                        <td class="px-6 py-4">
-                            <a href="/produtos/{{ $c->id }}" class="hover:underline"
-                            class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition">
-                                {{ $c->descricao }}
-                            </a>
-                        </td>
-                        <td class="px-6 py-4">
-                            @if ($c->fornecedor)
-                                <a href="/fornecedores/{{ $c->fornecedor->id }}"  class="hover:underline"
-                                class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition">
-                                    {{ $c->fornecedor->nome_fantasia }}
+                   <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors duration-200">
+                        <td class="px-3 py-4">
+                            <div class="flex flex-col max-w-[250px]">
+                                <a href="/produtos/{{ $c->id }}" class="font-bold text-zinc-900 dark:text-zinc-50 hover:underline">
+                                    {{ $c->nome }}
                                 </a>
-                            @else
-                                <span class="text-zinc-500 dark:text-zinc-400">Sem fornecedor</span>
-                            @endif
+                                <span class="text-[10px] text-zinc-400 font-mono uppercase truncate">{{ $c->id }} | {{ $c->descricao }}</span>
+                            </div>
                         </td>
-                        <td class="px-6 py-4">
-                            <a href="/produtos/{{ $c->id }}"  class="hover:underline"
-                            class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition">
-                                {{ $c->part_number }}
-                            </a>
+                        <td class="px-3 py-4">
+                            <div class="flex flex-col gap-1.5">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase w-fit {{ in_array(strtolower($c->status), ['ativo', 'active', '1', 'sim']) ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                    {{ $c->status }}
+                                </span>
+                                @if ($c->cor)
+                                    <span class="inline-flex items-center gap-1.5 text-[11px] text-zinc-600 dark:text-zinc-400">
+                                        <span class="w-3 h-3 border border-zinc-300 dark:border-zinc-600 rounded-full"
+                                            style="background-color: {{ $c->cor->codigo_hex }}"></span>
+                                        {{ $c->cor->nome }}
+                                    </span>
+                                @endif
+                            </div>
                         </td>
-                        <!-- Preço venda -->
-                        <td class="px-6 py-4">
-                            <a href="/produtos/{{ $c->id }}"  class="hover:underline"
-                            class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition">
-                                R$ {{ number_format($c->preco_venda, 2, ',', '.') }}
-                            </a>
+                        <td class="px-3 py-4">
+                            <div class="flex flex-col">
+                                <span class="text-xs font-medium text-zinc-800 dark:text-zinc-200 truncate max-w-[150px]" title="{{ $c->fornecedor->nome_fantasia ?? 'Sem fornecedor' }}">
+                                    {{ $c->fornecedor->nome_fantasia ?? '-' }}
+                                </span>
+                                <span class="text-[10px] text-zinc-400 font-mono">{{ $c->part_number ?: '-' }}</span>
+                            </div>
                         </td>
-                        <!-- Preço custo -->
-                        <td class="px-6 py-4">
-                            <a href="/produtos/{{ $c->id }}"  class="hover:underline"
-                            class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition">
-                                R$ {{ number_format($c->preco_custo, 2, ',', '.') }}
-                            </a>
+                        <td class="px-3 py-4">
+                            <div class="flex flex-col">
+                                <span class="text-[11px] font-bold text-zinc-900 dark:text-zinc-50">Venda: R$ {{ number_format($c->preco_venda, 2, ',', '.') }}</span>
+                                <span class="text-[10px] text-zinc-400">Custo: R$ {{ number_format($c->preco_custo, 2, ',', '.') }}</span>
+                            </div>
                         </td>
-                        <td class="px-6 py-4">
-                            <a href="/produtos/{{ $c->id }}"  class="hover:underline"
-                            class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition">
-                                {{ $c->estoque_atual }}
-                            </a>
+                        <td class="px-3 py-4 text-xs">
+                            <div class="flex flex-col">
+                                <span class="font-bold {{ $c->estoque_atual <= $c->estoque_minimo ? 'text-red-600' : 'text-zinc-900 dark:text-zinc-50' }}">
+                                    Atual: {{ $c->estoque_atual }}
+                                </span>
+                                <span class="text-[10px] text-zinc-400 font-medium">Mínimo: {{ $c->estoque_minimo }}</span>
+                            </div>
                         </td>
-                        <td class="px-6 py-4">
-                            <a href="/produtos/{{ $c->id }}"  class="hover:underline"
-                            class="text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 font-medium transition">
-                                {{ $c->estoque_minimo }}
-                            </a>
-                        </td>
-                        <td class="px-6 py-4 flex gap-2">
-                            <a href="{{ route('produtos.edit', $c->id) }}">
-                                <x-button size="sm" variant="secondary">
-                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
-                                    Editar
-                                </x-button>
-                            </a>
-                            <form action="{{ route('produtos.destroy', $c->id) }}" method="POST"
-                                onsubmit="return confirm('Tem certeza que deseja excluir este produto?');">
-                                @csrf
-                                @method('DELETE')
-                                <x-button size="sm" variant="danger">
-                                    <x-heroicon-o-trash class="w-4 h-4" />
-                                    Excluir
-                                </x-button>
-                            </form>
+                        <td class="px-3 py-4">
+                            <div class="flex items-center gap-1">
+                                <a href="{{ route('produtos.edit', $c->id) }}" title="Editar" class="p-1.5 text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg transition">
+                                    <x-heroicon-o-pencil-square class="w-5 h-5" />
+                                </a>
+                                <form action="{{ route('produtos.destroy', $c->id) }}" method="POST"
+                                    onsubmit="return confirm('Tem certeza que deseja excluir este produto?');" class="inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" title="Excluir" class="p-1.5 text-red-400 fallback-red-700 hover:bg-red-50 rounded-lg transition">
+                                        <x-heroicon-o-trash class="w-5 h-5" />
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
-
                 @empty
                     <tr>
-                        <td colspan="11" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
+                        <td colspan="6" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400 font-medium italic">
                             Nenhum produto encontrado.
                         </td>
                     </tr>

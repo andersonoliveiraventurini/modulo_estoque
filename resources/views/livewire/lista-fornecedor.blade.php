@@ -36,75 +36,63 @@
         <table class="w-full text-sm">
             <thead class="bg-zinc-50 dark:bg-zinc-800">
                 <tr>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('id')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Código Fornecedor
+                    <th class="px-3 py-3 text-left">
+                        <button wire:click="sortBy('id')" class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Fornecedor
                         </button>
                     </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('nome_fantasia')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Nome Fantasia
-                        </button>
-                    </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('razao_social')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Razão Social
-                        </button>
-                    </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('tratamento')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                    <th class="px-3 py-3 text-left">
+                        <button wire:click="sortBy('tratamento')" class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Tratamento
                         </button>
                     </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('cnpj')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                    <th class="px-3 py-3 text-left">
+                        <button wire:click="sortBy('cnpj')" class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             CNPJ
                         </button>
                     </th>
-                    <th class="px-6 py-3 text-left">Ações</th>
+                    <th class="px-3 py-3 text-left">Ações</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse($fornecedores as $f)
-                    <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="/fornecedores/{{ $f->id }}"  class="hover:underline">{{ $f->id }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="/fornecedores/{{ $f->id }}" class="hover:underline">{{ $f->nome_fantasia }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="/fornecedores/{{ $f->id }}" class="hover:underline">{{ $f->razao_social }}</a></td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200"><a
-                                href="/fornecedores/{{ $f->id }}" class="hover:underline">{{ $f->tratamento ?? '-' }}</a></td>
-                        <td class="px-6 py-4 font-mono text-zinc-800 dark:text-zinc-200"><a
-                                href="/fornecedores/{{ $f->id }}" class="hover:underline">{{ $f->cnpj_formatado }}</a></td>
-                        <td class="px-6 py-4 flex gap-2">
-                            <a href="{{ route('fornecedores.edit', $f->id) }}">
-                                <x-button size="sm" variant="secondary">
-                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
-                                    Editar
-                                </x-button>
-                            </a>
-
-                            <form action="{{ route('fornecedores.destroy', $f->id) }}" method="POST"
-                                onsubmit="return confirm('Deseja excluir este fornecedor?');">
-                                @csrf
-                                @method('DELETE')
-                                <x-button size="sm" variant="danger">
-                                    <x-heroicon-o-trash class="w-4 h-4" />
-                                    Excluir
-                                </x-button>
-                            </form>
+                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
+                        <td class="px-3 py-4">
+                            <div class="flex flex-col max-w-[300px]">
+                                <a href="/fornecedores/{{ $f->id }}" class="font-bold text-zinc-900 dark:text-zinc-50 hover:underline">
+                                    {{ $f->nome_fantasia }}
+                                </a>
+                                <span class="text-[10px] text-zinc-400 uppercase truncate" title="{{ $f->razao_social }}">
+                                    {{ $f->id }} | {{ $f->razao_social }}
+                                </span>
+                            </div>
                         </td>
+                        <td class="px-3 py-4 text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                            {{ $f->tratamento ?? '-' }}
+                        </td>
+                        <td class="px-3 py-4 font-mono text-[11px] text-zinc-600 dark:text-zinc-400">
+                            {{ $f->cnpj_formatado }}
+                        </td>
+                        <td class="px-3 py-4">
+                            <div class="flex items-center gap-1">
+                                <a href="{{ route('fornecedores.edit', $f->id) }}" title="Editar" class="p-1.5 text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg transition">
+                                    <x-heroicon-o-pencil-square class="w-5 h-5" />
+                                </a>
 
+                                <form action="{{ route('fornecedores.destroy', $f->id) }}" method="POST"
+                                    onsubmit="return confirm('Deseja excluir este fornecedor?');" class="inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" title="Excluir" class="p-1.5 text-red-400 hover:text-red-700 hover:bg-red-50 rounded-lg transition">
+                                        <x-heroicon-o-trash class="w-5 h-5" />
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
+                        <td colspan="4" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400 font-medium italic">
                             Nenhum fornecedor encontrado.
                         </td>
                     </tr>

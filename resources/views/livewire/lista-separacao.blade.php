@@ -111,106 +111,92 @@
         <table class="w-full text-sm">
             <thead class="bg-zinc-50 dark:bg-zinc-800">
                 <tr>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('obra')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Obra
+                    <th class="px-3 py-3 text-left">
+                        <button wire:click="sortBy('obra')" class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Obra / Rota
                         </button>
                     </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('cliente_id')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                    <th class="px-3 py-3 text-left">
+                        <button wire:click="sortBy('cliente_id')" class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Cliente
                         </button>
                     </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('workflow_status')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
-                            Status Separação
+                    <th class="px-3 py-3 text-left">
+                        <button wire:click="sortBy('workflow_status')" class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Status
                         </button>
                     </th>
-                    <th class="px-6 py-3 text-left">
-                        <button wire:click="sortBy('vendedor_id')"
-                            class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                    <th class="px-3 py-3 text-left">
+                        <button wire:click="sortBy('vendedor_id')" class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Vendedor
                         </button>
                     </th>
-                    <th class="px-6 py-3 text-left">
-                        <span class="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                            PDF
-                        </span>
-                    </th>
-                    <th class="px-6 py-3 text-left">
-                        <span class="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                            Ações
-                        </span>
-                    </th>
+                    <th class="px-3 py-3 text-left">Docs</th>
+                    <th class="px-3 py-3 text-left">Ações</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse($orcamentos as $o)
-                    <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
-                            <a href="{{ route('orcamentos.show', $o) }}" class="hover:underline font-bold">
-                                {{ $o->obra }}
-                            </a>
-                            <div class="text-xs text-zinc-500 mt-1">
-                                Rota: <span class="font-semibold text-zinc-700 dark:text-zinc-300">{{ $o->endereco->roteiro ?? 'Não definida' }}</span>
+                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
+                        <td class="px-3 py-4">
+                            <div class="flex flex-col">
+                                <a href="{{ route('orcamentos.show', $o) }}" class="font-bold text-zinc-900 dark:text-zinc-50 hover:underline">
+                                    {{ $o->obra }}
+                                </a>
+                                <div class="flex items-center gap-1 text-[10px] text-zinc-400 font-medium">
+                                    <x-heroicon-o-truck class="w-3 h-3" />
+                                    <span>{{ $o->endereco->roteiro ?? 'Sem rota' }}</span>
+                                </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->cliente->nome }}</td>
-                        <td class="px-6 py-4">
+                        <td class="px-3 py-4">
+                            <span class="text-xs font-bold text-zinc-800 dark:text-zinc-200 truncate max-w-[200px] inline-block">
+                                {{ $o->cliente->nome }}
+                            </span>
+                        </td>
+                        <td class="px-3 py-4">
                             @if ($o->workflow_status === 'aguardando_separacao')
-                                <span
-                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                                    Aguardando Separação
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase whitespace-nowrap bg-amber-100 text-amber-700">
+                                    Aguardando
                                 </span>
                             @elseif($o->workflow_status === 'em_separacao')
-                                <span
-                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase whitespace-nowrap bg-blue-100 text-blue-700">
                                     Em Separação
                                 </span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">{{ $o->vendedor->name }}</td>
-                        <td class="px-6 py-4">
+                        <td class="px-3 py-4 text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                            {{ $o->vendedor->name }}
+                        </td>
+                        <td class="px-3 py-4">
                             @if ($o->pdf_path)
-                                <a href="{{ asset('storage/' . $o->pdf_path) }}" target="_blank">
-                                    <x-button size="sm" variant="primary">
-                                        <x-heroicon-o-document-arrow-down class="w-4 h-4" />
-                                        PDF
-                                    </x-button>
+                                <a href="{{ asset('storage/' . $o->pdf_path) }}" target="_blank" title="Ver PDF" class="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition">
+                                    <x-heroicon-o-document-arrow-down class="w-5 h-5" />
                                 </a>
+                            @else
+                                <span class="text-zinc-300">—</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 flex gap-2">
-                            <a href="{{ route('orcamentos.show', $o->id) }}">
-                                <x-button size="sm" variant="secondary">
-                                    <x-heroicon-o-eye class="w-4 h-4" />
-                                    Ver orçamento
-                                </x-button>
-                            </a>
+                        <td class="px-3 py-4">
+                            <div class="flex items-center gap-1">
+                                <a href="{{ route('orcamentos.show', $o->id) }}" title="Ver detalhes" class="p-1.5 text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg transition">
+                                    <x-heroicon-o-eye class="w-5 h-5" />
+                                </a>
 
-                            @if ($o->workflow_status === 'aguardando_separacao')
-                                <a href="{{ route('orcamentos.separacao.show', $o->id) }}">
-                                    <x-button size="sm" variant="primary">
-                                        <x-heroicon-o-play class="w-4 h-4" />
-                                        Iniciar Separação
-                                    </x-button>
+                                @php
+                                    $isAguardando = $o->workflow_status === 'aguardando_separacao';
+                                @endphp
+                                <a href="{{ route('orcamentos.separacao.show', $o->id) }}" 
+                                   title="{{ $isAguardando ? 'Iniciar Separação' : 'Acompanhar Separação' }}" 
+                                   class="p-1.5 {{ $isAguardando ? 'text-emerald-500 hover:bg-emerald-50' : 'text-blue-500 hover:bg-blue-50' }} rounded-lg transition">
+                                    <x-heroicon-o-play class="w-5 h-5" />
                                 </a>
-                            @elseif($o->workflow_status === 'em_separacao')
-                                <a href="{{ route('orcamentos.separacao.show', $o->id) }}">
-                                    <x-button size="sm" variant="primary">
-                                        <x-heroicon-o-play class="w-4 h-4" />
-                                        Acompanhar Separação
-                                    </x-button>
-                                </a>
-                            @endif
+                            </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
+                        <td colspan="6" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400 font-medium italic">
                             Nenhum orçamento encontrado para separação.
                         </td>
                     </tr>
