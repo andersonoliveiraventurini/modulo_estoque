@@ -12,7 +12,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class OrcamentoPdfService
 {
-    public function gerarOrcamentoPdf(Orcamento $orcamento): bool
+    public function gerarOrcamentoPdf(Orcamento $orcamento, bool $showRotaRestriction = false): bool
     {
         try {
             // Não gerar PDF se não houver condição de pagamento definida
@@ -21,6 +21,14 @@ class OrcamentoPdfService
                     'orcamento_id' => $orcamento->id,
                 ]);
                 return false;
+            }
+
+            // Auto-detecta restrição via approval mais recente de Rota
+            if (!$showRotaRestriction) {
+                $latestApproval = $orcamento->routeBillingApprovals()
+                    ->orderByDesc('id')
+                    ->first();
+                $showRotaRestriction = $latestApproval?->status === 'restrictions';
             }
 
             // 1. TOKEN E LINK SEGURO
@@ -44,11 +52,12 @@ class OrcamentoPdfService
 
             // 4. PDF
             $pdf = Pdf::loadView('documentos_pdf.orcamento', [
-                'orcamento'    => $orcamento,
-                'qrCode'       => $qrCodeBase64,
-                'linkSeguro'   => $linkSeguro,
-                'versao'       => $orcamento->versao ?? 1,
-                'grupoCotacao' => $grupoCotacao, // ✅ passado para o template
+                'orcamento'           => $orcamento,
+                'qrCode'              => $qrCodeBase64,
+                'linkSeguro'          => $linkSeguro,
+                'versao'              => $orcamento->versao ?? 1,
+                'grupoCotacao'        => $grupoCotacao,
+                'showRotaRestriction' => $showRotaRestriction,
             ])->setPaper('a4');
 
             // 5. NUMERAÇÃO DE PÁGINAS

@@ -197,6 +197,21 @@
  <div style="text-align:right; margin-top:-60px; margin-right:4px;">
         <img src="data:image/png;base64,{{ $qrCode }}" width="70" height="70">
     </div>
+
+@if (!empty($showRotaRestriction) && $showRotaRestriction)
+    <div style="
+        margin: 8px 0 12px 0;
+        padding: 10px 14px;
+        background-color: #fff3cd;
+        border: 2px solid #e0a800;
+        border-radius: 4px;
+        text-align: center;
+    ">
+        <strong style="font-size: 14px; color: #7a5c00; text-transform: uppercase; letter-spacing: 1px;">
+            RECEBER PAGAMENTO NA ENTREGA
+        </strong>
+    </div>
+@endif
 {{--
     NOTA: o QR code foi removido do partial pois o cabeçalho compartilhado não
     recebe $qrCode em todos os documentos. Se quiser mantê-lo no orçamento,

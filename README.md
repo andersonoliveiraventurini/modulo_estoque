@@ -53,6 +53,8 @@ npm install && npm run dev
 | `orcamentos.status_orcamentos` | GET | Painel de status dos pedidos |
 | `orcamentos.balcao` | GET | Caixa do balcão (venda presencial) |
 | `orcamentos.balcao_concluidos` | GET | Pedidos finalizados do balcão |
+| `orcamentos.rota_concluidos` | GET | Lista de pedidos de rota (Conferidos/Finalizados) |
+| `orcamentos.rota_pagamento` | GET | Tela de faturamento e aprovação de Rota (Financeiro) |
 
 **Status possíveis de um orçamento:** `Pendente` → `Aprovar desconto` → `Aprovar pagamento` → `Aprovado` → `Sem estoque` → `Pago` → `Cancelado`
 
@@ -110,10 +112,13 @@ Retorna `null` se o cliente não tiver contato com telefone.
 Fluxo obrigatório para pedidos do tipo **ROTA** (transportes 1, 2, 3, 6, 7). Garante que a mercadoria só saia do estoque após validação financeira.
 
 #### Fluxo de Operação:
-1. **Anexo (Vendedor)**: O vendedor anexa comprovantes de pagamento ou documentos no detalhe do orçamento.
-2. **Aprovação (Financeiro)**: O financeiro valida anexo por anexo e emite o parecer (`Aprovado`, `Com Restrições` ou `Negado`).
-3. **Trava de Logística**: O pedido **não aparece** na fila de separação (`logistica.separacao.lista`) até que possua uma aprovação `approved` e o `loading_day` (dia de carregamento) definido.
-4. **Carregamento**: Após separado/conferido, o pedido consta na tela de **Carregamento de Rota**, agrupado pelo cronograma semanal.
+1. **Anexo (Vendedor)**: O vendedor anexa comprovantes de pagamento no detalhe do orçamento via componente `RouteBillingAttach`.
+2. **Aprovação (Financeiro)**: O financeiro acessa a tela de faturamento (`orcamentos.rota_pagamento`), valida os anexos e seleciona a decisão:
+   - **Aprovar**: Registra o pagamento e libera para logística.
+   - **Aprovar com Restrição**: Registra o pagamento e gera PDF com a marca d'água **"RECEBER PAGAMENTO NA ENTREGA"**.
+   - **Negar**: Cancela o faturamento e dispara `RouteBillingDeniedNotification` para Vendedor, Supervisor, Separação e Conferência.
+3. **Trava de Logística**: O pedido **não aparece** na fila de separação até que possua uma aprovação e o `loading_day` definido.
+4. **Carregamento**: Pedidos conferidos aparecem no cronograma semanal de carregamento.
 
 ---
 

@@ -3,47 +3,55 @@
 namespace App\Livewire;
 
 use App\Models\Orcamento;
+use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\Log;
 
-class ListaOrcamentoBalcaoConcluidos extends Component
+class ListaOrcamentoRotaConcluidos extends Component
 {
     use WithPagination;
 
-    public $search = '';
-    public $cliente = '';
-    public $cidade = '';
-    public $vendedor = '';
-    public $loadingDay = '';
-    public $dataInicio = '';
-    public $dataFim = '';
-    public $sortField = 'id';
+    public $search        = '';
+    public $cliente       = '';
+    public $vendedor      = '';
+    public $loadingDay    = '';
+    public $billingStatus = '';   // pending | approved | restrictions | rejected
+    public $dataInicio    = '';
+    public $dataFim       = '';
+    public $sortField     = 'id';
     public $sortDirection = 'desc';
-    public $perPage = 10;
+    public $perPage       = 10;
+
+    /** Tipos de transporte que pertencem à Rota */
+    const ROUTE_TRANSPORT_IDS = [1, 2, 3, 6, 7];
 
     protected $queryString = [
         'search'        => ['except' => ''],
         'cliente'       => ['except' => ''],
-        'cidade'        => ['except' => ''],
         'vendedor'      => ['except' => ''],
         'loadingDay'    => ['except' => ''],
+        'billingStatus' => ['except' => ''],
         'dataInicio'    => ['except' => ''],
         'dataFim'       => ['except' => ''],
         'sortField'     => ['except' => 'id'],
         'sortDirection' => ['except' => 'desc'],
     ];
 
-    public function updatingSearch()     { $this->resetPage(); }
-    public function updatingCliente()    { $this->resetPage(); }
-    public function updatingCidade()     { $this->resetPage(); }
-    public function updatingVendedor()   { $this->resetPage(); }
-    public function updatingLoadingDay() { $this->resetPage(); }
-    public function updatingDataInicio() { $this->resetPage(); }
-    public function updatingDataFim()    { $this->resetPage(); }
+    public function updatingSearch()        { $this->resetPage(); }
+    public function updatingCliente()       { $this->resetPage(); }
+    public function updatingVendedor()      { $this->resetPage(); }
+    public function updatingLoadingDay()    { $this->resetPage(); }
+    public function updatingBillingStatus() { $this->resetPage(); }
+    public function updatingDataInicio()    { $this->resetPage(); }
+    public function updatingDataFim()       { $this->resetPage(); }
 
     public function limparFiltros(): void
     {
-        $this->reset(['search', 'cliente', 'cidade', 'vendedor', 'loadingDay', 'dataInicio', 'dataFim']);
+        $this->reset([
+            'search', 'cliente', 'vendedor', 'loadingDay',
+            'billingStatus', 'dataInicio', 'dataFim',
+        ]);
         $this->resetPage();
     }
 
@@ -59,21 +67,22 @@ class ListaOrcamentoBalcaoConcluidos extends Component
 
     public function render()
     {
+        Log::info('ListaOrcamentoRotaConcluidos: carregando listagem de pedidos de rota.');
+
         $orcamentos = Orcamento::query()
             ->with([
                 'cliente',
                 'vendedor',
                 'endereco',
-                // Carrega o pagamento ativo mais recente + formas + condicao
-                // Mesmo padrão do ListaOrcamentoConcluidos
-                'pagamentos'                        => fn ($q) => $q->where('estornado', false)->latest()->limit(1),
+                'pagamentos'    => fn ($q) => $q->where('estornado', false)->latest()->limit(1),
                 'pagamentos.formas.condicaoPagamento',
+                'routeBillingApprovals' => fn ($q) => $q->latest()->limit(1),
+                'routeBillingAttachments',
             ])
 
-            // Filtros obrigatórios do Balcão
+            // Apenas orçamentos de Rota
+            ->whereHas('transportes', fn ($q) => $q->whereIn('tipos_transportes.id', self::ROUTE_TRANSPORT_IDS))
             ->whereIn('workflow_status', ['conferido', 'finalizado'])
-            ->whereIn('status', ['Pago'])
-            ->whereHas('transportes', fn ($q) => $q->whereIn('tipos_transportes.id', [4, 5]))
 
             // Busca geral
             ->when($this->search, function ($query) {
@@ -86,24 +95,14 @@ class ListaOrcamentoBalcaoConcluidos extends Component
                             ->orWhere('status', 'like', "%{$normalized}%")
                             ->orWhere('observacoes', 'like', "%{$normalized}%")
                             ->orWhereHas('cliente', fn ($q2) => $q2->where('nome', 'like', "%{$normalized}%"))
-                            ->orWhereHas('vendedor', fn ($q2) => $q2->where('name', 'like', "%{$normalized}%"))
-                            ->orWhereHas('endereco', fn ($q2) => $q2
-                                ->where('logradouro', 'like', "%{$normalized}%")
-                                ->orWhere('cidade', 'like', "%{$normalized}%"));
+                            ->orWhereHas('vendedor', fn ($q2) => $q2->where('name', 'like', "%{$normalized}%"));
                     });
                 }
             })
 
-            // Filtro por nome do cliente
+            // Filtro por cliente
             ->when($this->cliente, fn ($q) =>
                 $q->whereHas('cliente', fn ($q2) => $q2->where('nome', 'like', "%{$this->cliente}%"))
-            )
-
-            // Filtro por cidade (via endereços do cliente)
-            ->when($this->cidade, fn ($q) =>
-                $q->whereHas('cliente.enderecos', fn ($q2) =>
-                    $q2->where('cidade', 'like', "%{$this->cidade}%")
-                )
             )
 
             // Filtro por vendedor
@@ -112,9 +111,26 @@ class ListaOrcamentoBalcaoConcluidos extends Component
             )
 
             // Filtro por dia de carregamento
-            ->when($this->loadingDay, fn ($query) =>
-                $query->where('loading_day', $this->loadingDay)
+            ->when($this->loadingDay, fn ($q) =>
+                $q->where('loading_day', $this->loadingDay)
             )
+
+            // Filtro por status de aprovação do financeiro
+            ->when($this->billingStatus, function ($q) {
+                if ($this->billingStatus === 'pending') {
+                    // Pedidos que nunca receberam aprovação
+                    $q->whereDoesntHave('routeBillingApprovals');
+                } else {
+                    $q->whereHas('routeBillingApprovals', function ($q2) {
+                        $q2->where('status', $this->billingStatus)
+                           ->whereIn('id', function ($sub) {
+                               $sub->selectRaw('MAX(id)')
+                                   ->from('route_billing_approvals')
+                                   ->groupBy('orcamento_id');
+                           });
+                    });
+                }
+            })
 
             ->when($this->dataInicio, fn ($q) => $q->whereDate('created_at', '>=', $this->dataInicio))
             ->when($this->dataFim,    fn ($q) => $q->whereDate('created_at', '<=', $this->dataFim))
@@ -122,7 +138,7 @@ class ListaOrcamentoBalcaoConcluidos extends Component
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate($this->perPage);
 
-        return view('livewire.lista-orcamento-balcao-concluidos', [
+        return view('livewire.lista-orcamento-rota-concluidos', [
             'orcamentos' => $orcamentos,
         ]);
     }

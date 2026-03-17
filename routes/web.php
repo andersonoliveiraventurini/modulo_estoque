@@ -193,7 +193,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('orcamentos_concluidos', [OrcamentoController::class, 'orcamentos_concluidos'])->name('orcamentos.concluidos');
     Route::get('balcao_concluidos', [OrcamentoController::class, 'balcao_concluidos'])->name('orcamentos.balcao_concluidos');
     Route::get('status_orcamentos', [OrcamentoController::class, 'kanban_orcamentos'])->name('orcamentos.status_orcamentos');
-    // rotas separação e conferência
+
+    // ========== ROTAS — FATURAMENTO DE ROTA ==========
+    Route::get('rota_concluidos', [OrcamentoController::class, 'rota_concluidos'])
+        ->name('orcamentos.rota_concluidos');
+    Route::get('rota_pagamento_lista', [OrcamentoController::class, 'rota_pagamento_lista'])
+        ->name('orcamentos.rota_pagamento_lista');
+    Route::get('rota_pagamento/{orcamento}', [OrcamentoController::class, 'rota_pagamento'])
+        ->name('orcamentos.rota_pagamento');
+    // fim rotas separação e conferência
     Route::get('/logistica/separacao', SeparacaoListaPage::class)->name('logistica.separacao.lista');
     Route::get('/logistica/carregamento', \App\Livewire\Logistica\CarregamentoPage::class)
         ->name('logistica.carregamento')

@@ -36,6 +36,18 @@
                 :current="request()->routeIs('orcamentos.balcao_concluidos')" wire:navigate>
                 {{ __('Pedidos Finalizados') }}</flux:navlist.item>
         </flux:navlist.group>
+        @can('viewBilling', App\Models\Orcamento::class)
+        <flux:navlist.group heading="Rota" expandable :expanded="false">
+            <flux:navlist.item icon="truck" :href="route('orcamentos.rota_concluidos')"
+                :current="request()->routeIs('orcamentos.rota_concluidos')" wire:navigate>
+                {{ __('Pedidos de Rota') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="banknotes" :href="route('orcamentos.rota_pagamento_lista')"
+                :current="request()->routeIs('orcamentos.rota_pagamento_lista')" wire:navigate>
+                {{ __('Faturamento Rota') }}
+            </flux:navlist.item>
+        </flux:navlist.group>
+        @endcan
         <flux:navlist.group heading="Clientes" expandable :expanded="false">
             <flux:navlist.item icon="user-plus" :href="route('clientes.create')"
                 :current="request()->routeIs('clientes.create')" wire:navigate>{{ __('Pré-cadastro') }}

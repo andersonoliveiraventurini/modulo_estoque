@@ -57,6 +57,21 @@ class OrcamentoController extends Controller
         return view('paginas.orcamentos.index_balcao_concluidos');
     }
 
+    public function rota_concluidos()
+    {
+        return view('paginas.orcamentos.index_rota_concluidos');
+    }
+
+    public function rota_pagamento_lista()
+    {
+        return view('paginas.orcamentos.index_rota_concluidos');
+    }
+
+    public function rota_pagamento(Orcamento $orcamento)
+    {
+        return view('paginas.orcamentos.pagamento_rota', compact('orcamento'));
+    }
+
     public function orcamentos_concluidos()
     {
         return view('paginas.orcamentos.index_concluidos');
