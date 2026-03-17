@@ -99,7 +99,7 @@
             <div style="margin-top: 5px; font-weight: bold;">{{ $ordem->executor->name ?? '________________________________' }}</div>
         </div>
         <p style="margin-top: 40px; font-size: 9px; color: #999;">
-            Documento gerado pelo Sistema de Gestão ERP - Módulo Estoque/HUB
+            Documento gerado pelo {{env('APP_NAME')}}
         </p>
     </div>
 

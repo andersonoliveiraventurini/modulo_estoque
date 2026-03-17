@@ -1,4 +1,6 @@
 <?php
+ 
+namespace App\Livewire\Logistica;
 
 use App\Models\Orcamento;
 use Livewire\Attributes\Title;
