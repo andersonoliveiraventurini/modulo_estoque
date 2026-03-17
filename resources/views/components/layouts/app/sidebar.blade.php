@@ -73,6 +73,9 @@
             <flux:navlist.item icon="truck" :href="route('romaneios.index')"
                 :current="request()->routeIs('romaneios.*')" wire:navigate>{{ __('Romaneios') }}
             </flux:navlist.item>
+            <flux:navlist.item icon="calendar-days" :href="route('logistica.carregamento')"
+                :current="request()->routeIs('logistica.carregamento')" wire:navigate>{{ __('Carregamento de Rota') }}
+            </flux:navlist.item>
             <flux:navlist.item icon="document-chart-bar" :href="route('relatorios.separacao_por_roteiro')"
                 :current="request()->routeIs('relatorios.separacao_por_roteiro')" wire:navigate>{{ __('Fila de Carga') }}
             </flux:navlist.item>

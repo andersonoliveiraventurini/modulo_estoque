@@ -195,6 +195,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('status_orcamentos', [OrcamentoController::class, 'kanban_orcamentos'])->name('orcamentos.status_orcamentos');
     // rotas separação e conferência
     Route::get('/logistica/separacao', SeparacaoListaPage::class)->name('logistica.separacao.lista');
+    Route::get('/logistica/carregamento', \App\Livewire\Logistica\CarregamentoPage::class)->name('logistica.carregamento');
 
     // ========== ROTA DE ROMANEIOS (ENTREGAS) ==========
     Route::resource('romaneios', RomaneioController::class);

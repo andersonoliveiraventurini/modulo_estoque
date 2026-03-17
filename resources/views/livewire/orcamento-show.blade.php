@@ -99,15 +99,35 @@
         @endif
     </div>
 
-    <!-- Transporte -->
-    <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
-        <h3 class="text-lg font-semibold mb-3">Transporte</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <p><strong>Nº Rota / Transportadora:</strong> {{ $orcamento->transportes->first()->nome ?? '—' }}</p>
-            @if(in_array($orcamento->transportes->first()->id ?? null, [1, 2, 3, 6, 7]))
-                <p><strong>Dia de Carregamento:</strong> {{ $orcamento->loading_day_formatted ?? 'Não definido' }}</p>
-            @endif
+    <!-- Transporte e Faturamento de Rota -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
+            <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+                <svg class="w-5 h-5 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                Transporte
+            </h3>
+            <div class="space-y-2">
+                <p><strong>Nº Rota / Transportadora:</strong> {{ $orcamento->transportes->first()->nome ?? '—' }}</p>
+                @if(in_array($orcamento->transportes->first()->id ?? null, [1, 2, 3, 6, 7]))
+                    <p><strong>Dia de Carregamento:</strong> 
+                        <span class="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-lg font-medium">
+                            {{ $orcamento->loading_day_formatted ?? 'Não definido' }}
+                        </span>
+                    </p>
+                @endif
+            </div>
         </div>
+
+        @if(in_array($orcamento->transportes->first()->id ?? null, [1, 2, 3, 6, 7]))
+            <div class="flex flex-col gap-6">
+                <livewire:route-billing-attach :orcamento="$orcamento" :key="'attach-'.$orcamento->id" />
+                @can('route_billing_approve')
+                    <livewire:route-billing-approval-manager :orcamento="$orcamento" :key="'approval-'.$orcamento->id" />
+                @endcan
+            </div>
+        @endif
     </div>
 
     <!-- Totais -->

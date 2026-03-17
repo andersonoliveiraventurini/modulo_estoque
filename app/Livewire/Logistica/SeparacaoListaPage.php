@@ -5,6 +5,7 @@ namespace App\Livewire\Logistica;
 use App\Models\EstoqueReserva;
 use App\Models\PickingItem;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -56,6 +57,25 @@ class SeparacaoListaPage extends Component
                 if (!empty($this->f_armazem_id)) {
                     $q->where('armazem_id', $this->f_armazem_id);
                 }
+            })
+            // Regra de Faturamento de Rota: Bloqueia se for ROTA e não estiver aprovado/com dia definido
+            ->whereHas('batch.orcamento', function (Builder $q) {
+                $q->where(function ($q2) {
+                    // Caso 1: Não é transporte de Rota
+                    $q2->whereDoesntHave('transportes', function ($q3) {
+                        $q3->whereIn('tipo_transporte_id', [1, 2, 3, 6, 7]);
+                    })
+                    // Caso 2: É Rota e está apto para faturar
+                    ->orWhere(function ($q3) {
+                        $q3->whereHas('transportes', function ($q4) {
+                            $q4->whereIn('tipo_transporte_id', [1, 2, 3, 6, 7]);
+                        })
+                        ->whereNotNull('loading_day')
+                        ->whereHas('routeBillingApprovals', function ($q4) {
+                            $q4->where('status', 'approved');
+                        });
+                    });
+                });
             });
 
         if ($this->f_status_item !== '') {

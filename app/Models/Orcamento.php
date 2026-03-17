@@ -294,4 +294,14 @@ class Orcamento extends Model
 
         return $this->loading_day ? ($dias[$this->loading_day] ?? $this->loading_day) : null;
     }
+
+    public function routeBillingAttachments()
+    {
+        return $this->hasMany(RouteBillingAttachment::class);
+    }
+
+    public function routeBillingApprovals()
+    {
+        return $this->hasMany(RouteBillingApproval::class);
+    }
 }
