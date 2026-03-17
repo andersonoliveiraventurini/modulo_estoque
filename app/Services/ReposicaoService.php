@@ -57,7 +57,7 @@ final class ReposicaoService
      */
     public function confirmarReposicao(
         OrdemReposicao $ordem,
-        int $armazemOrigemId,
+        ?int $armazemOrigemId,
         ?int $corredorOrigemId,
         ?int $posicaoOrigemId,
         int $executorId
@@ -71,34 +71,35 @@ final class ReposicaoService
         try {
             DB::transaction(function () use ($ordem, $armazemOrigemId, $corredorOrigemId, $posicaoOrigemId, $executorId) {
                 $produto = Produto::lockForUpdate()->findOrFail($ordem->produto_id);
-                $hub     = Armazem::findOrFail(self::HUB_ARMAZEM_ID);
 
-                // 1. Registrar movimentação de SAÍDA da origem
-                $saida = Movimentacao::create([
-                    'tipo'              => 'saida_para_hub',
-                    'status'            => 'aprovado',
-                    'data_movimentacao' => now()->toDateString(),
-                    'observacao'        => "Reposição ao HUB - Ordem #{$ordem->id}",
-                    'is_reposicao'      => true,
-                    'usuario_id'        => auth()->id(),
-                    'executor_id'       => $executorId,
-                    'aprovado_em'       => now(),
-                ]);
+                // 1. Registrar movimentação de SAÍDA da origem (apenas se houver origem)
+                if ($armazemOrigemId) {
+                    $saida = Movimentacao::create([
+                        'tipo'              => 'saida_para_hub',
+                        'status'            => 'aprovado',
+                        'data_movimentacao' => now()->toDateString(),
+                        'observacao'        => "Reposição ao HUB - Ordem #{$ordem->id}",
+                        'is_reposicao'      => true,
+                        'usuario_id'        => auth()->id(),
+                        'executor_id'       => $executorId,
+                        'aprovado_em'       => now(),
+                    ]);
 
-                $saida->itens()->create([
-                    'produto_id'   => $produto->id,
-                    'quantidade'   => $ordem->quantidade_solicitada,
-                    'armazem_id'   => $armazemOrigemId,
-                    'corredor_id'  => $corredorOrigemId,
-                    'posicao_id'   => $posicaoOrigemId,
-                ]);
+                    $saida->itens()->create([
+                        'produto_id'   => $produto->id,
+                        'quantidade'   => $ordem->quantidade_solicitada,
+                        'armazem_id'   => $armazemOrigemId,
+                        'corredor_id'  => $corredorOrigemId,
+                        'posicao_id'   => $posicaoOrigemId,
+                    ]);
+                }
 
                 // 2. Registrar movimentação de ENTRADA no HUB
                 $entrada = Movimentacao::create([
                     'tipo'              => 'entrada_hub',
                     'status'            => 'aprovado',
                     'data_movimentacao' => now()->toDateString(),
-                    'observacao'        => "Entrada no HUB - Ordem #{$ordem->id}",
+                    'observacao'        => "Entrada no HUB - Ordem #{$ordem->id}" . ($armazemOrigemId ? '' : ' (Entrada Direta)'),
                     'is_reposicao'      => true,
                     'usuario_id'        => auth()->id(),
                     'executor_id'       => $executorId,
@@ -123,8 +124,7 @@ final class ReposicaoService
 
                 Log::info('ReposicaoService: reposição concluída', [
                     'ordem_id' => $ordem->id,
-                    'movimentacao_saida_id'  => $saida->id,
-                    'movimentacao_entrada_id' => $entrada->id,
+                    'entrada_id' => $entrada->id,
                 ]);
             });
         } catch (\Exception $e) {

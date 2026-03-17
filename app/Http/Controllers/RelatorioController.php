@@ -79,7 +79,7 @@ class RelatorioController extends Controller
     public function comparativoPrecos(Request $request)
     {
         $produtos = Produto::select('id', 'nome', 'sku')->get();
-        $ranking = [];
+        $ranking = collect();
 
         if ($request->filled('produto_id')) {
             $ranking = DB::table('pedido_compra_itens')

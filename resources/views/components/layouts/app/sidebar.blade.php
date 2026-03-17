@@ -138,8 +138,8 @@
         </flux:navlist.group>
         
         <flux:navlist.group heading="Devoluções" expandable :expanded="false">
-            <flux:navlist.item icon="arrow-path" :href="route('devolucoes.solicitar')"
-                :current="request()->routeIs('devolucoes.solicitar')" wire:navigate>{{ __('Solicitar Devolução') }}
+            <flux:navlist.item icon="arrow-path" :href="route('devolucoes.solicitar_index')"
+                :current="request()->routeIs('devolucoes.solicitar_index')" wire:navigate>{{ __('Solicitar Devolução') }}
             </flux:navlist.item>
             <flux:navlist.item icon="check-badge" :href="route('devolucoes.aprovacao-vendas')"
                 :current="request()->routeIs('devolucoes.aprovacao-vendas')" wire:navigate>{{ __('Aprovação Vendas') }}

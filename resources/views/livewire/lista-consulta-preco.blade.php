@@ -132,13 +132,6 @@
                         </td>
                     </tr>
                 @endforelse
-            @empty
-                <tr>
-                    <td colspan="8" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
-                        Nenhuma cotação encontrada.
-                    </td>
-                </tr>
-            @endforelse
             </tbody>
         </table>
     </div>

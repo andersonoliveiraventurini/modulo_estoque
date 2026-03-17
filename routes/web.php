@@ -291,7 +291,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('historico-financeiro', \App\Livewire\HistoricoFinanceiroIndex::class)->name('historico.financeiro');
 
     // Fluxo de Devoluções
-    Route::get('devolucoes/solicitar', \App\Livewire\Returns\ReturnSolicitation::class)->name('devolucoes.solicitar');
+    Route::get('devolucoes/solicitar', \App\Livewire\Returns\ReturnSolicitation::class)->name('devolucoes.solicitar_index');
     Route::get('devolucoes/solicitar/{pedidoId}', \App\Livewire\Returns\ReturnSolicitation::class)->name('devolucoes.solicitar.pedido');
     Route::get('devolucoes/aprovacao-vendas', \App\Livewire\Returns\ReturnApprovalSales::class)->name('devolucoes.aprovacao-vendas');
     Route::get('devolucoes/aprovacao-estoque', \App\Livewire\Returns\ReturnApprovalStock::class)->name('devolucoes.aprovacao-estoque');

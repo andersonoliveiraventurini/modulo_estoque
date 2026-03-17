@@ -21,7 +21,7 @@ class ReturnApprovalStock extends Component
 
     public function loadQuantities()
     {
-        $returns = OrderReturn::with('items')->where('status', 'sales_approved')->get();
+        $returns = OrderReturn::query()->with('items')->where('status', 'sales_approved')->get();
         foreach($returns as $return) {
             foreach($return->items as $item) {
                 $this->approvedQuantities[$item->id] = $item->quantity_requested;
@@ -67,7 +67,8 @@ class ReturnApprovalStock extends Component
 
     public function render()
     {
-        $pendingReturns = OrderReturn::with(['customer', 'order', 'items.product'])
+        $pendingReturns = OrderReturn::query()
+            ->with(['customer', 'order', 'items.product'])
             ->where('status', 'sales_approved')
             ->latest()
             ->paginate(10);

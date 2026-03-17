@@ -201,13 +201,6 @@
                         </td>
                     </tr>
                 @endforelse
-                @empty
-                    <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
-                            Nenhum orçamento encontrado para conferência.
-                        </td>
-                    </tr>
-                @endforelse
             </tbody>
         </table>
     </div>

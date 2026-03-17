@@ -128,10 +128,9 @@ class ReposicaoIndex extends Component
     {
         $this->validate([
             'ordemId'         => 'required|exists:ordens_reposicao,id',
-            'armazemOrigemId' => 'required|exists:armazens,id',
+            'armazemOrigemId' => 'nullable|exists:armazens,id',
             'executorId'      => 'required|exists:users,id',
         ], [
-            'armazemOrigemId.required' => 'Informe o armazém de origem.',
             'executorId.required'      => 'Selecione o executor (repositor).',
         ]);
 
