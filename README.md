@@ -140,7 +140,12 @@ Quando o estoque cai abaixo do mínimo (via `EstoqueService::verificarAlertaEsto
 
 ### Módulo: HUB – Reposição de Produtos
 
-Centraliza a movimentação de itens para o **HUB (Armazém ID 1)** para facilitar a separação.
+Centraliza a movimentação de itens para o **HUB (Armazém ID 1)** para facilitar a separação e picking.
+
+#### Fluxo de Operação:
+1. **Solicitação**: Criada via botão "Solicitar Reposição" (gera `OrdemReposicao` pendente).
+2. **Impressão**: O repositor imprime o **Formulário de Retirada (PDF)** com as localizações de origem.
+3. **Execução**: Após a coleta física, o repositor confirma a ação no sistema, que realiza a transferência entre endereços físicos e o HUB.
 
 #### Serviço: `ReposicaoService`
 

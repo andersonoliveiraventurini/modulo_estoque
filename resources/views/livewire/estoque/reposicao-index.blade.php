@@ -46,31 +46,33 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-50">
-                        @forelse($saldoHub as $item)
-                            <tr class="hover:bg-indigo-50/30 transition duration-150 group">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-semibold text-gray-800">{{ $item->produto_nome }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 text-xs font-mono bg-gray-100 text-gray-600 rounded-md">{{ $item->produto_sku }}</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <div class="text-sm font-bold text-indigo-600 bg-indigo-50 inline-block px-3 py-1 rounded-full">{{ number_format($item->saldo, 2) }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <div class="flex justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                        <button wire:click="abrirModalSolicitar({{ $item->produto_id }})" class="p-2 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-lg transition-colors" title="Solicitar Reposição">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                        </button>
-                                        <button wire:click="abrirModalDevolver({{ $item->produto_id }})" class="p-2 text-rose-600 hover:bg-rose-600 hover:text-white rounded-lg transition-colors" title="Devolver ao Estoque">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
+                        @if($saldoHub->isNotEmpty())
+                            @foreach($saldoHub as $item)
+                                <tr class="hover:bg-indigo-50/30 transition duration-150 group">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-semibold text-gray-800">{{ $item->produto_nome }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs font-mono bg-gray-100 text-gray-600 rounded-md">{{ $item->produto_sku }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        <div class="text-sm font-bold text-indigo-600 bg-indigo-50 inline-block px-3 py-1 rounded-full">{{ number_format($item->saldo, 2) }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                            <button wire:click="abrirModalSolicitar({{ $item->produto_id }})" class="p-2 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-lg transition-colors" title="Solicitar Reposição">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                            </button>
+                                            <button wire:click="abrirModalDevolver({{ $item->produto_id }})" class="p-2 text-rose-600 hover:bg-rose-600 hover:text-white rounded-lg transition-colors" title="Devolver ao Estoque">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @else
                             <tr><td colspan="4" class="px-6 py-12 text-center text-gray-400 font-medium italic">Nenhum produto com saldo no HUB.</td></tr>
-                        @endforelse
+                        @endif
                     </tbody>
                 </table>
             </div>
@@ -94,50 +96,52 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-50">
-                        @forelse($ordens as $ordem)
-                            <tr class="hover:bg-indigo-50/30 transition duration-150">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">#{{ str_pad($ordem->id, 5, '0', STR_PAD_LEFT) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-semibold text-gray-800">{{ $ordem->produto->nome }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <div class="text-sm font-bold text-gray-900">{{ number_format($ordem->quantidade_solicitada, 2) }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold tracking-wide
-                                        {{ $ordem->status === 'pendente' ? 'bg-amber-100 text-amber-700' : '' }}
-                                        {{ $ordem->status === 'concluida' ? 'bg-emerald-100 text-emerald-700' : '' }}
-                                        {{ $ordem->status === 'cancelada' ? 'bg-rose-100 text-rose-700' : '' }}">
-                                        {{ strtoupper($ordem->status) }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
-                                    {{ $ordem->created_at->format('d/m/Y') }}
-                                    <span class="block text-xs text-gray-400 font-normal mt-0.5">{{ $ordem->created_at->format('H:i') }}</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <div class="flex justify-end space-x-1">
-                                        @if($ordem->status === 'pendente')
-                                            <button wire:click="marcarComoImpresso({{ $ordem->id }})" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-600 hover:text-white transition duration-200">
-                                                Imprimir
-                                            </button>
-                                            <button wire:click="abrirModalExecutar({{ $ordem->id }})" class="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-600 hover:text-white transition duration-200">
-                                                Repor
-                                            </button>
-                                            <button wire:click="cancelarOrdem({{ $ordem->id }})" onclick="confirm('Deseja realmente cancelar esta ordem?') || event.stopImmediatePropagation()" class="p-1.5 text-rose-400 hover:text-rose-600 transition duration-200">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                            </button>
-                                        @else
-                                            <button wire:click="marcarComoImpresso({{ $ordem->id }})" class="px-3 py-1.5 text-gray-400 hover:text-gray-600 font-semibold underline underline-offset-4 decoration-dotted">
-                                                PDF
-                                            </button>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
+                        @if($ordens->isNotEmpty())
+                            @foreach($ordens as $ordem)
+                                <tr class="hover:bg-indigo-50/30 transition duration-150">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">#{{ str_pad($ordem->id, 5, '0', STR_PAD_LEFT) }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-semibold text-gray-800">{{ $ordem->produto->nome }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        <div class="text-sm font-bold text-gray-900">{{ number_format($ordem->quantidade_solicitada, 2) }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold tracking-wide
+                                            {{ $ordem->status === 'pendente' ? 'bg-amber-100 text-amber-700' : '' }}
+                                            {{ $ordem->status === 'concluida' ? 'bg-emerald-100 text-emerald-700' : '' }}
+                                            {{ $ordem->status === 'cancelada' ? 'bg-rose-100 text-rose-700' : '' }}">
+                                            {{ strtoupper($ordem->status) }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
+                                        {{ $ordem->created_at->format('d/m/Y') }}
+                                        <span class="block text-xs text-gray-400 font-normal mt-0.5">{{ $ordem->created_at->format('H:i') }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex justify-end space-x-1">
+                                            @if($ordem->status === 'pendente')
+                                                <button wire:click="marcarComoImpresso({{ $ordem->id }})" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-600 hover:text-white transition duration-200">
+                                                    Imprimir
+                                                </button>
+                                                <button wire:click="abrirModalExecutar({{ $ordem->id }})" class="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-600 hover:text-white transition duration-200">
+                                                    Repor
+                                                </button>
+                                                <button wire:click="cancelarOrdem({{ $ordem->id }})" onclick="confirm('Deseja realmente cancelar esta ordem?') || event.stopImmediatePropagation()" class="p-1.5 text-rose-400 hover:text-rose-600 transition duration-200">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                </button>
+                                            @else
+                                                <button wire:click="marcarComoImpresso({{ $ordem->id }})" class="px-3 py-1.5 text-gray-400 hover:text-gray-600 font-semibold underline underline-offset-4 decoration-dotted">
+                                                    PDF
+                                                </button>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @else
                             <tr><td colspan="6" class="px-6 py-12 text-center text-gray-400 font-medium italic">Nenhuma ordem de reposição registrada.</td></tr>
-                        @endforelse
+                        @endif
                     </tbody>
                 </table>
             </div>

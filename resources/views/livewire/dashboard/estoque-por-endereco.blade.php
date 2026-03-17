@@ -11,24 +11,26 @@
             </flux:table.columns>
 
             <flux:table.rows>
-                @forelse($estoquePorEndereco as $item)
-                    <flux:table.row>
-                        <flux:table.cell class="font-medium">{{ $item->armazem ?? 'N/A' }}</flux:table.cell>
-                        <flux:table.cell>{{ $item->corredor ?? '-' }}</flux:table.cell>
-                        <flux:table.cell>{{ $item->posicao ?? '-' }}</flux:cell>
-                        <flux:table.cell align="end">
-                            <flux:badge color="indigo" variant="subtle" size="sm">
-                                {{ number_format($item->saldo, 2, ',', '.') }}
-                            </flux:badge>
-                        </flux:table.cell>
-                    </flux:table.row>
-                @empty
+                @if($estoquePorEndereco->isNotEmpty())
+                    @foreach($estoquePorEndereco as $item)
+                        <flux:table.row>
+                            <flux:table.cell class="font-medium">{{ $item->armazem ?? 'N/A' }}</flux:table.cell>
+                            <flux:table.cell>{{ $item->corredor ?? '-' }}</flux:table.cell>
+                            <flux:table.cell>{{ $item->posicao ?? '-' }}</flux:table.cell>
+                            <flux:table.cell align="end">
+                                <flux:badge color="indigo" variant="subtle" size="sm">
+                                    {{ number_format($item->saldo, 2, ',', '.') }}
+                                </flux:badge>
+                            </flux:table.cell>
+                        </flux:table.row>
+                    @endforeach
+                @else
                     <flux:table.row>
                         <flux:table.cell colspan="4" class="text-center py-8 text-neutral-500">
                             Nenhuma movimentação para endereços físicos encontrada.
                         </flux:table.cell>
                     </flux:table.row>
-                @endforelse
+                @endif
             </flux:table.rows>
         </flux:table>
     </div>
