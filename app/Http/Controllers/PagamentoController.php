@@ -114,6 +114,7 @@ class PagamentoController extends Controller
             'formas_pagamento'               => 'required|array|min:1',
             'formas_pagamento.*.condicao_id' => 'required|exists:condicoes_pagamento,id',
             'formas_pagamento.*.valor'       => 'required|numeric|min:0.01',
+            'formas_pagamento.*.parcelas'    => 'nullable|integer|min:1',
             'desconto_balcao'                => 'nullable|numeric|min:0',
             'precisa_nota_fiscal'            => 'nullable|boolean',
             'cnpj_cpf_nota'                  => 'nullable|string|max:20',
@@ -236,7 +237,7 @@ class PagamentoController extends Controller
                     'condicao_pagamento_id' => $forma['condicao_id'],
                     'valor'                 => $forma['valor'],
                     'usa_credito'           => $usaCredito,
-                    'parcelas'              => 1,
+                    'parcelas'              => (int) ($forma['parcelas'] ?? 1),
                     'observacoes'           => null,
                 ]);
  

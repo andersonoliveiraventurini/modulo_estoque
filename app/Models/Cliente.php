@@ -73,6 +73,16 @@ class Cliente extends Model
         return $this->hasMany(Bloqueio::class);
     }
 
+    public function analisesCredito()
+    {
+        return $this->hasMany(AnaliseCredito::class);
+    }
+
+    public function faturas()
+    {
+        return $this->hasMany(Fatura::class);
+    }
+
     public function ultimoBloqueio()
     {
         return $this->hasOne(Bloqueio::class)->latestOfMany();
@@ -149,5 +159,48 @@ public function vendedorAssistente()
         }
 
         return $numero ? "https://wa.me/{$numero}" : null;
+    }
+
+    public function getLimiteBoletoAttribute(): float
+    {
+        /** @var \App\Models\AnaliseCredito|null $ultimaAnalise */
+        $ultimaAnalise = $this->analisesCredito()->latest()->first();
+        return $ultimaAnalise ? (float) $ultimaAnalise->limite_boleto : 0.0;
+    }
+
+    public function getLimiteCarteiraAttribute(): float
+    {
+        /** @var \App\Models\AnaliseCredito|null $ultimaAnalise */
+        $ultimaAnalise = $this->analisesCredito()->latest()->first();
+        return $ultimaAnalise ? (float) $ultimaAnalise->limite_carteira : 0.0;
+    }
+
+    public function getLimiteTotalAttribute(): float
+    {
+        return $this->getLimiteBoletoAttribute() + $this->getLimiteCarteiraAttribute();
+    }
+
+    public function getLimiteUtilizadoAttribute(): float
+    {
+        // Limite contabilizado por: Boletos em aberto + Pedidos em aberto pendentes de faturamento
+        // 1. Faturas em aberto (boletos pendentes)
+        $valorFaturasAberto = $this->faturas()
+            ->where('status', '!=', 'pago')
+            ->sum('valor_total');
+        
+        // 2. Pedidos pendentes (Aprovado, Em Expedição, etc. que ainda não foram faturados)
+        // Isso pode variar conforme a regra de negócio do app. 
+        // Assumiremos status != Cancelado e != Faturado.
+        $valorPedidosAberto = $this->pedidos()
+            ->whereNotIn('status', ['Cancelado', 'Entregue', 'Faturado'])
+            ->sum('valor_total');
+
+        return (float) ($valorFaturasAberto + $valorPedidosAberto);
+    }
+
+    public function getLimiteDisponivelAttribute(): float
+    {
+        $disponivel = $this->getLimiteTotalAttribute() - $this->getLimiteUtilizadoAttribute();
+        return $disponivel > 0 ? $disponivel : 0.0;
     }
 }

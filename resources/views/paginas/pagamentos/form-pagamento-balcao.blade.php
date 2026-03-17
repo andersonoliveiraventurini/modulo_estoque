@@ -180,7 +180,7 @@
                                             </div>
 
                                             <!-- Condição + Valor -->
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end">
                                                 <div>
                                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Condição de Pagamento *</label>
                                                     <select name="formas_pagamento[{{ $idx }}][condicao_id]" required
@@ -190,6 +190,8 @@
                                                         @foreach ($condicoesBalcao as $condicao)
                                                             <option value="{{ $condicao->id }}"
                                                                 data-tipo="{{ $condicao->tipo }}"
+                                                                data-parcelavel="{{ $condicao->permite_parcelamento ? 'true' : 'false' }}"
+                                                                data-max-parcelas="{{ $condicao->max_parcelas ?? 1 }}"
                                                                 {{ ($formaOld['condicao_id'] ?? '') == $condicao->id ? 'selected' : '' }}>
                                                                 {{ $condicao->nome }}
                                                             </option>
@@ -208,6 +210,16 @@
                                                         class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                                                         placeholder="0,00">
                                                     @error("formas_pagamento.{$idx}.valor")
+                                                        <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                                    @enderror
+                                                </div>
+                                                <div class="div-parcelas {{ empty($formaOld['parcelas']) || $formaOld['parcelas'] <= 1 ? 'hidden' : '' }}">
+                                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Parcelas</label>
+                                                    <input type="number" name="formas_pagamento[{{ $idx }}][parcelas]"
+                                                        min="1" max="1"
+                                                        value="{{ $formaOld['parcelas'] ?? 1 }}"
+                                                        class="input-parcelas w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500">
+                                                    @error("formas_pagamento.{$idx}.parcelas")
                                                         <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                                                     @enderror
                                                 </div>
@@ -699,6 +711,26 @@
                     const badge     = card.querySelector('.badge-alterada');
                     const selecionado = parseInt(selectEl.value) || null;
 
+                    // Tratamento de parcelas
+                    const divParcelas = card.querySelector('.div-parcelas');
+                    const inputParcelas = card.querySelector('.input-parcelas');
+                    
+                    if (selectEl.selectedIndex >= 0) {
+                        const option = selectEl.options[selectEl.selectedIndex];
+                        const parcelavel = option.dataset.parcelavel === 'true';
+                        let maxParcelas = parseInt(option.dataset.maxParcelas);
+                        if (isNaN(maxParcelas) || maxParcelas < 1) { maxParcelas = 1; }
+
+                        if (parcelavel) {
+                            divParcelas.classList.remove('hidden');
+                            inputParcelas.max = maxParcelas;
+                        } else {
+                            divParcelas.classList.add('hidden');
+                            inputParcelas.value = 1;
+                            inputParcelas.max = 1;
+                        }
+                    }
+
                     if (!isExtra && condicaoPadraoId !== null) {
                         const alterado = selecionado !== condicaoPadraoId;
                         card.classList.toggle('bg-orange-50',          alterado);
@@ -732,7 +764,7 @@
                     const container  = document.getElementById('formasContainer');
                     const idx        = contadorFormas;
                     const opcoesHtml = Array.from(document.querySelector('.select-condicao').options)
-                        .map(o => `<option value="${o.value}" data-tipo="${o.dataset.tipo}">${o.text}</option>`)
+                        .map(o => `<option value="${o.value}" data-tipo="${o.dataset.tipo}" data-parcelavel="${o.dataset.parcelavel}" data-max-parcelas="${o.dataset.maxParcelas}">${o.text}</option>`)
                         .join('');
 
                     container.insertAdjacentHTML('beforeend', `
@@ -745,7 +777,7 @@
                                 </div>
                                 <button type="button" onclick="removerForma(this)" class="text-red-500 hover:text-red-700 text-sm font-medium">Remover</button>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Condição de Pagamento *</label>
                                     <select name="formas_pagamento[${idx}][condicao_id]" required
@@ -762,6 +794,12 @@
                                         oninput="atualizarDesconto(); calcularValores()"
                                         class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                                         placeholder="0,00">
+                                </div>
+                                <div class="div-parcelas hidden">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Parcelas</label>
+                                    <input type="number" name="formas_pagamento[${idx}][parcelas]"
+                                        min="1" max="1" value="1"
+                                        class="input-parcelas w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500">
                                 </div>
                             </div>
                             <div class="comprovante-forma-section">

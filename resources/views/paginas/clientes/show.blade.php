@@ -149,6 +149,19 @@
                         @endforelse
                     </x-tab>
 
+                    {{-- Histórico Financeiro - Chamado #22 --}}
+                    <x-tab name="financeiro" label="Histórico Financeiro">
+                        @livewire('cliente-historico-financeiro', ['clienteId' => $cliente->id])
+                    </x-tab>
+
+                    <x-tab name="creditos-historico" label="Créditos do Cliente">
+                        @livewire('cliente-historico-creditos', ['clienteId' => $cliente->id])
+                    </x-tab>
+
+                    <x-tab name="descontos" label="Histórico de Descontos">
+                        @livewire('cliente-historico-descontos', ['clienteId' => $cliente->id])
+                    </x-tab>
+
                 </x-tabs>
 
                 <!-- Botões -->
