@@ -71,7 +71,11 @@ class OrcamentoPolicy
      */
     public function viewBilling(User $user)
     {
-        return $user->hasPermissionTo('route_billing_view_billing');
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        return $user->checkPermissionTo('route_billing_view_billing');
     }
 
     /**
@@ -80,7 +84,13 @@ class OrcamentoPolicy
      */
     public function viewLoading(User $user)
     {
-        return $user->hasPermissionTo('route_billing_view_loading');
+        // Admin always has access regardless of granular permissions
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        // checkPermissionTo returns false (instead of throwing) when permission doesn't exist
+        return $user->checkPermissionTo('route_billing_view_loading');
     }
 
     /**
@@ -89,7 +99,11 @@ class OrcamentoPolicy
      */
     public function attach(User $user, Orcamento $orcamento)
     {
-        if (!$user->hasPermissionTo('route_billing_attach')) {
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        if (!$user->checkPermissionTo('route_billing_attach')) {
             return false;
         }
 
@@ -103,7 +117,11 @@ class OrcamentoPolicy
      */
     public function approve(User $user)
     {
-        return $user->hasPermissionTo('route_billing_approve');
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        return $user->checkPermissionTo('route_billing_approve');
     }
 
     /**
@@ -112,7 +130,11 @@ class OrcamentoPolicy
      */
     public function deny(User $user)
     {
-        return $user->hasPermissionTo('route_billing_deny');
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        return $user->checkPermissionTo('route_billing_deny');
     }
 
     /**

@@ -7,13 +7,17 @@ use App\Models\OrderReturnItem;
 use App\Models\Pedido;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
+use Livewire\WithPagination;
 
 class ReturnSolicitation extends Component
 {
+    use WithPagination;
+
     public $pedidoId;
     public $pedido;
     public $items = [];
     public $selectedItems = []; // item_id => [selected => bool, quantity => float]
+    public $orderSearch = '';
 
     public function mount($pedidoId = null)
     {
@@ -79,12 +83,34 @@ class ReturnSolicitation extends Component
         });
 
         session()->flash('message', 'Solicitação de devolução enviada com sucesso!');
-        return redirect()->route('historico.financeiro');
+        return redirect()->route('devolucoes.solicitar_index');
+    }
+
+    public function selectPedido($id)
+    {
+        return redirect()->route('devolucoes.solicitar.pedido', $id);
     }
 
     public function render()
     {
-        return view('livewire.returns.return-solicitation')
-            ->layout('components.layouts.app.sidebar');
+        $recentOrders = [];
+        if (!$this->pedidoId) {
+            $recentOrders = Pedido::query()
+                ->with('cliente')
+                ->where('status', 'aprovado')
+                ->when($this->orderSearch, function($q) {
+                    $q->where('id', 'like', "%{$this->orderSearch}%")
+                      ->orWhereHas('cliente', function($query) {
+                          $query->where('nome', 'like', "%{$this->orderSearch}%");
+                      });
+                })
+                ->latest()
+                ->paginate(10);
+        }
+
+        return view('livewire.returns.return-solicitation', [
+            'recentOrders' => $recentOrders
+        ])
+            ->layout('components.layouts.app');
     }
 }

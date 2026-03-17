@@ -45,6 +45,6 @@ class HistoricoFinanceiroIndex extends Component
 
         return view('livewire.historico-financeiro-index', [
             'clientes' => $clientes,
-        ])->layout('components.layouts.app.sidebar');
+        ])->layout('components.layouts.app');
     }
 }

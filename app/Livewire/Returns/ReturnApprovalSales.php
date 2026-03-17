@@ -51,6 +51,6 @@ class ReturnApprovalSales extends Component
 
         return view('livewire.returns.return-approval-sales', [
             'pendingReturns' => $pendingReturns
-        ])->layout('components.layouts.app.sidebar');
+        ])->layout('components.layouts.app');
     }
 }

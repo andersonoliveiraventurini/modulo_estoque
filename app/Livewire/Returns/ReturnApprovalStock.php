@@ -75,6 +75,6 @@ class ReturnApprovalStock extends Component
 
         return view('livewire.returns.return-approval-stock', [
             'pendingReturns' => $pendingReturns
-        ])->layout('components.layouts.app.sidebar');
+        ])->layout('components.layouts.app');
     }
 }
