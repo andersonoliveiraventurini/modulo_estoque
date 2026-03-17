@@ -383,7 +383,7 @@ Route::middleware(['auth'])->group(function () {
     Route::group(['prefix' => 'faturamento', 'as' => 'faturamento.'], function () {
         Route::get('/', \App\Livewire\Faturas\ListaFaturas::class)->name('index');
         Route::get('/inadimplencia', \App\Livewire\Faturas\RelatorioInadimplencia::class)->name('inadimplencia');
-        Route::get('/conferidos', [App\Http\Controllers\FaturamentoController::class, 'conferidos'])->name('conferidos');
+        Route::get('/conferidos', [\App\Http\Controllers\FaturamentoController::class, 'conferidos'])->name('conferidos');
     });
 
     // ─── HUB Reposição ─────────────────────────────────────────────────────
