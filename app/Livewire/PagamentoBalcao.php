@@ -6,6 +6,7 @@ use App\Models\Orcamento;
 use App\Models\CondicoesPagamento;
 use App\Models\MetodoPagamento;
 use App\Services\PagamentoService;
+use App\Services\CreditoService;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -29,13 +30,18 @@ class PagamentoBalcao extends Component
     
     public $valorPago = 0;
     public $valorComDesconto = 0;
+    public $saldoDisponivel = 0;
+    public $abaterCredito = false;
+    public $valorCreditoAbatido = 0;
     public $troco = 0;
 
     protected $pagamentoService;
+    protected $creditoService;
 
-    public function boot(PagamentoService $pagamentoService)
+    public function boot(PagamentoService $pagamentoService, CreditoService $creditoService)
     {
         $this->pagamentoService = $pagamentoService;
+        $this->creditoService = $creditoService;
     }
 
     public function mount($orcamentoId)
@@ -43,8 +49,16 @@ class PagamentoBalcao extends Component
         $this->orcamentoId = $orcamentoId;
         $this->carregarOrcamento();
         $this->carregarCondicoesPagamento();
+        $this->carregarSaldoCredito();
         $this->inicializarFormaPagamento();
         $this->calcularValores();
+    }
+
+    public function carregarSaldoCredito()
+    {
+        if ($this->orcamento && $this->orcamento->cliente_id) {
+            $this->saldoDisponivel = $this->creditoService->getSaldoDisponivel($this->orcamento->cliente_id);
+        }
     }
 
     public function carregarOrcamento()
@@ -115,7 +129,8 @@ class PagamentoBalcao extends Component
     {
         if (str_starts_with($propertyName, 'formasPagamento') || 
             $propertyName === 'descontoBalcao' || 
-            $propertyName === 'descontoAplicado') {
+            $propertyName === 'descontoAplicado' ||
+            $propertyName === 'abaterCredito') {
             $this->calcularValores();
         }
 
@@ -150,12 +165,21 @@ class PagamentoBalcao extends Component
         $descontoTotal = $this->descontoAplicado + $this->descontoBalcao;
         $this->valorComDesconto = max(0, $valorTotal - $descontoTotal);
 
+        // Crédito do Cliente
+        $this->valorCreditoAbatido = 0;
+        if ($this->abaterCredito && $this->saldoDisponivel > 0) {
+            $this->valorCreditoAbatido = min($this->saldoDisponivel, $this->valorComDesconto);
+        }
+
         $this->valorPago = 0;
         foreach ($this->formasPagamento as $forma) {
             $this->valorPago += (float) ($forma['valor'] ?? 0);
         }
 
-        $this->troco = max(0, $this->valorPago - $this->valorComDesconto);
+        // Se abater crédito, o valor total pago inclui o crédito
+        $totalPagoGeral = $this->valorPago + $this->valorCreditoAbatido;
+
+        $this->troco = max(0, $totalPagoGeral - $this->valorComDesconto);
     }
 
     public function usandoCartao()
@@ -275,8 +299,8 @@ class PagamentoBalcao extends Component
             throw new \Exception('É necessário adicionar pelo menos uma forma de pagamento válida.');
         }
 
-        if ($this->valorPago < $this->valorComDesconto) {
-            $faltando = $this->valorComDesconto - $this->valorPago;
+        if ($this->valorPago + $this->valorCreditoAbatido < $this->valorComDesconto) {
+            $faltando = $this->valorComDesconto - ($this->valorPago + $this->valorCreditoAbatido);
             throw new \Exception(
                 'Valor pago insuficiente! Falta: R$ ' . number_format($faltando, 2, ',', '.')
             );
@@ -306,6 +330,20 @@ class PagamentoBalcao extends Component
         });
 
         $metodosPagamento = [];
+        
+        // Adiciona crédito se selecionado
+        if ($this->abaterCredito && $this->valorCreditoAbatido > 0) {
+            $metodoCredito = MetodoPagamento::where('tipo', 'credito_cliente')->first();
+            if ($metodoCredito) {
+                $metodosPagamento[] = [
+                    'metodo_id' => $metodoCredito->id,
+                    'valor' => (float) $this->valorCreditoAbatido,
+                    'usa_credito' => true,
+                    'parcelas' => 1,
+                ];
+            }
+        }
+
         foreach ($formasValidas as $forma) {
             $metodo = MetodoPagamento::find($forma['condicao_id']);
             

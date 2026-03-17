@@ -91,6 +91,33 @@
 
             <hr class="my-6 border-gray-200 dark:border-gray-700" />
 
+            <!-- Crédito do Cliente -->
+            @if ($saldoDisponivel > 0)
+                <div class="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <x-heroicon-o-gift class="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                            <div>
+                                <h4 class="font-semibold text-blue-900 dark:text-blue-200">Crédito Disponível: R$ {{ number_format($saldoDisponivel, 2, ',', '.') }}</h4>
+                                <p class="text-sm text-blue-700 dark:text-blue-300">Você pode usar este crédito para abater no valor total.</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" wire:model.live="abaterCredito" class="sr-only peer" id="abaterCreditoToggle">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">Abater Crédito</span>
+                        </label>
+                    </div>
+                    @if ($abaterCredito)
+                        <div class="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800 text-right">
+                            <p class="text-sm font-bold text-blue-800 dark:text-blue-300">
+                                Valor Abatido: R$ {{ number_format($valorCreditoAbatido, 2, ',', '.') }}
+                            </p>
+                        </div>
+                    @endif
+                </div>
+            @endif
+
             <!-- Formas de Pagamento -->
             <div class="space-y-4 mb-6">
                 <div class="flex items-center justify-between">
@@ -160,7 +187,7 @@
                     @endforelse
 
                     <!-- Valor Restante -->
-                    @if ($valorComDesconto - $valorPago > 0.01)
+                    @if ($valorComDesconto - ($valorPago + $valorCreditoAbatido) > 0.01)
                         <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                             <div class="flex items-center justify-between gap-3">
                                 <div class="flex items-center gap-2">
@@ -168,7 +195,7 @@
                                     <div>
                                         <p class="text-sm font-medium text-blue-900 dark:text-blue-200">Valor Restante</p>
                                         <p class="text-lg font-bold text-blue-700 dark:text-blue-300">
-                                            R$ {{ number_format($valorComDesconto - $valorPago, 2, ',', '.') }}
+                                            R$ {{ number_format($valorComDesconto - ($valorPago + $valorCreditoAbatido), 2, ',', '.') }}
                                         </p>
                                     </div>
                                 </div>
@@ -336,11 +363,20 @@
                         </div>
                         
                         <div class="flex justify-between items-center py-3 border-t-2 border-gray-300 dark:border-gray-600">
-                            <span class="text-base font-bold text-gray-900 dark:text-gray-100">Valor Pago:</span>
-                            <span class="text-xl font-bold {{ $valorPago >= $valorComDesconto ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400' }}">
-                                R$ {{ number_format($valorPago, 2, ',', '.') }}
+                            <span class="text-base font-bold text-gray-900 dark:text-gray-100">Total Pago:</span>
+                            <span class="text-xl font-bold {{ ($valorPago + $valorCreditoAbatido) >= $valorComDesconto ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400' }}">
+                                R$ {{ number_format($valorPago + $valorCreditoAbatido, 2, ',', '.') }}
                             </span>
                         </div>
+
+                        @if ($valorCreditoAbatido > 0)
+                            <div class="flex justify-between items-center py-2 border-t border-gray-200 dark:border-gray-700">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Crédito Utilizado:</span>
+                                <span class="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                                    - R$ {{ number_format($valorCreditoAbatido, 2, ',', '.') }}
+                                </span>
+                            </div>
+                        @endif
                         
                         @if ($troco > 0)
                             <div class="flex justify-between items-center py-3 border-t border-gray-200 dark:border-gray-700">
@@ -351,14 +387,14 @@
                             </div>
                         @endif
 
-                        @if ($valorPago < $valorComDesconto)
+                        @if ($valorPago + $valorCreditoAbatido < $valorComDesconto)
                             <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mt-3">
                                 <div class="flex items-center gap-2">
                                     <x-heroicon-o-exclamation-circle class="w-5 h-5 text-red-600 dark:text-red-400" />
                                     <div>
                                         <p class="text-sm font-medium text-red-900 dark:text-red-200">Falta pagar:</p>
                                         <p class="text-lg font-bold text-red-700 dark:text-red-300">
-                                            R$ {{ number_format($valorComDesconto - $valorPago, 2, ',', '.') }}
+                                            R$ {{ number_format($valorComDesconto - ($valorPago + $valorCreditoAbatido), 2, ',', '.') }}
                                         </p>
                                     </div>
                                 </div>
@@ -377,9 +413,9 @@
                 <button type="button" 
                         wire:click="finalizarPagamento" 
                         wire:loading.attr="disabled"
-                        @if ($valorPago < $valorComDesconto) disabled @endif
+                        @if ($valorPago + $valorCreditoAbatido < $valorComDesconto) disabled @endif
                         class="flex items-center gap-2 font-medium px-6 py-3 rounded-lg transition-colors shadow-sm
-                               {{ $valorPago >= $valorComDesconto 
+                               {{ ($valorPago + $valorCreditoAbatido) >= $valorComDesconto 
                                   ? 'bg-green-600 hover:bg-green-700 text-white cursor-pointer' 
                                   : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' }}
                                disabled:opacity-50 disabled:cursor-not-allowed">

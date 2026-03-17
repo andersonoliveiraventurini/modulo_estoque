@@ -89,6 +89,21 @@ Retorna `null` se o cliente não tiver contato com telefone.
 
 ---
 
+### Módulo: Devoluções e Reembolsos
+
+| Rota | Função |
+|---|---|
+| `devolucoes.solicitar` | Solicitação de devolução de itens por orçamento/pedido |
+| `devolucoes.aprovacao-vendas` | Aprovação comercial da devolução (Supervisor) |
+| `devolucoes.aprovacao-estoque` | Conferência física e autorização de crédito (Estoque) |
+
+#### Fluxo de Devolução:
+1. **Solicitação**: Vendedor seleciona itens e quantidades devolvidas.
+2. **Aprovação Vendas**: Supervisor valida o motivo e autoriza o processo.
+3. **Aprovação Estoque**: O responsável pelo estoque confirma o recebimento dos itens. Ao finalizar, o sistema gera automaticamente um **Crédito de Devolução** para o cliente.
+
+---
+
 ### Módulo: Compras
 
 | Rota | Função |
@@ -199,6 +214,11 @@ Centraliza a movimentação de itens para o **HUB (Armazém ID 1)** para facilit
 | `relatorios.fluxo_caixa` | **Relatório de Fluxo de Caixa** |
 | `notas.index` | Notas fiscais emitidas |
 | `orcamentos.concluidos` | Movimentações financeiras realizadas |
+| `historico.financeiro` | **Histórico Financeiro Completo** (Créditos, Pagamentos e Descontos) |
+
+#### Gestão de Créditos:
+- **Geração**: Via devoluções aprovadas ou ajustes manuais.
+- **Abatimento**: No checkout (Pagamento Balcão), é possível abater o saldo disponível diretamente no valor total da venda.
 
 #### Serviço: `FaturaService`
 
@@ -261,6 +281,9 @@ Para usar as implementações reais de produção, substitua os Mocks no `AppSer
 | `descontos.aprovados` | Descontos aprovados e histórico |
 
 **Tipos de desconto:** `percentual` (sobre o total) · `produto` (por item) · `fixo` (valor em R$)
+
+#### Histórico de Descontos:
+O sistema mantém um log detalhado (`customer_discount_history`) de todas as alterações em valores de desconto concedidos, permitindo auditoria de datas, usuários e valores anteriores vs. atuais.
 
 ---
 
@@ -326,6 +349,8 @@ app/Services/
 ├── EstoqueService.php        ← Reservas, baixas e alertas de estoque
 ├── FaturaService.php         ← Faturas e controle de inadimplência
 ├── FluxoCaixaService.php     ← Consolidação financeira (previsto x realizado)
+├── FinancialService.php      ← Lógica de abatimentos e geração de créditos
+├── CreditoService.php         ← Gestão de saldo e movimentações de crédito do cliente
 ├── OrcamentoPdfService.php   ← Geração de PDF dos orçamentos
 ├── ReposicaoService.php      ← Movimentações e ordens de reposição HUB
 ├── RdStationService.php      ← Integração CRM RD Station

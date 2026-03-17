@@ -136,6 +136,18 @@
                 {{ __('Relatórios') }}
             </flux:navlist.item>
         </flux:navlist.group>
+        
+        <flux:navlist.group heading="Devoluções" expandable :expanded="false">
+            <flux:navlist.item icon="arrow-path" :href="route('devolucoes.solicitar')"
+                :current="request()->routeIs('devolucoes.solicitar')" wire:navigate>{{ __('Solicitar Devolução') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="check-badge" :href="route('devolucoes.aprovacao-vendas')"
+                :current="request()->routeIs('devolucoes.aprovacao-vendas')" wire:navigate>{{ __('Aprovação Vendas') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="archive-box" :href="route('devolucoes.aprovacao-estoque')"
+                :current="request()->routeIs('devolucoes.aprovacao-estoque')" wire:navigate>{{ __('Aprovação Estoque') }}
+            </flux:navlist.item>
+        </flux:navlist.group>
 
         <flux:navlist.group heading="Produtos" expandable :expanded="false">
             <flux:navlist.item icon="cube" :href="route('produtos.index')"
