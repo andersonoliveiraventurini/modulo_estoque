@@ -17,10 +17,13 @@ class RouteBillingApprovalManager extends Component
     public function mount(Orcamento $orcamento)
     {
         $this->orcamento = $orcamento;
+        $this->authorize('approve', $this->orcamento);
     }
 
     public function approve()
     {
+        $this->authorize('approve', $this->orcamento);
+
         $this->validate([
             'status' => 'required|in:approved,rejected,restrictions',
             'comments' => 'nullable|string|max:1000',
@@ -40,6 +43,8 @@ class RouteBillingApprovalManager extends Component
 
     public function toggleAttachmentValidity($attachmentId)
     {
+        $this->authorize('validateAttachment', $this->orcamento);
+
         $attachment = RouteBillingAttachment::findOrFail($attachmentId);
         $attachment->update([
             'is_valid' => !$attachment->is_valid,

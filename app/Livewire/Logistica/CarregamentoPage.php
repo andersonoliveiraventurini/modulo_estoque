@@ -27,6 +27,8 @@ class CarregamentoPage extends Component
 
     public function render()
     {
+        $this->authorize('viewLoading', Orcamento::class);
+
         $query = Orcamento::query();
         
         $query->with(['cliente', 'vendedor', 'transportes', 'routeBillingApprovals']);

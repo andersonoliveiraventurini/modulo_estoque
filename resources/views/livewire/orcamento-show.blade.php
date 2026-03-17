@@ -122,8 +122,11 @@
 
         @if(in_array($orcamento->transportes->first()->id ?? null, [1, 2, 3, 6, 7]))
             <div class="flex flex-col gap-6">
-                <livewire:route-billing-attach :orcamento="$orcamento" :key="'attach-'.$orcamento->id" />
-                @can('route_billing_approve')
+                @can('attach', $orcamento)
+                    <livewire:route-billing-attach :orcamento="$orcamento" :key="'attach-'.$orcamento->id" />
+                @endcan
+
+                @can('approve', $orcamento)
                     <livewire:route-billing-approval-manager :orcamento="$orcamento" :key="'approval-'.$orcamento->id" />
                 @endcan
             </div>

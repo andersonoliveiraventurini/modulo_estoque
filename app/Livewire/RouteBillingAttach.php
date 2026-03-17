@@ -24,6 +24,7 @@ class RouteBillingAttach extends Component
     public function mount(Orcamento $orcamento)
     {
         $this->orcamento = $orcamento;
+        $this->authorize('attach', $this->orcamento);
     }
 
     public function save()
@@ -32,6 +33,8 @@ class RouteBillingAttach extends Component
             $this->addError('files', 'Selecione ao menos um arquivo.');
             return;
         }
+
+        $this->authorize('attach', $this->orcamento);
 
         $this->validate();
 
