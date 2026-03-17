@@ -42,7 +42,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-neutral-200 dark:divide-neutral-700">
-                    @forelse($vencimentos as $item)
+                    @forelse ($vencimentos as $item)
                         <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors">
                             <td class="px-6 py-4">
                                 <span class="font-medium text-neutral-900 dark:text-white">{{ $item->produto->nome }}</span>

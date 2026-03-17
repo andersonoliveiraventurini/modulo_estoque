@@ -29,7 +29,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-neutral-200 dark:divide-neutral-700">
-                    @forelse($devolucoes as $mov)
+                    @forelse ($devolucoes as $mov)
                         @foreach($mov->itens as $item)
                             <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors">
                                 <td class="px-6 py-4 text-neutral-500">{{ $mov->data_movimentacao->format('d/m/Y') }}</td>

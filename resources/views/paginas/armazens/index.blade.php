@@ -29,7 +29,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($armazens as $armazem)
+                        @forelse ($armazens as $armazem)
                             <tr class="border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
                                 <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">#{{ $armazem->id }}</td>
                                 <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-gray-100">{{ $armazem->nome }}</td>

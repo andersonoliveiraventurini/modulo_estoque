@@ -18,7 +18,7 @@
 
         {{-- Lista de Saídas --}}
         <div class="space-y-4">
-            @forelse($saidas as $saida)
+            @forelse ($saidas as $saida)
                 <div class="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
                     <div class="bg-neutral-50 dark:bg-neutral-900 px-6 py-3 border-b border-neutral-200 dark:border-neutral-700 flex justify-between items-center text-sm">
                         <div class="flex items-center gap-4">

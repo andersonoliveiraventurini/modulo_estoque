@@ -29,7 +29,7 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200 dark:bg-neutral-900 dark:divide-neutral-700">
-                            @forelse($corredores as $corredor)
+                            @forelse ($corredores as $corredor)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-neutral-800">
                                     <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{{ $corredor->id }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 font-medium">{{ optional($corredor->armazem)->nome }}</td>

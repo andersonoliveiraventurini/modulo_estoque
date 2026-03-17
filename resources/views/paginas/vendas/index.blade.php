@@ -24,7 +24,7 @@
                             <flux:table.cell class="font-medium">#{{ $venda->id }}</flux:table.cell>
                             
                             <flux:table.cell>
-                                {{ \Carbon\Carbon::parse($venda->data_venda)->format('d/m/Y H:i') }}
+                                {{ $venda->data_venda?->format('d/m/Y H:i') ?? '---' }}
                             </flux:table.cell>
                             
                             <flux:table.cell>

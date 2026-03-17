@@ -36,7 +36,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-neutral-200 dark:divide-neutral-700">
-                    @forelse($pedidos as $pedido)
+                    @forelse ($pedidos as $pedido)
                         <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-900">
                             <td class="px-6 py-4 font-bold">#{{ $pedido->id }}</td>
                             <td class="px-6 py-4">{{ $pedido->fornecedor->nome_fantasia }}</td>

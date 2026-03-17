@@ -27,7 +27,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($divergencias as $div)
+                        @forelse ($divergencias as $div)
                             @php
                                 $diff = $div->qtd_real - $div->qtd_esperada;
                             @endphp

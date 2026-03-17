@@ -127,7 +127,7 @@
                     </x-tab>
 
                     <x-tab name="entrega" label="Endereços">
-                        @forelse($cliente->enderecos as $endereco)
+                        @forelse ($cliente->enderecos as $endereco)
                             <h4 class="text-sm font-semibold text-gray-700 mb-3"> Endereço
                                 {{ $endereco->tipo === 'comercial' ? 'Comercial' : 'de Entrega' }}
                                 @if ($cliente->enderecos->where('tipo', $endereco->tipo)->count() > 1)

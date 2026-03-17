@@ -45,7 +45,7 @@
 
         {{-- Lista de Movimentações --}}
         <div class="space-y-4">
-            @forelse($movimentacoes as $mov)
+            @forelse ($movimentacoes as $mov)
                 <div class="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
                     <div class="bg-neutral-50 dark:bg-neutral-900 px-6 py-3 border-b border-neutral-200 dark:border-neutral-700 flex justify-between items-center">
                         <div class="flex items-center gap-4">

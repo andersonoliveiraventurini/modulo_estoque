@@ -60,7 +60,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-neutral-200 dark:divide-neutral-700">
-                        @forelse($vendas as $venda)
+                        @forelse ($vendas as $venda)
                             <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors">
                                 <td class="px-6 py-4 text-neutral-500">{{ $venda->orcamento->created_at->format('d/m/Y') }}</td>
                                 <td class="px-6 py-4">#{{ $venda->orcamento->id }}</td>

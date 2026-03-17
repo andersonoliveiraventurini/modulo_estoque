@@ -28,7 +28,7 @@
                         </flux:table.columns>
 
                         <flux:table.rows>
-                            @forelse($historico as $item)
+                            @forelse ($historico as $item)
                                 <flux:table.row>
                                     <flux:table.cell>{{ $item->k100 }}</flux:table.cell>
                                     <flux:table.cell>{{ $item->created_at->format('d/m/Y H:i') }}</flux:cell>
