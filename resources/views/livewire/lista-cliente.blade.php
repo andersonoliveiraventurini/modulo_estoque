@@ -79,7 +79,7 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                @forelse($clientes as $c)
+                @forelse ($clientes as $c)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                         <td class="px-2 py-4">
                             <div class="flex flex-col gap-1.5">

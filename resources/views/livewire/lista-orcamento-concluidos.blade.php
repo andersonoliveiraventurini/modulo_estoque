@@ -100,7 +100,7 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                @forelse($orcamentos as $o)
+                @forelse ($orcamentos as $o)
                     {{--
                         Usa a relação já eager-loaded (pagamentos foi carregada
                         no Livewire component com ->limit(1)).

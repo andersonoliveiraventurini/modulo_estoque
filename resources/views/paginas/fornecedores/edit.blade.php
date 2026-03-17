@@ -135,7 +135,7 @@
                         </h3>
 
                         <div id="contatos-wrapper" class="space-y-4">
-                            @forelse($fornecedor->contatos as $i => $contato)
+                            @forelse ($fornecedor->contatos as $i => $contato)
                                 <div
                                     class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-xl dark:border-neutral-700 relative">
                                     <input type="hidden" name="contatos[{{ $i }}][id]"

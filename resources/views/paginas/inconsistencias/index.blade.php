@@ -28,7 +28,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($inconsistencias as $inc)
+                        @forelse ($inconsistencias as $inc)
                             <tr class="border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
                                 <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{{ $inc->created_at->format('d/m/Y H:i') }}</td>
                                 <td class="py-3 px-4 text-sm font-medium text-indigo-600 dark:text-indigo-400">

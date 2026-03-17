@@ -21,7 +21,7 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
-                @forelse($produtos as $produto)
+                @forelse ($produtos as $produto)
                     <tr class="hover:bg-gray-50 dark:hover:bg-neutral-800">
                         <td class="px-4 py-2 text-sm">{{ $produto->id }}</td>
                         <td class="px-4 py-2 text-sm">

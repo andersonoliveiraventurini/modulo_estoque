@@ -26,7 +26,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-neutral-200 dark:divide-neutral-700">
-                    @forelse($requisicoes as $req)
+                    @forelse ($requisicoes as $req)
                         <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-900">
                             <td class="px-6 py-4 font-bold">#{{ $req->id }}</td>
                             <td class="px-6 py-4">{{ $req->solicitante->name }}</td>

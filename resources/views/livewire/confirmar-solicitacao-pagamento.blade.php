@@ -144,7 +144,7 @@
                     </div>
 
                     <div class="space-y-3">
-                        @forelse($solicitacoes as $index => $solicitacao)
+                        @forelse ($solicitacoes as $index => $solicitacao)
                             <div class="ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10 rounded-lg overflow-hidden"
                                 wire:key="solicitacao-{{ $solicitacao->id }}">
 

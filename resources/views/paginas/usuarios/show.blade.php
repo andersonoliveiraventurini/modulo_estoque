@@ -27,7 +27,7 @@
                     @if ($usuario->vendedor)
                         <x-tab name="pedidos" label="Pedidos">
                             <div class="space-y-4">
-                                @forelse($usuario->vendedor->pedidos as $pedido)
+                                @forelse ($usuario->vendedor->pedidos as $pedido)
                                     <a href="{{ route('pedidos.show', $pedido) }}">
                                         <div class="border rounded-lg p-4 dark:border-neutral-700">
                                             <p><span class="font-medium">#{{ $pedido->id }}</span> -
@@ -49,7 +49,7 @@
 
                         <x-tab name="clientes" label="Clientes">
                             <div class="space-y-4">
-                                @forelse($usuario->vendedor->clientes as $cliente)
+                                @forelse ($usuario->vendedor->clientes as $cliente)
                                     <a href="{{ route('clientes.show', $cliente) }}">
                                         <div class="border rounded-lg p-4 dark:border-neutral-700">
                                             <p class="font-medium">{{ $cliente->nome }}</p>

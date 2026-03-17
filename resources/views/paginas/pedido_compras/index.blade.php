@@ -31,7 +31,7 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200 dark:bg-neutral-900 dark:divide-neutral-700">
-                            @forelse($pedidos as $pedido)
+                            @forelse ($pedidos as $pedido)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-neutral-800">
                                     <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ $pedido->id }}</td>
                                     <td class="px-4 py-3 font-medium dark:text-gray-100">{{ $pedido->numero_pedido ?: '-' }}</td>

@@ -63,7 +63,7 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                @forelse($subcategorias as $sub)
+                @forelse ($subcategorias as $sub)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             {{ $sub->id }}

@@ -243,7 +243,7 @@
                     </div>
 
                     <div class="space-y-3">
-                        @forelse($descontos as $index => $desconto)
+                        @forelse ($descontos as $index => $desconto)
                             @php
                                 // ── Detecta se é item de encomenda: tipo produto com consulta_preco_id OU produto_id null + motivo "encomenda" ──
                                 $consultaPrecoId = $desconto->consulta_preco_id ?? null;

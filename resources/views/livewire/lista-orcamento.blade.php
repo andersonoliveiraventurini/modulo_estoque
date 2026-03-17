@@ -116,7 +116,7 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                @forelse($orcamentos as $o)
+                @forelse ($orcamentos as $o)
                     <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
                         <td class="px-3 py-4">
                             <div class="flex flex-col">

@@ -57,7 +57,7 @@
                             <!-- Certidões Negativas -->
                             <div>
                                 <h4 class="font-medium">Certidões Negativas</h4>
-                                @forelse($fornecedor->certidoesNegativas as $doc)
+                                @forelse ($fornecedor->certidoesNegativas as $doc)
                                     <p>
                                         <a href="{{ asset('storage/' . $doc->caminho_arquivo) }}" target="_blank"
                                             class="text-blue-600 hover:underline">
@@ -72,7 +72,7 @@
                             <!-- Certificações de Qualidade -->
                             <div>
                                 <h4 class="font-medium">Certificações de Qualidade</h4>
-                                @forelse($fornecedor->certificacoesQualidade as $doc)
+                                @forelse ($fornecedor->certificacoesQualidade as $doc)
                                     <p>
                                         <a href="{{ asset('storage/' . $doc->caminho_arquivo) }}" target="_blank"
                                             class="text-blue-600 hover:underline">
@@ -90,7 +90,7 @@
                     <!-- Contatos -->
                     <x-tab name="contatos" label="Contatos">
                         <div class="space-y-2">
-                            @forelse($contatos as $contato)
+                            @forelse ($contatos as $contato)
                                 <div class="p-4 border rounded-xl dark:border-neutral-700">
                                     <p><strong>Nome:</strong> {{ $contato->nome }}</p>
                                     <p><strong>Telefone:</strong> {{ $contato->telefone }}</p>

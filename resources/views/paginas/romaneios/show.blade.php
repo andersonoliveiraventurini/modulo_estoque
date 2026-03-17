@@ -34,7 +34,7 @@
             <div class="lg:col-span-2 space-y-4">
                 <x-heading size="lg">Pedidos no Romaneio ({{ $romaneio->batches->count() }})</x-heading>
                 
-                @forelse($romaneio->batches as $batch)
+                @forelse ($romaneio->batches as $batch)
                     <x-card class="p-0 relative overflow-hidden ring-1 ring-zinc-200 dark:ring-zinc-700 shadow-sm">
                         <div class="p-4 bg-zinc-50/50 dark:bg-zinc-800/50 border-b border-zinc-100 dark:border-zinc-700 flex justify-between items-start">
                             <div class="space-y-1">
@@ -124,7 +124,7 @@
                     <form action="{{ route('romaneios.add_batches', $romaneio) }}" method="POST">
                         @csrf
                         <div class="max-h-[600px] overflow-y-auto divide-y divide-zinc-100">
-                            @forelse($availableBatches as $batch)
+                            @forelse ($availableBatches as $batch)
                                 <div class="p-3 hover:bg-zinc-50 flex items-start gap-3">
                                     <input type="checkbox" name="batch_ids[]" value="{{ $batch->id }}" class="mt-1 rounded border-zinc-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                     <div class="flex-1 min-w-0">
