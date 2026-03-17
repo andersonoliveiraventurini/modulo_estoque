@@ -5,7 +5,6 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Models\Orcamento;
 use App\Observers\OrcamentoObserver;
-use App\Policies\RouteBillingPolicy;
 use Illuminate\Support\Facades\Gate;
 
 class AppServiceProvider extends ServiceProvider
@@ -36,10 +35,5 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Orcamento::observe(OrcamentoObserver::class);
-
-        // Registro da Policy de Faturamento de Rota
-        // Como o faturamento de rota é uma extensão do Orçamento,
-        // registramos para verificações de Gate específicas.
-        Gate::policy(Orcamento::class, RouteBillingPolicy::class);
     }
 }

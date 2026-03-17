@@ -83,6 +83,7 @@ Retorna `null` se o cliente não tiver contato com telefone.
 | `separacao.index` | Fila de batches de separação abertos |
 | `logistica.separacao.lista` | Lista de itens individuais a separar |
 | `conferencia.index` | Conferência pós-separação |
+| `logistica.carregamento` | **Carregamento de Rota** — Pedidos aprovados por dia |
 | `romaneios.index` | Gerenciamento de romaneios de entrega |
 | `relatorios.separacao_por_roteiro` | Fila de carga agrupada por endereço |
 | `relatorios.divergencias` | Relatório de divergências de conferência |
@@ -101,6 +102,18 @@ Retorna `null` se o cliente não tiver contato com telefone.
 1. **Solicitação**: Vendedor seleciona itens e quantidades devolvidas.
 2. **Aprovação Vendas**: Supervisor valida o motivo e autoriza o processo.
 3. **Aprovação Estoque**: O responsável pelo estoque confirma o recebimento dos itens. Ao finalizar, o sistema gera automaticamente um **Crédito de Devolução** para o cliente.
+
+---
+
+### Módulo: Faturamento de Rota (Compliance)
+
+Fluxo obrigatório para pedidos do tipo **ROTA** (transportes 1, 2, 3, 6, 7). Garante que a mercadoria só saia do estoque após validação financeira.
+
+#### Fluxo de Operação:
+1. **Anexo (Vendedor)**: O vendedor anexa comprovantes de pagamento ou documentos no detalhe do orçamento.
+2. **Aprovação (Financeiro)**: O financeiro valida anexo por anexo e emite o parecer (`Aprovado`, `Com Restrições` ou `Negado`).
+3. **Trava de Logística**: O pedido **não aparece** na fila de separação (`logistica.separacao.lista`) até que possua uma aprovação `approved` e o `loading_day` (dia de carregamento) definido.
+4. **Carregamento**: Após separado/conferido, o pedido consta na tela de **Carregamento de Rota**, agrupado pelo cronograma semanal.
 
 ---
 
@@ -310,9 +323,9 @@ O sistema mantém um log detalhado (`customer_discount_history`) de todas as alt
 |---|---|
 | `admin` | Acesso completo, recebe alertas de estoque |
 | `compras` | Compras, fornecedores, pedidos, recebe alertas |
-| `vendedor` | Orçamentos, clientes, balcão |
-| `estoque` | Movimentações, separação, conferência |
-| `financeiro` | Faturas, contas a receber/pagar, relatórios |
+| `vendedor` | Orçamentos, clientes, balcão, **anexos de rota** |
+| `estoque` | Movimentações, separação, conferência, **carregamento** |
+| `financeiro` | Faturas, contas a receber/pagar, **aprovação de rota** |
 
 ---
 
