@@ -134,6 +134,12 @@ class ReposicaoIndex extends Component
             'executorId.required'      => 'Selecione o executor (repositor).',
         ]);
 
+        // Validação condicional: se armazemOrigemId for null, assumimos Entrada Direta.
+        // Se no futuro houver mais tipos, aqui deve ser expandido.
+        if (is_null($this->armazemOrigemId)) {
+            Log::info('ReposicaoIndex: Confirmando como Entrada Direta', ['ordem_id' => $this->ordemId]);
+        }
+
         $ordem = OrdemReposicao::find($this->ordemId);
         if (!$ordem || $ordem->status !== 'pendente') {
             $this->addError('executar', 'Esta ordem não está mais pendente.');
@@ -207,13 +213,14 @@ class ReposicaoIndex extends Component
     }
 
     // ─── Marcar ordem como impressa (indica que PDF foi gerado) ──────────────
-    public function marcarComoImpresso(int $ordemId): void
+    public function marcarComoImpresso(int $ordemId)
     {
         $ordem = OrdemReposicao::find($ordemId);
         if ($ordem && is_null($ordem->impresso_em)) {
             $ordem->update(['impresso_em' => now()]);
         }
-        $this->dispatch('abrirPdf', ['url' => route('reposicao.pdf', ['ordem' => $ordemId])]);
+        
+        return redirect()->route('reposicao.pdf', ['ordem' => $ordemId]);
     }
 
     // ─── Cancelar ordem de reposição ─────────────────────────────────────────

@@ -14,11 +14,24 @@ class ReposicaoPdfController extends Controller
      */
     public function __invoke(OrdemReposicao $ordem)
     {
-        $ordem->load(['produto', 'solicitadoPor', 'executor', 'armazemOrigem', 'corredorOrigem', 'posicaoOrigem']);
+        try {
+            $ordem->load(['produto', 'solicitadoPor', 'executor', 'armazemOrigem', 'corredorOrigem', 'posicaoOrigem']);
 
-        $pdf = Pdf::loadView('pdfs.reposicao-form', compact('ordem'))
-            ->setPaper('a4', 'portrait');
+            $pdf = Pdf::loadView('pdfs.reposicao-form', compact('ordem'))
+                ->setPaper('a4', 'portrait');
 
-        return $pdf->stream("Ordem_Reposicao_{$ordem->id}.pdf");
+            return $pdf->stream("Ordem_Reposicao_{$ordem->id}.pdf");
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('ReposicaoPdfController: erro ao gerar PDF', [
+                'ordem_id' => $ordem->id,
+                'erro'     => $e->getMessage(),
+                'trace'    => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao gerar o PDF. Verifique os logs do sistema.'
+            ], 500);
+        }
     }
 }

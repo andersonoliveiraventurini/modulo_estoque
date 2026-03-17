@@ -65,7 +65,14 @@ final class ReposicaoService
         ?int $posicaoOrigemId,
         int $executorId
     ): void {
-        $tipoEntrada = $armazemOrigemId ? 'entrada_hub' : 'entrada_hub';
+        $tipoEntrada = $armazemOrigemId ? 'entrada_hub' : 'entrada_hub'; // TODO: Validar se existirão outros tipos no futuro
+
+        if (!$armazemOrigemId) {
+            Log::warning('ReposicaoService: entrada direta detectada (sem armazém de origem)', [
+                'ordem_id' => $ordem->id,
+                'usuario'  => auth()->id(),
+            ]);
+        }
 
         Log::info('ReposicaoService: confirmando reposição', [
             'ordem_id'       => $ordem->id,
