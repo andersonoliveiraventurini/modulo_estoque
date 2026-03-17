@@ -150,6 +150,10 @@
             <flux:navlist.item icon="view-columns" :href="route('blocok.insumos.index')"
                 :current="request()->routeIs('blocok.insumos.*')" wire:navigate>{{ __('Insumos de Produção') }}
             </flux:navlist.item>
+            {{-- Bloco K SPED Fiscal --}}
+            <flux:navlist.item icon="document-arrow-down" :href="route('blocok.index')"
+                :current="request()->routeIs('blocok.index')" wire:navigate>{{ __('Bloco K — SPED Fiscal') }}
+            </flux:navlist.item>
         </flux:navlist.group>
 
         <flux:navlist.group heading="Financeiro" expandable :expanded="false">
@@ -171,14 +175,20 @@
             <flux:navlist.item icon="exclamation-triangle" :href="route('faturamento.inadimplencia')"
                 :current="request()->routeIs('faturamento.inadimplencia')" wire:navigate>{{ __('Inadimplência') }}
             </flux:navlist.item>
+            <flux:navlist.item icon="chart-bar-square" :href="route('relatorios.fluxo_caixa')"
+                :current="request()->routeIs('relatorios.fluxo_caixa')" wire:navigate>{{ __('Fluxo de Caixa') }}
+            </flux:navlist.item>
             <flux:navlist.item icon="document-text" :href="route('notas.index')"
                 :current="request()->routeIs('notas.*')" wire:navigate>{{ __('Notas Fiscais') }}
             </flux:navlist.item>
             <flux:navlist.item icon="currency-dollar" :href="route('orcamentos.concluidos')"
                 :current="request()->routeIs('orcamentos.concluidos')" wire:navigate>{{ __('Movimentações Financeiras') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="presentation-chart-line" wire:navigate>{{ __('Relatórios Financeiros') }}
-            </flux:navlist.item>
+            <flux:navlist.group heading="Relatórios Financeiros" expandable :expanded="false">
+                <flux:navlist.item icon="presentation-chart-line" :href="route('relatorios.fluxo_caixa')" :current="request()->routeIs('relatorios.fluxo_caixa')" wire:navigate>{{ __('Fluxo de Caixa') }}</flux:navlist.item>
+                <flux:navlist.item icon="document-chart-bar" :href="route('relatorios.vendas_margem')" :current="request()->routeIs('relatorios.vendas_margem')" wire:navigate>{{ __('Vendas e Margem') }}</flux:navlist.item>
+                <flux:navlist.item icon="users" :href="route('relatorios.ranking_clientes')" :current="request()->routeIs('relatorios.ranking_clientes')" wire:navigate>{{ __('Ranking de Clientes') }}</flux:navlist.item>
+            </flux:navlist.group>
         </flux:navlist.group>
         <flux:navlist.group heading="Descontos" expandable :expanded="false">
             <flux:navlist.item icon="check-circle" :href="route('descontos.aprovados')"
@@ -188,6 +198,18 @@
                 :current="request()->routeIs('descontos.index')" wire:navigate>{{ __('Solicitações Pendentes') }}
             </flux:navlist.item>
         </flux:navlist.group>
+        <flux:navlist.group heading="CRM & Integrações" expandable :expanded="false">
+            <flux:navlist.item icon="building-office" :href="route('rdstation.listar-empresas')"
+                :current="request()->routeIs('rdstation.listar-empresas')" wire:navigate>{{ __('Empresas no CRM') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="chart-bar" :href="route('rdstation.listar-negociacoes')"
+                :current="request()->routeIs('rdstation.listar-negociacoes')" wire:navigate>{{ __('Negociações (RD Station)') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="shopping-bag" href="#"
+                wire:navigate>{{ __('E-commerce (WooCommerce)') }}
+            </flux:navlist.item>
+        </flux:navlist.group>
+
         <flux:navlist.group heading="Administração" expandable :expanded="false">
 
             <flux:navlist.group heading="Configurações" expandable :expanded="false">

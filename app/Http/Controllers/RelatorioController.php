@@ -473,4 +473,17 @@ class RelatorioController extends Controller
 
         return view('paginas.relatorios.vendas_margem', compact('vendas', 'produto', 'produtos'));
     }
+
+    /**
+     * Relatório de Fluxo de Caixa (Previsto vs Realizado).
+     */
+    public function fluxoCaixa(Request $request, \App\Services\FluxoCaixaService $service)
+    {
+        $dataInicio = $request->filled('data_inicio') ? \Carbon\Carbon::parse($request->data_inicio) : now()->startOfMonth();
+        $dataFim = $request->filled('data_fim') ? \Carbon\Carbon::parse($request->data_fim) : now()->endOfMonth();
+
+        $dados = $service->obterDadosFluxo($dataInicio, $dataFim);
+
+        return view('paginas.relatorios.fluxo_caixa', compact('dados'));
+    }
 }

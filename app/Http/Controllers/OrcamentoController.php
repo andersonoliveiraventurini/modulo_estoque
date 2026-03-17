@@ -548,6 +548,13 @@ class OrcamentoController extends Controller
             } else {
                 $orcamento->status = 'Aprovado';
                 $orcamento->save();
+
+                // Sincroniza com RD Station
+                try {
+                    app(\App\Services\RdStationService::class)->registrarVenda($orcamento);
+                } catch (\Exception $e) {
+                    Log::error("Erro ao sincronizar venda com RD Station: " . $e->getMessage());
+                }
             }
         } elseif ($necessitaAprovacaoDesconto && $necessitaAprovacaoPagamento) {
             // Ambos precisam de aprovação — prioriza desconto
@@ -643,6 +650,13 @@ class OrcamentoController extends Controller
                 'status' => 'Pendente',
                 'workflow_status' => 'aguardando_separacao'
             ]);
+
+            // Sincroniza com RD Station após aprovação de desconto
+            try {
+                app(\App\Services\RdStationService::class)->registrarVenda($orcamento);
+            } catch (\Exception $e) {
+                Log::error("Erro ao sincronizar venda com RD Station apos aprovacao: " . $e->getMessage());
+            }
 
             // Chama a função para gerar o PDF e verifica o resultado
             $pdfService = new OrcamentoPdfService();

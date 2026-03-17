@@ -177,6 +177,15 @@
                                 </x-button>
                             </a>
 
+                            @if($c->whatsapp_url)
+                                <a href="{{ $c->whatsapp_url }}" target="_blank" title="Conversar no WhatsApp">
+                                    <x-button size="sm" variant="secondary" class="!text-green-600 border-green-200 hover:bg-green-50">
+                                        <x-heroicon-o-chat-bubble-left-right class="w-4 h-4" />
+                                        WhatsApp
+                                    </x-button>
+                                </a>
+                            @endif
+
                             <form action="{{ route('clientes.destroy', $c->id) }}" method="POST"
                                 onsubmit="return confirm('Tem certeza que deseja excluir este cliente?');">
                                 @csrf

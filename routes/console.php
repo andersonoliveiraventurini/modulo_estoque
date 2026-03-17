@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('faturas:verificar-inadimplencia')->dailyAt('00:00');
+Schedule::command('app:process-critical-stock')->hourly();

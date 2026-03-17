@@ -25,7 +25,9 @@ final class EstoqueService
 
                     if (!$produto) continue;
 
-                    $this->checarEstoqueMinimo($produto, $quantidade);
+                    if (!$this->checarEstoqueMinimo($produto, $quantidade)) {
+                        throw new \Exception("Estoque insuficiente para o produto {$produto->nome} (SKU: {$produto->sku}). Disponível: {$produto->estoque_atual}");
+                    }
 
                     EstoqueReserva::create([
                         'orcamento_id'  => $orcamento->id,

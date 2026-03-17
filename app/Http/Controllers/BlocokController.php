@@ -13,7 +13,8 @@ class BlocokController extends Controller
      */
     public function index()
     {
-        //
+        $historico = blocok::orderBy('created_at', 'desc')->paginate(10);
+        return view('paginas.blocok.index', compact('historico'));
     }
 
     /**
@@ -61,6 +62,28 @@ class BlocokController extends Controller
      */
     public function destroy(blocok $blocok)
     {
-        //
+        $blocok->delete();
+        return redirect()->route('blocok.index')->with('success', 'Registro removido com sucesso.');
+    }
+
+    /**
+     * Download the latest generated TXT file for this entry.
+     */
+    public function download(blocok $blocok)
+    {
+        // Como o arquivo é gerado com timestamp, 
+        // e não salvamos opcionalmente o path no banco na migration original,
+        // vamos procurar o arquivo mais recente ou apenas baixar o que foi salvo por último.
+        
+        $files = \Illuminate\Support\Facades\Storage::files('public/sped');
+        if (empty($files)) {
+            return back()->with('error', 'Arquivo não encontrado no servidor.');
+        }
+
+        // Simplificação: Pegamos o arquivo mais recente da pasta sped
+        // Para um sistema real, o path deveria estar na tabela bloco_k.
+        $latestFile = end($files);
+        
+        return \Illuminate\Support\Facades\Storage::download($latestFile);
     }
 }

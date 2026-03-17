@@ -1,0 +1,208 @@
+﻿Visão Geral do Sistema
+O sistema será desenvolvido em PHP com o framework Laravel, containerizado via Docker e utilizando banco de dados MySQL.
+Sendo composto por cinco módulos:
+1. Estoque: O módulo de estoque irá controlar endereços físicos no armazém e movimentações de entrada e saída de materiais, com aprovação da supervisão de expedição. Além disso, será responsável pela geração dos dados fiscais exigidos pelo Bloco K do SPED Fiscal.
+Funcionalidades:
+* Organização dos endereços físicos (armazém, corredor, posição).
+* Estoque web - para e commerce
+* Controle da entrada de materiais, com registro de Nota Fiscal, fornecedor e data.
+* Controle da saída de materiais vinculada a Ordens de Produção ou Pedidos.
+* Aprovação da supervisão antes da baixa no estoque.
+* Relatórios e dashboards para visualização de saldos, movimentações e histórico.
+* Exportação dos dados para Bloco K, incluindo registros:
+   * 0200: Identificação do item
+   * 0210: Consumo específico padronizado
+   * K200: Estoque escriturado
+   * K220: Outras movimentações internas
+   * K230/K235: Produção e insumos consumidos
+* Controle de permissões e autenticação de usuários.
+* Testes e ajustes para garantir a qualidade e conformidade do sistema.
+
+
+Valor: R$ 28.080,00
+Tempos estimado: 3 meses (noventa dias)
+2. Compras: O módulo de compras será integrado aos módulos de estoque e vendas, possibilitando controle centralizado das movimentações, geração de relatórios gerenciais e automação de pedidos a fornecedores, incluindo monitoramento automático de estoque mínimo.
+Funcionalidades:
+● Cadastro e gestão de fornecedores.
+● Cadastro e gestão de produtos (integrado ao módulo de estoque).
+● Controle de estoque mínimo com geração automática de pedidos de compra.
+● Fluxo de requisição de compras com aprovação.
+● Emissão de pedidos para fornecedores.
+● Recebimento de compras integrado ao estoque.
+● Integração com vendas para atualização automática do saldo de estoque.
+● Relatórios e dashboards, incluindo:
+● Histórico de compras.
+● Fornecedores mais utilizados.
+● Comparativo de preços.
+● Estoques críticos e em falta.
+● Controle de permissões e níveis de acesso.
+● Testes e ajustes finais para garantir qualidade e conformidade.
+
+
+Valor: R$ 31.320,00
+Tempos estimado: 3 meses (noventa dias)
+3. Financeiro: O módulo financeiro deverá contemplar funcionalidades essenciais para gestão financeira. 
+Funcionalidades: 
+● Controle de limite de crédito de clientes 
+● Faturamento e controle de inadimplência 
+● Emissão de NF-e (via API externa) 
+● Emissão de boletos bancários (via API) 
+● Gestão do fluxo de caixa (entradas e saídas financeiras) 
+● Gestão de pagamentos a fornecedores 
+● Migração de dados do sistema antigo
+● Relatórios para suporte à gestão financeira
+Valor: R$ 32.400,00
+Tempos estimado: 3 meses (noventa dias)
+4. Vendas: O módulo de vendas será integrado ao CRM do RD Station via API, conectado ao WhatsApp para comunicação direta com clientes, e preparado para operar em conjunto com um site em WordPress, utilizando o WooCommerce para vendas online. O e-commerce será desenvolvido em WordPress com WooCommerce, permitindo gerenciamento completo de produtos, carrinho, checkout, formas de pagamento e sincronização direta com o módulo de vendas, para atualização de pedidos, clientes e estoque em tempo real.
+Funcionalidades: 
+* Cadastro e gestão de clientes e leads.
+* Integração com RD Station CRM, incluindo:
+   * Sincronização de contatos e pedidos com funil RD station.
+   * Registro automático de interações.
+* Integração com WhatsApp (via API):
+   * Envio de mensagens 
+   * Disparo de mensagens automáticas para clientes
+* Gestão de pedidos e orçamentos
+* Catálogo de produtos integrado com WordPress (WooCommerce), com:
+   * Sincronização de produtos, preços e estoque.
+   * Importação e exportação de dados entre WooCommerce e o módulo de vendas.
+* Controle de status dos pedidos: em aberto, pago, enviado e concluído.
+* Desenvolvimento do e-commerce em WordPress com WooCommerce, incluindo:
+   * Sincronização de produtos, preços e estoque.
+   * Importação e exportação de dados entre WooCommerce e o módulo de vendas.
+* Relatórios e dashboards com métricas de vendas e desempenho.
+* Controle de permissões e autenticação de usuários.
+* Testes, ajustes e implantação final do sistema.
+Valor: R$ 36.180,00
+Tempos estimado: 3 meses (noventa dias)
+5. Separação de Material: O módulo de separação será integrado aos módulos existentes de Vendas e Financeiro, permitindo a liberação automática da separação dos pedidos após a confirmação do pagamento.
+Funcionalidades:        
+* Gerenciamento do processo de separação de materiais;
+* Emissão de etiquetas com dados principais e volumes;
+* Organização dos pedidos por roteiro;
+* Integração com módulos existentes para controle de status.
+* Controle de pedidos para separação: exibição apenas dos pedidos liberados pelo Financeiro;
+* Registro da separação: confirmação por item/volume e manutenção de histórico de operações;
+* Emissão de etiquetas: geração de etiquetas em PDF com informações principais do pedido e identificação do volume;
+* Organização por roteiro: agrupamento e ordenação dos pedidos conforme rota pré-definida;
+* Integração com módulos existentes: consulta direta aos módulos de Vendas e Financeiro;
+* Relatórios: listagem filtrada por status de separação, roteiro e data.
+
+
+Valor: R$ 8.100,00
+Tempos estimado: 1 mês (trinta dias)
+________________
+
+
+Resumo de custos de desenvolvimento
+Fase
+	Estimativa de tempo
+	Valor
+	Estoque
+	3 meses
+	R$ 28.080,00
+	Compras
+	3 meses
+	R$ 31.320,00
+	Financeiro
+	3 meses
+	R$ 32.400,00
+	Vendas
+	3 meses
+	R$ 36.180,00
+	Separação
+	1 mês
+	R$ 8.100,00
+	Total
+	13 meses
+	R$ 136.080,00
+	
+
+Escopo de cada fase
+
+
+O escopo de cada fase será definido com base no sistema existente “Brcom” e necessidades apresentadas. Após serem definidos os pontos necessários será gerado uma lista de funcionalidades necessárias que serão aprovadas pelo contratante e após isso serão executadas. 
+
+
+________________
+
+
+Desenvolvimento de Novas Áreas e/ou Relatórios
+Em caso de necessidade de criação de novas áreas do sistema ou relatórios personalizados, o serviço será realizado com base no tempo estimado de desenvolvimento. O valor da hora técnica é de R$ 90,00, sendo apresentado previamente ao cliente um orçamento detalhado para aprovação antes do início dos trabalhos.
+Como referência, seguem estimativas de investimento conforme a complexidade:
+* Relatórios Simples (ex.: listagem de pedidos por cliente, exportação em Excel ou PDF): R$ 360,00 a R$ 540,00 (4 a 6 horas).
+
+* Relatórios Intermediários (ex.: vendas filtradas por período, status ou método de pagamento, incluindo gráficos): R$ 720,00 a R$ 1.080,00 (8 a 12 horas).
+
+* Relatórios Avançados ou Novas Áreas (ex.: dashboards gerenciais com indicadores, relatórios financeiros consolidados ou de estoque com regras de negócio complexas): R$ 1.440,00 a R$ 2.160,00 (16 a 24 horas).
+
+Dessa forma, o cliente terá total clareza e previsibilidade nos custos, garantindo que os novos recursos atendam plenamente às necessidades do negócio.
+________________
+
+
+
+
+Hospedagem
+
+
+        Para o sistema ser disponibilizado será necessário que exista um domínio (por exemplo: “acavacessorios.com.br” e um serviço de hospedagem de site - que será responsável por armazenar o sistema e loja virtual.
+
+
+Valores:
+   * Domínio .com.br: ~R$ 40,00/ano (≈ R$ 3,30/mês).
+   * Servidor (VPS ou cloud pequena para Laravel + banco): ~R$ 100,00 a R$ 200,00/mês (depende do tráfego e volume de vendas).
+   * Configuração inicial do servidor (instalação do ambiente Laravel, PHP, MySQL, SSL, deploy automatizado): ~8 horas = R$ 720,00 (custo único de configuração).
+
+
+________________
+
+
+
+
+Backup
+
+
+É importante que se possua backup das informações a realização de backups do banco de dados em um sistema é essencial para garantir a segurança e a integridade das informações armazenadas. Como o banco concentra dados críticos, como registros de clientes, produtos, transações e configurações da aplicação, qualquer falha no servidor, ataque cibernético, erro humano ou corrupção de dados pode comprometer a continuidade do sistema. Com uma política de backup bem estruturada, é possível restaurar rapidamente o ambiente e minimizar perdas, assegurando a disponibilidade do serviço e a confiança dos usuários.
+Para um sistema de vendas, o ideal é adotar uma rotina de backup que combine segurança e frequência. Uma boa prática seria:
+   * Backups diários incrementais do banco de dados (armazenam apenas as alterações desde o último backup, economizando espaço).
+
+   * Backup completo semanal (dump completo do banco, garantindo um ponto seguro para restauração total).
+
+   * Retenção de pelo menos 30 dias de backups (para lidar com problemas identificados tardiamente).
+
+   * Armazenamento redundante: manter uma cópia local (no servidor do sistema) e outro armazenamento da empresa (servidor da empresa ou nuvem ).
+Valores: 
+      * Configuração inicial de rotina de backup automatizada: ~6 horas = R$ 540,00 (custo único).
+      * Monitoramento mensal e testes de restauração: ~2 horas/mês = R$ 180,00/mês.
+      * Armazenamento em nuvem (AWS S3, Google Cloud, etc.): ~R$ 50,00 a R$ 100,00/mês (dependendo do volume de dados).
+________________
+
+
+Suporte preventivo e corretivo (atualizações Laravel/PHP, patches de segurança, ajustes e resolução de falhas):
+O suporte de um sistema de vendas é fundamental para garantir sua continuidade operacional e o bom desempenho no dia a dia do negócio. Como se trata de uma aplicação que lida diretamente com clientes, pedidos, pagamentos e relatórios financeiros, qualquer falha, indisponibilidade ou erro pode impactar diretamente as vendas e gerar prejuízos. O suporte técnico assegura monitoramento constante, correção rápida de problemas, aplicação de atualizações de segurança e melhorias necessárias para acompanhar mudanças no mercado e na legislação. Dessa forma, o suporte não apenas mantém o sistema funcionando de forma estável, mas também protege a confiabilidade da operação e a experiência do usuário.
+Valor: Pacote de 10 horas/mês = R$ 900,00/mês. Caso precise mais horas, pode ser cobrado avulso (R$ 90,00/h).
+Início: Após implantação da primeira fase, ocorrerá provavelmente após 3 meses quando o primeiro módulo for concluído.
+________________
+
+
+Resumo de custos de operação
+Item
+	Custo Inicial (configuração)
+	Mensal
+	Hospedagem (configuração)
+	R$ 720,00
+	R$ 100,00 até R$ 200,00
+	Backup (configuração)
+	R$ 540,00
+	R$ 180,00 + 
+R$ 50,00 a R$ 100,00(caso necessário comprar armazenamento)
+	Suporte (10h/mês)
+	–
+	R$ 900,00
+	Total Inicial
+	R$ 1.260,00
+	–
+	Total Mensal
+	–
+	≈ R$ 1.180,00 a R$ 1.380,00
+	Valor hora técnica: O valor da hora técnica apontado é de R$ 90,00 e será mantido durante os primeiros 12 meses de vigência do contrato. Após este período, poderá ocorrer reajuste anual com base na variação do IPCA (Índice Nacional de Preços ao Consumidor Amplo – IBGE) ou outro índice oficial que venha a substituí-lo, garantindo a atualização do valor em conformidade com a inflação e assegurando a continuidade do serviço com qualidade e sustentabilidade.

@@ -133,4 +133,19 @@ public function vendedorAssistente()
         return $this->hasMany(Desconto::class);
     }
 
+    public function getWhatsappUrlAttribute(): ?string
+    {
+        $contato = $this->contatos()->first();
+        if (!$contato || empty($contato->telefone)) {
+            return null;
+        }
+
+        $numero = preg_replace('/\D/', '', $contato->telefone);
+        
+        if ($numero && (strlen($numero) === 10 || strlen($numero) === 11)) {
+            $numero = '55' . $numero;
+        }
+
+        return $numero ? "https://wa.me/{$numero}" : null;
+    }
 }

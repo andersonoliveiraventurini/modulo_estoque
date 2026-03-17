@@ -1,86 +1,318 @@
-# Sistema de Gestão de Estoque, Indústria e Logística
+# 📦 Sistema de Gestão — ERP Modular
 
-Este é um ecossistema completo para gestão empresarial, integrando desde o primeiro contato com o cliente (orçamento) até a expedição logística e o controle industrial (Bloco K).
-
----
-
-## 🏛 Módulos do Sistema
-
-### 1. CRM e Vendas (Orçamentos)
-O coração do sistema, onde o ciclo de venda se inicia.
-- **Orçamentos & Pedidos**: Criação dinâmica de orçamentos com suporte a múltiplos itens, cálculo automático de impostos e prazos.
-- **Kanban de Vendas**: Visualização em funil para acompanhar o status de cada negociação.
-- **Ciclo de Aprovação de Descontos**: Sistema de alçada onde vendedores solicitam descontos que devem ser aprovados por gestores.
-- **Visualização Pública**: Link externo para que o cliente visualize o orçamento sem necessidade de login.
-- **Duplicação e Cópia**: Agilidade na criação de novos pedidos com base em históricos existentes.
-
-### 2. Gestão de Clientes e Crédito
-Controle total sobre a base de parceiros comerciais.
-- **Cadastro Completo**: Gestão de endereços múltiplos (entrega, cobrança), contatos e documentos.
-- **Análise de Crédito**: Definição de limites de crédito e análise de risco para liberação de pedidos.
-- **Bloqueios Automáticos**: Restrição de vendas para clientes inadimplentes ou com restrições manuais.
-- **Movimentações de Crédito**: Histórico de uso de crédito e adiantamentos.
-
-### 3. Compras e Suprimentos
-Gestão da cadeia de suprimentos e entrada de materiais.
-- **Requisições de Compra**: Solicitações internas que passam por fluxo de aprovação antes de virarem pedidos.
-- **Pedidos de Compra**: Emissão de ordens de compra para fornecedores com controle de itens e valores.
-- **Cotações de Preço**: Comparativo entre fornecedores para garantir a melhor compra.
-- **Recebimento de Encomendas**: Fluxo de conferência de entrada para validar o que foi comprado vs. o que chegou.
-
-### 4. Estoque e Almoxarifado
-Controle físico e lógico de mercadorias.
-- **Movimentações**: Registro de entradas, saídas e transferências com fluxo de aprovação para ajustes manuais.
-- **Endereçamento Logístico**: Organização por Armazéns, Corredores e Posições (Gaiolas/Prateleiras).
-- **Inconsistências de Recebimento**: Auditoria de erros detectados no momento da descararga.
-- **Estoque Crítico**: Alertas automáticos para produtos abaixo do nível de segurança.
-
-### 5. Logística e Expedição
-Garantia de que o produto certo chegue ao cliente certo.
-- **Separação (Picking)**: Fluxo parcial e acumulado, permitindo múltiplas saídas para um mesmo pedido.
-- **Conferência (Packing)**: Validação física via bipagem, com suporte a conferência virtual.
-- **Romaneios e Roteirização**: Agrupamento de entregas por roteiros e geração de mapas de carga.
-- **Etiquetagem**: Emissão de etiquetas de volume personalizadas.
-
-### 6. Financeiro e Contas a Receber
-Gestão do fluxo de caixa e obrigações.
-- **Contas a Receber**: Geração automática de faturas após a conferência concluída.
-- **Fluxo de Pagamento**: Registro de pagamentos no balcão ou via banco, com gestão de comprovantes em PDF.
-- **Contas a Pagar**: Solicitações de pagamento para despesas operacionais e fornecedores.
-- **Notas Fiscais**: Integração para emissão e consulta de documentos fiscais.
-
-### 7. Indústria (Bloco K)
-Controle de produção e transformação de insumos.
-- **Ordens de Produção**: Gestão de fabricação de itens compostos.
-- **Consumo de Insumos**: Baixa automática de matéria-prima baseada na ficha técnica.
-- **Descartes e Perdas**: Registro de desperdícios durante o processo produtivo para conformidade fiscal.
-
-### 8. Inteligência e Relatórios (BI)
-Dashboards e relatórios detalhados para suporte à decisão.
-- **Dashboard Central**: Rota unificada para acesso a todos os relatórios do sistema.
-- **Gestão de Validade**: Relatórios de vencimento por lote e alertas de proximidade.
-- **Análise de Movimentação**: Histórico detalhado de reposições e fluxos internos.
-- **Recebimento e N.C**: Auditoria de recebimento com vínculo a NF/Romaneio e registros de não conformidade.
-- **Vendas e Margem**: Análise de lucratividade por produto, descontos concedidos e volume de vendas no período.
-- **Estoque Crítico**: Visualização de itens abaixo do estoque mínimo.
+> **Stack**: Laravel 12 · Livewire 3 · MySQL · Tailwind CSS · FluxUI Pro · Docker
 
 ---
 
-## 🛠 Comandos Técnicos e Manutenção
+## 🚀 Instalação e Configuração
 
-### Atualização de Dados
+### Pré-requisitos
+- Docker + Docker Compose
+- PHP 8.2+
+- Node.js 20+
+- Composer 2+
+
+### Setup
+
 ```bash
-# Atualiza dados de empresas via API de CNPJ
-php artisan clientes:atualizar-cnpj --limit=100
+cp .env.example .env
+docker compose up -d
+composer install
+php artisan key:generate
+php artisan migrate --seed
+npm install && npm run dev
 ```
 
-### Limpeza e Reset
-O sistema possui rotinas para resetar fluxos logísticos quando um orçamento é editado, garantindo que as reservas de estoque e os lotes de separação reflitam sempre a última versão do pedido.
+### Variáveis de ambiente obrigatórias
+
+| Variável | Descrição |
+|---|---|
+| `DB_DATABASE` | Nome do banco MySQL |
+| `RDSTATION_TOKEN` | Token da API do RD Station CRM |
+| `RDSTATION_USER_ID` | ID do usuário padrão no RD Station |
+| `WOOCOMMERCE_URL` | URL base da loja WordPress |
+| `WOOCOMMERCE_KEY` | Consumer Key da API REST do WooCommerce |
+| `WOOCOMMERCE_SECRET` | Consumer Secret da API REST do WooCommerce |
+| `MAIL_*` | Configurações SMTP para alertas de estoque |
 
 ---
 
-## 💻 Stack Tecnológica
-- **Backend**: Laravel 12 (PHP 8.4)
-- **Frontend**: Livewire 3 + TailwindCSS + Flux UI
-- **Banco de Dados**: MySQL 8
-- **Relatórios**: DomPDF para geração de documentos fiscais e etiquetas.
+## 🗺️ Mapa de Rotas e Funcionalidades
+
+### Módulo: Orçamentos / Vendas
+
+| Rota | Método | Função |
+|---|---|---|
+| `clientes.index` | GET | Lista de clientes (ponto de início para criar orçamento) |
+| `orcamentos.index` | GET | Lista de orçamentos ativos |
+| `orcamentos.criar` | GET | Cria novo orçamento para um cliente (`/clientes/{id}/orcamento`) |
+| `orcamentos.show` | GET | Detalhe do orçamento |
+| `orcamentos.copiar` | GET | Tela para duplicar um orçamento existente |
+| `orcamentos.concluidos` | GET | Orçamentos finalizados / Movimentações financeiras |
+| `orcamentos.kanban_orcamentos` | GET | Kanban de orçamentos por status |
+| `orcamentos.status_orcamentos` | GET | Painel de status dos pedidos |
+| `orcamentos.balcao` | GET | Caixa do balcão (venda presencial) |
+| `orcamentos.balcao_concluidos` | GET | Pedidos finalizados do balcão |
+
+**Status possíveis de um orçamento:** `Pendente` → `Aprovar desconto` → `Aprovar pagamento` → `Aprovado` → `Sem estoque` → `Pago` → `Cancelado`
+
+---
+
+### Módulo: Clientes
+
+| Rota | Método | Função |
+|---|---|---|
+| `clientes.create` | GET | Pré-cadastro rápido |
+| `clientes.create_completo` | GET | Cadastro completo com dados fiscais |
+| `clientes.index` | GET | Lista de clientes com filtros e botão de WhatsApp |
+| `clientes.edit` | GET/PUT | Edição de dados do cliente |
+| `clientes.destroy` | DELETE | Exclusão (soft delete) |
+| `bloqueios.index` | GET | Clientes com crédito bloqueado |
+| `analise_creditos.index` | GET | Análise de crédito por cliente |
+
+#### Accessor: `Cliente::getWhatsappUrlAttribute()`
+Retorna a URL de WhatsApp (`https://wa.me/{numero}`) baseada no primeiro contato cadastrado.
+Retorna `null` se o cliente não tiver contato com telefone.
+
+---
+
+### Módulo: Logística e Separação
+
+| Rota | Função |
+|---|---|
+| `separacao.index` | Fila de batches de separação abertos |
+| `logistica.separacao.lista` | Lista de itens individuais a separar |
+| `conferencia.index` | Conferência pós-separação |
+| `romaneios.index` | Gerenciamento de romaneios de entrega |
+| `relatorios.separacao_por_roteiro` | Fila de carga agrupada por endereço |
+| `relatorios.divergencias` | Relatório de divergências de conferência |
+
+---
+
+### Módulo: Compras
+
+| Rota | Função |
+|---|---|
+| `fornecedores.index` / `create` | Listagem e cadastro de fornecedores |
+| `consulta_preco.index` | Cotações e grupos de consulta de preço |
+| `pedido_compras.index` | Pedidos de compra pendentes/recebidos |
+| `requisicao_compras.index` | Requisições de compra (manuais ou automáticas) |
+| `entrada_encomendas.index` | Recebimento de encomendas |
+| `entrada_encomendas.kanban` | Kanban de encomendas por estágio |
+| `relatorios.historico_compras` | Histórico de pedidos de compra |
+| `relatorios.fornecedores_frequentes` | Fornecedores mais utilizados |
+| `relatorios.comparativo_precos` | Comparativo de preços com gráfico |
+| `relatorios.estoque_critico` | Produtos abaixo do estoque mínimo |
+
+#### Automação: Estoque Crítico
+Quando o estoque cai abaixo do mínimo (via `EstoqueService::verificarAlertaEstoqueBaixo()`):
+- Envia e-mail para roles `admin` e `compras`
+- Cria uma `RequisicaoCompra` automática com 2x o estoque mínimo
+
+---
+
+### Módulo: Estoque
+
+| Rota | Função |
+|---|---|
+| `movimentacao.index` | Lista de movimentações de entrada/saída |
+| `movimentacao.create` | Nova movimentação de estoque |
+| `armazens.index` | Cadastro de armazéns físicos |
+| `corredores.index` | Cadastro de corredores nos armazéns |
+| `posicoes.index` | Cadastro de posições (endereçamento) |
+| `inconsistencias.index` | Inconsistências de recebimento detectadas |
+| `relatorios.index` | Central de relatórios de estoque |
+
+#### Serviço: `EstoqueService`
+
+| Método | Descrição |
+|---|---|
+| `reservarParaOrcamento(Orcamento $orcamento)` | Reserva estoque dos itens do orçamento. Lança exceção se insuficiente. |
+| `liberarReservaDoOrcamento(Orcamento $orcamento)` | Cancela todas as reservas ativas de um orçamento (usado em cancelamentos). |
+| `liberarReservas(Orcamento $orcamento, array $consumos)` | Marca reservas como `consumida` após conferência. |
+| `baixarSaida(Conferencia $conf)` | Debita o `estoque_atual` dos produtos conferidos. Protegido por `DB::transaction`. |
+| `checarEstoqueMinimo(Produto $produto, float $qtd)` | Retorna `true` se houver estoque disponível após reserva + quantidade solicitada. |
+| `verificarAlertaEstoqueBaixo(Produto $produto)` | Dispara e-mail e cria requisição automática se estoque ≤ mínimo. |
+
+---
+
+### Módulo: Produtos
+
+| Rota | Função |
+|---|---|
+| `produtos.index` | Lista de produtos com filtros |
+| `produtos.create` | Cadastro de novo produto |
+| `produtos.edit` | Edição de produto, preço e NCM |
+
+---
+
+### Módulo: Industria / Produção
+
+| Rota | Função |
+|---|---|
+| `blocok.index` | Ordens de Produção |
+| `blocok.descartes.index` | Registro de descartes de produção |
+| `blocok.insumos.index` | Insumos consumidos na produção |
+| `blocok.fiscal.index` | **Bloco K — Gerador SPED Fiscal** |
+
+#### Serviço: `BlocokService`
+
+| Método | Descrição |
+|---|---|
+| `gerarRegistro0200()` | Gera registros de itens (produtos) para o Bloco K SPED. |
+| `gerarRegistroK200(Carbon $dataFim)` | Gera registros de saldos de estoque por produto. |
+| `exportarTxt(Carbon $dataInicio, Carbon $dataFim)` | Consolida todos os registros e salva em `storage/app/public/sped/`. Retorna o path do arquivo. |
+| `limparTexto(string $texto)` | Remove caracteres especiais para conformidade com o layout SPED. |
+
+---
+
+### Módulo: Financeiro
+
+| Rota | Função |
+|---|---|
+| `faturamento.index` | Contas a Receber (faturas pendentes) |
+| `solicitacoes-pagamento.index` | Contas a Pagar (aprovação de pagamentos especiais) |
+| `faturamento.conferidos` | Orçamentos enviados ao financeiro |
+| `faturamento.inadimplencia` | Painel de inadimplência |
+| `faturamento.historicoCliente` | Histórico financeiro por cliente |
+| `relatorios.fluxo_caixa` | **Relatório de Fluxo de Caixa** |
+| `notas.index` | Notas fiscais emitidas |
+| `orcamentos.concluidos` | Movimentações financeiras realizadas |
+
+#### Serviço: `FaturaService`
+
+| Método | Descrição |
+|---|---|
+| `gerarFaturasVenda($registro, array $dados)` | Cria parcelas de fatura para um orçamento/pedido pago. |
+| `gerarFaturaPorOrcamento(Orcamento $orc)` | Cria uma fatura simples com vencimento em 30 dias. Ignora se já existir. |
+| `verificarInadimplencia()` | Atualiza faturas `pendente` vencidas para `vencido`. Retorna a quantidade. |
+
+#### Serviço: `FluxoCaixaService`
+
+| Método | Descrição |
+|---|---|
+| `obterDadosFluxo($inicio, $fim)` | Retorna array consolidado com entradas/saídas previstas e realizadas no período. |
+| `getEntradasPrevistas($inicio, $fim)` | Faturas pendentes com vencimento no período (agrupadas por data). |
+| `getEntradasRealizadas($inicio, $fim)` | Faturas pagas no período (agrupadas por data de pagamento). |
+| `getSaidasPrevistas($inicio, $fim)` | Pedidos de compra pendentes no período (agrupados por data do pedido). |
+| `getSaidasRealizadas($inicio, $fim)` | Pedidos de compra recebidos no período (agrupados por data de atualização). |
+
+---
+
+### Módulo: CRM & Integrações
+
+#### Serviço: `RdStationService`
+
+| Método | Descrição |
+|---|---|
+| `sincronizarEmpresa(Cliente $cliente)` | Cria ou atualiza a Organização no RD Station CRM. Salva `rdstation_id` no cliente. |
+| `registrarVenda(Orcamento $orc)` | Registra a venda como um **Deal Ganho** no CRM. Chamado automaticamente no fechamento de orçamentos (via `OrcamentoController`). |
+
+> **Configuração**: Defina `RDSTATION_TOKEN` e `RDSTATION_USER_ID` no `.env`.
+
+#### Serviço: `WooCommerceService`
+
+| Método | Descrição |
+|---|---|
+| `atualizarEstoqueNoSite(Produto $produto)` | Busca o produto pelo SKU na loja WooCommerce e atualiza o `stock_quantity`. |
+| `importarPedidos()` | Busca pedidos com status `processing` das últimas 24h e os importa para o ERP. |
+
+> **Configuração**: Defina `WOOCOMMERCE_URL`, `WOOCOMMERCE_KEY` e `WOOCOMMERCE_SECRET` no `.env`.
+
+#### Integrações de NF-e e Boletos (Mock)
+
+Localizadas em `app/Integrations/Financial/`:
+
+| Interface | Implementação | Descrição |
+|---|---|---|
+| `NfeIntegrationInterface` | `Mock/MockNfeService` | Emite, consulta e cancela NF-e (ambiente de homologação). |
+| `BoletoIntegrationInterface` | `Mock/MockBoletoService` | Gera, consulta e cancela boletos bancários (simulação). |
+
+Para usar as implementações reais de produção, substitua os Mocks no `AppServiceProvider`.
+
+---
+
+### Módulo: Descontos
+
+| Rota | Função |
+|---|---|
+| `descontos.index` | Solicitações de desconto aguardando aprovação |
+| `descontos.aprovados` | Descontos aprovados e histórico |
+
+**Tipos de desconto:** `percentual` (sobre o total) · `produto` (por item) · `fixo` (valor em R$)
+
+---
+
+### Módulo: Administração
+
+| Rota | Função |
+|---|---|
+| `usuarios.index` / `create` | Gerenciamento de usuários do sistema |
+| `vendedores.index` | Cadastro de vendedores internos, externos e assistentes |
+| `filament.admin.pages.dashboard` | Painel de permissões e papéis (Filament + Spatie) |
+| `cores.index` | Cores e acabamentos dos produtos |
+| `categorias.index` | Categorias de produtos |
+| `subcategorias.index` | Subcategorias |
+| `ncm.index` | Tabela de NCMs para uso fiscal |
+| `rdstation.listar-empresas` | Lista organizações sincronizadas com o CRM |
+| `rdstation.listar-negociacoes` | Lista deals do RD Station |
+| `rdstation.checar-token` | Valida o token de configuração do RD Station |
+
+---
+
+## 🔒 Papéis e Permissões (Spatie Permissions)
+
+| Role | Acesso Principal |
+|---|---|
+| `admin` | Acesso completo, recebe alertas de estoque |
+| `compras` | Compras, fornecedores, pedidos, recebe alertas |
+| `vendedor` | Orçamentos, clientes, balcão |
+| `estoque` | Movimentações, separação, conferência |
+| `financeiro` | Faturas, contas a receber/pagar, relatórios |
+
+---
+
+## ⚙️ Comandos Artisan
+
+| Comando | Frequência | Descrição |
+|---|---|---|
+| `app:process-critical-stock` | Diário (via Scheduler) | Verifica produtos com estoque crítico e gera requisições automáticas |
+| `php artisan migrate` | Manual | Executa migrations pendentes |
+| `php artisan db:seed` | Manual | Popula tabelas com dados iniciais |
+
+---
+
+## 🧪 Testes
+
+```bash
+# Todos os testes
+php artisan test
+
+# Testes do módulo fiscal
+php artisan test --filter BlocokTest
+
+# Testes do fluxo de caixa
+php artisan test --filter FluxoCaixaTest
+```
+
+---
+
+## 📁 Estrutura de Serviços
+
+```
+app/Services/
+├── BlocokService.php         ← Geração SPED Fiscal Bloco K
+├── EstoqueService.php        ← Reservas, baixas e alertas de estoque
+├── FaturaService.php         ← Faturas e controle de inadimplência
+├── FluxoCaixaService.php     ← Consolidação financeira (previsto x realizado)
+├── OrcamentoPdfService.php   ← Geração de PDF dos orçamentos
+├── RdStationService.php      ← Integração CRM RD Station
+└── WooCommerceService.php    ← Integração E-commerce WooCommerce
+
+app/Integrations/Financial/
+├── NfeIntegrationInterface.php
+├── BoletoIntegrationInterface.php
+└── Mock/
+    ├── MockNfeService.php
+    └── MockBoletoService.php
+```

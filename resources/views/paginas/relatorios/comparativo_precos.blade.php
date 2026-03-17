@@ -46,6 +46,16 @@
                 </div>
                 @endif
 
+                {{-- Gráfico Comparativo --}}
+                @if($ranking->count() > 0)
+                <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
+                    <h3 class="text-sm font-bold text-neutral-800 dark:text-white uppercase mb-4">Análise Visual de Preços</h3>
+                    <div class="h-64">
+                        <canvas id="chartComparativo"></canvas>
+                    </div>
+                </div>
+                @endif
+
                 <div class="overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
                     <div class="px-6 py-4 border-b border-neutral-100 dark:border-neutral-700">
                         <h2 class="font-bold text-neutral-800 dark:text-white uppercase text-xs tracking-widest">Ranking Completo</h2>
@@ -105,5 +115,64 @@
                 </div>
             </div>
         @endif
-    </div>
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ctx = document.getElementById('chartComparativo');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: {!! json_encode($ranking->pluck('nome_fantasia')) !!},
+                        datasets: [
+                            {
+                                label: 'Preço Médio (R$)',
+                                data: {!! json_encode($ranking->pluck('preco_medio')) !!},
+                                backgroundColor: 'rgba(79, 70, 229, 0.6)',
+                                borderColor: 'rgb(79, 70, 229)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Último Preço (R$)',
+                                data: {!! json_encode($ranking->pluck('ultimo_preco')) !!},
+                                backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                                borderColor: 'rgb(16, 185, 129)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return 'R$ ' + value.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        label += 'R$ ' + context.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+@endpush
 </x-layouts.app>

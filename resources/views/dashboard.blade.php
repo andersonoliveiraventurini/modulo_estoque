@@ -35,6 +35,9 @@
             </a>
         </div>
 
+        {{-- Nova Seção: Saldos e Lucratividade --}}
+        <livewire:dashboard.saldos-lucratividade />
+
         <div class="grid gap-6 md:grid-cols-2">
             {{-- Lista de Alertas de Estoque --}}
             <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-6 shadow-sm">
@@ -71,17 +74,22 @@
                 @endif
             </div>
 
-            {{-- Vendas e Atividade --}}
-            <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-6 shadow-sm">
-                <flux:heading size="lg" class="mb-4">Desempenho de Vendas</flux:heading>
-                <div class="flex flex-col items-center justify-center h-48 border-2 border-dashed border-neutral-200 dark:border-neutral-700 rounded-lg">
-                    <span class="text-4xl font-bold text-neutral-900 dark:text-white">{{ $stats['vendas_mensal'] }}</span>
-                    <flux:text>Vendas este mês</flux:text>
+            {{-- Estoque por Endereço --}}
+            <livewire:dashboard.estoque-por-endereco />
+        </div>
+
+        {{-- Vendas e Atividade --}}
+        <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <flux:heading size="lg">Desempenho de Vendas (Mensal)</flux:heading>
+                <div class="flex gap-2">
+                    <flux:button variant="filled" color="indigo" size="sm" href="{{ route('orcamentos.index') }}">Orçamentos</flux:button>
+                    <flux:button variant="outline" size="sm" href="{{ route('vendas.index') }}">Histórico</flux:button>
                 </div>
-                <div class="mt-4 grid grid-cols-2 gap-4">
-                    <flux:button variant="filled" color="indigo" class="w-full" href="{{ route('orcamentos.index') }}">Ver Orçamentos</flux:button>
-                    <flux:button variant="outline" class="w-full" href="{{ route('vendas.index') }}">Histórico Vendas</flux:button>
-                </div>
+            </div>
+            <div class="flex flex-col items-center justify-center h-32 border-2 border-dashed border-neutral-200 dark:border-neutral-700 rounded-lg">
+                <span class="text-4xl font-bold text-neutral-900 dark:text-white">{{ $stats['vendas_mensal'] }}</span>
+                <flux:text>Vendas concluídas este mês</flux:text>
             </div>
         </div>
     </div>

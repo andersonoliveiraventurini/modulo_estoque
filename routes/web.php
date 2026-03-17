@@ -138,6 +138,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('blocok/descartes', BlocokDescartesController::class)->names('blocok.descartes');
     Route::resource('blocok/insumos', BlocokInsumosController::class)->names('blocok.insumos');
     Route::resource('blocok/items', BlocokItemController::class)->names('blocok.items');
+    Route::get('blocok/{blocok}/download', [BlocokController::class, 'download'])->name('blocok.download');
     Route::resource('blocok', BlocokController::class)->names('blocok');
 
     Route::resource('vendas', VendaController::class)->names('vendas');
@@ -349,6 +350,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/historico-compras', [RelatorioController::class, 'historicoCompras'])->name('relatorios.historico_compras');
         Route::get('/fornecedores-frequentes', [RelatorioController::class, 'fornecedoresFrequentes'])->name('relatorios.fornecedores_frequentes');
         Route::get('/comparativo-precos', [RelatorioController::class, 'comparativoPrecos'])->name('relatorios.comparativo_precos');
+        Route::get('/fluxo-caixa', [RelatorioController::class, 'fluxoCaixa'])->name('relatorios.fluxo_caixa');
         
         // Novos Relatórios Solicidados
         Route::get('/vencimento-produtos', [RelatorioController::class, 'vencimentoProdutos'])->name('relatorios.vencimento_produtos');
