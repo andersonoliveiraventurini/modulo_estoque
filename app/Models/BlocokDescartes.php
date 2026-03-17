@@ -12,4 +12,21 @@ class BlocokDescartes extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'bloco_k_descartes';
+
+    protected $fillable = [
+        'produto_id',
+        'produto_descartado_id',
+        'quantidade_descarte',
+        'unidade_medida_descarte',
+    ];
+
+    public function produto()
+    {
+        return $this->belongsTo(Produto::class, 'produto_id');
+    }
+
+    public function produtoDescartado()
+    {
+        return $this->belongsTo(Produto::class, 'produto_descartado_id');
+    }
 }

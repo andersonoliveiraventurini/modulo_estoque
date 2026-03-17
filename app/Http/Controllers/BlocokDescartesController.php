@@ -13,7 +13,7 @@ class BlocokDescartesController extends Controller
      */
     public function index()
     {
-        //
+        return view('paginas.blocok.descartes.index');
     }
 
     /**

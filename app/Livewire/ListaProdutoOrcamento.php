@@ -16,6 +16,9 @@ class ListaProdutoOrcamento extends Component
     public $perPage = 25;
     public $showStock = true;
     public $showDiscount = true;
+    public $showPrice = true;
+    public $context = 'orcamento'; // 'orcamento' or component name
+    public $purpose = ''; // custom identifier for listeners
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -81,11 +84,27 @@ class ListaProdutoOrcamento extends Component
     ->orderBy($this->sortField, $this->sortDirection)
     ->paginate($this->perPage);
 
-
-
-
         return view('livewire.lista-produto-orcamento', [
             'produtos' => $produtos,
         ]);
+    }
+
+    public function selectProduct($id)
+    {
+        $produto = Produto::with(['fornecedor', 'cor'])->find($id);
+        if ($produto) {
+            $this->dispatch('produtoSelecionado', [
+                'id' => $produto->id,
+                'nome' => $produto->nome,
+                'sku' => $produto->sku,
+                'preco' => $produto->preco_venda,
+                'fornecedor' => $produto->fornecedor?->nome_fantasia ?? 'Sem fornecedor',
+                'cor' => $produto->cor?->nome ?? 'Sem cor',
+                'partNumber' => $produto->part_number ?? '',
+                'liberarDesconto' => $produto->liberar_desconto,
+                'estoqueAtual' => $produto->estoque_atual,
+                'purpose' => $this->purpose
+            ])->to($this->context === 'orcamento' ? null : $this->context);
+        }
     }
 }

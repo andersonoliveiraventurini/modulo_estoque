@@ -24,7 +24,9 @@
                 <tr>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Código</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Cor</th>
-                    <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Preço</th>
+                    @if($showPrice)
+                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Preço</th>
+                    @endif
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Descrição</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Part Number</th>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Fornecedor</th>
@@ -52,7 +54,9 @@
                                 Sem cor
                             @endif
                         </td>
-                        <td class="px-4 py-2 text-sm">R$ {{ number_format($produto->preco_venda, 2, ',', '.') }}</td>
+                        @if($showPrice)
+                            <td class="px-4 py-2 text-sm">R$ {{ number_format($produto->preco_venda, 2, ',', '.') }}</td>
+                        @endif
                         <td class="px-4 py-2 text-sm">{{ $produto->descricao }}</td>
                         <td class="px-6 py-4 text-zinc-800 dark:text-zinc-200">
                             {{ $produto->part_number }}
@@ -67,20 +71,28 @@
                             <td class="px-4 py-2 text-sm">{{ $produto->liberar_desconto == 0 ? 'Não' : 'Sim' }}</td>
                         @endif
                         <td class="px-4 py-2 text-center">
-                            <x-button type="button" variant="primary"
-                                onclick="selecionarProdutoComQuantidade(
-                                            '{{ $produto->id }}',
-                                            '{{ addslashes($produto->nome) }}',
-                                            '{{ $produto->preco_venda }}',
-                                            '{{ addslashes($produto->fornecedor?->nome_fantasia ?? 'Sem fornecedor') }}',
-                                            '{{ addslashes($produto->cor?->nome ?? 'Sem cor') }}',
-                                            '{{ addslashes($produto->part_number ?? '') }}',
-                                            '{{ $produto->liberar_desconto }}',
-                                            {{ $produto->estoque_atual !== null ? $produto->estoque_atual : 'null' }}
-                                        )">
-                                <x-heroicon-o-plus class="w-4 h-4" />
-                                Selecionar
-                            </x-button>
+                            @if($context === 'orcamento')
+                                <x-button type="button" variant="primary"
+                                    onclick="selecionarProdutoComQuantidade(
+                                                '{{ $produto->id }}',
+                                                '{{ addslashes($produto->nome) }}',
+                                                '{{ $produto->preco_venda }}',
+                                                '{{ addslashes($produto->fornecedor?->nome_fantasia ?? 'Sem fornecedor') }}',
+                                                '{{ addslashes($produto->cor?->nome ?? 'Sem cor') }}',
+                                                '{{ addslashes($produto->part_number ?? '') }}',
+                                                '{{ $produto->liberar_desconto }}',
+                                                {{ $produto->estoque_atual !== null ? $produto->estoque_atual : 'null' }}
+                                            )">
+                                    <x-heroicon-o-plus class="w-4 h-4" />
+                                    Selecionar
+                                </x-button>
+                            @else
+                                <x-button type="button" variant="primary"
+                                    wire:click="selectProduct({{ $produto->id }})">
+                                    <x-heroicon-o-plus class="w-4 h-4" />
+                                    Selecionar
+                                </x-button>
+                            @endif
                         </td>
                     </tr>
                 @empty

@@ -33,9 +33,11 @@ class Generator extends Component
             $service->exportarTxt($bloco);
 
             session()->flash('success', 'Arquivo Bloco K gerado com sucesso!');
-            return redirect()->route('blocok.index');
+            
+            // Usar navigate: true para uma transição suave no Livewire 3
+            return $this->redirect(route('blocok.index'), navigate: true);
         } catch (\Exception $e) {
-            session()->flash('error', 'Erro ao gerar Bloco K: ' . $e->getMessage());
+            session()->flash('error', 'Ocorreu um erro ao gerar o arquivo: ' . $e->getMessage());
         }
     }
 

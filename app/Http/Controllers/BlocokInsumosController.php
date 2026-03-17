@@ -13,7 +13,7 @@ class BlocokInsumosController extends Controller
      */
     public function index()
     {
-        //
+        return view('paginas.blocok.insumos.index');
     }
 
     /**

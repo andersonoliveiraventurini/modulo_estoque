@@ -5,7 +5,12 @@
                 <h1 class="text-2xl font-bold text-neutral-800 dark:text-white">Bloco K - SPED Fiscal</h1>
                 <p class="text-neutral-500 dark:text-neutral-400">Geração de arquivos de controle de estoque e produção para o SPED.</p>
             </div>
+            <div class="flex gap-2">
+                <flux:button variant="ghost" icon="beaker" href="{{ route('blocok.insumos.index') }}">Insumos</flux:button>
+                <flux:button variant="ghost" icon="trash" href="{{ route('blocok.descartes.index') }}">Descartes</flux:button>
+            </div>
         </div>
+
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             {{-- Componente de Geração --}}

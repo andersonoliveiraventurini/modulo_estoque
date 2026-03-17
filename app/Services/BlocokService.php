@@ -10,20 +10,19 @@ use Illuminate\Support\Facades\Storage;
 class BlocokService
 {
     /**
-     * Gera os registros do Bloco K para um período específico.
+     * Gera os registros do Bloco K para um período específico salvando direto no arquivo.
      */
     public function gerarRegistrosParaPeriodo($dataInicio, $dataFim)
     {
-        $reg0200 = $this->gerarRegistro0200();
-        $regK200 = $this->gerarRegistroK200($dataFim);
-
-        return Blocok::create([
-            'k001' => '0', // Abertura do bloco com dados
+        // Criação inicial do registro no banco com os identificadores básicos
+        $bloco = Blocok::create([
+            'k001' => '0',
             'k100' => $dataInicio->format('dmY') . '|' . $dataFim->format('dmY'),
-            'k200' => $regK200,
-            'k990' => 'Total de registros', // Simplificado para exemplo
-            // Armazenamos o 0200 em um campo customizado ou tratamos na exportação
+            // k200 não será mais salvo no banco devido ao limite de string
+            'k990' => 'Total de registros em processamento', // Será atualizado depois
         ]);
+
+        return $bloco;
     }
 
     /**
@@ -35,22 +34,21 @@ class BlocokService
         $linhas = [];
 
         foreach ($produtos as $produto) {
-            // Formato: |0200|COD_ITEM|DESCR_ITEM|COD_BARRA|COD_ANT_ITEM|UNID_INV|TIPO_ITEM|COD_NCM|...
             $linha = [
                 '0200',
                 $produto->sku,
                 $this->limparTexto($produto->nome),
                 '', // COD_BARRA
                 '', // COD_ANT_ITEM
-                'UN', // UNID_INV (Simplificado)
-                '04', // TIPO_ITEM (04 = Produto Acabado)
+                'UN', // UNID_INV
+                '04', // TIPO_ITEM
                 $produto->ncm?->codigo ?? '00000000',
                 '', '', ''
             ];
             $linhas[] = '|' . implode('|', $linha) . '|';
         }
 
-        return implode("\n", $linhas);
+        return $linhas;
     }
 
     /**
@@ -58,24 +56,22 @@ class BlocokService
      */
     public function gerarRegistroK200($dataReferencia)
     {
-        // Pega o saldo atual (simplificado, ideal seria saldo na dataFim)
         $produtos = Produto::where('estoque_atual', '>', 0)->get();
         $linhas = [];
 
         foreach ($produtos as $produto) {
-            // Formato: |K200|DT_EST|COD_ITEM|QTD|IND_EST|COD_PART|
             $linha = [
                 'K200',
                 $dataReferencia->format('dmY'),
                 $produto->sku,
                 number_format($produto->estoque_atual, 3, '.', ''),
-                '0', // IND_EST (0 = Estoque de propriedade do informante e em seu poder)
+                '0', // IND_EST
                 ''   // COD_PART
             ];
             $linhas[] = '|' . implode('|', $linha) . '|';
         }
 
-        return implode("\n", $linhas);
+        return $linhas;
     }
 
     private function limparTexto($texto)
@@ -84,7 +80,7 @@ class BlocokService
     }
 
     /**
-     * Exporta o arquivo TXT completo do Bloco K.
+     * Exporta o arquivo TXT completo do Bloco K e salva o caminho no banco.
      */
     public function exportarTxt(Blocok $bloco)
     {
@@ -92,14 +88,34 @@ class BlocokService
         $conteudo[] = "|K001|{$bloco->k001}|";
         $conteudo[] = "|K100|{$bloco->k100}|";
         
-        // Incluir 0200 (deve vir antes do K)
-        $conteudo[] = $this->gerarRegistro0200();
+        // Pega as datas do K100 guardado no banco
+        $datas = explode('|', $bloco->k100);
+        $dataFim = \Carbon\Carbon::createFromFormat('dmY', $datas[1]);
+
+        // Gerar linhas e adicionar ao array de conteúdo (evitando array para string conversion direta)
+        $linhas0200 = $this->gerarRegistro0200();
+        $conteudo = array_merge($conteudo, $linhas0200);
         
-        $conteudo[] = $bloco->k200;
-        $conteudo[] = "|K990|" . count($conteudo) . "|";
+        $linhasK200 = $this->gerarRegistroK200($dataFim);
+        $conteudo = array_merge($conteudo, $linhasK200);
+        
+        $totalLinhas = count($conteudo) + 1; // +1 pela linha k990 que será adicionada
+        $conteudo[] = "|K990|{$totalLinhas}|";
 
         $filename = "bloco_k_" . now()->format('Ymd_His') . ".txt";
+        
+        if (!Storage::exists('public/sped')) {
+            Storage::makeDirectory('public/sped');
+        }
+
         Storage::put("public/sped/{$filename}", implode("\r\n", $conteudo));
+
+        // Atualizar o registro no banco de dados com o caminho do arquivo e o K990 correto
+        $bloco->update([
+            'k990' => $totalLinhas,
+            'arquivo_path' => "public/sped/{$filename}",
+            'k200' => null // Limpa para garantir
+        ]);
 
         return $filename;
     }

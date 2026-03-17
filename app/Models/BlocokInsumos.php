@@ -12,5 +12,15 @@ class BlocokInsumos extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'bloco_k_insumos';
-    
+
+    protected $fillable = [
+        'produto_id',
+        'quantidade',
+        'unidade_medida',
+    ];
+
+    public function produto()
+    {
+        return $this->belongsTo(Produto::class);
+    }
 }
