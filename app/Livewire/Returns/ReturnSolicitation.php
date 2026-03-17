@@ -15,17 +15,14 @@ class ReturnSolicitation extends Component
     public $items = [];
     public $selectedItems = []; // item_id => [selected => bool, quantity => float]
 
-    public function mount($pedidoId)
+    public function mount($pedidoId = null)
     {
+        if (!$pedidoId) {
+            return;
+        }
+
         $this->pedidoId = $pedidoId;
         $this->pedido = Pedido::with(['cliente', 'descontos'])->findOrFail($pedidoId);
-        
-        // No sistema, itens do pedido parecem vir dos itens do orçamento associado.
-        // Vamos buscar o orçamento vinculado ao pedido (mesmo cliente, valor, etc ou relação direta se existisse)
-        // Como 'Pedido' não tem 'orcamento_id' explicitamente no fillable, mas orçamentos viram pedidos.
-        // Vou assumir que o pedido herda os itens do orçamento que o gerou.
-        // Nota: Em um ERP real, haveria uma tabela intermediária ou relação. 
-        // Aqui, vou buscar o orçamento com o mesmo ID ou relação se disponível.
         
         $orcamento = \App\Models\Orcamento::where('cliente_id', $this->pedido->cliente_id)
             ->where('status', 'Aprovado')
@@ -68,12 +65,15 @@ class ReturnSolicitation extends Component
             ]);
 
             foreach ($toReturn as $itemId => $data) {
-                $item = collect($this->items)->firstWhere('id', $itemId);
+                $item = (array) collect($this->items)->firstWhere('id', (int)$itemId);
+                
+                if (empty($item)) continue;
+
                 OrderReturnItem::create([
                     'order_return_id' => $return->id,
-                    'product_id' => $item['product_id'],
+                    'product_id' => $item['product_id'] ?? null,
                     'quantity_requested' => $data['quantity'],
-                    'unit_price' => $item['valor_unitario'],
+                    'unit_price' => $item['valor_unitario'] ?? 0,
                 ]);
             }
         });

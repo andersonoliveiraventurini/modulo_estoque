@@ -43,8 +43,9 @@ class ReturnApprovalSales extends Component
 
     public function render()
     {
-        $pendingReturns = OrderReturn::with(['customer', 'order', 'items.product'])
-            ->where('status', 'pending')
+        $pendingReturns = OrderReturn::query()
+            ->with(['customer', 'order', 'items.product'])
+            ->whereStatus('pending')
             ->latest()
             ->paginate(10);
 
