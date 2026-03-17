@@ -19,5 +19,13 @@ class AnaliseCredito extends Model
         'user_id'
     ];
 
-    
+    public function cliente()
+    {
+        return $this->belongsTo(Cliente::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

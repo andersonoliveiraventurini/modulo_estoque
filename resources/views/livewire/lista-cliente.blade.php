@@ -64,7 +64,7 @@
         <table class="w-full text-sm">
             <thead class="bg-zinc-50 dark:bg-zinc-800">
                 <tr>
-                    <th class="px-2 py-3 text-left"></th>
+                    <th class="px-2 py-3 text-left">Código</th>
                     <th class="px-2 py-3 text-left">
                         <x-heroicon-o-building-office-2 class="w-4 h-4 inline mr-1" />
                         Nome Brcom
@@ -81,19 +81,27 @@
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse ($clientes as $c)
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
+
                         <td class="px-2 py-4">
                             <div class="flex flex-col gap-1.5">
-                                <a href="{{ route('orcamentos.criar', $c->id) }}" class="text-[9px] bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-100 hover:bg-blue-100 transition font-bold uppercase text-center">CRIAR ORÇAMENTO</a>
-                                <a href="{{ route('consulta_preco.criar', $c->id) }}" class="text-[9px] bg-amber-50 text-amber-700 px-2 py-1 rounded border border-amber-100 hover:bg-amber-100 transition font-bold uppercase text-center">CRIAR ENCOMENDA</a>
+                                 <a href="/clientes/{{ $c->id }}" class="font-bold text-zinc-900 dark:text-zinc-50 hover:underline flex items-center gap-1">
+                                    {{ $c->id }}
+                                </a>
                             </div>
                         </td>
                         <td class="px-2 py-4">
-                            <a href="/clientes/{{ $c->id }}" class="font-bold text-zinc-900 dark:text-zinc-50 hover:underline flex items-center gap-1">
-                                @if($c->bloqueado)
-                                    <x-heroicon-s-lock-closed class="w-4 h-4 text-red-600" />
-                                @endif
-                                {{ $c->nome }}
-                            </a>
+                            <div class="flex flex-col">
+                                <a href="/clientes/{{ $c->id }}" class="font-bold text-zinc-900 dark:text-zinc-50 hover:underline flex items-center gap-1">
+                                    @if($c->bloqueado)
+                                        <x-heroicon-s-lock-closed class="w-4 h-4 text-red-600" />
+                                    @endif
+                                    {{ $c->nome }}
+                                </a>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <a href="{{ route('orcamentos.criar', $c->id) }}" class="text-[9px] bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-100 hover:bg-blue-100 transition font-bold uppercase text-center whitespace-nowrap">CRIAR ORÇAMENTO</a>
+                                    <a href="{{ route('consulta_preco.criar', $c->id) }}" class="text-[9px] bg-amber-50 text-amber-700 px-2 py-1 rounded border border-amber-100 hover:bg-amber-100 transition font-bold uppercase text-center whitespace-nowrap">CRIAR ENCOMENDA</a>
+                                </div>
+                            </div>
                         </td>
                         <td class="px-2 py-4 text-zinc-800 dark:text-zinc-200">
                             {{ $c->nome_fantasia ?: '-' }}
@@ -109,8 +117,8 @@
                         </td>
                         <td class="px-2 py-4 text-xs">
                             <div class="flex flex-col font-medium">
-                                <span class="text-zinc-700 dark:text-zinc-300">L: R$ {{ number_format($c->limite, 2, ',', '.') }}</span>
-                                <span class="text-zinc-600 dark:text-zinc-400">D: {{ $c->desconto }}%</span>
+                                <span class="text-zinc-700 dark:text-zinc-300">Limite: R$ {{ number_format($c->limite, 2, ',', '.') }}</span>
+                                <span class="text-zinc-600 dark:text-zinc-400">Desconto: {{ $c->desconto }}%</span>
                             </div>
                         </td>
                         <td class="px-2 py-4 text-center">
@@ -147,7 +155,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
+                        <td colspan="8" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
                             Nenhum cliente encontrado.
                         </td>
                     </tr>

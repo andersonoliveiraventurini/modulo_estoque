@@ -108,7 +108,6 @@
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse ($orcamentos as $o)
-                    {{-- $o->pagamento é a relação singular (hasOne ou via eager load) --}}
                     <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
 
                         {{-- ID --}}

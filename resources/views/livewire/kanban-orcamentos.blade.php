@@ -126,21 +126,21 @@
                                                                 class="text-xs font-mono font-semibold text-zinc-900 dark:text-white">
                                                                 #{{ $orcamento->id }}
 
-                                                                @if ($orcamento->versao > 1)
-                                                                    <span
-                                                                        class="text-xs
-                                                                    px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-700
-                                                                    text-zinc-600 dark:text-zinc-400 rounded">
-                                                                        v{{ $orcamento->versao }}
-                                                                    </span>
-                                                                @endif
-                                                                @if ($orcamento->complemento === 'Sim')
-                                                                    <span
-                                                                        class="text-xs px-1.5 py-0.5 bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 rounded">
-                                                                        Complemento
-                                                                    </span>
-                                                                @endif
-                                                        </div>
+                                                                    @if ($orcamento->versao > 1)
+                                                                        <span
+                                                                            class="text-xs px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-400 rounded">
+                                                                            v{{ $orcamento->versao }}
+                                                                        </span>
+                                                                    @endif
+
+                                                                    @if ($orcamento->complemento === 'Sim')
+                                                                        <span
+                                                                            class="text-xs px-1.5 py-0.5 bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 rounded">
+                                                                            Complemento
+                                                                        </span>
+                                                                    @endif
+                                                                </span>
+                                                            </div>
                                                         <h4
                                                             class="font-semibold text-sm text-zinc-900 dark:text-white line-clamp-2">
                                                             {{ $orcamento->obra ?: 'Sem título de obra' }}
