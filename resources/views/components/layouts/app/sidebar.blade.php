@@ -55,9 +55,6 @@
             <flux:navlist.item icon="no-symbol" :href="route('bloqueios.index')"
                 :current="request()->routeIs('bloqueios.index')" wire:navigate>{{ __('Clientes Bloqueados') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="banknotes" :href="route('historico.financeiro')"
-                :current="request()->routeIs('historico.financeiro')" wire:navigate>{{ __('Histórico Financeiro') }}
-            </flux:navlist.item>
         </flux:navlist.group>
 
         <flux:navlist.group heading="Logística" expandable :expanded="false">
