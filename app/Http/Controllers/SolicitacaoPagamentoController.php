@@ -42,7 +42,7 @@ class SolicitacaoPagamentoController extends Controller
      */
     public function solicitacao_orcamento($orcamento_id)
     {
-        return view('paginas.pagamentos.solicitacoes-pagamento', compact('orcamento_id'));
+        return view('paginas.pagamentos.solicitacao-orcamento', compact('orcamento_id'));
     }
 
     /**

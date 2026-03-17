@@ -13,7 +13,7 @@ class NotaFiscalController extends Controller
      */
     public function index()
     {
-        //
+        return view('paginas.notas-fiscais.index');
     }
 
     /**
