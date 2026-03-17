@@ -112,6 +112,9 @@
             <flux:navlist.item icon="arrows-right-left" :href="route('movimentacao.index')"
                 :current="request()->routeIs('movimentacao.index')" wire:navigate>{{ __('Movimentações') }}
             </flux:navlist.item>
+            <flux:navlist.item icon="home-modern" :href="route('reposicao.index')"
+                :current="request()->routeIs('reposicao.*')" wire:navigate>{{ __('HUB Reposição') }}
+            </flux:navlist.item>
             <flux:navlist.item icon="plus-circle" :href="route('movimentacao.create')" :current="request()->routeIs('movimentacao.create')" wire:navigate>
                 {{ __('Nova Movimentação') }}</flux:navlist.item>
 

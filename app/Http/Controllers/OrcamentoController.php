@@ -34,6 +34,7 @@ use Illuminate\Support\Facades\Http;
 use App\Models\SolicitacaoPagamento;
 
 use Illuminate\Support\Str;
+use App\Services\EstoqueService;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class OrcamentoController extends Controller
@@ -549,6 +550,15 @@ class OrcamentoController extends Controller
                 $orcamento->status = 'Aprovado';
                 $orcamento->save();
 
+                // Reserva estoque automaticamente
+                try {
+                    app(EstoqueService::class)->reservarParaOrcamento($orcamento);
+                } catch (\Exception $e) {
+                    Log::error("Erro ao reservar estoque no store: " . $e->getMessage());
+                    // Não bloqueia o retorno se falhar, mas loga. 
+                    // Em um cenário real, talvez devesse reverter o status.
+                }
+
                 // Sincroniza com RD Station
                 try {
                     app(\App\Services\RdStationService::class)->registrarVenda($orcamento);
@@ -650,6 +660,13 @@ class OrcamentoController extends Controller
                 'status' => 'Pendente',
                 'workflow_status' => 'aguardando_separacao'
             ]);
+
+            // Reserva estoque após aprovação do desconto
+            try {
+                app(EstoqueService::class)->reservarParaOrcamento($orcamento);
+            } catch (\Exception $e) {
+                Log::error("Erro ao reservar estoque após aprovação de desconto: " . $e->getMessage());
+            }
 
             // Sincroniza com RD Station após aprovação de desconto
             try {
@@ -1086,6 +1103,17 @@ class OrcamentoController extends Controller
             }
 
             $orcamento->save();
+
+            // ── Reserva de Estoque ao Aprovar ───────────────────────────────────
+            if ($status === 'Aprovado') {
+                try {
+                    app(EstoqueService::class)->reservarParaOrcamento($orcamento);
+                } catch (\Exception $e) {
+                    Log::error("Erro ao reservar estoque ao aprovar orçamento #{$id}: " . $e->getMessage());
+                    // Retorna o erro se a reserva falhar (regra de negócio importante)
+                    return response()->json(['message' => 'Orçamento aprovado, mas falha na reserva: ' . $e->getMessage()], 500);
+                }
+            }
 
             // ── PENDENTE — só salva e retorna ────────────────────────────────────
             if ($status === 'Pendente') {

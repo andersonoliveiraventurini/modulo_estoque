@@ -44,7 +44,8 @@ use App\Livewire\Logistica\SeparacaoListaPage;
 use App\Http\Controllers\InconsistenciaRecebimentoController;
 use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\RequisicaoCompraController;
-use App\Http\Controllers\RomaneioController;
+use App\Livewire\Estoque\ReposicaoIndex;
+use App\Http\Controllers\Estoque\ReposicaoPdfController;
 
 Volt::route('/', 'auth.login')
     ->name('home');
@@ -369,11 +370,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/divergencias', [RelatorioController::class, 'divergencias'])->name('relatorios.divergencias');
     });
     // ── Faturamento e Inadimplência ──────────────────────────────────────────
-    Route::prefix('faturamento')->name('faturamento.')->group(function () {
+    Route::group(['prefix' => 'faturamento', 'as' => 'faturamento.'], function () {
         Route::get('/', \App\Livewire\Faturas\ListaFaturas::class)->name('index');
         Route::get('/inadimplencia', \App\Livewire\Faturas\RelatorioInadimplencia::class)->name('inadimplencia');
-        Route::get('/conferidos', [FaturamentoController::class, 'conferidos'])->name('conferidos');
+        Route::get('/conferidos', [App\Http\Controllers\FaturamentoController::class, 'conferidos'])->name('conferidos');
     });
+
+    // ─── HUB Reposição ─────────────────────────────────────────────────────
+    Route::get('/reposicao', ReposicaoIndex::class)->name('reposicao.index');
+    Route::get('/reposicao/{ordem}/pdf', ReposicaoPdfController::class)->name('reposicao.pdf');
 });
 
 require __DIR__ . '/auth.php';

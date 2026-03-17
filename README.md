@@ -122,6 +122,8 @@ Quando o estoque cai abaixo do mínimo (via `EstoqueService::verificarAlertaEsto
 | `posicoes.index` | Cadastro de posições (endereçamento) |
 | `inconsistencias.index` | Inconsistências de recebimento detectadas |
 | `relatorios.index` | Central de relatórios de estoque |
+| `reposicao.index` | **HUB Reposição** — Gestão de saldo e ordens |
+| `reposicao.pdf` | Formulário de retirada para reposição |
 
 #### Serviço: `EstoqueService`
 
@@ -133,6 +135,20 @@ Quando o estoque cai abaixo do mínimo (via `EstoqueService::verificarAlertaEsto
 | `baixarSaida(Conferencia $conf)` | Debita o `estoque_atual` dos produtos conferidos. Protegido por `DB::transaction`. |
 | `checarEstoqueMinimo(Produto $produto, float $qtd)` | Retorna `true` se houver estoque disponível após reserva + quantidade solicitada. |
 | `verificarAlertaEstoqueBaixo(Produto $produto)` | Dispara e-mail e cria requisição automática se estoque ≤ mínimo. |
+
+---
+
+### Módulo: HUB – Reposição de Produtos
+
+Centraliza a movimentação de itens para o **HUB (Armazém ID 1)** para facilitar a separação.
+
+#### Serviço: `ReposicaoService`
+
+| Método | Descrição |
+|---|---|
+| `solicitarReposicao($produtoId, $qtd)` | Cria uma ordem de reposição pendente. |
+| `confirmarReposicao($ordem, ...)` | Transfere o saldo do endereço físico para o HUB. |
+| `devolverAoEstoque($produtoId, $qtd, ...)` | Retira do HUB e devolve para um endereço físico. |
 
 ---
 
@@ -306,6 +322,7 @@ app/Services/
 ├── FaturaService.php         ← Faturas e controle de inadimplência
 ├── FluxoCaixaService.php     ← Consolidação financeira (previsto x realizado)
 ├── OrcamentoPdfService.php   ← Geração de PDF dos orçamentos
+├── ReposicaoService.php      ← Movimentações e ordens de reposição HUB
 ├── RdStationService.php      ← Integração CRM RD Station
 └── WooCommerceService.php    ← Integração E-commerce WooCommerce
 

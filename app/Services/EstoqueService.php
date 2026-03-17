@@ -19,6 +19,12 @@ final class EstoqueService
 
         try {
             DB::transaction(function () use ($orcamento) {
+                // Evita duplicidade de reserva ativa
+                if (EstoqueReserva::where('orcamento_id', $orcamento->id)->where('status', 'ativa')->exists()) {
+                    Log::info("Orçamento #{$orcamento->id} já possui reserva ativa. Pulando.");
+                    return;
+                }
+
                 foreach ($orcamento->itens->whereNotNull('produto_id') as $oi) {
                     $produto    = $oi->produto;
                     $quantidade = (float) $oi->quantidade;
