@@ -50,13 +50,13 @@
                             @foreach($saldoHub as $item)
                                 <tr class="hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 transition duration-150 group">
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-semibold text-gray-800 dark:text-zinc-200">{{ $item->produto_nome }}</div>
+                                        <div class="text-sm font-semibold text-gray-800 dark:text-zinc-200">{{ $item->produto?->nome ?? '—' }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 py-1 text-xs font-mono bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 rounded-md">{{ $item->produto_sku }}</span>
+                                        <span class="px-2 py-1 text-xs font-mono bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 rounded-md">{{ $item->produto?->sku ?? '—' }}</span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-center">
-                                        <div class="text-sm font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 inline-block px-3 py-1 rounded-full">{{ number_format($item->saldo, 2) }}</div>
+                                        <div class="text-sm font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 inline-block px-3 py-1 rounded-full">{{ number_format($item->quantidade, 2) }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div class="flex justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">

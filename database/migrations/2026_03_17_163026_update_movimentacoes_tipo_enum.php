@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,9 +12,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('movimentacoes', function (Blueprint $table) {
-            //
-        });
+        // Necessário no MySQL para alterar ENUM mantendo compatibilidade de dados e adicionando novos valores.
+        DB::statement("ALTER TABLE movimentacoes MODIFY COLUMN tipo ENUM('entrada', 'saida', 'saida_para_hub', 'entrada_hub', 'saida_hub', 'entrada_estoque', 'saida_estoque', 'reposicao', 'devolucao_hub', 'transferencia') NOT NULL COMMENT 'Tipo de movimentação: entrada ou saída.'");
     }
 
     /**
@@ -21,8 +21,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('movimentacoes', function (Blueprint $table) {
-            //
-        });
+        DB::statement("ALTER TABLE movimentacoes MODIFY COLUMN tipo ENUM('entrada', 'saida', 'saida_para_hub') NOT NULL COMMENT 'Tipo de movimentação: entrada ou saída.'");
     }
 };

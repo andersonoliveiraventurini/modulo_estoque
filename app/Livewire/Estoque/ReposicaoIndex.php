@@ -4,12 +4,12 @@ namespace App\Livewire\Estoque;
 
 use App\Models\Armazem;
 use App\Models\Corredor;
+use App\Models\HubStock;
 use App\Models\OrdemReposicao;
 use App\Models\Posicao;
 use App\Models\Produto;
 use App\Models\User;
 use App\Services\ReposicaoService;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -232,33 +232,22 @@ class ReposicaoIndex extends Component
     // ─── Render ───────────────────────────────────────────────────────────────
     public function render()
     {
-        // Saldo de produtos no HUB (Armazem 1)
-        $query = DB::table('movimentacao_produtos as mp')
-            ->join('movimentacoes as m', 'm.id', '=', 'mp.movimentacao_id')
-            ->join('produtos as p', 'p.id', '=', 'mp.produto_id')
-            ->where('mp.armazem_id', ReposicaoService::HUB_ARMAZEM_ID)
-            ->where('m.status', 'aprovado')
-            ->whereNull('m.deleted_at');
+        // Lê saldo direto da tabela hub_stocks (mantida pelo ReposicaoService)
+        $saldoHubQuery = HubStock::with('produto')
+            ->where('quantidade', '>', 0);
 
         if (!empty($this->searchProduto)) {
             $term = $this->searchProduto;
-            $query->where(function ($sub) use ($term) {
-                $sub->where('p.nome', 'like', "%{$term}%")
-                    ->orWhere('p.sku', 'like', "%{$term}%");
+            $saldoHubQuery->whereHas('produto', function ($q) use ($term) {
+                $q->where('nome', 'like', "%{$term}%")
+                  ->orWhere('sku', 'like', "%{$term}%");
             });
         }
 
-        $saldoHub = $query->selectRaw("
-                mp.produto_id,
-                p.nome as produto_nome,
-                p.sku as produto_sku,
-                SUM(CASE WHEN m.tipo IN ('entrada_hub','entrada') THEN mp.quantidade
-                         WHEN m.tipo IN ('saida_para_hub','saida','devolucao_hub') THEN -mp.quantidade
-                         ELSE 0 END) as saldo
-            ")
-            ->groupBy('mp.produto_id', 'p.nome', 'p.sku')
-            ->having('saldo', '>', 0)
-            ->orderBy('p.nome')
+        $saldoHub = $saldoHubQuery
+            ->join('produtos', 'produtos.id', '=', 'hub_stocks.produto_id')
+            ->orderBy('produtos.nome')
+            ->select('hub_stocks.*')
             ->paginate(15, ['*'], 'saldoPage');
 
         // Ordens de reposição
