@@ -74,12 +74,14 @@ class PagamentoController extends Controller
         });
 
         $ativo = strtoupper(trim($body['descricao_situacao_cadastral'] ?? '')) === 'ATIVA';
+        $isBlocked = $cliente->bloqueado ?? false;
 
         return view('paginas.pagamentos.form-pagamento-balcao', compact(
             'orcamento',
             'condicoes',
             'condicoesBalcao',
             'ativo',
+            'isBlocked',
             'condicaoPadrao',
             'condicaoEspecial',
             'precisaNotaFiscal',
@@ -153,8 +155,15 @@ class PagamentoController extends Controller
  
             // ── Proteção: bloqueia tipo "outros" se não for condição 20 ───
             $condicaoEspecial = (int) $orcamento->condicao_id === self::CONDICAO_ESPECIAL_OUTROS;
+            $isBlocked = $orcamento->cliente->bloqueado ?? false;
             foreach ($validated['formas_pagamento'] as $forma) {
                 $cond = CondicoesPagamento::find($forma['condicao_id']);
+                
+                // Proteção para cliente bloqueado
+                if ($isBlocked && !in_array($cond?->tipo, ['dinheiro', 'pix', 'cartao_credito', 'cartao_debito'])) {
+                    throw new \Exception('Cliente bloqueado: Pagamento restrito a PIX, Dinheiro ou Cartão de Crédito/Débito.');
+                }
+
                 if (! $condicaoEspecial && $cond?->tipo === 'outros') {
                     throw new \Exception('A condição "Outros" não está disponível para este orçamento.');
                 }

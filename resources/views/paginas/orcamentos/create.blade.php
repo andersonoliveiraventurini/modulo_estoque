@@ -147,18 +147,18 @@
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <x-input type="text" name="nome_obra" placeholder="Digite o nome da obra"
-                                label="Nome da Obra" required />
+                                label="Nome da Obra" required value="{{ old('nome_obra') }}" />
                             <x-select name="complemento" label="Complemento de outro orçamento?" required>
-                                <option value="Não">Não</option>
-                                <option value="Sim">Sim</option>
+                                <option value="Não" {{ old('complemento') == 'Não' ? 'selected' : '' }}>Não</option>
+                                <option value="Sim" {{ old('complemento') == 'Sim' ? 'selected' : '' }}>Sim</option>
                             </x-select>
                             <x-input type="text" name="prazo_entrega" placeholder="Ex: 15 dias úteis"
-                                label="Prazo de Entrega" />
+                                label="Prazo de Entrega" value="{{ old('prazo_entrega') }}" />
                             <x-select name="frete" label="Tipo de Frete" required>
                                 <option value="">Selecione...</option>
-                                <option value="cif">CIF - entrega por conta do fornecedor
+                                <option value="cif" {{ old('frete') == 'cif' ? 'selected' : '' }}>CIF - entrega por conta do fornecedor
                                 </option>
-                                <option value="fob">FOB - entrega por conta do cliente</option>
+                                <option value="fob" {{ old('frete') == 'fob' ? 'selected' : '' }}>FOB - entrega por conta do cliente</option>
                             </x-select>
                             <x-select name="enderecos_cadastrados" label="Endereços de cadastrados do cliente">
                                 <option value="">Selecione...</option>
@@ -249,46 +249,46 @@
                         <flux:select name="condicao_id" id="condicao_id" label="Condição de pagamento" required>
                             <option value="">Selecione...</option>
                             @foreach ($condicao as $c)
-                                <option value="{{ $c->id }}">{{ $c->nome }}</option>
+                                <option value="{{ $c->id }}" {{ old('condicao_id') == $c->id ? 'selected' : '' }}>{{ $c->nome }}</option>
                             @endforeach
                         </flux:select>
 
                         <flux:input name="outros_meios_pagamento" id="outros_meios_pagamento" label="Outros meios pagamento" 
-                            disabled placeholder="Ex: Boleto 28/56/84..." />
+                            disabled placeholder="Ex: Boleto 28/56/84..." value="{{ old('outros_meios_pagamento') }}" />
 
                         <flux:select name="tipo_documento" label="Nota fiscal" required>
                             <option value="">Selecione...</option>
-                            <option value="Nota fiscal">Nota fiscal</option>
-                            <option value="Cupom Fiscal">Cupom Fiscal</option>
+                            <option value="Nota fiscal" {{ old('tipo_documento') == 'Nota fiscal' ? 'selected' : '' }}>Nota fiscal</option>
+                            <option value="Cupom Fiscal" {{ old('tipo_documento') == 'Cupom Fiscal' ? 'selected' : '' }}>Cupom Fiscal</option>
                         </flux:select>
 
                         <flux:select name="homologacao" label="Homologação" required>
-                            <option value="0" selected>Não</option>
-                            <option value="1">Sim</option>
+                            <option value="0" {{ old('homologacao', '0') == '0' ? 'selected' : '' }}>Não</option>
+                            <option value="1" {{ old('homologacao') == '1' ? 'selected' : '' }}>Sim</option>
                         </flux:select>
 
                         <flux:select name="venda_triangular" id="venda_triangular" label="Venda triangular?" required>
-                            <option value="0" selected>Não</option>
-                            <option value="1">Sim</option>
+                            <option value="0" {{ old('venda_triangular', '0') == '0' ? 'selected' : '' }}>Não</option>
+                            <option value="1" {{ old('venda_triangular') == '1' ? 'selected' : '' }}>Sim</option>
                         </flux:select>
 
                         <flux:input name="cnpj_triangular" id="cnpj_triangular" label="CNPJ venda triangular" 
                             disabled placeholder="00.000.000/0000-00" 
-                            onkeypress="mascara(this, '##.###.###/####-##')" maxlength="18" />
+                            onkeypress="mascara(this, '##.###.###/####-##')" maxlength="18" value="{{ old('cnpj_triangular') }}" />
                     </div>
 
                     <!-- Seção de Valores e Descontos -->
                     <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                        <flux:input name="desconto" label="Desconto na venda %" value="0" 
+                        <flux:input name="desconto" label="Desconto na venda %" value="{{ old('desconto', 0) }}" 
                             oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
 
-                        <flux:input name="desconto_especifico" label="Desconto específico R$" value="0.00" 
+                        <flux:input name="desconto_especifico" label="Desconto específico R$" value="{{ old('desconto_especifico', '0.00') }}" 
                             oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
 
-                        <flux:input name="guia_recolhimento" label="Guia Recolhimento R$" value="0" 
+                        <flux:input name="guia_recolhimento" label="Guia Recolhimento R$" value="{{ old('guia_recolhimento', 0) }}" 
                             oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
 
-                        <flux:input id="valor_total" name="valor_total" label="Total s/ desconto (R$)" readonly value="0,00" />
+                        <flux:input id="valor_total" name="valor_total" label="Total s/ desconto (R$)" readonly value="{{ old('valor_total', '0,00') }}" />
 
                         <flux:input id="valor_final" label="Valor Final c/ desconto (R$)" readonly value="0.00" 
                             class="font-semibold text-green-700 dark:text-green-400" />
@@ -729,8 +729,13 @@
                 row.innerHTML = `
             <td class="px-3 py-2 border">
                 <input type="hidden" name="itens[${i}][id]" value="${p.id}">
+                <input type="hidden" name="itens[${i}][nome]" value="${p.nome}">
+                <input type="hidden" name="itens[${i}][partNumber]" value="${p.partNumber || ''}">
+                <input type="hidden" name="itens[${i}][fornecedor]" value="${p.fornecedor || ''}">
+                <input type="hidden" name="itens[${i}][cor]" value="${p.cor || ''}">
                 <input type="hidden" name="itens[${i}][liberar_desconto]" value="${p.liberarDesconto}">
                 <input type="hidden" name="itens[${i}][preco_original]" value="${p.precoOriginal}">
+                <input type="hidden" name="itens[${i}][preco_unitario]" value="${valorUnitarioAtual}">
                 <input type="hidden" name="itens[${i}][desconto_produto]" value="${p.descontoProduto}">
                 <input type="hidden" name="itens[${i}][tipo_desconto]" value="${tipoDesconto}">
                 ${p.id}
@@ -935,6 +940,44 @@
                 // Recalcular produtos
                 renderProdutos();
             });
+
+            // Restauração de dados old()
+            const oldItens = @json(old('itens', []));
+            if (oldItens.length > 0) {
+                oldItens.forEach(item => {
+                    produtos.push({
+                        id: item.id,
+                        nome: item.nome,
+                        preco: parseFloat(item.preco_unitario),
+                        precoOriginal: parseFloat(item.preco_original),
+                        quantidade: parseInt(item.quantidade),
+                        fornecedor: item.fornecedor,
+                        cor: item.cor,
+                        partNumber: item.partNumber,
+                        liberarDesconto: parseInt(item.liberar_desconto),
+                        descontoProduto: parseFloat(item.desconto_produto) || 0
+                    });
+                });
+                renderProdutos();
+            }
+
+            const oldVidros = @json(old('vidros', []));
+            if (oldVidros.length > 0) {
+                oldVidros.forEach((vidro, idx) => {
+                    addVidro();
+                    const container = document.querySelector(`#vidros-wrapper > div:nth-child(${idx + 1})`);
+                    if (container) {
+                        container.querySelector('[name*="[descricao]"]').value = vidro.descricao || '';
+                        container.querySelector('[name*="[quantidade]"]').value = vidro.quantidade || 1;
+                        container.querySelector('[name*="[preco_m2]"]').value = vidro.preco_m2 || 0;
+                        container.querySelector('[name*="[altura]"]').value = vidro.altura || 0;
+                        container.querySelector('[name*="[largura]"]').value = vidro.largura || 0;
+                        
+                        // Disparar cálculo
+                        calcularVidro(container.querySelector('[name*="[altura]"]'));
+                    }
+                });
+            }
         });
 
         let produtoSelecionado = null; // variável global para armazenar o produto temporário

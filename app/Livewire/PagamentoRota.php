@@ -30,6 +30,7 @@ class PagamentoRota extends Component
     public $abaterCredito        = false;
     public $valorCreditoAbatido  = 0;
     public $troco                = 0;
+    public $isBlocked            = false;
 
     // ─── Faturamento de Rota ────────────────────────────────────────────────
     /** approved | restrictions | rejected */
@@ -81,11 +82,19 @@ class PagamentoRota extends Component
             'routeBillingApprovals.user',
             'routeBillingAttachments',
         ])->findOrFail($this->orcamentoId);
+
+        $this->isBlocked = $this->orcamento->cliente->bloqueado ?? false;
     }
 
     public function carregarCondicoesPagamento(): void
     {
-        $this->condicoesPagamento = MetodoPagamento::ativos()->ordenado()->get();
+        $query = MetodoPagamento::ativos()->ordenado();
+
+        if ($this->isBlocked) {
+            $query->whereIn('tipo', ['dinheiro', 'pix', 'cartao_credito', 'cartao_debito']);
+        }
+
+        $this->condicoesPagamento = $query->get();
     }
 
     public function carregarSaldoCredito(): void
@@ -257,6 +266,16 @@ class PagamentoRota extends Component
 
         if (empty($formasValidas)) {
             throw new \Exception('Adicione pelo menos uma forma de pagamento válida.');
+        }
+
+        // Proteção para cliente bloqueado
+        if ($this->isBlocked) {
+            foreach ($formasValidas as $forma) {
+                $metodo = MetodoPagamento::find($forma['condicao_id']);
+                if ($metodo && !in_array($metodo->tipo, ['dinheiro', 'pix', 'cartao_credito', 'cartao_debito'])) {
+                    throw new \Exception('Cliente bloqueado: Pagamento restrito a PIX, Dinheiro ou Cartão de Crédito/Débito.');
+                }
+            }
         }
 
         $totalPago = $this->valorPago + $this->valorCreditoAbatido;

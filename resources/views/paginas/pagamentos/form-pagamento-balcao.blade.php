@@ -44,6 +44,20 @@
                             </div>
                         @endif
 
+                        @if ($isBlocked)
+                            <div class="mb-6 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-500 dark:border-amber-600 rounded-xl p-4 animate-pulse">
+                                <div class="flex gap-3 items-center">
+                                    <svg class="w-8 h-8 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                                    </svg>
+                                    <div>
+                                        <h4 class="font-bold text-amber-900 dark:text-amber-200 text-lg">CLIENTE BLOQUEADO</h4>
+                                        <p class="text-amber-800 dark:text-amber-300 font-medium">Pagamento restrito a PIX, Dinheiro ou Cartão de Crédito/Débito.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         <!-- Informações do Orçamento -->
                         <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
                             <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Informações do Orçamento</h3>
@@ -188,13 +202,15 @@
                                                         class="select-condicao w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500">
                                                         <option value="">Selecione...</option>
                                                         @foreach ($condicoesBalcao as $condicao)
-                                                            <option value="{{ $condicao->id }}"
-                                                                data-tipo="{{ $condicao->tipo }}"
-                                                                data-parcelavel="{{ $condicao->permite_parcelamento ? 'true' : 'false' }}"
-                                                                data-max-parcelas="{{ $condicao->max_parcelas ?? 1 }}"
-                                                                {{ ($formaOld['condicao_id'] ?? '') == $condicao->id ? 'selected' : '' }}>
-                                                                {{ $condicao->nome }}
-                                                            </option>
+                                                            @if (!$isBlocked || in_array($condicao->tipo, ['dinheiro', 'pix', 'cartao_credito', 'cartao_debito']))
+                                                                <option value="{{ $condicao->id }}"
+                                                                    data-tipo="{{ $condicao->tipo }}"
+                                                                    data-parcelavel="{{ $condicao->permite_parcelamento ? 'true' : 'false' }}"
+                                                                    data-max-parcelas="{{ $condicao->max_parcelas ?? 1 }}"
+                                                                    {{ ($formaOld['condicao_id'] ?? '') == $condicao->id ? 'selected' : '' }}>
+                                                                    {{ $condicao->nome }}
+                                                                </option>
+                                                            @endif
                                                         @endforeach
                                                     </select>
                                                     @error("formas_pagamento.{$idx}.condicao_id")

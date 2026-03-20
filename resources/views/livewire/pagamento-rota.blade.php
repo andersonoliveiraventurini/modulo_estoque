@@ -37,6 +37,20 @@
                 </div>
             @endif
 
+            @if ($isBlocked)
+                <div class="mb-6 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-500 dark:border-amber-600 rounded-xl p-4 animate-pulse">
+                    <div class="flex gap-3 items-center">
+                        <svg class="w-8 h-8 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                        </svg>
+                        <div>
+                            <h4 class="font-bold text-amber-900 dark:text-amber-200 text-lg">CLIENTE BLOQUEADO</h4>
+                            <p class="text-amber-800 dark:text-amber-300 font-medium text-sm">Pagamento restrito a PIX, Dinheiro ou Cartão de Crédito/Débito.</p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             {{-- Grid de 2 colunas --}}
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 

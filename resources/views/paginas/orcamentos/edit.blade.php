@@ -282,25 +282,25 @@
                                             <tr data-estoque="{{ $item->produto->estoque_atual ?? 'null' }}">
                                                 <input type="hidden"
                                                     name="produtos[{{ $loop->index }}][produto_id]"
-                                                    value="{{ $item->produto->id }}">
+                                                    value="{{ old("produtos.{$loop->index}.produto_id", $item->produto->id) }}">
                                                 <input type="hidden"
                                                     name="produtos[{{ $loop->index }}][valor_unitario]"
                                                     class="valor-unitario-hidden"
-                                                    value="{{ $item->valor_unitario }}">
+                                                    value="{{ old("produtos.{$loop->index}.valor_unitario", $item->valor_unitario) }}">
                                                 <input type="hidden"
                                                     name="produtos[{{ $loop->index }}][part_number]"
-                                                    value="{{ $item->produto->part_number ?? '' }}">
+                                                    value="{{ old("produtos.{$loop->index}.part_number", $item->produto->part_number ?? '') }}">
                                                 <input type="hidden"
                                                     name="produtos[{{ $loop->index }}][quantidade]"
-                                                    value="{{ $item->quantidade }}">
+                                                    value="{{ old("produtos.{$loop->index}.quantidade", $item->quantidade) }}">
                                                 <input type="hidden" name="produtos[{{ $loop->index }}][subtotal]"
-                                                    value="{{ number_format($item->valor_unitario * $item->quantidade, 2, '.', '') }}">
+                                                    value="{{ old("produtos.{$loop->index}.subtotal", number_format($item->valor_unitario * $item->quantidade, 2, '.', '')) }}">
                                                 <input type="hidden"
                                                     name="produtos[{{ $loop->index }}][subtotal_com_desconto]"
-                                                    value="{{ number_format($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0), 2, '.', '') }}">
+                                                    value="{{ old("produtos.{$loop->index}.subtotal_com_desconto", number_format($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0), 2, '.', '')) }}">
                                                 <input type="hidden"
                                                     name="produtos[{{ $loop->index }}][preco_unitario_com_desconto]"
-                                                    value="{{ number_format(($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0)) / $item->quantidade, 2, '.', '') }}">
+                                                    value="{{ old("produtos.{$loop->index}.preco_unitario_com_desconto", number_format(($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0)) / $item->quantidade, 2, '.', '')) }}">
 
                                                 <td class="px-3 py-2 border">{{ $item->produto->id }}</td>
                                                 <td class="px-3 py-2 border">{{ $item->produto->nome }}</td>
@@ -314,7 +314,7 @@
                                                 <td class="px-3 py-2 border">
                                                     <input type="number"
                                                         name="produtos[{{ $loop->index }}][quantidade]"
-                                                        value="{{ $item->quantidade }}" min="1"
+                                                        value="{{ old("produtos.{$loop->index}.quantidade", $item->quantidade) }}" min="1"
                                                         onchange="alterarQuantidadeOriginal({{ $loop->index }}, this.value)"
                                                         class="w-12 border rounded px-2 py-1 text-center"
                                                         style="max-width: 4rem;" />
@@ -356,7 +356,7 @@
                                     <div class="space-y-2 relative border border-neutral-200 dark:border-neutral-700 rounded-lg p-4"
                                         data-vidro-id="{{ $vidro->id }}">
                                         <input type="hidden" name="vidros_existentes[{{ $loop->index }}][id]"
-                                            value="{{ $vidro->id }}" />
+                                            value="{{ old("vidros_existentes.{$loop->index}.id", $vidro->id) }}" />
                                         <div class="overflow-x-auto">
                                             <div class="flex gap-4 min-w-max">
                                                 <div class="flex-1">
@@ -364,7 +364,7 @@
                                                         class="block text-sm font-medium text-gray-700">Descrição</label>
                                                     <input type="text"
                                                         name="vidros_existentes[{{ $loop->index }}][descricao]"
-                                                        value="{{ $vidro->descricao }}"
+                                                        value="{{ old("vidros_existentes.{$loop->index}.descricao", $vidro->descricao) }}"
                                                         placeholder="Ex: Vidro incolor 8mm"
                                                         class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                                                 </div>
@@ -373,7 +373,7 @@
                                                         class="block text-sm font-medium text-gray-700">Quantidade</label>
                                                     <input type="number"
                                                         name="vidros_existentes[{{ $loop->index }}][quantidade]"
-                                                        value="{{ $vidro->quantidade }}"
+                                                        value="{{ old("vidros_existentes.{$loop->index}.quantidade", $vidro->quantidade) }}"
                                                         oninput="calcularVidroExistente(this)"
                                                         class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                                                 </div>
@@ -382,7 +382,7 @@
                                                         m²</label>
                                                     <input type="number" step="0.01"
                                                         name="vidros_existentes[{{ $loop->index }}][preco_m2]"
-                                                        value="{{ $vidro->preco_metro_quadrado }}"
+                                                        value="{{ old("vidros_existentes.{$loop->index}.preco_m2", $vidro->preco_metro_quadrado) }}"
                                                         oninput="calcularVidroExistente(this)"
                                                         class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                                                 </div>
@@ -392,7 +392,7 @@
                                                     </label>
                                                     <input type="number"
                                                         name="vidros_existentes[{{ $loop->index }}][altura]"
-                                                        value="{{ $vidro->altura }}"
+                                                        value="{{ old("vidros_existentes.{$loop->index}.altura", $vidro->altura) }}"
                                                         oninput="calcularVidroExistente(this)"
                                                         class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                                                 </div>
@@ -454,18 +454,18 @@
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <x-input type="text" name="obra" placeholder="Digite o nome da obra"
-                                label="Nome da Obra" required :value="$orcamento->obra" />
+                                label="Nome da Obra" required :value="old('obra', $orcamento->obra)" />
                             <x-select name="complemento" label="Complemento de outro orçamento?" required>
-                                <option value="Não">Não</option>
-                                <option value="Sim">Sim</option>
+                                <option value="Não" {{ old('complemento', $orcamento->complemento) == 'Não' ? 'selected' : '' }}>Não</option>
+                                <option value="Sim" {{ old('complemento', $orcamento->complemento) == 'Sim' ? 'selected' : '' }}>Sim</option>
                             </x-select>
                             <x-input type="text" name="prazo_entrega" placeholder="Ex: 15 dias úteis"
-                                label="Prazo de Entrega" :value="$orcamento->prazo_entrega" />
+                                label="Prazo de Entrega" :value="old('prazo_entrega', $orcamento->prazo_entrega)" />
                             <x-select name="frete" label="Tipo de Frete">
                                 <option value="">Selecione...</option>
-                                <option value="cif" @selected($orcamento->frete == 'cif')>CIF - entrega por conta do
+                                <option value="cif" {{ old('frete', $orcamento->frete) == 'cif' ? 'selected' : '' }}>CIF - entrega por conta do
                                     fornecedor</option>
-                                <option value="fob" @selected($orcamento->frete == 'fob')>FOB - entrega por conta do cliente
+                                <option value="fob" {{ old('frete', $orcamento->frete) == 'fob' ? 'selected' : '' }}>FOB - entrega por conta do cliente
                                 </option>
                             </x-select>
                             <x-select name="enderecos_cadastrados" label="Endereços de cadastrados do cliente">
@@ -500,17 +500,17 @@
                         <div id="endereco-entrega-wrapper">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                                 <x-input id="entrega_cidade" name="entrega_cidade" label="Cidade"
-                                    readonly="readonly" placeholder="Cidade" :value="$orcamento->endereco->cidade ?? ''" />
+                                    readonly="readonly" placeholder="Cidade" :value="old('entrega_cidade', $orcamento->endereco->cidade ?? '')" />
                                 <x-input id="entrega_estado" name="entrega_estado" label="Estado"
-                                    placeholder="Estado" readonly="readonly" :value="$orcamento->endereco->estado ?? ''" />
+                                    placeholder="Estado" readonly="readonly" :value="old('entrega_estado', $orcamento->endereco->estado ?? '')" />
                                 <x-input id="entrega_bairro" name="entrega_bairro" label="Bairro"
-                                    placeholder="Bairro" readonly="readonly" :value="$orcamento->endereco->bairro ?? ''" />
+                                    placeholder="Bairro" readonly="readonly" :value="old('entrega_bairro', $orcamento->endereco->bairro ?? '')" />
                                 <x-input id="entrega_logradouro" name="entrega_logradouro" label="Logradouro"
-                                    placeholder="Rua, número, complemento" readonly="readonly" :value="$orcamento->endereco->logradouro ?? ''" />
+                                    placeholder="Rua, número, complemento" readonly="readonly" :value="old('entrega_logradouro', $orcamento->endereco->logradouro ?? '')" />
                                 <x-input id="entrega_numero" name="entrega_numero" label="Número" placeholder="N°"
-                                    :value="$orcamento->endereco->numero ?? ''" />
+                                    :value="old('entrega_numero', $orcamento->endereco->numero ?? '')" />
                                 <x-input id="entrega_compl" name="entrega_compl" label="Complemento"
-                                    placeholder="Complemento - Apto, Bloco, etc." :value="$orcamento->endereco->complemento ?? ''" />
+                                    placeholder="Complemento - Apto, Bloco, etc." :value="old('entrega_compl', $orcamento->endereco->complemento ?? '')" />
                             </div>
                         </div>
                     </div>
@@ -548,49 +548,49 @@
                         <flux:select name="condicao_id" id="condicao_id" label="Condição de pagamento" required>
                             <option value="">Selecione...</option>
                             @foreach ($condicao as $c)
-                                <option value="{{ $c->id }}" @selected($orcamento->condicao_id == $c->id)>
+                                <option value="{{ $c->id }}" {{ old('condicao_id', $orcamento->condicao_id) == $c->id ? 'selected' : '' }}>
                                     {{ $c->nome }}</option>
                             @endforeach
                         </flux:select>
 
                         <flux:input name="outros_meios_pagamento" id="outros_meios_pagamento" label="Outros meios pagamento" 
-                            disabled placeholder="Ex: Boleto 28/56/84..." :value="$orcamento->outros_meios_pagamento" />
+                            disabled placeholder="Ex: Boleto 28/56/84..." :value="old('outros_meios_pagamento', $orcamento->outros_meios_pagamento)" />
 
                         <flux:select name="tipo_documento" label="Nota fiscal">
                             <option value="">Selecione...</option>
-                            <option value="Nota fiscal" @selected($orcamento->tipo_documento == 'Nota fiscal')>Nota fiscal</option>
-                            <option value="Cupom Fiscal" @selected($orcamento->tipo_documento == 'Cupom Fiscal')>Cupom Fiscal</option>
+                            <option value="Nota fiscal" {{ old('tipo_documento', $orcamento->tipo_documento) == 'Nota fiscal' ? 'selected' : '' }}>Nota fiscal</option>
+                            <option value="Cupom Fiscal" {{ old('tipo_documento', $orcamento->tipo_documento) == 'Cupom Fiscal' ? 'selected' : '' }}>Cupom Fiscal</option>
                         </flux:select>
 
                         <flux:select name="homologacao" label="Homologação" required>
-                            <option value="0" @selected($orcamento->homologacao == 0)>Não</option>
-                            <option value="1" @selected($orcamento->homologacao == 1)>Sim</option>
+                            <option value="0" {{ old('homologacao', $orcamento->homologacao) == 0 ? 'selected' : '' }}>Não</option>
+                            <option value="1" {{ old('homologacao', $orcamento->homologacao) == 1 ? 'selected' : '' }}>Sim</option>
                         </flux:select>
 
                         <flux:select name="venda_triangular" id="venda_triangular" label="Venda triangular?" required>
-                            <option value="0" @selected($orcamento->venda_triangular == 0)>Não</option>
-                            <option value="1" @selected($orcamento->venda_triangular == 1)>Sim</option>
+                            <option value="0" {{ old('venda_triangular', $orcamento->venda_triangular) == 0 ? 'selected' : '' }}>Não</option>
+                            <option value="1" {{ old('venda_triangular', $orcamento->venda_triangular) == 1 ? 'selected' : '' }}>Sim</option>
                         </flux:select>
 
                         <flux:input name="cnpj_triangular" id="cnpj_triangular" label="CNPJ venda triangular" 
                             disabled size="18" maxlength="18" onkeypress="mascara(this, '##.###.###/####-##')" 
-                            placeholder="00.000.000/0000-00" :value="$orcamento->cnpj_triangular" />
+                            placeholder="00.000.000/0000-00" :value="old('cnpj_triangular', $orcamento->cnpj_triangular)" />
                     </div>
 
                     <!-- Seção de Valores e Descontos -->
                     <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
                         <flux:input name="desconto" label="Desconto na vendedor %" 
-                            :value="$desconto_percentual ?? old('desconto')" 
+                            :value="old('desconto', $desconto_percentual ?? 0)" 
                             placeholder="0" 
                             oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
 
                         <flux:input name="desconto_especifico" label="Desconto específico R$" 
-                            :value="$desconto_especifico ?? old('desconto_especifico')" 
+                            :value="old('desconto_especifico', $desconto_especifico ?? '0.00')" 
                             placeholder="0.00" 
                             oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
 
                         <flux:input name="guia_recolhimento" label="Guia Recolhimento" 
-                            :value="$orcamento->guia_recolhimento ?? 0" 
+                            :value="old('guia_recolhimento', $orcamento->guia_recolhimento ?? 0)" 
                             oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
 
                         <flux:input id="valor_total" name="valor_total" label="Total s/ desconto (R$)" 
@@ -774,6 +774,47 @@
     window.vidroIndex = 0;
     window.produtos = [];
     window.produtoSelecionado = null;
+
+    // Restauração de dados old() para novos itens
+    const oldItens = @json(old('itens', []));
+    if (oldItens.length > 0) {
+        oldItens.forEach(item => {
+            window.produtos.push({
+                id: item.id,
+                nome: item.nome,
+                preco: parseFloat(item.preco_unitario),
+                precoOriginal: parseFloat(item.preco_original),
+                quantidade: parseInt(item.quantidade),
+                fornecedor: item.fornecedor,
+                cor: item.cor,
+                partNumber: item.partNumber,
+                liberarDesconto: parseInt(item.liberar_desconto),
+                descontoProduto: parseFloat(item.desconto_produto) || 0,
+                estoqueDisponivel: null
+            });
+        });
+        setTimeout(renderProdutosNovos, 100);
+    }
+
+    const oldVidros = @json(old('vidros', []));
+    if (oldVidros.length > 0) {
+        document.addEventListener('DOMContentLoaded', () => {
+            oldVidros.forEach((vidro, idx) => {
+                addVidro();
+                const container = document.querySelector(`#vidros-wrapper > div:nth-child(${idx + 1 + @json(count($orcamento->vidros ?? []))})`);
+                if (container) {
+                    container.querySelector('[name*="[descricao]"]').value = vidro.descricao || '';
+                    container.querySelector('[name*="[quantidade]"]').value = vidro.quantidade || 1;
+                    container.querySelector('[name*="[preco_m2]"]').value = vidro.preco_m2 || 0;
+                    container.querySelector('[name*="[altura]"]').value = vidro.altura || 0;
+                    container.querySelector('[name*="[largura]"]').value = vidro.largura || 0;
+                    
+                    // Disparar cálculo
+                    calcularVidro(container.querySelector('[name*="[altura]"]'));
+                }
+            });
+        });
+    }
 
     // ==================== MODAL ====================
     window.selecionarProdutoComQuantidade = function(id, nome, preco, fornecedor, cor, partNumber, liberarDesconto,
@@ -1021,6 +1062,10 @@
             row.innerHTML = `
             <td class="px-3 py-2 border">
                 <input type="hidden" name="itens[${i}][id]" value="${p.id}">
+                <input type="hidden" name="itens[${i}][nome]" value="${p.nome}">
+                <input type="hidden" name="itens[${i}][partNumber]" value="${p.partNumber || ''}">
+                <input type="hidden" name="itens[${i}][fornecedor]" value="${p.fornecedor || ''}">
+                <input type="hidden" name="itens[${i}][cor]" value="${p.cor || ''}">
                 <input type="hidden" name="itens[${i}][liberar_desconto]" value="${p.liberarDesconto}">
                 <input type="hidden" name="itens[${i}][preco_original]" value="${p.precoOriginal}">
                 <input type="hidden" name="itens[${i}][desconto_produto]" value="${p.descontoProduto}">
