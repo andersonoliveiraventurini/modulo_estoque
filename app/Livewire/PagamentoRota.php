@@ -40,6 +40,8 @@ class PagamentoRota extends Component
     public $valorJaPago          = 0;
     public $pagamentosExistentes = [];
     public $troco                = 0;
+    public $pagamentoCreditoId   = null;
+    public $valorCreditoOriginal = 0;
     public $isBlocked            = false;
 
     // ─── Faturamento de Rota ────────────────────────────────────────────────
@@ -102,10 +104,11 @@ class PagamentoRota extends Component
         foreach ($pagamentos as $pag) {
             $pag->load('metodos.metodoPagamento', 'routeBillingAttachments');
             foreach ($pag->metodos as $metodo) {
-                // Se for abatimento de crédito, popula as propriedades de crédito em vez do grid de formas
                 if ($metodo->usa_credito || ($metodo->metodoPagamento->tipo ?? '') === 'credito_cliente') {
                     $this->abaterCredito = true;
                     $this->abaterValor = (float) $metodo->valor;
+                    $this->valorCreditoOriginal = (float) $metodo->valor;
+                    $this->pagamentoCreditoId = $pag->id;
                     continue;
                 }
 
@@ -141,7 +144,9 @@ class PagamentoRota extends Component
     public function carregarSaldoCredito(): void
     {
         if ($this->orcamento && $this->orcamento->cliente_id) {
-            $this->saldoDisponivel = $this->creditoService->getSaldoDisponivel($this->orcamento->cliente_id);
+            $saldoNoBanco = $this->creditoService->getSaldoDisponivel($this->orcamento->cliente_id);
+            // O saldo total disponível para este faturamento é o que está no banco + o que já foi abatido neste pedido (reservado)
+            $this->saldoDisponivel = (float) $saldoNoBanco + (float) $this->valorCreditoOriginal;
         }
     }
 
@@ -461,30 +466,39 @@ class PagamentoRota extends Component
                     $this->processarUploadComprovanteItem($index, $novoPagamento);
                 }
 
-                // 5. Processa abatimento de crédito se marcado e não registrado ainda
-                if ($this->abaterCredito && $this->valorCreditoAbatido > 0) {
-                    $jaAbatido = $this->orcamento->pagamentos()->ativos()->get()->contains(fn($p) => $p->utilizouCreditos());
-                    if (!$jaAbatido) {
-                         $metodoCredito = MetodoPagamento::where('tipo', 'credito_cliente')->first();
-                         if ($metodoCredito) {
-                             $dadosCredito = [
-                                 'orcamento_id'          => $this->orcamentoId,
-                                 'condicao_id'           => $this->orcamento->condicao_id, // Condição base do orçamento
-                                 'condicao_pagamento_id' => $this->orcamento->condicao_id,
-                                 'tipo_documento'        => $this->orcamento->precisa_nota_fiscal ? 'nota_fiscal' : 'cupom_fiscal',
-                                 'metodos_pagamento'     => [
-                                     [
-                                         'metodo_id'  => $metodoCredito->id,
-                                         'valor'      => (float) $this->valorCreditoAbatido,
-                                         'usa_credito' => true,
-                                         'parcelas'   => 1,
-                                     ]
-                                 ],
-                                 'permitir_parcial'   => true,
-                                 'finalizar_registro' => false,
-                             ];
-                             $this->pagamentoService->salvarPagamentoVenda($dadosCredito);
-                         }
+                // 5. Processa abatimento de crédito (novo ou alterado)
+                $foiAlterado = ($this->abaterValor != $this->valorCreditoOriginal) || (!$this->abaterCredito && $this->pagamentoCreditoId);
+
+                if ($foiAlterado) {
+                    // Se já existia um pagamento de crédito, estorna para limpar o saldo antes de (re)registrar
+                    if (!empty($this->pagamentoCreditoId)) {
+                        $this->pagamentoService->estornarPagamento($this->pagamentoCreditoId, 'Ajuste de abatimento na rota', false);
+                        $this->pagamentoCreditoId = null;
+                        $this->valorCreditoOriginal = 0;
+                    }
+
+                    // Se continua marcado para abater com valor positivo, registra o novo
+                    if ($this->abaterCredito && $this->valorCreditoAbatido > 0) {
+                        $metodoCredito = MetodoPagamento::where('tipo', 'credito_cliente')->first();
+                        if ($metodoCredito) {
+                            $dadosCredito = [
+                                'orcamento_id'          => $this->orcamentoId,
+                                'condicao_id'           => $this->orcamento->condicao_id,
+                                'condicao_pagamento_id' => $this->orcamento->condicao_id,
+                                'tipo_documento'        => $this->orcamento->precisa_nota_fiscal ? 'nota_fiscal' : 'cupom_fiscal',
+                                'metodos_pagamento'     => [
+                                    [
+                                        'metodo_id'  => $metodoCredito->id,
+                                        'valor'      => (float) $this->valorCreditoAbatido,
+                                        'usa_credito' => true,
+                                        'parcelas'   => 1,
+                                    ]
+                                ],
+                                'permitir_parcial'   => true,
+                                'finalizar_registro' => false,
+                            ];
+                            $this->pagamentoService->salvarPagamentoVenda($dadosCredito);
+                        }
                     }
                 }
             });
