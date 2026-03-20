@@ -20,7 +20,7 @@ class PagamentoPdfService
             $pagamento->loadMissing([
                 'formas.condicaoPagamento',
                 'condicaoPagamento',
-                'comprovantes.pagamentoForma.condicaoPagamento',
+                'routeBillingAttachments',
                 'orcamento.cliente',
                 'orcamento.vendedor',
                 'orcamento.itens.produto',

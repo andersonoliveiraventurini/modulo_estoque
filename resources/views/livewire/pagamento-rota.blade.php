@@ -190,11 +190,28 @@
                                         <h4 class="font-semibold text-blue-900 dark:text-blue-200">Crédito Disponível: R$ {{ number_format($saldoDisponivel, 2, ',', '.') }}</h4>
                                     </div>
                                 </div>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" wire:model.live="abaterCredito" class="sr-only peer" id="abaterCreditoRota">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                                    <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">Abater</span>
-                                </label>
+                                <div class="flex flex-col items-end gap-2">
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" wire:model.live="abaterCredito" class="sr-only peer" id="abaterCreditoRota">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                        <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">Abater</span>
+                                    </label>
+                                    @if($abaterCredito)
+                                        <div class="mt-2 flex flex-col items-end gap-1 animate-fade-in bg-white dark:bg-gray-900/50 p-2 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-bold text-blue-700 dark:text-blue-400">Valor a Abater: R$</span>
+                                                <input type="number" step="0.01" wire:model.live.debounce.500ms="abaterValor" 
+                                                    class="w-32 px-3 py-1.5 text-lg font-black text-right border-2 border-blue-500 dark:border-blue-600 bg-white dark:bg-gray-900 text-blue-900 dark:text-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/40 focus:border-blue-600 transition-all shadow-sm"
+                                                    placeholder="0,00">
+                                            </div>
+                                            @if($abaterValor > 0)
+                                                <div class="text-[10px] font-medium text-blue-600 dark:text-blue-400 mt-1">
+                                                    Restará R$ {{ number_format($saldoDisponivel - $abaterValor, 2, ',', '.') }} de crédito para o cliente.
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     @endif

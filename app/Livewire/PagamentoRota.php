@@ -35,6 +35,7 @@ class PagamentoRota extends Component
     public $valorComDesconto     = 0;
     public $saldoDisponivel      = 0;
     public $abaterCredito        = false;
+    public $abaterValor          = 0;
     public $valorCreditoAbatido  = 0;
     public $valorJaPago          = 0;
     public $pagamentosExistentes = [];
@@ -99,8 +100,15 @@ class PagamentoRota extends Component
         $pagamentos = $this->orcamento->pagamentos()->ativos()->get();
         
         foreach ($pagamentos as $pag) {
-            $pag->load('metodos', 'routeBillingAttachments');
+            $pag->load('metodos.metodoPagamento', 'routeBillingAttachments');
             foreach ($pag->metodos as $metodo) {
+                // Se for abatimento de crédito, popula as propriedades de crédito em vez do grid de formas
+                if ($metodo->usa_credito || ($metodo->metodoPagamento->tipo ?? '') === 'credito_cliente') {
+                    $this->abaterCredito = true;
+                    $this->abaterValor = (float) $metodo->valor;
+                    continue;
+                }
+
                 $attachment = $pag->routeBillingAttachments->first();
                 $this->formasPagamento[] = [
                     'pagamento_id' => $pag->id,
@@ -203,6 +211,17 @@ class PagamentoRota extends Component
         }
 
         if ($propertyName === 'abaterCredito') {
+            if ($this->abaterCredito) {
+                $necessario = max(0, $this->valorComDesconto - $this->valorPago);
+                $this->abaterValor = min($this->saldoDisponivel, $necessario);
+            } else {
+                $this->abaterValor = 0;
+            }
+            $this->calcularValores();
+        }
+
+        if ($propertyName === 'abaterValor') {
+            $this->abaterValor = min((float) $this->abaterValor, (float) $this->saldoDisponivel);
             $this->calcularValores();
         }
     }
@@ -217,7 +236,7 @@ class PagamentoRota extends Component
         // valorJaPago deve ser zero pois eles já estão no grid e somando em valorPago
         $this->valorJaPago = 0; 
 
-        $this->valorCreditoAbatido = $this->abaterCredito ? min($this->saldoDisponivel, $this->valorComDesconto - $this->valorPago) : 0;
+        $this->valorCreditoAbatido = $this->abaterCredito ? (float) $this->abaterValor : 0;
         
         $totalSessao = $this->valorPago + $this->valorCreditoAbatido;
         $this->troco = max(0, $totalSessao - $this->valorComDesconto);
@@ -393,7 +412,7 @@ class PagamentoRota extends Component
 
         try {
             // 1. Validação básica
-            if ($this->valorPago <= 0) {
+            if ($this->valorPago <= 0 && (!$this->abaterCredito || $this->valorCreditoAbatido <= 0)) {
                 $this->addError('formasPagamento', 'Informe pelo menos um valor de pagamento.');
                 return;
             }
@@ -411,7 +430,7 @@ class PagamentoRota extends Component
                         $mudou = ($metodoBase->metodo_pagamento_id != $forma['condicao_id']) || ($metodoBase->valor != $forma['valor']) || !empty($forma['comprovante']);
                         
                         if ($mudou) {
-                            $this->pagamentoService->estornarPagamento($pagamentoExistente->id, 'Edição via faturamento de rota');
+                            $this->pagamentoService->estornarPagamento($pagamentoExistente->id, 'Edição via faturamento de rota', false);
                             // Após estornar, tratamos como novo para o service criar o registro atualizado
                         } else {
                             // Não mudou nada, pula para o próximo
@@ -440,6 +459,33 @@ class PagamentoRota extends Component
 
                     // 4. Se houver novo comprovante (ou se já existia um que precisamos re-vincular)
                     $this->processarUploadComprovanteItem($index, $novoPagamento);
+                }
+
+                // 5. Processa abatimento de crédito se marcado e não registrado ainda
+                if ($this->abaterCredito && $this->valorCreditoAbatido > 0) {
+                    $jaAbatido = $this->orcamento->pagamentos()->ativos()->get()->contains(fn($p) => $p->utilizouCreditos());
+                    if (!$jaAbatido) {
+                         $metodoCredito = MetodoPagamento::where('tipo', 'credito_cliente')->first();
+                         if ($metodoCredito) {
+                             $dadosCredito = [
+                                 'orcamento_id'          => $this->orcamentoId,
+                                 'condicao_id'           => $this->orcamento->condicao_id, // Condição base do orçamento
+                                 'condicao_pagamento_id' => $this->orcamento->condicao_id,
+                                 'tipo_documento'        => $this->orcamento->precisa_nota_fiscal ? 'nota_fiscal' : 'cupom_fiscal',
+                                 'metodos_pagamento'     => [
+                                     [
+                                         'metodo_id'  => $metodoCredito->id,
+                                         'valor'      => (float) $this->valorCreditoAbatido,
+                                         'usa_credito' => true,
+                                         'parcelas'   => 1,
+                                     ]
+                                 ],
+                                 'permitir_parcial'   => true,
+                                 'finalizar_registro' => false,
+                             ];
+                             $this->pagamentoService->salvarPagamentoVenda($dadosCredito);
+                         }
+                    }
                 }
             });
 
@@ -499,6 +545,15 @@ class PagamentoRota extends Component
         
         // 1. Se houver um novo arquivo fazendo upload
         if ($comprovante instanceof UploadedFile) {
+            // Se já existia um pagamento_id nesta linha, deleta o anexo antigo para não duplicar
+            if (!empty($forma['pagamento_id'])) {
+                $antigoAnexo = RouteBillingAttachment::where('pagamento_id', $forma['pagamento_id'])->first();
+                if ($antigoAnexo) {
+                    Storage::disk('public')->delete($antigoAnexo->file_path);
+                    $antigoAnexo->delete();
+                }
+            }
+
             $metodo = MetodoPagamento::find($forma['condicao_id']);
             $nomeMetodo = $metodo ? $metodo->nome : 'Método não identificado';
             
@@ -519,9 +574,15 @@ class PagamentoRota extends Component
         // 2. Se não houver novo arquivo, mas havia um comprovante_url (re-vincular o anexo anterior ao novo pagamento)
         elseif (!empty($forma['comprovante_url']) && !empty($forma['pagamento_id'])) {
              // O anexo anterior estava em route_billing_attachments vinculado ao pagamento_id antigo
-             // Como estornamos o antigo e criamos um novo, precisamos atualizar o pagamento_id no anexo
+             // Como estonamos o antigo e criamos um novo, precisamos atualizar o pagamento_id no anexo e as notas (valor)
+             $metodo = MetodoPagamento::find($forma['condicao_id']);
+             $nomeMetodo = $metodo ? $metodo->nome : 'Método não identificado';
+
              RouteBillingAttachment::where('pagamento_id', $forma['pagamento_id'])
-                ->update(['pagamento_id' => $pagamento->id]);
+                ->update([
+                    'pagamento_id' => $pagamento->id,
+                    'notes'        => "Comprovante de pagamento ({$nomeMetodo}): R$ " . number_format($forma['valor'], 2, ',', '.'),
+                ]);
         }
     }
 

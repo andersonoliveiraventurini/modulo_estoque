@@ -528,11 +528,16 @@ class PagamentoService
         ]);
     }
 
-    public function estornarPagamento($pagamentoId, $motivo)
+    public function estornarPagamento($pagamentoId, $motivo, bool $gerarDevolucao = true)
     {
+        // Se for um objeto de modelo, extrai o ID
+        if (is_object($pagamentoId) && method_exists($pagamentoId, 'getKey')) {
+            $pagamentoId = $pagamentoId->getKey();
+        }
+
         \Illuminate\Support\Facades\Log::info("Iniciando estorno de pagamento", [
             'pagamento_id' => $pagamentoId,
-            'motivo' => $motivo,
+            'motivo' => (string) $motivo,
             'user_id' => \Illuminate\Support\Facades\Auth::id()
         ]);
 
@@ -541,7 +546,7 @@ class PagamentoService
         }
 
         try {
-            return DB::transaction(function () use ($pagamentoId, $motivo) {
+            return DB::transaction(function () use ($pagamentoId, $motivo, $gerarDevolucao) {
                 $pagamento = Pagamento::with(['metodos', 'orcamento', 'pedido'])->findOrFail($pagamentoId);
 
                 if ($pagamento->estornado) {
@@ -576,7 +581,7 @@ class PagamentoService
                     ->where('usa_credito', false)
                     ->sum('valor');
 
-                if ($valorDevolucao > 0) {
+                if ($gerarDevolucao && $valorDevolucao > 0) {
                     $registro = $pagamento->orcamento ?? $pagamento->pedido;
                     
                     $creditoDevolucao = $this->creditoService->gerarCreditoDevolucao(
