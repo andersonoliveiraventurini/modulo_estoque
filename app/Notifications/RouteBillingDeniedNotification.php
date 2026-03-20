@@ -20,7 +20,8 @@ class RouteBillingDeniedNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        // Desabilitado temporariamente pois a tabela notifications não existe no banco
+        return [];
     }
 
     public function toDatabase(object $notifiable): array

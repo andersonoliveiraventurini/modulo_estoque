@@ -41,6 +41,17 @@ class PagamentoForma extends Model
         return $this->belongsTo(CondicoesPagamento::class, 'condicao_pagamento_id');
     }
 
+    /** Alias para compatibilidade com o novo PagamentoService */
+    public function metodoPagamento()
+    {
+        return $this->condicaoPagamento();
+    }
+
+    public function getMetodoPagamentoIdAttribute()
+    {
+        return $this->condicao_pagamento_id;
+    }
+
     public function comprovantes()
     {
         return $this->hasMany(PagamentoComprovante::class, 'pagamento_forma_id');

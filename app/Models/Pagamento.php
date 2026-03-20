@@ -85,13 +85,13 @@ class Pagamento extends Model
      */
     public function metodos()
     {
-        return $this->hasMany(PagamentoMetodo::class);
+        return $this->hasMany(PagamentoForma::class);
     }
 
-    /** Comprovantes de upload vinculados ao pagamento ou a uma forma específica */
-    public function comprovantes()
+    /** Comprovantes específicos do faturamento de rota vinculados a este pagamento */
+    public function routeBillingAttachments()
     {
-        return $this->hasMany(PagamentoComprovante::class);
+        return $this->hasMany(RouteBillingAttachment::class);
     }
 
     public function movimentacoesCredito()

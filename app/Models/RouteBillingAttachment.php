@@ -12,6 +12,7 @@ class RouteBillingAttachment extends Model
 
     protected $fillable = [
         'orcamento_id',
+        'pagamento_id',
         'user_id',
         'file_path',
         'file_type',

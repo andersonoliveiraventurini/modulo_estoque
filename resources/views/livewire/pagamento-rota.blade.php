@@ -7,7 +7,9 @@
             <div class="mb-6">
                 <h2 class="text-xl font-semibold flex items-center gap-2 mb-2 text-gray-900 dark:text-gray-100">
                     <x-heroicon-o-truck class="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-                    Faturamento de Rota — Orçamento #{{ $orcamento->id }}
+                    Faturamento de Rota — <a href="{{ route('orcamentos.show', $orcamento->id) }}"
+                              class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">Orçamento
+                #{{ $orcamento->id }}</a>
                 </h2>
                 <p class="text-sm text-zinc-600 dark:text-zinc-400">
                     Registre o pagamento, revise os comprovantes e emita a decisão do financeiro.
@@ -34,6 +36,12 @@
             @if (session()->has('success'))
                 <div class="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 text-sm text-green-700 dark:text-green-300">
                     {{ session('success') }}
+                </div>
+            @endif
+
+            @if (session()->has('error'))
+                <div class="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-sm text-red-700 dark:text-red-300">
+                    {{ session('error') }}
                 </div>
             @endif
 
@@ -126,7 +134,10 @@
                                             <a href="{{ Storage::url($att->file_path) }}" target="_blank" class="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
                                                 Comprovante #{{ $att->id }}
                                             </a>
-                                            <p class="text-xs text-zinc-500">Enviado por {{ $att->user->name ?? '—' }}</p>
+                                            @if($att->notes)
+                                                <p class="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5 italic">{{ $att->notes }}</p>
+                                            @endif
+                                            <p class="text-[10px] text-zinc-400 dark:text-zinc-500">Enviado por {{ $att->user->name ?? '—' }}</p>
                                         </div>
                                     </div>
                                     <span class="px-2 py-0.5 rounded-full text-xs font-medium
@@ -150,7 +161,7 @@
                                 @foreach($orcamento->routeBillingApprovals->sortByDesc('created_at') as $app)
                                     <div class="flex items-start gap-2 text-xs">
                                         <span class="px-1.5 py-0.5 rounded font-bold
-                                            {{ $app->status === 'approved' ? 'bg-green-100 text-green-800' : ($app->status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800') }}">
+                                            {{ $app->status === 'approved' ? 'bg-green-100 text-green-800' : ($app->status === 'restrictions' ? 'bg-amber-100 text-amber-800' : ($app->status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800')) }}">
                                             {{ match($app->status) { 'approved' => 'Aprovado', 'restrictions' => 'Restrição', 'rejected' => 'Negado', default => $app->status } }}
                                         </span>
                                         <div>
@@ -198,11 +209,19 @@
                                 Adicionar
                             </button>
                         </div>
-                        <div class="space-y-3">
+                        <div class="space-y-4">
                             @foreach ($formasPagamento as $index => $forma)
-                                <div class="ring-1 ring-gray-200 dark:ring-gray-700 rounded-lg overflow-hidden" wire:key="forma-rota-{{ $index }}">
-                                    <div class="bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Forma #{{ $index + 1 }}</span>
+                                <div class="ring-1 {{ !empty($forma['pagamento_id']) ? 'ring-emerald-200 dark:ring-emerald-800/30 bg-emerald-50/20' : 'ring-gray-200 dark:ring-gray-700' }} rounded-lg overflow-hidden" wire:key="forma-rota-{{ $index }}">
+                                    <div class="{{ !empty($forma['pagamento_id']) ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-gray-50 dark:bg-gray-800' }} px-4 py-2 border-b {{ !empty($forma['pagamento_id']) ? 'border-emerald-100 dark:border-emerald-800/30' : 'border-gray-200 dark:border-gray-700' }} flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Forma #{{ $index + 1 }}</span>
+                                            @if(!empty($forma['pagamento_id']))
+                                                <span class="flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
+                                                    <x-heroicon-s-check-badge class="w-2.5 h-2.5" />
+                                                    Registrado
+                                                </span>
+                                            @endif
+                                        </div>
                                         @if (count($formasPagamento) > 1)
                                             <button type="button" wire:click="removerFormaPagamento({{ $index }})"
                                                     class="text-red-500 hover:text-red-700 text-sm flex items-center gap-1">
@@ -228,6 +247,49 @@
                                                        class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100"
                                                        step="0.01" min="0" placeholder="0,00">
                                             </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Comprovante (opcional)</label>
+                                            
+                                            @if(!empty($forma['comprovante_url']))
+                                                <div class="flex items-center justify-between bg-gray-50 dark:bg-zinc-800 rounded-md p-2 mb-2 border border-dashed border-gray-300 dark:border-gray-700">
+                                                    <div class="flex items-center gap-2">
+                                                        <x-heroicon-o-paper-clip class="w-4 h-4 text-emerald-500" />
+                                                        <span class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-[200px]" title="{{ $forma['comprovante_nome'] }}">
+                                                            {{ $forma['comprovante_nome'] }}
+                                                        </span>
+                                                    </div>
+                                                    <a href="{{ $forma['comprovante_url'] }}" target="_blank" class="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold hover:underline">
+                                                        VER ARQUIVO
+                                                    </a>
+                                                </div>
+                                            @endif
+
+                                            <div class="flex items-center gap-2">
+                                                <input type="file" wire:model="formasPagamento.{{ $index }}.comprovante"
+                                                       class="block w-full text-xs text-gray-500 dark:text-gray-400
+                                                               file:mr-4 file:py-1 file:px-3
+                                                               file:rounded-full file:border-0
+                                                               file:text-xs file:font-semibold
+                                                               file:bg-indigo-50 file:text-indigo-700
+                                                               hover:file:bg-indigo-100 dark:file:bg-indigo-900/30 dark:file:text-indigo-400">
+                                                
+                                                @if(isset($formasPagamento[$index]['comprovante']) && $formasPagamento[$index]['comprovante'] instanceof \Illuminate\Http\UploadedFile)
+                                                    <span class="text-[10px] text-green-600 font-medium truncate max-w-[150px]" title="{{ $formasPagamento[$index]['comprovante']->getClientOriginalName() }}">
+                                                        <x-heroicon-s-check-circle class="w-3 h-3 inline mr-1" />
+                                                        {{ $formasPagamento[$index]['comprovante']->getClientOriginalName() }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <div wire:loading wire:target="formasPagamento.{{ $index }}.comprovante">
+                                                <svg class="animate-spin h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                            </div>
+                                            @error("formasPagamento.{$index}.comprovante")
+                                                <span class="text-xs text-red-500 mt-1">{{ $message }}</span>
+                                            @enderror
                                         </div>
                                     </div>
                                 </div>
@@ -259,14 +321,26 @@
                         </div>
                         <div class="bg-white dark:bg-zinc-900 p-4 space-y-2 text-sm">
                             <div class="flex justify-between py-2">
-                                <span class="text-gray-700 dark:text-gray-300">Valor a Pagar:</span>
+                                <span class="text-gray-700 dark:text-gray-300">Valor Total:</span>
                                 <span class="font-bold text-indigo-600 dark:text-indigo-400">
                                     R$ {{ number_format($valorComDesconto, 2, ',', '.') }}
                                 </span>
                             </div>
+
+                            @if($valorJaPago > 0)
+                                <div class="flex justify-between py-2 border-t border-gray-100 dark:border-gray-800">
+                                    <span class="text-gray-700 dark:text-gray-300">Total Já Pago:</span>
+                                    <span class="font-bold text-blue-600">R$ {{ number_format($valorJaPago, 2, ',', '.') }}</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-t border-gray-100 dark:border-gray-800">
+                                    <span class="text-gray-700 dark:text-gray-300">Saldo Devedor:</span>
+                                    <span class="font-bold text-amber-600">R$ {{ number_format(max(0, $valorComDesconto - $valorJaPago), 2, ',', '.') }}</span>
+                                </div>
+                            @endif
+
                             <div class="flex justify-between py-2 border-t border-gray-200 dark:border-gray-700">
-                                <span class="text-gray-700 dark:text-gray-300">Total Pago:</span>
-                                <span class="font-bold {{ ($valorPago + $valorCreditoAbatido) >= $valorComDesconto ? 'text-green-600' : 'text-red-600' }}">
+                                <span class="text-gray-700 dark:text-gray-300">Pagamento Atual:</span>
+                                <span class="font-bold {{ ($valorPago + $valorCreditoAbatido + $valorJaPago) >= ($valorComDesconto - 0.01) ? 'text-green-600' : 'text-red-600' }}">
                                     R$ {{ number_format($valorPago + $valorCreditoAbatido, 2, ',', '.') }}
                                 </span>
                             </div>
@@ -292,6 +366,7 @@
                                 <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Resultado *</label>
                                 <select wire:model.live="billingStatus"
                                         class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500">
+                                    <option value="">Selecione o resultado...</option>
                                     <option value="approved">✅ Aprovar Faturamento</option>
                                     <option value="restrictions">⚠️ Aprovar com Restrição (Receber na Entrega)</option>
                                     <option value="rejected">❌ Negar / Cancelar Faturamento</option>
@@ -317,35 +392,51 @@
                     </div>
 
                     {{-- Ações --}}
-                    <div class="flex gap-4">
-                        <a href="{{ route('orcamentos.rota_pagamento_lista') }}" class="flex-1">
-                            <button type="button" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-medium px-6 py-3 rounded-lg transition-colors">
-                                Voltar
-                            </button>
-                        </a>
-                        <button type="button"
-                                wire:click="finalizarPagamento"
+                    <div class="flex flex-col gap-3">
+                        <button type="button" 
+                                wire:click="registrarPagamentoAvulso"
                                 wire:loading.attr="disabled"
-                                @if($billingStatus !== 'rejected' && ($valorPago + $valorCreditoAbatido) < $valorComDesconto) disabled @endif
-                                class="flex-1 flex items-center justify-center gap-2 font-medium px-6 py-3 rounded-lg transition-colors shadow-sm
-                                    {{ $billingStatus === 'rejected' ? 'bg-red-600 hover:bg-red-700 text-white' : (($billingStatus !== 'rejected' && ($valorPago + $valorCreditoAbatido) >= $valorComDesconto) ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed') }}
-                                    disabled:opacity-50 disabled:cursor-not-allowed">
-                            <span wire:loading.remove wire:target="finalizarPagamento" class="flex items-center gap-2">
-                                <x-heroicon-o-check-circle class="w-5 h-5" />
-                                @if($billingStatus === 'rejected') Confirmar Negação @else Confirmar Faturamento @endif
-                            </span>
-                            <span wire:loading wire:target="finalizarPagamento" class="flex items-center gap-2">
-                                <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Processando...
-                            </span>
+                                @if($valorPago <= 0) disabled @endif
+                                class="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-6 py-2.5 rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                            <x-heroicon-o-banknotes class="w-5 h-5" />
+                            Registrar Recebimento (Sem Finalizar)
                         </button>
                     </div>
                 </div>
 
-            </div>{{-- end grid --}}
-        </div>
-    </div>
-</div>
+                {{-- Ação de Faturamento Final --}}
+                <div class="ring-1 ring-gray-200 dark:ring-gray-700 rounded-lg overflow-hidden">
+                     <div class="bg-gray-50 dark:bg-gray-800 px-4 py-4 border-b border-gray-200 dark:border-gray-700">
+                        <div class="flex gap-4">
+                            <a href="{{ route('orcamentos.rota_pagamento_lista') }}" class="flex-1">
+                                <button type="button" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-medium px-6 py-3 rounded-lg transition-colors">
+                                    Voltar
+                                </button>
+                            </a>
+                            <button type="button"
+                                    wire:click="finalizarPagamento"
+                                    wire:loading.attr="disabled"
+                                    @if($billingStatus !== 'rejected' && ($valorPago + $valorCreditoAbatido) < ($valorComDesconto - 0.01)) disabled @endif
+                                    class="flex-1 flex items-center justify-center gap-2 font-medium px-6 py-3 rounded-lg transition-colors shadow-sm
+                                        {{ $billingStatus === 'rejected' ? 'bg-red-600 hover:bg-red-700 text-white' : (($billingStatus !== 'rejected' && ($valorPago + $valorCreditoAbatido) >= ($valorComDesconto - 0.01)) ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed') }}
+                                        disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span wire:loading.remove wire:target="finalizarPagamento" class="flex items-center gap-2">
+                                    <x-heroicon-o-check-circle class="w-5 h-5" />
+                                    @if($billingStatus === 'rejected') Confirmar Negação @else Confirmar Faturamento @endif
+                                </span>
+                                <span wire:loading wire:target="finalizarPagamento" class="flex items-center gap-2">
+                                    <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Processando...
+                                </span>
+                            </button>
+                        </div>
+                     </div>
+                </div>
+
+            </div> {{-- Fim Coluna Direita --}}
+        </div> {{-- Fim Grid --}}
+    </div> {{-- Fim Container Principal --}}
+</div> {{-- Fim Componente --}}

@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Pagamento;
-use App\Models\PagamentoMetodo;
+use App\Models\PagamentoForma;
 use App\Models\Orcamento;
 use App\Models\Pedido;
 use App\Models\MetodoPagamento;
@@ -49,7 +49,7 @@ class PagamentoService
      
             // A transaction retorna o array de resultado com o pagamento já salvo.
             $resultado = \Illuminate\Support\Facades\DB::transaction(
-                function () use ($dadosValidados) {
+                function () use ($dadosValidados, $dados) {
                     $registro  = $this->buscarRegistro($dadosValidados);
                     $clienteId = $registro->cliente_id;
      
@@ -63,7 +63,25 @@ class PagamentoService
                         $clienteId
                     );
      
-                    $this->validarValorPago($dadosValidados['metodos_pagamento'], $valoresVenda);
+                    // Se não for permitido parcial, valida se o valor total foi atingido
+                    $finalizarRegistro = filter_var($dadosValidados['finalizar_registro'] ?? ($dados['finalizar_registro'] ?? true), FILTER_VALIDATE_BOOLEAN);
+                    $permitirParcial   = filter_var($dadosValidados['permitir_parcial'] ?? ($dados['permitir_parcial'] ?? false), FILTER_VALIDATE_BOOLEAN);
+
+                    \Illuminate\Support\Facades\Log::info("DEBUG: Checagem de Pagamento Parcial", [
+                        'finalizar_registro_raw' => $dadosValidados['finalizar_registro'] ?? ($dados['finalizar_registro'] ?? 'N/A'),
+                        'finalizar_registro_bool' => $finalizarRegistro,
+                        'permitir_parcial_raw' => $dadosValidados['permitir_parcial'] ?? ($dados['permitir_parcial'] ?? 'N/A'),
+                        'permitir_parcial_bool' => $permitirParcial,
+                    ]);
+
+                    // Se não vai finalizar o registro (caso de faturamento de rota parcial), sempre permite parcial
+                    if (!$finalizarRegistro) {
+                        $permitirParcial = true;
+                    }
+
+                    if (!$permitirParcial) {
+                        $this->validarValorPago($dadosValidados['metodos_pagamento'], $valoresVenda);
+                    }
      
                     $pagamento = $this->criarPagamento($registro, $dadosValidados, $valoresVenda);
      
@@ -87,7 +105,9 @@ class PagamentoService
                         );
                     }
      
-                    $this->atualizarStatusRegistro($registro, 'pago');
+                    if ($dadosValidados['finalizar_registro'] ?? true) {
+                        $this->atualizarStatusRegistro($registro, 'pago');
+                    }
      
                     return [
                         'sucesso'              => true,
@@ -147,6 +167,8 @@ class PagamentoService
             'cnpj_cpf_nota' => 'nullable|string|max:20',
             'observacoes' => 'nullable|string|max:1000',
             'gerar_troco_como_credito' => 'nullable|boolean',
+            'permitir_parcial' => 'nullable|boolean',
+            'finalizar_registro' => 'nullable|boolean',
         ];
 
         $mensagens = [
@@ -228,9 +250,12 @@ class PagamentoService
         ->where('estornado', false)
         ->exists();
 
+        /* 
+        // No faturamento de rota, permitimos múltiplos pagamentos parciais
         if ($pagamentoExistente) {
             throw new \Exception('Já existe um pagamento registrado para este registro');
         }
+        */
     }
 
     /**
@@ -437,9 +462,9 @@ class PagamentoService
             $parcelas = (int) ($metodoPag['parcelas'] ?? 1);
             $valorParcela = $parcelas > 1 ? round($metodoPag['valor'] / $parcelas, 2) : null;
 
-            PagamentoMetodo::create([
+            PagamentoForma::create([
                 'pagamento_id' => $pagamento->id,
-                'metodo_pagamento_id' => $metodoPag['metodo_id'],
+                'condicao_pagamento_id' => $metodoPag['metodo_id'],
                 'valor' => $metodoPag['valor'],
                 'usa_credito' => $usaCredito,
                 'parcelas' => $parcelas,
