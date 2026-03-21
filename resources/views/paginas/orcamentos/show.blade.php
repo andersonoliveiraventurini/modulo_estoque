@@ -25,9 +25,25 @@
                         <p
                             class="text-xs text-neutral-400 dark:text-neutral-500 font-medium uppercase tracking-wider leading-none mb-0.5">
                             Orçamento</p>
+                        @php
+                            $statusColors = [
+                                'Pendente' => ['bg' => 'bg-amber-100', 'text' => 'text-amber-800', 'dark' => 'dark:bg-amber-900/40 dark:text-amber-200'],
+                                'Aprovado' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-800', 'dark' => 'dark:bg-blue-900/40 dark:text-blue-200'],
+                                'Cancelado' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'dark' => 'dark:bg-red-900/40 dark:text-red-200'],
+                                'Rejeitado' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'dark' => 'dark:bg-red-900/40 dark:text-red-200'],
+                                'Expirado' => ['bg' => 'bg-neutral-100', 'text' => 'text-neutral-800', 'dark' => 'dark:bg-neutral-700 dark:text-neutral-200'],
+                                'Pago' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'dark' => 'dark:bg-green-900/40 dark:text-green-200'],
+                            ];
+                            $currentStatusColor = $statusColors[$orcamento->status] ?? $statusColors['Pendente'];
+                        @endphp
                         <h2
                             class="text-lg font-bold text-neutral-900 dark:text-white leading-tight truncate flex items-center gap-2">
                             #{{ $orcamento->id }}
+                            <span
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold {{ $currentStatusColor['bg'] }} {{ $currentStatusColor['text'] }} {{ $currentStatusColor['dark'] }} border border-current border-opacity-20 flex-shrink-0">
+                                <span class="inline-block w-1.5 h-1.5 rounded-full bg-current opacity-70"></span>
+                                {{ $orcamento->status }}
+                            </span>
                             @if ($orcamento->encomenda !== null)
                                 <span
                                     class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300 border border-violet-200 dark:border-violet-700">
@@ -270,12 +286,6 @@
                                 @else
                                     {{-- Seletor de Status --}}
                                     <div class="space-y-2">
-                                        @if ($orcamento->condicao_id != null)
-                                            <p
-                                                class="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
-                                                Status Comercial
-                                            </p>
-                                        @endif
                                         @if ($orcamento->status === 'Pago')
                                             @php $pagamentoRegistrado = $orcamento->pagamento; @endphp
                                             <div
@@ -344,20 +354,34 @@
 
                                             @if ($orcamento->condicao_id != null)
 
-                                                {{-- Aviso: prazo de 10 dias expirado --}}
-                                                @if ($aprovacaoExpirada)
-                                                    <div
-                                                        class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg text-xs text-red-800 dark:text-red-200">
-                                                        <x-heroicon-o-clock
-                                                            class="w-4 h-4 flex-shrink-0 mt-0.5 text-red-500" />
-                                                        <div>
-                                                            <strong>Prazo de aprovação expirado</strong><br>
-                                                            Todos os itens ficaram disponíveis em
-                                                            {{ \Carbon\Carbon::parse($ultimaAtualizacao)->format('d/m/Y \à\s H:i') }},
-                                                            mas o prazo de 10 dias para aprovar o orçamento foi
-                                                            encerrado.
+                                                {{-- Aviso: prazo de 10 dias expirado (apenas para status não aprovado) --}}
+                                                @if ($aprovacaoExpirada && $orcamento->status !== 'Aprovado')
+                                                    @if ($orcamento->encomenda)
+                                                        {{-- Encomenda: mensagem simplificada --}}
+                                                        <div
+                                                            class="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg text-xs text-blue-800 dark:text-blue-200">
+                                                            <x-heroicon-o-check-circle
+                                                                class="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-500" />
+                                                            <div>
+                                                                Todos os itens ficaram disponíveis em
+                                                                {{ \Carbon\Carbon::parse($ultimaAtualizacao)->format('d/m/Y \à\s H:i') }}.
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    @else
+                                                        {{-- Orçamento regular: mensagem de prazo expirado --}}
+                                                        <div
+                                                            class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg text-xs text-red-800 dark:text-red-200">
+                                                            <x-heroicon-o-clock
+                                                                class="w-4 h-4 flex-shrink-0 mt-0.5 text-red-500" />
+                                                            <div>
+                                                                <strong>Prazo de aprovação expirado</strong><br>
+                                                                Todos os itens ficaram disponíveis em
+                                                                {{ \Carbon\Carbon::parse($ultimaAtualizacao)->format('d/m/Y \à\s H:i') }},
+                                                                mas o prazo de 10 dias para aprovar o orçamento foi
+                                                                encerrado.
+                                                            </div>
+                                                        </div>
+                                                    @endif
 
                                                     {{-- Aviso: nem todos os itens disponíveis --}}
                                                 @elseif ($itensConsulta->isNotEmpty() && !$todosDisponiveis)
@@ -375,31 +399,46 @@
                                                     </div>
                                                 @endif
 
-                                                <form id="form-status-{{ $orcamento->id }}" class="flex gap-2"
+                                                {{-- ─────────────────────────────────────────── --}}
+                                                {{-- FORMULÁRIO PARA ALTERAR STATUS --}}
+                                                {{-- ─────────────────────────────────────────── --}}
+                                                <form id="form-status-{{ $orcamento->id }}" class="space-y-2.5"
                                                     data-id="{{ $orcamento->id }}"
                                                     data-url="{{ route('orcamentos.atualizar-status', $orcamento->id) }}">
                                                     @csrf
                                                     @method('PUT')
-                                                    <select name="status" {{ $statusBloqueado ? 'disabled' : '' }}
-                                                        class="flex-1 border border-gray-300 dark:border-neutral-600 dark:bg-zinc-700 dark:text-white rounded-lg px-2 py-1.5 text-sm status-select focus:ring-2 focus:ring-blue-300 focus:outline-none
-                {{ $statusBloqueado ? 'opacity-50 cursor-not-allowed' : '' }}"
-                                                        data-id="{{ $orcamento->id }}">
-                                                        @foreach (['Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'] as $s)
-                                                            @if ($s === 'Aprovado' && $bloqueiaAprovado && $orcamento->status !== 'Aprovado')
-                                                                @continue
-                                                            @endif
-                                                            <option value="{{ $s }}"
-                                                                @selected($orcamento->status === $s)>
-                                                                {{ $s }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                    <button type="button" {{ $statusBloqueado ? 'disabled' : '' }}
-                                                        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors atualizar-status
-                {{ $statusBloqueado ? 'opacity-50 cursor-not-allowed' : '' }}"
-                                                        data-id="{{ $orcamento->id }}">
-                                                        Salvar
-                                                    </button>
+                                                    
+                                                    <div>
+                                                        <p class="mb-2 text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                                            Alterar Status Comercial
+                                                        </p>
+                                                        <div class="flex gap-2">
+                                                            <select name="status" {{ $statusBloqueado ? 'disabled' : '' }}
+                                                                class="flex-1 border border-gray-300 dark:border-neutral-600 dark:bg-zinc-700 dark:text-white rounded-lg px-2 py-1.5 text-sm status-select focus:ring-2 focus:ring-blue-300 focus:outline-none
+                    {{ $statusBloqueado ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                                data-id="{{ $orcamento->id }}">
+                                                                @foreach (['Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'] as $s)
+                                                                    @if ($s === 'Aprovado' && $bloqueiaAprovado && $orcamento->status !== 'Aprovado')
+                                                                        @continue
+                                                                    @endif
+                                                                    <option value="{{ $s }}"
+                                                                        @selected($orcamento->status === $s)>
+                                                                        {{ $s }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                            <button type="button" {{ $statusBloqueado ? 'disabled' : '' }}
+                                                                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors atualizar-status
+                    {{ $statusBloqueado ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                                data-id="{{ $orcamento->id }}">
+                                                                Salvar
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                                                        💡 Selecione o novo status e clique em <strong>Salvar</strong> para alterar.
+                                                    </p>
                                                 </form>
 
                                                 @if ($orcamento->encomenda && $orcamento->status === 'Aprovado')
