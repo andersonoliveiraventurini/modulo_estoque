@@ -173,4 +173,40 @@ final class EstoqueService
             ->where('status', 'ativa')
             ->update(['status' => 'cancelada']);
     }
+
+    /**
+     * Realiza a baixa definitiva do estoque para um orçamento pago.
+     * Decrementa o estoque atual e marca a reserva como consumida.
+     */
+    public function baixarEstoqueDefinitivo(Orcamento $orcamento): void
+    {
+        Log::info("Iniciando baixa definitiva de estoque para Orçamento #{$orcamento->id}");
+        $orcamento->load('itens.produto');
+
+        DB::transaction(function () use ($orcamento) {
+            $consumos = [];
+
+            foreach ($orcamento->itens->whereNotNull('produto_id') as $oi) {
+                $produto = $oi->produto;
+                $quantidade = (float) $oi->quantidade;
+
+                if (!$produto || $quantidade <= 0) continue;
+
+                // Decrementa o estoque real
+                $produto->decrement('estoque_atual', $quantidade);
+                
+                // Log da movimentação (se houver tabela de logs específica, podemos usar aqui)
+                Log::info("Baixa definitiva: Produto #{$produto->id}, Qtd: -{$quantidade}");
+
+                $this->verificarAlertaEstoqueBaixo($produto);
+
+                $consumos[$produto->id] = ($consumos[$produto->id] ?? 0) + $quantidade;
+            }
+
+            // Marca as reservas como consumidas
+            $this->liberarReservas($orcamento, $consumos);
+        });
+
+        Log::info("Baixa definitiva concluída para Orçamento #{$orcamento->id}");
+    }
 }

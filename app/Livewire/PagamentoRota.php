@@ -330,8 +330,25 @@ class PagamentoRota extends Component
                 // 6. Atualiza status do orçamento de acordo com a decisão (APÓS salvar pagamento)
                 if ($this->billingStatus === 'approved') {
                     $this->orcamento->update(['status' => 'Pago']);
+                    
+                    // ── BAIXA DE ESTOQUE (Canais de Entrega) ──
+                    if ($this->orcamento->isCanalEntrega()) {
+                        Log::info("Baixando estoque para canal de entrega no faturamento de rota", [
+                            'orcamento_id' => $this->orcamento->id
+                        ]);
+                        app(\App\Services\EstoqueService::class)->baixarEstoqueDefinitivo($this->orcamento);
+                    }
                 } else {
                     $this->orcamento->update(['status' => 'Pagamento pendente']);
+                    
+                    // ── BAIXA DE ESTOQUE (Canais de Entrega com Restrição) ──
+                    // Mesmo com restrição, se o financeiro liberou a rota, o estoque deve ser baixado
+                    if ($this->billingStatus === 'restrictions' && $this->orcamento->isCanalEntrega()) {
+                        Log::info("Baixando estoque para canal de entrega com restrição no faturamento de rota", [
+                            'orcamento_id' => $this->orcamento->id
+                        ]);
+                        app(\App\Services\EstoqueService::class)->baixarEstoqueDefinitivo($this->orcamento);
+                    }
                 }
             });
 

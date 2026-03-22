@@ -4,73 +4,78 @@ namespace App\Livewire\Quality;
 
 use App\Models\ProductReturn;
 use App\Services\ProductReturnService;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
+use Illuminate\Support\Facades\Log;
 
 class ProductReturnApproval extends Component
 {
     public $returnId;
     public $return;
-    
-    // Approval fields
-    public $status_approval = 'aprovado';
     public $observacoes;
-    public $retorno_estoque = true;
+    public $retorno_estoque = false;
 
-    protected $rules = [
-        'status_approval' => 'required|in:aprovado,negado',
-        'observacoes' => 'nullable|string',
-    ];
-
-    public function mount($return, $action = null)
+    public function mount($return)
     {
-        $this->returnId = $return;
-        $this->return = ProductReturn::with(['orcamento.cliente', 'items.produto', 'authorizations.user'])->findOrFail($return);
-        
-        // Se a ação for negar, pré-seleciona
-        if ($action === 'deny') {
-            $this->status_approval = 'negado';
-        }
+        $this->returnId = $return instanceof ProductReturn ? $return->id : $return;
+        $this->loadReturn();
+    }
 
-        // Se o retorno já estiver finalizado ou negado, o formulário de decisão não deve ser exibido (modo visualização)
+    public function loadReturn()
+    {
+        $this->return = ProductReturn::with([
+            'items.produto', 
+            'cliente', 
+            'vendedor', 
+            'orcamento', 
+            'authorizations.user'
+        ])->findOrFail($this->returnId);
     }
 
     public function approve(ProductReturnService $service)
     {
-        $this->validate();
+        try {
+            if ($this->return->status === 'pendente_supervisor') {
+                $service->authorizeSupervisor($this->return, true, $this->observacoes);
+                session()->flash('success', 'Aprovação do supervisor registrada com sucesso!');
+            } elseif ($this->return->status === 'pendente_estoque') {
+                $service->authorizeEstoque($this->return, true, [
+                    'observacoes_estoque' => $this->observacoes,
+                    'retorno_estoque' => $this->retorno_estoque
+                ]);
+                session()->flash('success', 'Devolução finalizada e estoque atualizado!');
+            }
 
-        $isApproved = $this->status_approval === 'aprovado';
-
-        if ($this->return->status === 'pendente_supervisor') {
-            $service->authorizeSupervisor($this->return, $isApproved, $this->observacoes);
-            session()->flash('success', $isApproved ? 'Aprovação do Supervisor registrada. Aguardando Estoque.' : 'Devolução negada pelo Supervisor.');
-        } 
-        elseif ($this->return->status === 'pendente_estoque') {
-            $service->authorizeEstoque($this->return, $isApproved, [
-                'retorno_estoque' => $this->retorno_estoque,
-                'observacoes_estoque' => $this->observacoes,
-            ]);
-            session()->flash('success', $isApproved ? 'Devolução finalizada com sucesso! Créditos gerados.' : 'Devolução negada pelo Estoque.');
+            return redirect()->route('quality.dashboard');
+        } catch (\Exception $e) {
+            Log::error("Erro na aprovação da devolução: " . $e->getMessage());
+            $this->addError('general', 'Erro ao aprovar: ' . $e->getMessage());
         }
-
-        return redirect()->route('quality.dashboard');
     }
 
-    public function downloadReturn($id, $type)
+    public function reject(ProductReturnService $service)
     {
-        $return = ProductReturn::findOrFail($id);
-        $path = "quality/return_{$type}_{$return->nr}.pdf";
-        
-        if (!Storage::disk('public')->exists($path)) {
-            app(\App\Services\QualityPdfService::class)->generateReturnPdf($return, $type);
+        if (empty($this->observacoes)) {
+            $this->addError('observacoes', 'Por favor, informe o motivo da rejeição nas observações.');
+            return;
         }
-        
-        return response()->download(storage_path("app/public/{$path}"));
+
+        try {
+            if ($this->return->status === 'pendente_supervisor') {
+                $service->authorizeSupervisor($this->return, false, $this->observacoes);
+            } elseif ($this->return->status === 'pendente_estoque') {
+                $service->authorizeEstoque($this->return, false, ['observacoes_estoque' => $this->observacoes]);
+            }
+
+            session()->flash('warning', 'Devolução rejeitada.');
+            return redirect()->route('quality.dashboard');
+        } catch (\Exception $e) {
+            Log::error("Erro na rejeição da devolução: " . $e->getMessage());
+            $this->addError('general', 'Erro ao rejeitar: ' . $e->getMessage());
+        }
     }
 
     public function render()
     {
-        return view('livewire.quality.product-return-approval')
-            ->layout('components.layouts.app');
+        return view('livewire.quality.product-return-approval');
     }
 }

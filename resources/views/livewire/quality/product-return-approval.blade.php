@@ -1,199 +1,157 @@
-<div class="space-y-6">
-    <div class="mb-6">
-        <flux:heading size="xl">
-            {{ ($return->status === 'pendente_supervisor' || $return->status === 'pendente_estoque') ? __('Autorização de Devolução') : __('Detalhes da Devolução') }} #{{ $return->nr }}
-        </flux:heading>
-        <flux:subheading>
-            @if($return->status === 'pendente_supervisor')
-                {{ __('Etapa 1/2: Autorização do Supervisor de Vendas') }}
-            @elseif($return->status === 'pendente_estoque')
-                {{ __('Etapa 2/2: Autorização do Chefe do Estoque') }}
-            @endif
-        </flux:subheading>
+<div class="p-6 max-w-5xl mx-auto">
+    <div class="mb-8">
+        <div class="flex items-center gap-2 text-sm text-zinc-500 mb-2">
+            <a href="{{ route('quality.dashboard') }}" class="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">Qualidade</a>
+            <flux:icon icon="chevron-right" class="w-3 h-3" />
+            <span>Aprovar Devolução</span>
+        </div>
+        <div class="flex items-center justify-between">
+            <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Aprovação de Devolução #{{ $return->nr }}</h1>
+            <div class="px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wider
+                @if($return->status === 'pendente_supervisor') bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400
+                @elseif($return->status === 'pendente_estoque') bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400
+                @elseif($return->status === 'finalizado') bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400
+                @else bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400 @endif">
+                {{ $return->status_label }}
+            </div>
+        </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Detalhes da Solicitação -->
-        <div class="md:col-span-2 space-y-6">
-            <flux:card>
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="font-bold text-lg">{{ __('Dados do Pedido Original') }}</h3>
-                    <flux:badge color="zinc">#{{ $return->orcamento_id }}</flux:badge>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {{-- Detalhes da Devolução --}}
+        <div class="lg:col-span-2 space-y-6">
+            <flux:card class="p-0 overflow-hidden">
+                <div class="p-4 border-b bg-zinc-50 dark:bg-zinc-800/50 flex justify-between items-center">
+                    <h3 class="font-bold text-zinc-900 dark:text-white">Itens da Devolução</h3>
+                    <span class="text-xs text-zinc-500 uppercase tracking-tighter">Budget Orignal: #{{ $return->orcamento_id }}</span>
                 </div>
-
-                <div class="grid grid-cols-2 gap-6 text-sm">
-                    <div class="space-y-1">
-                        <p class="text-zinc-500 font-bold text-[10px] uppercase">{{ __('Cliente') }}</p>
-                        <p class="font-medium">{{ $return->cliente->nome }}</p>
-                        <p class="text-xs text-zinc-400 font-mono">{{ $return->cliente->cnpj ?? $return->cliente->cpf }}</p>
-                    </div>
-                    <div class="space-y-1">
-                        <p class="text-zinc-500 font-bold text-[10px] uppercase">{{ __('Vendedor') }}</p>
-                        <p class="font-medium">{{ $return->vendedor->name ?? 'N/A' }}</p>
-                    </div>
-                </div>
-
-                <div class="mt-8 border-t border-zinc-100 dark:border-zinc-700 pt-6">
-                    <h4 class="font-bold text-sm mb-4">{{ __('Itens Solicitados para Devolução') }}</h4>
-                    <div class="overflow-hidden border border-zinc-200 dark:border-zinc-700 rounded-lg">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-zinc-50 dark:bg-zinc-800 text-zinc-500">
-                                <tr>
-                                    <th class="px-3 py-2">{{ __('Produto') }}</th>
-                                    <th class="px-3 py-2 text-center">{{ __('Qtd') }}</th>
-                                    <th class="px-3 py-2 text-right">{{ __('Subtotal') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-zinc-100 dark:divide-zinc-700">
-                                @foreach($return->items as $item)
-                                    <tr>
-                                        <td class="px-3 py-2">
-                                            <div class="font-medium">{{ $item->produto->nome ?? __('Produto não identificado') }}</div>
-                                            <div class="text-[9px] text-zinc-400">{{ $item->produto->sku ?? '---' }}</div>
-                                        </td>
-                                        <td class="px-3 py-2 text-center">{{ number_format($item->quantidade, 2, ',', '.') }}</td>
-                                        <td class="px-3 py-2 text-right">R$ {{ number_format($item->subtotal, 2, ',', '.') }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                            <tfoot class="bg-zinc-50 dark:bg-zinc-800 font-bold">
-                                <tr>
-                                    <td colspan="2" class="px-3 py-2 text-right uppercase text-[9px]">{{ __('Total de Crédito Previsto:') }}</td>
-                                    <td class="px-3 py-2 text-right text-primary-600">R$ {{ number_format($return->valor_total_credito, 2, ',', '.') }}</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="mt-6 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-600">
-                    <p class="text-[10px] text-zinc-500 font-bold uppercase mb-2">{{ __('Motivo da Solicitação') }}</p>
-                    <p class="text-sm italic">"{{ $return->observacoes ?: __('Sem observações.') }}"</p>
-                </div>
+                
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 uppercase text-[10px] font-bold tracking-wider">
+                        <tr>
+                            <th class="px-4 py-3">Produto</th>
+                            <th class="px-4 py-3 text-right">Quantidade</th>
+                            <th class="px-4 py-3 text-right">Preço Un.</th>
+                            <th class="px-4 py-3 text-right">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                        @foreach ($return->items as $item)
+                            <tr>
+                                <td class="px-4 py-3">
+                                    <div class="font-medium text-zinc-900 dark:text-white">{{ $item->produto->nome ?? 'Produto não identificado' }}</div>
+                                    <div class="text-xs text-zinc-500">Ref: {{ $item->produto->referencia ?? '-' }}</div>
+                                </td>
+                                <td class="px-4 py-3 text-right font-medium">{{ number_format($item->quantidade, 2, ',', '.') }}</td>
+                                <td class="px-4 py-3 text-right">R$ {{ number_format($item->valor_unitario, 2, ',', '.') }}</td>
+                                <td class="px-4 py-3 text-right font-bold text-zinc-900 dark:text-white">R$ {{ number_format($item->subtotal, 2, ',', '.') }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot class="bg-zinc-50 dark:bg-zinc-800/50 font-bold border-t">
+                        <tr>
+                            <td colspan="3" class="px-4 py-4 text-right uppercase text-xs tracking-widest text-zinc-500">Valor Total do Crédito:</td>
+                            <td class="px-4 py-4 text-right text-lg text-indigo-600 dark:text-indigo-400">R$ {{ number_format($return->valor_total_credito, 2, ',', '.') }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
             </flux:card>
 
-            <!-- Histórico de Autorizações -->
-            @if($return->authorizations->count() > 0)
-                <flux:card class="space-y-4">
-                    <h3 class="font-bold text-lg">{{ __('Histórico de Autorizações') }}</h3>
-                    <div class="space-y-3">
-                        @foreach($return->authorizations as $auth)
-                            <div class="flex items-start gap-3 p-3 rounded-lg {{ $auth->status === 'aprovado' ? 'bg-green-50 dark:bg-green-900/10' : 'bg-red-50 dark:bg-red-900/10' }}">
-                                <flux:icon icon="{{ $auth->status === 'aprovado' ? 'check-circle' : 'x-circle' }}" class="w-5 h-5 {{ $auth->status === 'aprovado' ? 'text-green-600' : 'text-red-600' }}" />
-                                <div class="flex-1">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm font-bold uppercase">{{ $auth->role }}</span>
-                                        <span class="text-[10px] text-zinc-500">{{ $auth->created_at->format('d/m/Y H:i') }}</span>
-                                    </div>
-                                    <p class="text-xs font-medium">{{ $auth->user->name }}</p>
-                                    @if($auth->observacoes)
-                                        <p class="text-xs mt-1 text-zinc-600 dark:text-zinc-400 italic">"{{ $auth->observacoes }}"</p>
-                                    @endif
+            {{-- Histórico de Aprovações --}}
+            @if ($return->authorizations->count() > 0)
+                <div class="space-y-4">
+                    <h3 class="font-bold text-zinc-900 dark:text-white ml-2">Histórico de Decisões</h3>
+                    @foreach ($return->authorizations as $auth)
+                        <flux:card class="p-4 border-l-4 {{ $auth->status === 'aprovado' ? 'border-l-emerald-500' : 'border-l-rose-500' }}">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">{{ $auth->role === 'supervisor' ? 'Supervisor de Vendas' : 'Chefia de Estoque' }}</span>
+                                    <p class="font-medium mt-1">{{ $auth->user->name }}</p>
+                                </div>
+                                <div class="text-right text-xs text-zinc-500">
+                                    {{ $auth->created_at->format('d/m/Y H:i') }}
                                 </div>
                             </div>
-                        @endforeach
-                    </div>
-                </flux:card>
+                            @if ($auth->observacoes)
+                                <div class="mt-2 p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded text-sm italic">
+                                    "{{ $auth->observacoes }}"
+                                </div>
+                            @endif
+                        </flux:card>
+                    @endforeach
+                </div>
             @endif
         </div>
 
-        <!-- Formulário de Aprovação Atual (Apenas se Pendente) -->
+        {{-- Painel de Ações --}}
         <div class="space-y-6">
-            @if($return->status === 'pendente_supervisor' || $return->status === 'pendente_estoque')
-                <form wire:submit="approve">
-                    <flux:card class="space-y-6 border-2 {{ $return->status === 'pendente_supervisor' ? 'border-orange-200 dark:border-orange-900/30' : 'border-indigo-200 dark:border-indigo-900/30' }}">
-                        <flux:heading size="lg">
-                            {{ $return->status === 'pendente_supervisor' ? __('Decisão do Supervisor') : __('Decisão do Estoque') }}
-                        </flux:heading>
-
-                        <div class="space-y-4">
-                            <flux:radio.group wire:model.live="status_approval" variant="cards" class="flex-col">
-                                <flux:radio value="aprovado" label="{{ __('Autorizar Devolução') }}" description="{{ __('Deseja prosseguir com o processo.') }}" />
-                                <flux:radio value="negado" label="{{ __('Negar Solicitação') }}" description="{{ __('O processo será encerrado imediatamente.') }}" />
-                            </flux:radio.group>
-
-                            @if($status_approval === 'aprovado' && $return->status === 'pendente_estoque')
-                                <div class="p-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-xl space-y-3">
-                                    <flux:field>
-                                        <flux:label>{{ __('Retorno ao estoque físico?') }}</flux:label>
-                                        <flux:checkbox wire:model="retorno_estoque" label="{{ __('Sim, o material está pronto para venda.') }}" />
-                                        <flux:description>{{ __('Se marcado, a quantidade será somada ao produto automaticamente.') }}</flux:description>
-                                    </flux:field>
-                                    
-                                    <div class="p-2 bg-yellow-100 text-yellow-800 text-[10px] rounded font-bold flex gap-2 items-center uppercase">
-                                        <flux:icon icon="information-circle" variant="mini" />
-                                        {{ __('A finalização gerará R$') }} {{ number_format($return->valor_total_credito, 2, ',', '.') }} {{ __(' de crédito para o cliente.') }}
-                                    </div>
-                                </div>
-                            @endif
-
-                            <flux:field>
-                                <flux:label>{{ __('Observações / Justificativa') }}</flux:label>
-                                <flux:textarea wire:model="observacoes" placeholder="{{ __('Opcional...') }}" rows="3" />
-                            </flux:field>
-                        </div>
-
-                        <div class="pt-4 flex flex-col gap-2">
-                            <flux:modal.trigger name="confirm-decision">
-                                <flux:button variant="primary" icon="shield-check" :color="$status_approval === 'negado' ? 'red' : 'primary'" class="w-full">
-                                    {{ $status_approval === 'negado' ? __('Negar Solicitação') : __('Autorizar Devolução') }}
-                                </flux:button>
-                            </flux:modal.trigger>
-
-                            <flux:button href="{{ route('quality.dashboard') }}" variant="ghost">
-                                {{ __('Voltar') }}
-                            </flux:button>
-                        </div>
-
-                        <!-- Modal de Confirmação -->
-                        <flux:modal name="confirm-decision" class="md:w-[450px] space-y-6">
-                            <div>
-                                <flux:heading size="lg">{{ $status_approval === 'negado' ? __('Confirmar Negação?') : __('Confirmar Aprovação?') }}</flux:heading>
-                                <flux:subheading>
-                                    {{ $status_approval === 'negado' 
-                                        ? __('Tem certeza que deseja NEGAR esta devolução? Esta ação não pode ser desfeita.') 
-                                        : __('Deseja confirmar a AUTORIZAÇÃO desta devolução e prosseguir com o processo?') }}
-                                </flux:subheading>
-                            </div>
-
-                            <div class="flex gap-2">
-                                <flux:spacer />
-                                <flux:modal.close>
-                                    <flux:button variant="ghost">{{ __('Cancelar') }}</flux:button>
-                                </flux:modal.close>
-                                <flux:button type="submit" variant="primary" :color="$status_approval === 'negado' ? 'red' : 'primary'">
-                                    {{ __('Sim, Confirmar') }}
-                                </flux:button>
-                            </div>
-                        </flux:modal>
-                    </flux:card>
-                </form>
-            @else
-                <flux:card class="space-y-6">
-                    <div class="flex flex-col items-center text-center p-4">
-                        @php
-                            $statusInfo = match($return->status) {
-                                'finalizado' => ['icon' => 'check-circle', 'color' => 'text-green-600', 'label' => 'Finalizado'],
-                                'negado' => ['icon' => 'x-circle', 'color' => 'text-red-600', 'label' => 'Negado'],
-                                'em_troca' => ['icon' => 'arrow-path', 'color' => 'text-blue-600', 'label' => 'Em Troca'],
-                                default => ['icon' => 'information-circle', 'color' => 'text-zinc-600', 'label' => $return->status],
-                            };
-                        @endphp
-                        <flux:icon :icon="$statusInfo['icon']" class="w-12 h-12 {{ $statusInfo['color'] }} mb-2" />
-                        <flux:heading size="lg">{{ __('Solicitação') }} {{ $statusInfo['label'] }}</flux:heading>
-                        <flux:subheading>{{ __('Este processo já foi concluído e não permite novas alterações.') }}</flux:subheading>
+            <flux:card class="p-6 space-y-6 sticky top-6">
+                <h3 class="font-bold text-xl text-zinc-900 dark:text-white">Ação Necessária</h3>
+                
+                <div class="p-4 rounded-xl bg-zinc-50 dark:bg-black/20 border border-zinc-100 dark:border-zinc-800 text-sm space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-zinc-500">Cliente:</span>
+                        <span class="font-medium">{{ $return->cliente->nome }}</span>
                     </div>
+                    <div class="flex justify-between">
+                        <span class="text-zinc-500">Vendedor:</span>
+                        <span class="font-medium">{{ $return->vendedor->name }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-zinc-500">Ocorrência:</span>
+                        <span class="font-medium">{{ $return->data_ocorrencia->format('d/m/Y') }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-zinc-500">Solicitado por:</span>
+                        <span class="font-medium">{{ $return->usuario->name }}</span>
+                    </div>
+                </div>
 
-                    <div class="pt-4 flex flex-col gap-2">
-                        @if($return->status === 'finalizado')
-                            <flux:button wire:click="downloadReturn({{ $return->id }}, 'authorized')" variant="primary" icon="printer">
-                                {{ __('Imprimir Comprovante') }}
-                            </flux:button>
+                @if (in_array($return->status, ['pendente_supervisor', 'pendente_estoque']))
+                    <div class="space-y-4">
+                        <flux:field>
+                            <flux:label>Observações / Motivo da Decisão</flux:label>
+                            <flux:textarea wire:model="observacoes" rows="4" placeholder="Descreva o motivo da aprovação ou recusa..." />
+                            <flux:error name="observacoes" />
+                        </flux:field>
+
+                        @if ($return->status === 'pendente_estoque')
+                            <flux:card class="p-4 bg-indigo-50/30 dark:bg-indigo-950/20 border-indigo-100 dark:border-indigo-900/50">
+                                <flux:checkbox 
+                                    wire:model="retorno_estoque" 
+                                    label="Os itens retornaram ao estoque?" 
+                                    description="Se marcado, a quantidade será somada ao estoque atual automaticamente." 
+                                />
+                            </flux:card>
                         @endif
-                        <flux:button href="{{ route('quality.dashboard') }}" variant="ghost">
-                            {{ __('Voltar ao Painel') }}
-                        </flux:button>
+
+                        <div class="grid grid-cols-2 gap-3 pt-2">
+                            <flux:button wire:click="reject" variant="danger" icon="x-mark">Recusar</flux:button>
+                            <flux:button wire:click="approve" variant="primary" icon="check">Aprovar</flux:button>
+                        </div>
                     </div>
+                @else
+                    <div class="py-4 text-center text-zinc-500 space-y-4">
+                        <flux:icon icon="lock-closed" class="w-12 h-12 mx-auto opacity-20" />
+                        <p>Este processo de devolução foi <strong>{{ $return->status_label }}</strong> e não aceita mais alterações.</p>
+                        
+                        <div class="pt-4 flex flex-col gap-2">
+                            <flux:button variant="ghost" size="sm" icon="document-text">Ver PDF Solicitação</flux:button>
+                            @if ($return->status === 'finalizado')
+                                <flux:button variant="ghost" size="sm" icon="check-badge">Ver PDF Autorização</flux:button>
+                                @if ($return->troca_produto)
+                                    <flux:button variant="ghost" size="sm" icon="truck">Ver Romaneio de Troca</flux:button>
+                                @endif
+                            @endif
+                        </div>
+                    </div>
+                @endif
+            </flux:card>
+
+            @if ($return->observacoes)
+                <flux:card class="p-6">
+                    <h3 class="font-bold text-zinc-500 uppercase text-xs tracking-widest mb-3">Observação Original</h3>
+                    <p class="text-sm text-zinc-600 dark:text-zinc-400 italic">"{{ $return->observacoes }}"</p>
                 </flux:card>
             @endif
         </div>

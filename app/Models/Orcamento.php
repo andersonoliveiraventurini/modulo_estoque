@@ -306,4 +306,40 @@ class Orcamento extends Model
     {
         return $this->hasMany(RouteBillingApproval::class);
     }
+
+    /**
+     * Identifica o canal de venda para regras de faturamento e estoque.
+     */
+    public function getCanalVendaAttribute(): string
+    {
+        if ($this->encomenda) {
+            return 'encomenda';
+        }
+
+        if (in_array($this->loading_day, ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'])) {
+            return 'rota';
+        }
+
+        if (in_array($this->loading_day, ['express', 'sedex', 'carrier'])) {
+            return 'entrega_terceiros';
+        }
+
+        // Default é Balcão/Retira
+        return 'balcao';
+    }
+
+    public function isProntaEntrega(): bool
+    {
+        return $this->canal_venda === 'balcao';
+    }
+
+    public function isEncomenda(): bool
+    {
+        return $this->canal_venda === 'encomenda';
+    }
+
+    public function isEntregaAgendada(): bool
+    {
+        return in_array($this->canal_venda, ['rota', 'entrega_terceiros']);
+    }
 }

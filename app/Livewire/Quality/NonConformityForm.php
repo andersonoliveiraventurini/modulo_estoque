@@ -2,19 +2,19 @@
 
 namespace App\Livewire\Quality;
 
-use App\Models\Fornecedor;
 use App\Models\NonConformity;
 use App\Models\Produto;
+use App\Models\Fornecedor;
 use App\Services\NonConformityService;
 use Livewire\Component;
-use Flux\Flux;
+use Illuminate\Support\Facades\Log;
 
 class NonConformityForm extends Component
 {
     public $rncId;
     public $isEdit = false;
 
-    // Form fields
+    // Campos do formulário
     public $produto_id;
     public $produto_nome;
     public $fornecedor_id;
@@ -25,101 +25,66 @@ class NonConformityForm extends Component
     public $acoes_tomadas;
     public $observacoes;
 
-    // Search fields
-    public $searchProduto = '';
-    public $searchFornecedor = '';
-    public $showProdutoSearch = false;
-    public $showFornecedorSearch = false;
-
     protected $rules = [
+        'produto_nome' => 'required|string|max:255',
+        'fornecedor_nome' => 'required|string|max:255',
         'data_ocorrencia' => 'required|date',
-        'produto_nome' => 'required|string',
-        'fornecedor_nome' => 'required|string',
-        'nota_fiscal' => 'nullable|string',
-        'romaneio_recebimento' => 'nullable|string',
-        'acoes_tomadas' => 'nullable|string',
-        'observacoes' => 'nullable|string',
+        'nota_fiscal' => 'nullable|string|max:100',
+        'romaneio_recebimento' => 'nullable|string|max:100',
+        'acoes_tomadas' => 'nullable|string|max:2000',
+        'observacoes' => 'nullable|string|max:2000',
     ];
 
     public function mount($rnc = null)
     {
-        $this->data_ocorrencia = date('Y-m-d');
-        
         if ($rnc) {
+            $this->rncId = $rnc instanceof NonConformity ? $rnc->id : $rnc;
             $this->isEdit = true;
-            $this->rncId = $rnc;
-            $model = NonConformity::findOrFail($rnc);
-            $this->fill($model->toArray());
-            $this->data_ocorrencia = $model->data_ocorrencia->format('Y-m-d');
+            $this->loadRnc();
+        } else {
+            $this->data_ocorrencia = date('Y-m-d');
         }
     }
 
-    public function selectProduto($id, $nome)
+    public function loadRnc()
     {
-        $this->produto_id = $id;
-        $this->produto_nome = $nome;
-        $this->showProdutoSearch = false;
-        $this->searchProduto = '';
-    }
-
-    public function selectFornecedor($id, $nome)
-    {
-        $this->fornecedor_id = $id;
-        $this->fornecedor_nome = $nome;
-        $this->showFornecedorSearch = false;
-        $this->searchFornecedor = '';
+        $rnc = NonConformity::findOrFail($this->rncId);
+        $this->produto_id = $rnc->produto_id;
+        $this->produto_nome = $rnc->produto_nome;
+        $this->fornecedor_id = $rnc->fornecedor_id;
+        $this->fornecedor_nome = $rnc->fornecedor_nome;
+        $this->data_ocorrencia = $rnc->data_ocorrencia->format('Y-m-d');
+        $this->nota_fiscal = $rnc->nota_fiscal;
+        $this->romaneio_recebimento = $rnc->romaneio_recebimento;
+        $this->acoes_tomadas = $rnc->acoes_tomadas;
+        $this->observacoes = $rnc->observacoes;
     }
 
     public function save(NonConformityService $service)
     {
-        $this->validate();
+        $data = $this->validate();
+        $data['produto_id'] = $this->produto_id;
+        $data['fornecedor_id'] = $this->fornecedor_id;
 
-        $data = [
-            'produto_id' => $this->produto_id,
-            'produto_nome' => $this->produto_nome,
-            'fornecedor_id' => $this->fornecedor_id,
-            'fornecedor_nome' => $this->fornecedor_nome,
-            'data_ocorrencia' => $this->data_ocorrencia,
-            'nota_fiscal' => $this->nota_fiscal,
-            'romaneio_recebimento' => $this->romaneio_recebimento,
-            'acoes_tomadas' => $this->acoes_tomadas,
-            'observacoes' => $this->observacoes,
-        ];
+        try {
+            if ($this->isEdit) {
+                $rnc = NonConformity::findOrFail($this->rncId);
+                $service->update($rnc, $data);
+                session()->flash('success', 'RNC atualizada com sucesso!');
+            } else {
+                $rnc = $service->store($data);
+                session()->flash('success', "RNC #{$rnc->nr} criada com sucesso!");
+            }
 
-        if ($this->isEdit) {
-            $rnc = NonConformity::findOrFail($this->rncId);
-            $service->update($rnc, $data);
-            session()->flash('success', 'RNC atualizada com sucesso!');
-        } else {
-            $rnc = $service->store($data);
-            session()->flash('success', "RNC #{$rnc->nr} criada com sucesso!");
+            return redirect()->route('quality.dashboard');
+        } catch (\Exception $e) {
+            Log::error("Erro ao salvar RNC: " . $e->getMessage());
+            $this->addError('general', 'Ocorreu um erro ao salvar a RNC. Verifique os dados e tente novamente.');
         }
-
-        return redirect()->route('quality.dashboard');
     }
 
     public function render()
     {
-        $produtos = [];
-        if ($this->showProdutoSearch && strlen($this->searchProduto) >= 2) {
-            $produtos = Produto::where('nome', 'like', "%{$this->searchProduto}%")
-                ->orWhere('sku', 'like', "%{$this->searchProduto}%")
-                ->limit(5)
-                ->get();
-        }
-
-        $fornecedores = [];
-        if ($this->showFornecedorSearch && strlen($this->searchFornecedor) >= 2) {
-            $fornecedores = Fornecedor::where('nome_fantasia', 'like', "%{$this->searchFornecedor}%")
-                ->orWhere('razao_social', 'like', "%{$this->searchFornecedor}%")
-                ->orWhere('cnpj', 'like', "%{$this->searchFornecedor}%")
-                ->limit(5)
-                ->get();
-        }
-
-        return view('livewire.quality.non-conformity-form', [
-            'produtos' => $produtos,
-            'fornecedores' => $fornecedores,
-        ])->layout('components.layouts.app');
+        return view('livewire.quality.non-conformity-form');
     }
 }

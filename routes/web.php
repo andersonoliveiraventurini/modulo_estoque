@@ -314,6 +314,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('devolucoes-produtos/novo', \App\Livewire\Quality\ProductReturnForm::class)->name('product_returns.create');
     Route::get('devolucoes-produtos/{return}/autorizar', \App\Livewire\Quality\ProductReturnApproval::class)->name('product_returns.approve');
 
+    // Módulo de Entrega e Retirada
+    Route::get('estoque/encomendas/retirada', \App\Livewire\Estoque\EncomendaRetirada::class)->name('estoque.encomendas.retirada');
+
     Route::resource('bloqueios', BloqueioController::class)->names('bloqueios');
     Route::get('bloquear/{cliente_id}/cliente', [BloqueioController::class, 'bloquear'])->name('bloquear.cliente');
     Route::get('bloqueios/{cliente_id}/mostrar', [BloqueioController::class, 'bloqueios'])->name('bloqueios.mostrar');
