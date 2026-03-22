@@ -79,6 +79,11 @@ class PagamentoRota extends Component
         $this->carregarSaldoCredito();
         $this->calcularValores();
 
+        // Inicializa dados de faturamento do orçamento
+        $this->precisaNotaFiscal = (bool) ($this->orcamento->precisa_nota_fiscal ?? false);
+        $this->cnpjCpfNota = $this->orcamento->cnpj_cpf_nota ?? '';
+        $this->notaOutroCnpjCpf = !empty($this->cnpjCpfNota);
+
         // Apenas Financeiro pode acessar esta tela
         $this->authorize('viewBilling', $this->orcamento);
 
@@ -461,7 +466,8 @@ class PagamentoRota extends Component
                     $dadosItem = [
                         'orcamento_id'          => $this->orcamentoId,
                         'condicao_pagamento_id' => $this->orcamento->condicao_id,
-                        'tipo_documento'        => $this->orcamento->precisa_nota_fiscal ? 'nota_fiscal' : 'cupom_fiscal',
+                        'tipo_documento'        => $this->precisaNotaFiscal ? 'nota_fiscal' : 'cupom_fiscal',
+                        'cnpj_cpf_nota'         => $this->notaOutroCnpjCpf ? $this->cnpjCpfNota : null,
                         'metodos_pagamento'     => [
                             [
                                 'metodo_id' => $forma['condicao_id'],
@@ -499,7 +505,8 @@ class PagamentoRota extends Component
                                 'orcamento_id'          => $this->orcamentoId,
                                 'condicao_id'           => $this->orcamento->condicao_id,
                                 'condicao_pagamento_id' => $this->orcamento->condicao_id,
-                                'tipo_documento'        => $this->orcamento->precisa_nota_fiscal ? 'nota_fiscal' : 'cupom_fiscal',
+                                'tipo_documento'        => $this->precisaNotaFiscal ? 'nota_fiscal' : 'cupom_fiscal',
+                                'cnpj_cpf_nota'         => $this->notaOutroCnpjCpf ? $this->cnpjCpfNota : null,
                                 'metodos_pagamento'     => [
                                     [
                                         'metodo_id'  => $metodoCredito->id,

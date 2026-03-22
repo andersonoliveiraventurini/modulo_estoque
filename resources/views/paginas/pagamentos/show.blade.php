@@ -7,14 +7,15 @@
                 {{-- ── Cabeçalho ──────────────────────────────────────────────── --}}
                 <div class="flex items-center justify-between flex-wrap gap-3">
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                            <svg class="w-7 h-7 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        <h1 class="text-2xl font-black text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                            <svg class="w-8 h-8 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
-                            Pagamento #{{ $pagamento->id }}
+                            Orçamento #{{ $pagamento->orcamento_id }}
                         </h1>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
+                            <span class="font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider text-[10px] bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded">Comprovante de Pagamento #{{ $pagamento->id }}</span>
+                            <span>•</span>
                             Registrado em {{ $pagamento->data_pagamento?->format('d/m/Y \à\s H:i') }}
                         </p>
                     </div>
@@ -56,8 +57,9 @@
                         @endif
 
                         <a href="{{ route('orcamentos.show', $pagamento->orcamento_id) }}"
-                            class="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium">
-                            ← Orçamento #{{ $pagamento->orcamento_id }}
+                           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-sm font-semibold shadow-sm hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors">
+                            <x-heroicon-o-arrow-left class="w-4 h-4" />
+                            Ver Orçamento
                         </a>
                     </div>
                 </div>
