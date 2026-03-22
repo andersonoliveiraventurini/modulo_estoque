@@ -141,8 +141,10 @@ class Orcamento extends Model
      */
     public function pagamentoFinalizado()
     {
-        $totalPago = $this->pagamentos()->sum('valor');
-        return $totalPago >= $this->valorComDescontos();
+        $totalPago = (float) $this->pagamentos()->ativos()->sum('valor_pago');
+        
+        // Usamos o accessor valor_total que já resolve valor_total_itens vs valor_com_desconto
+        return $totalPago >= (float) $this->valor_total;
     }
 
     public function transportes()

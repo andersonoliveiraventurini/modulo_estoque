@@ -301,11 +301,19 @@ Route::middleware(['auth'])->group(function () {
     Route::get('cliente/create_completo', [ClienteController::class, 'create_completo'])->name('clientes.create_completo');
     Route::get('historico-financeiro', \App\Livewire\HistoricoFinanceiroIndex::class)->name('historico.financeiro');
 
-    // Fluxo de Devoluções
+    // Fluxo de Devoluções (Existente)
     Route::get('devolucoes/solicitar', \App\Livewire\Returns\ReturnSolicitation::class)->name('devolucoes.solicitar_index');
     Route::get('devolucoes/solicitar/{pedidoId}', \App\Livewire\Returns\ReturnSolicitation::class)->name('devolucoes.solicitar.pedido');
     Route::get('devolucoes/aprovacao-vendas', \App\Livewire\Returns\ReturnApprovalSales::class)->name('devolucoes.aprovacao-vendas');
     Route::get('devolucoes/aprovacao-estoque', \App\Livewire\Returns\ReturnApprovalStock::class)->name('devolucoes.aprovacao-estoque');
+
+    // Novo Módulo de RNC e Devoluções
+    Route::get('gestao/qualidade', \App\Livewire\Quality\QualityDashboard::class)->name('quality.dashboard');
+    Route::get('rnc/novo', \App\Livewire\Quality\NonConformityForm::class)->name('rnc.create');
+    Route::get('rnc/{rnc}/editar', \App\Livewire\Quality\NonConformityForm::class)->name('rnc.edit');
+    Route::get('devolucoes-produtos/novo', \App\Livewire\Quality\ProductReturnForm::class)->name('product_returns.create');
+    Route::get('devolucoes-produtos/{return}/autorizar', \App\Livewire\Quality\ProductReturnApproval::class)->name('product_returns.approve');
+
     Route::resource('bloqueios', BloqueioController::class)->names('bloqueios');
     Route::get('bloquear/{cliente_id}/cliente', [BloqueioController::class, 'bloquear'])->name('bloquear.cliente');
     Route::get('bloqueios/{cliente_id}/mostrar', [BloqueioController::class, 'bloqueios'])->name('bloqueios.mostrar');

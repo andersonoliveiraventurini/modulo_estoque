@@ -2,21 +2,27 @@
 
 namespace App\Services;
 
+use App\Models\Cliente;
 use App\Models\ClienteCreditos;
 use App\Models\ClienteCreditoMovimentacoes;
+use App\Models\ClientCredit;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CreditoService
 {
     /**
      * Obtém o saldo total de créditos disponíveis do cliente
-     * 
-     * @param int $clienteId
-     * @return float
      */
     public function getSaldoDisponivel($clienteId)
     {
-        return ClienteCreditos::where('cliente_id', $clienteId)
+        // Prioriza o novo saldo persistido se disponível, senão calcula
+        $cliente = Cliente::find($clienteId);
+        if ($cliente && isset($cliente->saldo_credito)) {
+            return (float) $cliente->saldo_credito;
+        }
+
+        return (float) ClienteCreditos::where('cliente_id', $clienteId)
             ->where('status', 'ativo')
             ->where('valor_disponivel', '>', 0)
             ->where(function($query) {
@@ -27,10 +33,25 @@ class CreditoService
     }
 
     /**
+     * Sincroniza o saldo persistido do cliente com o somatório dos créditos ativos
+     */
+    public function sincronizarSaldo($clienteId)
+    {
+        $saldo = (float) ClienteCreditos::where('cliente_id', $clienteId)
+            ->where('status', 'ativo')
+            ->where('valor_disponivel', '>', 0)
+            ->where(function($query) {
+                $query->whereNull('data_validade')
+                      ->orWhere('data_validade', '>=', now());
+            })
+            ->sum('valor_disponivel');
+
+        Cliente::where('id', $clienteId)->update(['saldo_credito' => $saldo]);
+        return $saldo;
+    }
+
+    /**
      * Obtém todos os créditos ativos do cliente
-     * 
-     * @param int $clienteId
-     * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getCreditosAtivos($clienteId)
     {
@@ -48,29 +69,14 @@ class CreditoService
 
     /**
      * Utiliza créditos do cliente em uma venda/orçamento (FIFO)
-     * 
-     * @param int $clienteId
-     * @param float $valorUtilizar
-     * @param int $referenciaId
-     * @param string $referenciaTipo (ex: 'venda', 'orcamento')
-     * @param int $usuarioId
-     * @param string $motivo
-     * @return array
      */
     public function utilizarCreditos($clienteId, $valorUtilizar, $referenciaId, $referenciaTipo, $usuarioId, $motivo)
     {
-        \Illuminate\Support\Facades\Log::info("Iniciando utilização de créditos do cliente", [
-            'cliente_id' => $clienteId,
-            'valor' => $valorUtilizar,
-            'referencia' => "{$referenciaTipo} #{$referenciaId}"
-        ]);
-
         try {
             return DB::transaction(function () use ($clienteId, $valorUtilizar, $referenciaId, $referenciaTipo, $usuarioId, $motivo) {
                 $valorRestante = $valorUtilizar;
                 $creditosUtilizados = [];
 
-                // Busca créditos disponíveis (FIFO - primeiro que vence primeiro)
                 $creditos = $this->getCreditosAtivos($clienteId);
 
                 if ($creditos->isEmpty()) {
@@ -89,8 +95,8 @@ class CreditoService
                     $saldoAnterior = $credito->valor_disponivel;
                     $saldoPosterior = $saldoAnterior - $valorUsar;
 
-                    // Registra a movimentação
-                    $movimentacao = ClienteCreditoMovimentacoes::create([
+                    // Registra a movimentação antiga
+                    ClienteCreditoMovimentacoes::create([
                         'credito_id' => $credito->id,
                         'cliente_id' => $clienteId,
                         'tipo_movimentacao' => 'utilizacao',
@@ -103,321 +109,83 @@ class CreditoService
                         'usuario_id' => $usuarioId,
                     ]);
 
-                    // Atualiza o crédito
                     $credito->valor_disponivel = $saldoPosterior;
                     if ($saldoPosterior == 0) {
                         $credito->status = 'utilizado';
                     }
                     $credito->save();
 
-                    $creditosUtilizados[] = [
-                        'credito_id' => $credito->id,
-                        'valor_usado' => $valorUsar,
-                        'movimentacao_id' => $movimentacao->id,
-                    ];
-
                     $valorRestante -= $valorUsar;
                 }
 
-                \Illuminate\Support\Facades\Log::info("Utilização de créditos concluída", [
+                // Novo Registro de Débito (Transaction Log)
+                ClientCredit::create([
                     'cliente_id' => $clienteId,
-                    'valor_total_utilizado' => $valorUtilizar
+                    'orcamento_id' => $referenciaId, // assume orcamento_id se referenciaTipo for orcamento
+                    'tipo' => 'saida',
+                    'valor' => $valorUtilizar,
+                    'descricao' => $motivo,
                 ]);
 
+                $this->sincronizarSaldo($clienteId);
+
                 return [
-                    'sucesso' => $valorRestante == 0,
-                    'valor_utilizado' => $valorUtilizar - $valorRestante,
-                    'valor_restante' => $valorRestante,
-                    'creditos_utilizados' => $creditosUtilizados,
+                    'sucesso' => true,
+                    'valor_utilizado' => $valorUtilizar,
                 ];
             });
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("Erro na utilização de créditos", [
-                'cliente_id' => $clienteId,
-                'erro' => $e->getMessage()
-            ]);
+            Log::error("Erro na utilização de créditos: " . $e->getMessage());
             throw $e;
         }
     }
 
     /**
-     * Gera crédito de troco para o cliente
-     * 
-     * @param int $clienteId
-     * @param float $valorTroco
-     * @param int $referenciaId
-     * @param string $referenciaTipo
-     * @param int $usuarioId
-     * @param string $motivoOrigem
-     * @return ClienteCreditos
+     * Gera crédito (usado por Devoluções e Trocos)
      */
+    public function adicionarCredito(Cliente $cliente, float $valor, string $descricao, ?int $returnId = null, $tipo = 'devolucao')
+    {
+        return DB::transaction(function () use ($cliente, $valor, $descricao, $returnId, $tipo) {
+            // 1. Criar registro no sistema antigo (FIFO compatível)
+            $credito = ClienteCreditos::create([
+                'cliente_id' => $cliente->id,
+                'valor_original' => $valor,
+                'valor_disponivel' => $valor,
+                'tipo' => $tipo,
+                'motivo_origem' => $descricao,
+                'origem_tipo' => 'return',
+                'origem_id' => $returnId,
+                'usuario_criacao_id' => auth()->id() ?? 1,
+                'status' => 'ativo',
+                'data_validade' => now()->addYear(),
+            ]);
+
+            // 2. Criar registro no novo sistema (Transaction Log)
+            ClientCredit::create([
+                'cliente_id' => $cliente->id,
+                'return_id' => $returnId,
+                'tipo' => 'entrada',
+                'valor' => $valor,
+                'descricao' => $descricao,
+            ]);
+
+            // 3. Sincronizar saldo persistido
+            $this->sincronizarSaldo($cliente->id);
+
+            return $credito;
+        });
+    }
+
+    // Métodos legados mantidos para compatibilidade se chamados diretamente
     public function gerarCreditoTroco($clienteId, $valorTroco, $referenciaId, $referenciaTipo, $usuarioId, $motivoOrigem)
     {
-        return DB::transaction(function () use ($clienteId, $valorTroco, $referenciaId, $referenciaTipo, $usuarioId, $motivoOrigem) {
-            // Cria o novo crédito de troco
-            $credito = ClienteCreditos::create([
-                'cliente_id' => $clienteId,
-                'valor_original' => $valorTroco,
-                'valor_disponivel' => $valorTroco,
-                'tipo' => 'troco',
-                'motivo_origem' => $motivoOrigem,
-                'origem_tipo' => $referenciaTipo,
-                'origem_id' => $referenciaId,
-                'usuario_criacao_id' => $usuarioId,
-                'status' => 'ativo',
-                'data_validade' => now()->addYear(), // 1 ano de validade
-            ]);
-
-            // Registra a movimentação de criação
-            ClienteCreditoMovimentacoes::create([
-                'credito_id' => $credito->id,
-                'cliente_id' => $clienteId,
-                'tipo_movimentacao' => 'geracao_troco',
-                'valor_movimentado' => $valorTroco,
-                'saldo_anterior' => 0,
-                'saldo_posterior' => $valorTroco,
-                'motivo' => $motivoOrigem,
-                'referencia_tipo' => $referenciaTipo,
-                'referencia_id' => $referenciaId,
-                'usuario_id' => $usuarioId,
-            ]);
-
-            return $credito;
-        });
+        $cliente = Cliente::find($clienteId);
+        return $this->adicionarCredito($cliente, $valorTroco, $motivoOrigem, $referenciaId, 'troco');
     }
 
-    /**
-     * Gera crédito de devolução
-     * 
-     * @param int $clienteId
-     * @param float $valorDevolucao
-     * @param int $referenciaId
-     * @param string $referenciaTipo
-     * @param int $usuarioId
-     * @param string $motivo
-     * @return ClienteCreditos
-     */
     public function gerarCreditoDevolucao($clienteId, $valorDevolucao, $referenciaId, $referenciaTipo, $usuarioId, $motivo)
     {
-        return DB::transaction(function () use ($clienteId, $valorDevolucao, $referenciaId, $referenciaTipo, $usuarioId, $motivo) {
-            $credito = ClienteCreditos::create([
-                'cliente_id' => $clienteId,
-                'valor_original' => $valorDevolucao,
-                'valor_disponivel' => $valorDevolucao,
-                'tipo' => 'devolucao',
-                'motivo_origem' => $motivo,
-                'origem_tipo' => $referenciaTipo,
-                'origem_id' => $referenciaId,
-                'usuario_criacao_id' => $usuarioId,
-                'status' => 'ativo',
-                'data_validade' => now()->addYear(),
-            ]);
-
-            ClienteCreditoMovimentacoes::create([
-                'credito_id' => $credito->id,
-                'cliente_id' => $clienteId,
-                'tipo_movimentacao' => 'geracao_troco',
-                'valor_movimentado' => $valorDevolucao,
-                'saldo_anterior' => 0,
-                'saldo_posterior' => $valorDevolucao,
-                'motivo' => $motivo,
-                'referencia_tipo' => $referenciaTipo,
-                'referencia_id' => $referenciaId,
-                'usuario_id' => $usuarioId,
-            ]);
-
-            return $credito;
-        });
-    }
-
-    /**
-     * Gera crédito de bonificação
-     * 
-     * @param int $clienteId
-     * @param float $valorBonificacao
-     * @param int $usuarioId
-     * @param string $motivo
-     * @return ClienteCreditos
-     */
-    public function gerarCreditoBonificacao($clienteId, $valorBonificacao, $usuarioId, $motivo)
-    {
-        return DB::transaction(function () use ($clienteId, $valorBonificacao, $usuarioId, $motivo) {
-            $credito = ClienteCreditos::create([
-                'cliente_id' => $clienteId,
-                'valor_original' => $valorBonificacao,
-                'valor_disponivel' => $valorBonificacao,
-                'tipo' => 'bonificacao',
-                'motivo_origem' => $motivo,
-                'origem_tipo' => 'manual',
-                'origem_id' => null,
-                'usuario_criacao_id' => $usuarioId,
-                'status' => 'ativo',
-                'data_validade' => now()->addYear(),
-            ]);
-
-            ClienteCreditoMovimentacoes::create([
-                'credito_id' => $credito->id,
-                'cliente_id' => $clienteId,
-                'tipo_movimentacao' => 'geracao_troco',
-                'valor_movimentado' => $valorBonificacao,
-                'saldo_anterior' => 0,
-                'saldo_posterior' => $valorBonificacao,
-                'motivo' => $motivo,
-                'referencia_tipo' => 'manual',
-                'referencia_id' => null,
-                'usuario_id' => $usuarioId,
-            ]);
-
-            return $credito;
-        });
-    }
-
-    /**
-     * Cancela/estorna um crédito
-     * 
-     * @param int $creditoId
-     * @param int $usuarioId
-     * @param string $motivo
-     * @return ClienteCreditos
-     */
-    public function cancelarCredito($creditoId, $usuarioId, $motivo)
-    {
-        return DB::transaction(function () use ($creditoId, $usuarioId, $motivo) {
-            $credito = ClienteCreditos::findOrFail($creditoId);
-            
-            if ($credito->status !== 'ativo') {
-                throw new \Exception('Apenas créditos ativos podem ser cancelados');
-            }
-
-            $saldoAnterior = $credito->valor_disponivel;
-
-            if ($saldoAnterior > 0) {
-                ClienteCreditoMovimentacoes::create([
-                    'credito_id' => $credito->id,
-                    'cliente_id' => $credito->cliente_id,
-                    'tipo_movimentacao' => 'cancelamento',
-                    'valor_movimentado' => $saldoAnterior,
-                    'saldo_anterior' => $saldoAnterior,
-                    'saldo_posterior' => 0,
-                    'motivo' => $motivo,
-                    'usuario_id' => $usuarioId,
-                ]);
-            }
-
-            $credito->valor_disponivel = 0;
-            $credito->status = 'cancelado';
-            $credito->save();
-
-            return $credito;
-        });
-    }
-
-    /**
-     * Estorna uma utilização de crédito
-     * 
-     * @param int $movimentacaoId
-     * @param int $usuarioId
-     * @param string $motivo
-     * @return array
-     */
-    public function estornarUtilizacao($movimentacaoId, $usuarioId, $motivo)
-    {
-        return DB::transaction(function () use ($movimentacaoId, $usuarioId, $motivo) {
-            $movimentacaoOriginal = ClienteCreditoMovimentacoes::findOrFail($movimentacaoId);
-
-            if ($movimentacaoOriginal->tipo_movimentacao !== 'utilizacao') {
-                throw new \Exception('Apenas movimentações de utilização podem ser estornadas');
-            }
-
-            $credito = ClienteCreditos::findOrFail($movimentacaoOriginal->credito_id);
-            $valorEstornar = $movimentacaoOriginal->valor_movimentado;
-            $saldoAnterior = $credito->valor_disponivel;
-            $saldoPosterior = $saldoAnterior + $valorEstornar;
-
-            // Cria movimentação de estorno
-            $movimentacaoEstorno = ClienteCreditoMovimentacoes::create([
-                'credito_id' => $credito->id,
-                'cliente_id' => $credito->cliente_id,
-                'tipo_movimentacao' => 'estorno',
-                'valor_movimentado' => $valorEstornar,
-                'saldo_anterior' => $saldoAnterior,
-                'saldo_posterior' => $saldoPosterior,
-                'motivo' => $motivo,
-                'referencia_tipo' => $movimentacaoOriginal->referencia_tipo,
-                'referencia_id' => $movimentacaoOriginal->referencia_id,
-                'usuario_id' => $usuarioId,
-            ]);
-
-            // Atualiza o crédito
-            $credito->valor_disponivel = $saldoPosterior;
-            if ($credito->status === 'utilizado' && $saldoPosterior > 0) {
-                $credito->status = 'ativo';
-            }
-            $credito->save();
-
-            return [
-                'credito' => $credito,
-                'movimentacao_estorno' => $movimentacaoEstorno,
-                'valor_estornado' => $valorEstornar,
-            ];
-        });
-    }
-
-    /**
-     * Obtém o histórico de movimentações de um cliente
-     * 
-     * @param int $clienteId
-     * @param int $limit
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
-    public function getHistoricoMovimentacoes($clienteId, $limit = 50)
-    {
-        return ClienteCreditoMovimentacoes::where('cliente_id', $clienteId)
-            ->with(['credito', 'usuario'])
-            ->orderBy('created_at', 'desc')
-            ->limit($limit)
-            ->get();
-    }
-
-    /**
-     * Expira créditos vencidos
-     * 
-     * @return int Quantidade de créditos expirados
-     */
-    public function expirarCreditosVencidos()
-    {
-        return DB::transaction(function () {
-            $creditosVencidos = ClienteCreditos::where('status', 'ativo')
-                ->where('valor_disponivel', '>', 0)
-                ->whereNotNull('data_validade')
-                ->where('data_validade', '<', now())
-                ->get();
-
-            $quantidadeExpirada = 0;
-
-            foreach ($creditosVencidos as $credito) {
-                $saldoAnterior = $credito->valor_disponivel;
-
-                    ClienteCreditoMovimentacoes::create([
-                    'credito_id' => $credito->id,
-                    'cliente_id' => $credito->cliente_id,
-                    'tipo_movimentacao' => 'expiracao',
-                    'valor_movimentado' => $saldoAnterior,
-                    'saldo_anterior' => $saldoAnterior,
-                    'saldo_posterior' => 0,
-                    'motivo' => 'Crédito expirado automaticamente por vencimento da data de validade',
-                    'usuario_id' => 1, // Sistema
-                ]);
-
-                 /** @var ClienteCreditos $credito */
-                $credito->valor_disponivel = 0.00;
-                $credito->status = 'expirado';
-                $credito->save();
-
-                $quantidadeExpirada++;
-            }
-
-            return $quantidadeExpirada;
-        });
+        $cliente = Cliente::find($clienteId);
+        return $this->adicionarCredito($cliente, $valorDevolucao, $motivo, $referenciaId, 'devolucao');
     }
 }

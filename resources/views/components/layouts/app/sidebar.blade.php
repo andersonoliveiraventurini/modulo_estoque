@@ -149,15 +149,15 @@
             </flux:navlist.item>
         </flux:navlist.group>
         
-        <flux:navlist.group heading="Devoluções" expandable :expanded="false">
-            <flux:navlist.item icon="arrow-path" :href="route('devolucoes.solicitar_index')"
-                :current="request()->routeIs('devolucoes.solicitar_index')" wire:navigate>{{ __('Solicitar Devolução') }}
+        <flux:navlist.group heading="RNC & Devoluções" expandable :expanded="true">
+            <flux:navlist.item icon="presentation-chart-line" :href="route('quality.dashboard')"
+                :current="request()->routeIs('quality.dashboard')" wire:navigate>{{ __('Painel de Gestão') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="check-badge" :href="route('devolucoes.aprovacao-vendas')"
-                :current="request()->routeIs('devolucoes.aprovacao-vendas')" wire:navigate>{{ __('Aprovação Vendas') }}
+            <flux:navlist.item icon="document-plus" :href="route('rnc.create')"
+                :current="request()->routeIs('rnc.create')" wire:navigate>{{ __('Nova RNC') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="archive-box" :href="route('devolucoes.aprovacao-estoque')"
-                :current="request()->routeIs('devolucoes.aprovacao-estoque')" wire:navigate>{{ __('Aprovação Estoque') }}
+            <flux:navlist.item icon="arrow-path-rounded-square" :href="route('product_returns.create')"
+                :current="request()->routeIs('product_returns.create')" wire:navigate>{{ __('Solicitar Devolução') }}
             </flux:navlist.item>
         </flux:navlist.group>
 
