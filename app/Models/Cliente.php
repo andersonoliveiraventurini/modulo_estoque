@@ -27,6 +27,7 @@ class Cliente extends Model
         'vendedor_id',
         'vendedor_externo_id',
         'vendedor_assistente_id',
+        'saldo_credito',
     ];
 
     protected $casts = [
@@ -203,5 +204,10 @@ public function vendedorAssistente()
     {
         $disponivel = $this->getLimiteTotalAttribute() - $this->getLimiteUtilizadoAttribute();
         return $disponivel > 0 ? $disponivel : 0.0;
+    }
+
+    public function creditos()
+    {
+        return $this->hasMany(ClientCredit::class, 'cliente_id');
     }
 }

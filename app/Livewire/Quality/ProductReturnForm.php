@@ -54,6 +54,8 @@ class ProductReturnForm extends Component
 
     public function updatedItemsSelecionados()
     {
+        if (!$this->orcamento) return;
+        
         foreach ($this->items_selecionados as $itemId) {
             if (!isset($this->quantidades[$itemId])) {
                 $item = $this->orcamento->itens->find($itemId);
@@ -79,12 +81,16 @@ class ProductReturnForm extends Component
                 return;
             }
             $item = $this->orcamento->itens->find($itemId);
+            if (!$item) continue;
+
             if ($qty > $item->quantidade) {
                 $this->addError("quantidades.$itemId", "A quantidade não pode ser maior que a vendida ({$item->quantidade}).");
                 return;
             }
             $itemsToReturn[$itemId] = $qty;
         }
+
+        if (!$this->orcamento) return;
 
         try {
             $data = [
