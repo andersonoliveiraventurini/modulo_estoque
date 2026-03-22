@@ -25,6 +25,11 @@ class NonConformityForm extends Component
     public $acoes_tomadas;
     public $observacoes;
 
+    // Search properties
+    public $showProdutoSearch = false;
+    public $searchProduto = '';
+    public $produtos = [];
+
     protected $rules = [
         'produto_nome' => 'required|string|max:255',
         'fornecedor_nome' => 'required|string|max:255',
@@ -80,6 +85,31 @@ class NonConformityForm extends Component
         } catch (\Exception $e) {
             Log::error("Erro ao salvar RNC: " . $e->getMessage());
             $this->addError('general', 'Ocorreu um erro ao salvar a RNC. Verifique os dados e tente novamente.');
+        }
+    }
+
+    public function updatedSearchProduto()
+    {
+        if (strlen($this->searchProduto) < 3) {
+            $this->produtos = [];
+            return;
+        }
+
+        $this->produtos = Produto::where('nome', 'like', "%{$this->searchProduto}%")
+            ->orWhere('referencia', 'like', "%{$this->searchProduto}%")
+            ->limit(10)
+            ->get();
+    }
+
+    public function selecionarProduto($id)
+    {
+        $produto = Produto::find($id);
+        if ($produto) {
+            $this->produto_id = $produto->id;
+            $this->produto_nome = $produto->nome;
+            $this->searchProduto = '';
+            $this->produtos = [];
+            $this->showProdutoSearch = false;
         }
     }
 

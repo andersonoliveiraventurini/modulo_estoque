@@ -54,12 +54,16 @@ class ProductReturnForm extends Component
 
     public function updatedItemsSelecionados()
     {
-        if (!$this->orcamento) return;
+        /** @var \App\Models\Orcamento|null $orcamento */
+        $orcamento = $this->orcamento;
+        if (!($orcamento instanceof \App\Models\Orcamento) || !$orcamento->itens) return;
         
         foreach ($this->items_selecionados as $itemId) {
             if (!isset($this->quantidades[$itemId])) {
-                $item = $this->orcamento->itens->find($itemId);
-                $this->quantidades[$itemId] = $item ? $item->quantidade : 0;
+                $item = $orcamento->itens->find($itemId);
+                if ($item) {
+                    $this->quantidades[$itemId] = $item->quantidade;
+                }
             }
         }
     }
@@ -80,7 +84,7 @@ class ProductReturnForm extends Component
                 $this->addError("quantidades.$itemId", 'A quantidade deve ser maior que zero.');
                 return;
             }
-            $item = $this->orcamento->itens->find($itemId);
+            $item = $this->orcamento?->itens?->find($itemId);
             if (!$item) continue;
 
             if ($qty > $item->quantidade) {
@@ -90,11 +94,13 @@ class ProductReturnForm extends Component
             $itemsToReturn[$itemId] = $qty;
         }
 
-        if (!$this->orcamento) return;
+        /** @var \App\Models\Orcamento|null $orcamento */
+        $orcamento = $this->orcamento;
+        if (!($orcamento instanceof \App\Models\Orcamento)) return;
 
         try {
             $data = [
-                'orcamento_id' => $this->orcamento->id,
+                'orcamento_id' => $orcamento->id,
                 'data_ocorrencia' => $this->data_ocorrencia,
                 'nota_fiscal' => $this->nota_fiscal,
                 'romaneio_recebimento' => $this->romaneio_recebimento,

@@ -31,7 +31,38 @@
                     
                     <flux:field>
                         <flux:label>Produto / Descrição</flux:label>
-                        <flux:input wire:model="produto_nome" placeholder="Ex: Vidro Temperado 8mm" />
+                        <div class="relative">
+                            <flux:input 
+                                wire:model.live.debounce.300ms="searchProduto" 
+                                placeholder="Buscar produto..." 
+                                icon="magnifying-glass"
+                                wire:focus="$set('showProdutoSearch', true)"
+                            />
+                            
+                            @if($showProdutoSearch && !empty($produtos))
+                                <div class="absolute z-10 w-full mt-1 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                                    @foreach($produtos as $produto)
+                                        <button 
+                                            type="button"
+                                            wire:click="selecionarProduto({{ $produto->id }})"
+                                            class="w-full px-4 py-2 text-left hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors border-b border-zinc-100 dark:border-zinc-700 last:border-0"
+                                        >
+                                            <div class="font-medium text-zinc-900 dark:text-white">{{ $produto->nome }}</div>
+                                            <div class="text-xs text-zinc-500">Ref: {{ $produto->referencia ?? '-' }}</div>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                        
+                        @if($produto_nome)
+                            <div class="mt-2 p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-200 dark:border-zinc-700 flex justify-between items-center">
+                                <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ $produto_nome }}</span>
+                                <button type="button" wire:click="$set('produto_nome', ''); $set('produto_id', null);" class="text-rose-500 hover:text-rose-700">
+                                    <flux:icon icon="x-mark" class="w-4 h-4" />
+                                </button>
+                            </div>
+                        @endif
                         <flux:error name="produto_nome" />
                     </flux:field>
 
