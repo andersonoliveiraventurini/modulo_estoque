@@ -323,6 +323,7 @@ class PagamentoController extends Controller
             'formas.condicaoPagamento',
             'formas.comprovantes.user',
             'comprovantes.user',
+            'routeBillingAttachments.user',
             'user',
         ])->findOrFail($id);
 

@@ -35,15 +35,36 @@
                                 'Pago' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'dark' => 'dark:bg-green-900/40 dark:text-green-200'],
                             ];
                             $currentStatusColor = $statusColors[$orcamento->status] ?? $statusColors['Pendente'];
+
+                            // Lógica de Transporte (Rota vs Balcão)
+                            $transportIds = $orcamento->transportes->pluck('id')->toArray();
+                            $isRota = collect($transportIds)->intersect([1, 2, 3, 6, 7])->isNotEmpty();
+                            $isBalcao = collect($transportIds)->intersect([4, 5])->isNotEmpty();
                         @endphp
                         <h2
-                            class="text-lg font-bold text-neutral-900 dark:text-white leading-tight truncate flex items-center gap-2">
+                            class="text-lg font-bold text-neutral-900 dark:text-white leading-tight truncate flex flex-wrap items-center gap-2">
                             #{{ $orcamento->id }}
                             <span
                                 class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold {{ $currentStatusColor['bg'] }} {{ $currentStatusColor['text'] }} {{ $currentStatusColor['dark'] }} border border-current border-opacity-20 flex-shrink-0">
                                 <span class="inline-block w-1.5 h-1.5 rounded-full bg-current opacity-70"></span>
                                 {{ $orcamento->status }}
                             </span>
+
+                            {{-- Badge de Rota/Balcão --}}
+                            @if ($isRota)
+                                <span
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-800 flex-shrink-0">
+                                    <x-heroicon-o-truck class="w-3.5 h-3.5" />
+                                    Rota
+                                </span>
+                            @elseif ($isBalcao)
+                                <span
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800 flex-shrink-0">
+                                    <x-heroicon-o-building-storefront class="w-3.5 h-3.5" />
+                                    Balcão
+                                </span>
+                            @endif
+
                             @if ($orcamento->encomenda !== null)
                                 <span
                                     class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300 border border-violet-200 dark:border-violet-700">

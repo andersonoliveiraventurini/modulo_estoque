@@ -234,10 +234,10 @@
                             </div>
                         </div>
 
-                        {{-- Comprovantes gerais --}}
+
                         @php $comprovantesGerais = $pagamento->comprovantes->whereNull('pagamento_forma_id'); @endphp
                         @if($comprovantesGerais->isNotEmpty())
-                            <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-5">
+                            <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-5 mt-6">
                                 <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                                     <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
@@ -260,6 +260,33 @@
                                                 <span class="text-gray-400">({{ number_format($comp->tamanho / 1024, 0) }} KB)</span>
                                             </button>
                                         @endif
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                        
+                        {{-- Comprovantes de Rota (Upload direto) --}}
+                        @if($pagamento->routeBillingAttachments->isNotEmpty())
+                            <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-5 mt-6">
+                                <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                    </svg>
+                                    Comprovantes de Rota
+                                </h3>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach($pagamento->routeBillingAttachments as $att)
+                                        <a href="{{ Storage::url($att->file_path) }}" target="_blank"
+                                            title="{{ $att->notes }}"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border {{ is_null($att->is_valid) ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-900/20' : ($att->is_valid ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/20' : 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-900/20') }} text-xs font-medium hover:opacity-80 transition-opacity">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                            </svg>
+                                            Doc #{{ $att->id }}
+                                            @if($att->notes)
+                                                <span class="opacity-60 text-[10px] ml-1">({{ $att->notes }})</span>
+                                            @endif
+                                        </a>
                                     @endforeach
                                 </div>
                             </div>

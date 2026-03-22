@@ -68,6 +68,13 @@ class PagamentoRota extends Component
     {
         $this->orcamentoId = $orcamentoId;
         $this->carregarOrcamento();
+
+        // Se o orçamento já estiver pago, redireciona para a tela de visualização
+        if (in_array(strtolower($this->orcamento->status), ['pago', 'finalizado', 'concluido'])) {
+            session()->flash('info', 'Este faturamento de rota já foi finalizado.');
+            return redirect()->route('orcamentos.show', $this->orcamentoId);
+        }
+
         $this->carregarCondicoesPagamento();
         $this->carregarSaldoCredito();
         $this->calcularValores();
@@ -293,7 +300,14 @@ class PagamentoRota extends Component
                     return; // Sai sem salvar pagamento
                 }
 
-                // 3. Salva o pagamento (approved ou restrictions)
+                // 3. Limpa pagamentos parciais existentes para consolidar no pagamento final
+                foreach ($this->formasPagamento as $forma) {
+                    if (!empty($forma['pagamento_id'])) {
+                        $this->pagamentoService->estornarPagamento($forma['pagamento_id'], 'Consolidação de faturamento de rota', false);
+                    }
+                }
+
+                // 4. Salva o pagamento (approved ou restrictions)
                 $this->validarDadosPagamento(false);
                 $dadosPagamento = $this->prepararDadosPagamento();
                 $resultado = $this->pagamentoService->salvarPagamentoVenda($dadosPagamento);
@@ -302,8 +316,8 @@ class PagamentoRota extends Component
                     'pagamento_id' => $resultado['pagamento']->id,
                 ]);
 
-                // 4. Salva os comprovantes enviados por forma de pagamento
-                $this->processarUploadComprovantes();
+                // 5. Salva os comprovantes enviados por forma de pagamento
+                $this->processarUploadComprovantes($resultado['pagamento'] ?? null);
             });
 
             $label = match ($this->billingStatus) {
@@ -537,6 +551,23 @@ class PagamentoRota extends Component
             'orcamento_id' => $this->orcamentoId,
             'roles'        => $roles,
         ]);
+    }
+
+    public function processarUploadComprovantes($pagamento = null): void
+    {
+        foreach ($this->formasPagamento as $index => $forma) {
+            // Se foi passado um pagamento específico, vinculamos todos a ele (fluxo de aprovação)
+            // Caso contrário, tentamos usar o pagamento_id que já está na linha (fluxo de salvar apenas imagens)
+            $p = $pagamento;
+            
+            if (!$p && !empty($forma['pagamento_id'])) {
+                $p = Pagamento::find($forma['pagamento_id']);
+            }
+
+            if ($p) {
+                $this->processarUploadComprovanteItem($index, $p);
+            }
+        }
     }
 
     public function salvarApenasComprovantes(): void

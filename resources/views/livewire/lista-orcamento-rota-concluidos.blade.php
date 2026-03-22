@@ -164,13 +164,17 @@
                         {{-- Comprovantes --}}
                         <td class="px-4 py-4">
                             @if($o->routeBillingAttachments->count())
-                                <span class="inline-flex items-center gap-1 text-xs {{ $anexosPendentes > 0 ? 'text-amber-600 dark:text-amber-400 font-semibold' : 'text-green-700 dark:text-green-400' }}">
-                                    <x-heroicon-o-paper-clip class="w-3.5 h-3.5" />
-                                    {{ $o->routeBillingAttachments->count() }} anexo(s)
-                                    @if($anexosPendentes > 0)
-                                        <span class="ml-1 px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30">{{ $anexosPendentes }} pendente(s)</span>
-                                    @endif
-                                </span>
+                                <div class="flex flex-col gap-1">
+                                    @foreach($o->routeBillingAttachments as $att)
+                                        <a href="{{ Storage::url($att->file_path) }}" 
+                                           target="_blank" 
+                                           title="{{ $att->notes }}"
+                                           class="inline-flex items-center gap-1 text-[10px] font-medium p-1 rounded border {{ is_null($att->is_valid) ? 'text-amber-700 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800' : ($att->is_valid ? 'text-green-700 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' : 'text-red-700 bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800') }} hover:opacity-80 transition-opacity">
+                                            <x-heroicon-o-paper-clip class="w-3 h-3" />
+                                            Doc #{{ $att->id }}
+                                        </a>
+                                    @endforeach
+                                </div>
                             @else
                                 <span class="text-xs text-zinc-400">Sem comprovantes</span>
                             @endif
@@ -183,12 +187,21 @@
                         <td class="px-4 py-4">
                             <div class="flex items-center gap-2">
                                 @can('viewBilling', App\Models\Orcamento::class)
-                                    <a href="{{ route('orcamentos.rota_pagamento', $o) }}">
-                                        <x-button size="sm" variant="primary">
-                                            <x-heroicon-o-banknotes class="w-4 h-4" />
-                                            Faturar
-                                        </x-button>
-                                    </a>
+                                    @if(in_array(strtolower($o->status), ['pago', 'finalizado', 'concluido']) && $o->pagamento)
+                                        <a href="{{ route('pagamentos.show', $o->pagamento->id) }}">
+                                            <x-button size="sm" variant="secondary">
+                                                <x-heroicon-o-eye class="w-4 h-4" />
+                                                Ver Pagamento
+                                            </x-button>
+                                        </a>
+                                    @else
+                                        <a href="{{ route('orcamentos.rota_pagamento', $o) }}">
+                                            <x-button size="sm" variant="primary">
+                                                <x-heroicon-o-banknotes class="w-4 h-4" />
+                                                Faturar
+                                            </x-button>
+                                        </a>
+                                    @endif
                                 @endcan
                                 <a href="{{ route('orcamentos.show', $o) }}">
                                     <x-button size="sm" variant="secondary">

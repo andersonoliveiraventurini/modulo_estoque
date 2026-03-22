@@ -1035,7 +1035,7 @@ class OrcamentoController extends Controller
             $bloqueiaAprovado = $aprovacaoExpirada;
         }
 
-        $statusBloqueado = $cotacaoBloqueada || $aprovacaoExpirada;
+        $statusBloqueado = $cotacaoBloqueada;
 
         return view('paginas.orcamentos.show', compact(
             'orcamento',

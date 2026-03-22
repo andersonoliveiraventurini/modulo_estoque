@@ -94,6 +94,12 @@ class Pagamento extends Model
         return $this->hasMany(RouteBillingAttachment::class);
     }
 
+    /** Comprovantes de pagamento de balcão vinculados a este pagamento */
+    public function comprovantes()
+    {
+        return $this->hasMany(PagamentoComprovante::class);
+    }
+
     public function movimentacoesCredito()
     {
         return $this->hasMany(ClienteCreditoMovimentacoes::class, 'referencia_id')
