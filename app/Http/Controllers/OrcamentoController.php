@@ -1055,7 +1055,7 @@ class OrcamentoController extends Controller
             $orcamento = Orcamento::with(['itens.produto'])->findOrFail($id);
 
             $status      = $request->input('status');
-            $validStatus = ['Aprovar desconto', 'Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'];
+            $validStatus = ['Aprovar desconto', 'Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado', 'Pagamento pendente'];
 
             if (!in_array($status, $validStatus)) {
                 return response()->json(['message' => 'Status inválido!'], 422);

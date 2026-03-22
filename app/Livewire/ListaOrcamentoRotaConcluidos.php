@@ -82,7 +82,13 @@ class ListaOrcamentoRotaConcluidos extends Component
 
             // Apenas orçamentos de Rota
             ->whereHas('transportes', fn ($q) => $q->whereIn('tipos_transportes.id', self::ROUTE_TRANSPORT_IDS))
-            ->whereIn('workflow_status', ['conferido', 'finalizado'])
+            ->where(function ($q) {
+                $q->whereIn('workflow_status', ['conferido', 'finalizado'])
+                    ->orWhere(function ($q2) {
+                        $q2->whereNotNull('encomenda')
+                            ->whereIn('status', ['Aprovado', 'Pagamento pendente', 'Pago']);
+                    });
+            })
 
             // Busca geral
             ->when($this->search, function ($query) {

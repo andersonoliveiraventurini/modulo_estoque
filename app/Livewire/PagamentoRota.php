@@ -302,6 +302,9 @@ class PagamentoRota extends Component
                 // 2. Para negação, dispara notificações e NÃO salva pagamento
                 if ($this->billingStatus === 'rejected') {
                     $this->dispararNotificacoesNegacao();
+                    
+                    // Atualiza status para Pagamento pendente
+                    $this->orcamento->update(['status' => 'Pagamento pendente']);
                     return; // Sai sem salvar pagamento
                 }
 
@@ -323,6 +326,13 @@ class PagamentoRota extends Component
 
                 // 5. Salva os comprovantes enviados por forma de pagamento
                 $this->processarUploadComprovantes($resultado['pagamento'] ?? null);
+
+                // 6. Atualiza status do orçamento de acordo com a decisão (APÓS salvar pagamento)
+                if ($this->billingStatus === 'approved') {
+                    $this->orcamento->update(['status' => 'Pago']);
+                } else {
+                    $this->orcamento->update(['status' => 'Pagamento pendente']);
+                }
             });
 
             $label = match ($this->billingStatus) {

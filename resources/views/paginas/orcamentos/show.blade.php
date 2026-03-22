@@ -33,6 +33,7 @@
                                 'Rejeitado' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'dark' => 'dark:bg-red-900/40 dark:text-red-200'],
                                 'Expirado' => ['bg' => 'bg-neutral-100', 'text' => 'text-neutral-800', 'dark' => 'dark:bg-neutral-700 dark:text-neutral-200'],
                                 'Pago' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'dark' => 'dark:bg-green-900/40 dark:text-green-200'],
+                                'Pagamento pendente' => ['bg' => 'bg-orange-100', 'text' => 'text-orange-800', 'dark' => 'dark:bg-orange-900/40 dark:text-orange-200'],
                             ];
                             $currentStatusColor = $statusColors[$orcamento->status] ?? $statusColors['Pendente'];
 
@@ -438,7 +439,7 @@
                                                                 class="flex-1 border border-gray-300 dark:border-neutral-600 dark:bg-zinc-700 dark:text-white rounded-lg px-2 py-1.5 text-sm status-select focus:ring-2 focus:ring-blue-300 focus:outline-none
                     {{ $statusBloqueado ? 'opacity-50 cursor-not-allowed' : '' }}"
                                                                 data-id="{{ $orcamento->id }}">
-                                                                @foreach (['Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'] as $s)
+                                                                @foreach (['Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado', 'Pagamento pendente'] as $s)
                                                                     @if ($s === 'Aprovado' && $bloqueiaAprovado && $orcamento->status !== 'Aprovado')
                                                                         @continue
                                                                     @endif
@@ -463,11 +464,19 @@
                                                 </form>
 
                                                 @if ($orcamento->encomenda && $orcamento->status === 'Aprovado')
-                                                    <a href="{{ route('orcamentos.pagamento', $orcamento->id) }}"
-                                                        class="inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium">
-                                                        <x-heroicon-o-banknotes class="w-4 h-4" />
-                                                        Registrar pagamento no balcão
-                                                    </a>
+                                                    @if ($isRota)
+                                                        <a href="{{ route('orcamentos.rota_pagamento', $orcamento->id) }}"
+                                                            class="inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium">
+                                                            <x-heroicon-o-truck class="w-4 h-4" />
+                                                            Faturamento de Rota
+                                                        </a>
+                                                    @else
+                                                        <a href="{{ route('orcamentos.pagamento', $orcamento->id) }}"
+                                                            class="inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium">
+                                                            <x-heroicon-o-banknotes class="w-4 h-4" />
+                                                            Registrar pagamento no balcão
+                                                        </a>
+                                                    @endif
                                                 @endif
                                             @endif
 
@@ -647,9 +656,9 @@
                         <p class="text-sm text-amber-700 dark:text-amber-300 mt-1">
                             Este orçamento é uma <strong>encomenda</strong>. O lote de separação não será iniciado
                             até que o pagamento seja confirmado pelo financeiro via
-                            <a href="{{ route('solicitacoes-pagamento.aprovar', $orcamento->id) }}"
+                            <a href="{{ $isRota ? route('orcamentos.rota_pagamento', $orcamento->id) : route('solicitacoes-pagamento.aprovar', $orcamento->id) }}"
                                 class="underline font-semibold hover:text-amber-900 dark:hover:text-amber-100">
-                                solicitação de pagamento
+                                {{ $isRota ? 'faturamento de rota' : 'solicitação de pagamento' }}
                             </a>.
                         </p>
                     </div>
