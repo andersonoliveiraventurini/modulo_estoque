@@ -61,7 +61,6 @@ class OrcamentoStoreRequest extends FormRequest
         ];
     }
 
-    /*
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
@@ -115,5 +114,4 @@ class OrcamentoStoreRequest extends FormRequest
             'valor_total' => $normalizarValor($this->valor_total),
         ]);
     }
-    */
-}
+    }

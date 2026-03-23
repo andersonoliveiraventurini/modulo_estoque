@@ -168,6 +168,17 @@ Quando o estoque cai abaixo do mínimo (via `EstoqueService::verificarAlertaEsto
 | `baixarSaida(Conferencia $conf)` | Debita o `estoque_atual` dos produtos conferidos. Protegido por `DB::transaction`. |
 | `checarEstoqueMinimo(Produto $produto, float $qtd)` | Retorna `true` se houver estoque disponível após reserva + quantidade solicitada. |
 | `verificarAlertaEstoqueBaixo(Produto $produto)` | Dispara e-mail e cria requisição automática se estoque ≤ mínimo. |
+| `reservarParaOrcamento(Orcamento $orc)` | Reserva itens (tabela `estoque_reservas`) com proteção de idempotência. |
+| `liberarReservaDoOrcamento(Orcamento $orc)`| Cancela reservas ativas. |
+
+#### Automação de Fluxo (Events & Observers)
+O sistema utiliza o `OrcamentoObserver` para disparar eventos automáticos baseados na mudança de status:
+- **Aprovado**: Dispara `OrcamentoAprovado` → `ReservarEstoqueAoAprovar` & `GerarFaturaAoAprovar`.
+- **Cancelado**: Dispara `OrcamentoCancelado` → `LiberarReservaAoCancelar`.
+- **Finalizado**: Dispara `OrcamentoFinalizado` → `LiberarReservaAoFinalizar`.
+
+> [!IMPORTANT]
+> A reserva de estoque possui proteção de idempotência via coluna `estoque_reservado_em` no model `Orcamento`, garantindo que múltiplas aprovações não dupliquem a reserva física.
 
 ---
 
@@ -355,6 +366,9 @@ php artisan test --filter BlocokTest
 
 # Testes do fluxo de caixa
 php artisan test --filter FluxoCaixaTest
+
+# Testes de Reserva de Estoque e Eventos
+php artisan test tests/Feature/OrcamentoReservaEstoqueTest.php
 ```
 
 ---

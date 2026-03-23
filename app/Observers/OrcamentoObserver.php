@@ -7,6 +7,7 @@ use App\Events\OrcamentoAprovado;
 use App\Events\OrcamentoCancelado;
 use App\Events\OrcamentoFinalizado;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class OrcamentoObserver
 {

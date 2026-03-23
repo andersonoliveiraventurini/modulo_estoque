@@ -14,6 +14,10 @@ use App\Models\Cor;
 use App\Models\Endereco;
 use App\Models\Fornecedor;
 use App\Models\Orcamento;
+use App\Events\OrcamentoAprovado;
+use App\Events\OrcamentoCancelado;
+use App\Events\OrcamentoFinalizado;
+use Illuminate\Support\Facades\Log;
 use App\Models\Produto;
 use App\Models\OrcamentoItem;
 use App\Models\User;
@@ -24,7 +28,6 @@ use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Models\PickingBatch;
 use App\Models\PickingItem;
@@ -265,8 +268,7 @@ class OrcamentoController extends Controller
 
     public function store(OrcamentoStoreRequest $request)
     {
-        \Illuminate\Support\Facades\Log::info('Tentativa de acesso ao Store do Orcamento. User: ' . (auth()->id() ?? 'null'));
-        // $this->authorize('approve', Orcamento::class);
+        $this->authorize('approve', Orcamento::class);
         $itenscomdesconto = false;
         $necessitaAprovacaoPagamento = false;
 

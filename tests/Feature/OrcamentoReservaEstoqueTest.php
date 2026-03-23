@@ -24,7 +24,7 @@ use Spatie\Permission\Models\Role;
 
 class OrcamentoReservaEstoqueTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, WithoutMiddleware;
 
     protected $vendedor;
     protected $cliente;
@@ -36,8 +36,8 @@ class OrcamentoReservaEstoqueTest extends TestCase
         parent::setUp();
 
         // Bypass authorization for tests to focus on business logic
-        Gate::before(fn() => true);
-        Gate::define('approve', fn() => true);
+        // Gate::before(fn() => true);
+        // Gate::define('approve', fn() => true);
 
         // Criar usuário e vendedor vinculados
         $this->vendedor = User::create([
@@ -109,6 +109,7 @@ class OrcamentoReservaEstoqueTest extends TestCase
     public function store_nao_deve_aprovar_se_estoque_for_insuficiente()
     {
         Event::fake([OrcamentoAprovado::class]);
+        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 
         $produto = Produto::create([
             'codigo' => 'P002',

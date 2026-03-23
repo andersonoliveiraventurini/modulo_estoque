@@ -6,8 +6,8 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use App\Models\Orcamento;
-use App\Policies\OrcamentoPolicy;
 use App\Observers\OrcamentoObserver;
+use App\Policies\OrcamentoPolicy;
 use App\Events\OrcamentoAprovado;
 use App\Events\OrcamentoCancelado;
 use App\Events\OrcamentoFinalizado;
@@ -15,6 +15,8 @@ use App\Listeners\ReservarEstoqueAoAprovar;
 use App\Listeners\GerarFaturaAoAprovar;
 use App\Listeners\LiberarReservaAoCancelar;
 use App\Listeners\LiberarReservaAoFinalizar;
+use App\Services\CreditoService;
+use App\Services\PagamentoService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -43,7 +45,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Gate::before(fn($user, $ability) => true);
         Gate::policy(Orcamento::class, OrcamentoPolicy::class);
         Orcamento::observe(OrcamentoObserver::class);
 
