@@ -4,13 +4,14 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreOrcamentoRequest extends FormRequest
+class OrcamentoStoreRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
+        \Illuminate\Support\Facades\Log::info('CALLING OrcamentoStoreRequest::authorize');
         return true;
     }
 
@@ -60,6 +61,7 @@ class StoreOrcamentoRequest extends FormRequest
         ];
     }
 
+    /*
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
@@ -113,4 +115,5 @@ class StoreOrcamentoRequest extends FormRequest
             'valor_total' => $normalizarValor($this->valor_total),
         ]);
     }
+    */
 }

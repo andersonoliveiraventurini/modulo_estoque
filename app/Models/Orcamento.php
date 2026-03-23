@@ -41,6 +41,12 @@ class Orcamento extends Model
         'valor_com_desconto',
         'encomenda',
         'loading_day',
+        'estoque_reservado_em',
+    ];
+
+    protected $casts = [
+        'estoque_reservado_em' => 'datetime',
+        'validade' => 'date',
     ];
 
     // Model Orcamento
@@ -341,5 +347,25 @@ class Orcamento extends Model
     public function isEntregaAgendada(): bool
     {
         return in_array($this->canal_venda, ['rota', 'entrega_terceiros']);
+    }
+
+    // ─── Status helpers ───────────────────────────────────────────────────────
+
+    /** O orçamento foi aprovado (estoque válido, pronto para separação). */
+    public function isAprovado(): bool
+    {
+        return $this->status === 'Aprovado';
+    }
+
+    /** O orçamento foi faturado / concluído financeiramente. */
+    public function isFinalizado(): bool
+    {
+        return in_array($this->status, ['Finalizado', 'Pago']);
+    }
+
+    /** O orçamento foi cancelado, rejeitado, expirado ou estornado. */
+    public function isCancelado(): bool
+    {
+        return in_array($this->status, ['Cancelado', 'Rejeitado', 'Expirado', 'Estornado']);
     }
 }

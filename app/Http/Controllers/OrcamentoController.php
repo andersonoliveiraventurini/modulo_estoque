@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\OrcamentoPdfService;
 
-use App\Http\Requests\StoreOrcamentoRequest;
+use App\Http\Requests\OrcamentoStoreRequest;
 use App\Http\Requests\UpdateOrcamentoRequest;
 use App\Models\Cliente;
 use App\Models\CondicoesPagamento;
@@ -23,7 +23,7 @@ use App\Models\TipoTransporte;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
-use DragonCode\Contracts\Cashier\Auth\Auth;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Models\PickingBatch;
@@ -263,8 +263,10 @@ class OrcamentoController extends Controller
         return redirect()->back()->with('error', 'Ação inválida.');
     }
 
-    public function store(StoreOrcamentoRequest $request)
+    public function store(OrcamentoStoreRequest $request)
     {
+        \Illuminate\Support\Facades\Log::info('Tentativa de acesso ao Store do Orcamento. User: ' . (auth()->id() ?? 'null'));
+        // $this->authorize('approve', Orcamento::class);
         $itenscomdesconto = false;
         $necessitaAprovacaoPagamento = false;
 
@@ -326,8 +328,8 @@ class OrcamentoController extends Controller
 
         $orcamento = Orcamento::create([
             'cliente_id' => $request->cliente_id,
-            'vendedor_id' => Auth()->user()->id,
-            'usuario_logado_id' => Auth()->user()->id,
+            'vendedor_id' => auth()->user()->id,
+            'usuario_logado_id' => auth()->user()->id,
             'obra' => $request->nome_obra,
             'valor_total_itens' => $request->valor_total,
             'guia_recolhimento' => $request->guia_recolhimento,
@@ -510,9 +512,9 @@ class OrcamentoController extends Controller
         if ($request->has('itens')) {
             foreach ($request->itens as $item) {
                 $produto = \App\Models\Produto::find($item['id']);
-                if ($produto && $produto->estoque_atual !== null) {
+                if ($produto) {
                     $quantidadeSolicitada = (float)($item['quantidade'] ?? 0);
-                    if ($quantidadeSolicitada > $produto->estoque_atual) {
+                    if ($quantidadeSolicitada > $produto->estoque_disponivel) {
                         $temItensSemEstoque = true;
                         break;
                     }
@@ -552,7 +554,7 @@ class OrcamentoController extends Controller
         $necessitaAprovacaoDesconto = $temQualquerDesconto && (
             $clienteBloqueado ||
             $descontoPercentual > (float)($request->desconto_aprovado ?? 0) ||
-            (Auth()->user()->vendedor->desconto ?? 0) < $descontoPercentual ||
+            (auth()->user()->vendedor->desconto ?? 0) < $descontoPercentual ||
             $itenscomdesconto
         );
 
@@ -566,14 +568,8 @@ class OrcamentoController extends Controller
                 $orcamento->status = 'Aprovado';
                 $orcamento->save();
 
-                // Reserva estoque automaticamente
-                try {
-                    app(EstoqueService::class)->reservarParaOrcamento($orcamento);
-                } catch (\Exception $e) {
-                    Log::error("Erro ao reservar estoque no store: " . $e->getMessage());
-                    // Não bloqueia o retorno se falhar, mas loga. 
-                    // Em um cenário real, talvez devesse reverter o status.
-                }
+                // O estoque será reservado automaticamente pelo OrcamentoObserver
+                // via evento OrcamentoAprovado disparado ao salvar o status 'Aprovado'.
 
                 // Sincroniza com RD Station
                 try {
@@ -667,6 +663,7 @@ class OrcamentoController extends Controller
 
         // 2. Encontra o orçamento (sem alterações)
         $orcamento = Orcamento::findOrFail($id);
+        $this->authorize('approve', $orcamento);
 
         // 3. Executa a lógica com base na ação escolhida
         if ($request->input('acao') === 'aprovar') {
@@ -677,12 +674,7 @@ class OrcamentoController extends Controller
                 'workflow_status' => 'aguardando_separacao'
             ]);
 
-            // Reserva estoque após aprovação do desconto
-            try {
-                app(EstoqueService::class)->reservarParaOrcamento($orcamento);
-            } catch (\Exception $e) {
-                Log::error("Erro ao reservar estoque após aprovação de desconto: " . $e->getMessage());
-            }
+            // Reserva estoque será feita via OrcamentoObserver (evento OrcamentoAprovado)
 
             // Sincroniza com RD Station após aprovação de desconto
             try {

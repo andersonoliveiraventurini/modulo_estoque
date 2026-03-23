@@ -14,6 +14,10 @@ final class EstoqueService
 {
     public function reservarParaOrcamento(Orcamento $orcamento): void
     {
+        if ($orcamento->estoque_reservado_em !== null) {
+            return;
+        }
+
         Log::info("Iniciando reserva de estoque para Orçamento #{$orcamento->id}");
         $orcamento->load('itens.produto');
 
@@ -45,6 +49,8 @@ final class EstoqueService
                     
                     Log::info("Item reservado: Produto #{$produto->id}, Qtd: {$quantidade}");
                 }
+
+                $orcamento->update(['estoque_reservado_em' => now()]);
             });
             Log::info("Reserva concluída com sucesso para Orçamento #{$orcamento->id}");
         } catch (\Exception $e) {

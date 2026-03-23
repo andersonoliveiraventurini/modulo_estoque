@@ -6,6 +6,7 @@ use App\Models\Orcamento;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
+use Illuminate\Support\Facades\Log;
 
 class OrcamentoPolicy
 {
@@ -117,6 +118,7 @@ class OrcamentoPolicy
      */
     public function approve(User $user)
     {
+        Log::info("OrcamentoPolicy::approve() chamado para User #{$user->id}");
         if ($user->hasRole('admin')) {
             return true;
         }
