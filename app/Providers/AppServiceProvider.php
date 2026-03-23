@@ -34,12 +34,8 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Registra o PagamentoService como singleton
-        // Injeta automaticamente o CreditoService como dependência
-        $this->app->singleton(PagamentoService::class, function ($app) {
-            return new PagamentoService(
-                $app->make(CreditoService::class)
-            );
-        });
+        // O Laravel resolverá automaticamente as dependências do construtor
+        $this->app->singleton(PagamentoService::class);
     }
 
     /**

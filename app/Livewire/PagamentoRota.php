@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Notifications\RouteBillingDeniedNotification;
 use App\Services\PagamentoService;
 use App\Services\CreditoService;
+use App\Services\CnpjService;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
@@ -43,6 +44,7 @@ class PagamentoRota extends Component
     public $pagamentoCreditoId   = null;
     public $valorCreditoOriginal = 0;
     public $isBlocked            = false;
+    public $isCnpjAtivo          = true;
 
     // ─── Faturamento de Rota ────────────────────────────────────────────────
     /** approved | restrictions | rejected */
@@ -57,11 +59,13 @@ class PagamentoRota extends Component
     // ─── Serviços ────────────────────────────────────────────────────────────
     protected $pagamentoService;
     protected $creditoService;
+    protected $cnpjService;
 
-    public function boot(PagamentoService $pagamentoService, CreditoService $creditoService)
+    public function boot(PagamentoService $pagamentoService, CreditoService $creditoService, CnpjService $cnpjService)
     {
         $this->pagamentoService = $pagamentoService;
         $this->creditoService   = $creditoService;
+        $this->cnpjService      = $cnpjService;
     }
 
     public function mount($orcamentoId)
@@ -78,6 +82,7 @@ class PagamentoRota extends Component
         $this->carregarCondicoesPagamento();
         $this->carregarSaldoCredito();
         $this->calcularValores();
+        $this->verificarCnpjAtivo();
 
         // Inicializa dados de faturamento do orçamento
         $this->precisaNotaFiscal = (bool) ($this->orcamento->precisa_nota_fiscal ?? false);
@@ -159,6 +164,17 @@ class PagamentoRota extends Component
             $saldoNoBanco = $this->creditoService->getSaldoDisponivel($this->orcamento->cliente_id);
             // O saldo total disponível para este faturamento é o que está no banco + o que já foi abatido neste pedido (reservado)
             $this->saldoDisponivel = (float) $saldoNoBanco + (float) $this->valorCreditoOriginal;
+        }
+    }
+
+    public function verificarCnpjAtivo(): void
+    {
+        if ($this->orcamento && $this->orcamento->cliente && $this->orcamento->cliente->cnpj_cpf) {
+            $cnpj = preg_replace('/\D/', '', $this->orcamento->cliente->cnpj_cpf);
+            if (strlen($cnpj) === 14) {
+                $dadosCnpj = $this->cnpjService->consultarCnpj($cnpj);
+                $this->isCnpjAtivo = $this->cnpjService->estaAtivo($dadosCnpj);
+            }
         }
     }
 
