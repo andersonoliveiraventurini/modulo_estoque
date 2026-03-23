@@ -10,6 +10,8 @@ class ClienteHistoricoCreditos extends Component
 {
     use WithPagination;
 
+    protected $listeners = ['creditoAdicionado' => '$refresh'];
+
     public $clienteId;
 
     public function mount($clienteId)

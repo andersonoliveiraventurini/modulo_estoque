@@ -155,6 +155,13 @@
                     </x-tab>
 
                     <x-tab name="creditos-historico" label="Créditos do Cliente">
+                        {{-- Adicionar Crédito Manual --}}
+                        @can('gerenciarCredito', $cliente)
+                        <div class="mb-4">
+                            @livewire('adicionar-credito-cliente', ['clienteId' => $cliente->id], key('adicionar-credito-'.$cliente->id))
+                        </div>
+                        @endcan
+
                         @livewire('cliente-historico-creditos', ['clienteId' => $cliente->id])
                     </x-tab>
 

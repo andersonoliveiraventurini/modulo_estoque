@@ -63,4 +63,17 @@ class ClientePolicy
     {
         return false;
     }
+
+    /**
+     * Determina se o usuário pode gerenciar (adicionar saldo manualmente) o crédito do cliente.
+     */
+    public function gerenciarCredito(User $user, Cliente $cliente): bool
+    {
+        if ($user->hasRole('admin') || $user->hasRole('Financeiro')) {
+            return true;
+        }
+
+        return $user->checkPermissionTo('gerenciar_credito_cliente');
+    }
 }
+

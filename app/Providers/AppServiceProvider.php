@@ -6,8 +6,10 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use App\Models\Orcamento;
+use App\Models\Cliente;
 use App\Observers\OrcamentoObserver;
 use App\Policies\OrcamentoPolicy;
+use App\Policies\ClientePolicy;
 use App\Events\OrcamentoAprovado;
 use App\Events\OrcamentoCancelado;
 use App\Events\OrcamentoFinalizado;
@@ -46,6 +48,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(Orcamento::class, OrcamentoPolicy::class);
+        Gate::policy(Cliente::class, ClientePolicy::class);
         Orcamento::observe(OrcamentoObserver::class);
 
         // ─── Eventos de Orçamento ─────────────────────────────────────────────
