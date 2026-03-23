@@ -888,10 +888,8 @@
                                 <th class="px-3 py-2 border text-right">Preço Unit.</th>
                                 <th class="px-3 py-2 border text-right">Preço Unit. c/ Desc.</th>
                                 <th class="px-3 py-2 border text-right">Subtotal</th>
-                                <th class="px-3 py-2 border text-right">Estoque Atual</th>
-                                <th class="px-3 py-2 border text-right">Reservado</th>
-                                <th class="px-3 py-2 border text-right">Disponível</th>
-                                <th class="px-3 py-2 border text-center">Alerta</th>
+                                <th class="px-3 py-2 border text-right" title="Estoque real no sistema">Estoque</th>
+                                <th class="px-3 py-2 border text-right" title="Reservado por este e outros orçamentos">Reservado</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y">
@@ -901,14 +899,15 @@
                                     if (!$prod) {
                                         continue;
                                     }
-                                    $reservado = (float) \App\Models\EstoqueReserva::where('produto_id', $prod->id ?? 0)
-                                        ->where('status', 'ativa')
-                                        ->sum('quantidade');
-                                    $estoqueAtual = (float) ($prod->estoque_atual ?? 0);
-                                    $disponivel = $estoqueAtual - $reservado;
-                                    $min = (float) ($prod->estoque_minimo ?? 0);
-                                    $risco = $disponivel - (float) $item->quantidade < $min;
-                                    $semEstoque = (float) $item->quantidade > $disponivel;
+                                    $info = $estoqueInfo[$item->produto_id] ?? null;
+                                    $estoqueAtual = $info ? (float) $info['estoque_atual'] : 0;
+                                    $reservado = $info ? (float) $info['reservado_total'] : 0;
+                                    $reservadoOutros = $info ? (float) $info['reservado_outros'] : 0;
+                                    $detalheReservas = $info ? $info['detalhe_reservas'] : 'Sem reservas';
+                                    
+                                    $temReservaOutros = $reservadoOutros > 0;
+                                    $temReservaPropria = ($reservado - $reservadoOutros) > 0;
+                                    $semEstoque = ($estoqueAtual - $reservadoOutros) < (float) $item->quantidade;
                                 @endphp
                                 <tr class="{{ $semEstoque ? 'bg-red-50 dark:bg-red-900/20' : '' }}">
                                     <td class="px-3 py-2 border">{{ $prod->codigo ?? $item->produto_id }}</td>
@@ -926,7 +925,7 @@
                                         @if ($semEstoque)
                                             <div class="text-xs font-normal text-red-500 mt-0.5">
                                                 Faltam
-                                                {{ number_format((float) $item->quantidade - $disponivel, 0, ',', '.') }}
+                                                {{ number_format((float) $item->quantidade - ($estoqueAtual - $reservadoOutros), 0, ',', '.') }}
                                                 un.
                                             </div>
                                         @endif
@@ -940,47 +939,19 @@
                                     <td class="px-3 py-2 border text-right">R$
                                         {{ number_format($item->valor_com_desconto, 2, ',', '.') }}</td>
                                     <td class="px-3 py-2 border text-right">
-                                        {{ number_format($estoqueAtual, 2, ',', '.') }}</td>
-                                    <td class="px-3 py-2 border text-right">
-                                        {{ number_format($reservado, 2, ',', '.') }}</td>
-                                    <td
-                                        class="px-3 py-2 border text-right font-semibold {{ $semEstoque ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' }}">
-                                        {{ number_format($disponivel, 2, ',', '.') }}
+                                        {{ number_format($estoqueAtual, 2, ',', '.') }}
                                     </td>
-                                    <td class="px-3 py-2 border text-center">
-                                        @if ($semEstoque)
-                                            <span
-                                                class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200 border border-red-300">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                                                </svg>
-                                                Sem estoque
-                                            </span>
-                                        @elseif ($risco)
-                                            <span
-                                                class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                                                </svg>
-                                                Abaixo do mínimo
-                                            </span>
-                                        @else
-                                            <span
-                                                class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M5 13l4 4L19 7" />
-                                                </svg>
-                                                OK
-                                            </span>
-                                        @endif
+                                    <td class="px-3 py-2 border text-right" title="{{ $detalheReservas }}">
+                                        <div class="flex items-center justify-end gap-1">
+                                            @if($temReservaOutros)
+                                                <span class="text-xs text-red-600 font-bold" title="Outros orçamentos têm reserva">⚠️</span>
+                                                <span class="text-red-600 font-semibold">{{ number_format($reservado, 2, ',', '.') }}</span>
+                                            @elseif($temReservaPropria)
+                                                <span class="text-amber-600">{{ number_format($reservado, 2, ',', '.') }}</span>
+                                            @else
+                                                <span class="text-gray-500">{{ number_format($reservado, 2, ',', '.') }}</span>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach

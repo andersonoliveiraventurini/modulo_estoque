@@ -22,6 +22,38 @@ class OrcamentoShow extends Component
 
     public function atualizarStatus()
     {
+        if ($this->status === 'Aprovado') {
+            // Verifica disponibilidade descontando reservas de OUTROS orçamentos
+            // mas ignorando reserva do próprio orçamento atual
+            $itens = $this->orcamento->itens;
+            $itensSemEstoque = [];
+
+            foreach ($itens as $item) {
+                $produto = $item->produto;
+                if (!$produto) continue;
+
+                $reservadoOutros = \App\Models\EstoqueReserva::where('produto_id', $produto->id)
+                    ->where('status', 'ativa')
+                    ->where('orcamento_id', '!=', $this->orcamento->id)
+                    ->sum('quantidade');
+
+                $disponivel = max(0, ($produto->estoque_atual ?? 0) - $reservadoOutros);
+
+                if ($disponivel < $item->quantidade) {
+                    $itensSemEstoque[] = "{$produto->descricao}: "
+                        . "disponível {$disponivel}, necessário {$item->quantidade}";
+                }
+            }
+
+            if (!empty($itensSemEstoque)) {
+                $this->addError(
+                    'status',
+                    'Estoque insuficiente: ' . implode(' | ', $itensSemEstoque)
+                );
+                return;
+            }
+        }
+
         $this->orcamento->update(['status' => $this->status]);
         $this->dispatch('notify', 'Status atualizado com sucesso!');
     }

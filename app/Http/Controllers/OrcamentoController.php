@@ -1020,6 +1020,33 @@ class OrcamentoController extends Controller
 
         $statusBloqueado = $cotacaoBloqueada;
 
+        $estoqueInfo = $orcamento->itens->mapWithKeys(function ($item) use ($orcamento) {
+            $produto = $item->produto;
+            if (!$produto) return [$item->produto_id => null];
+
+            $reservas = \App\Models\EstoqueReserva::with('orcamento:id,versao,cliente_id')
+                ->where('produto_id', $produto->id)
+                ->where('status', 'ativa')
+                ->get();
+
+            $reservadoTotal = $reservas->sum('quantidade');
+            $reservadoOutros = $reservas->where('orcamento_id', '!=', $orcamento->id)
+                ->sum('quantidade');
+
+            $detalheReservas = $reservas->map(fn($r) =>
+                "Orç. #{$r->orcamento_id}" .
+                ($r->orcamento_id === $orcamento->id ? ' (este)' : '') .
+                ": {$r->quantidade} un."
+            )->join(' | ');
+
+            return [$item->produto_id => [
+                'estoque_atual'    => $produto->estoque_atual ?? 0,
+                'reservado_total'  => $reservadoTotal,
+                'reservado_outros' => $reservadoOutros,
+                'detalhe_reservas' => $detalheReservas ?: 'Sem reservas ativas',
+            ]];
+        });
+
         return view('paginas.orcamentos.show', compact(
             'orcamento',
             'cotacaoBloqueada',
@@ -1029,6 +1056,7 @@ class OrcamentoController extends Controller
             'prazoExpirado',
             'bloqueiaAprovado',
             'statusBloqueado',
+            'estoqueInfo'
         ));
     }
 
@@ -1067,7 +1095,7 @@ class OrcamentoController extends Controller
                 }
 
                 // ✅ Bloqueia se houver itens (com produto) sem estoque suficiente — itens de encomenda (produto_id null) não têm estoque próprio
-                $itensSemEstoque = $orcamento->itens->filter(function ($item) {
+                $itensSemEstoque = $orcamento->itens->filter(function ($item) use ($orcamento) {
                     if (is_null($item->produto_id)) {
                         return false; // item de encomenda: não verifica estoque
                     }
@@ -1075,7 +1103,11 @@ class OrcamentoController extends Controller
                     if (! $produto) {
                         return false;
                     }
-                    $estoqueDisponivel = ($produto->estoque_atual ?? 0) - ($produto->estoque_web ?? 0);
+                    $reservadoOutros = \App\Models\EstoqueReserva::where('produto_id', $produto->id)
+                        ->where('status', 'ativa')
+                        ->where('orcamento_id', '!=', $orcamento->id)
+                        ->sum('quantidade');
+                    $estoqueDisponivel = max(0, ($produto->estoque_atual ?? 0) - $reservadoOutros);
                     return $estoqueDisponivel < $item->quantidade;
                 });
 
@@ -1997,7 +2029,12 @@ class OrcamentoController extends Controller
             foreach ($orcamento->itens as $item) {
                 $produto = \App\Models\Produto::find($item->produto_id);
                 if ($produto && $produto->estoque_atual !== null) {
-                    if ((float)$item->quantidade > (float)$produto->estoque_atual) {
+                    $reservadoOutros = \App\Models\EstoqueReserva::where('produto_id', $produto->id)
+                        ->where('status', 'ativa')
+                        ->where('orcamento_id', '!=', $orcamento->id ?? 0)
+                        ->sum('quantidade');
+                    $disponivelReal = max(0, ($produto->estoque_atual ?? 0) - $reservadoOutros);
+                    if ((float)$item->quantidade > $disponivelReal) {
                         $temItensSemEstoque = true;
                         break;
                     }
