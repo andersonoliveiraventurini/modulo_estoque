@@ -376,8 +376,8 @@
 
                                             @if ($orcamento->condicao_id != null)
 
-                                                {{-- Aviso: prazo de 10 dias expirado (apenas para status não aprovado) --}}
-                                                @if ($aprovacaoExpirada && $orcamento->status !== 'Aprovado')
+                                                {{-- Aviso: prazo expirado (apenas para status não aprovado) --}}
+                                                @if ($prazoExpirado && $orcamento->status !== 'Aprovado')
                                                     @if ($orcamento->encomenda)
                                                         {{-- Encomenda: mensagem simplificada --}}
                                                         <div
@@ -399,7 +399,7 @@
                                                                 <strong>Prazo de aprovação expirado</strong><br>
                                                                 Todos os itens ficaram disponíveis em
                                                                 {{ \Carbon\Carbon::parse($ultimaAtualizacao)->format('d/m/Y \à\s H:i') }},
-                                                                mas o prazo de 10 dias para aprovar o orçamento foi
+                                                                mas o prazo de {{ $orcamento->encomenda ? '10' : '2' }} dias para aprovar o orçamento foi
                                                                 encerrado.
                                                             </div>
                                                         </div>

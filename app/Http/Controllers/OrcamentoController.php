@@ -1013,21 +1013,10 @@ class OrcamentoController extends Controller
 
         $prazoAprovacaoDias = $orcamento->encomenda ? 10 : 2;
 
-        if ($orcamento->encomenda) {
-            // Encomenda: bloqueia se nem todos disponíveis, ou se prazo de 10 dias expirou
-            $aprovacaoExpirada = $todosDisponiveis
-                && $ultimaAtualizacao !== null
-                && \Carbon\Carbon::parse($ultimaAtualizacao)->addDays(10)->isPast();
+        $prazoExpirado = $orcamento->validade !== null
+            && now()->isAfter($orcamento->validade);
 
-            $bloqueiaAprovado = !$todosDisponiveis || $aprovacaoExpirada;
-        } else {
-            // Orçamento comum: prazo de 2 dias a partir do created_at
-            $aprovacaoExpirada = \Carbon\Carbon::parse($orcamento->created_at)
-                ->addDays(2)
-                ->isPast();
-
-            $bloqueiaAprovado = $aprovacaoExpirada;
-        }
+        $bloqueiaAprovado = (!$orcamento->encomenda && $prazoExpirado) || ($orcamento->encomenda && (!$todosDisponiveis || $prazoExpirado));
 
         $statusBloqueado = $cotacaoBloqueada;
 
@@ -1037,7 +1026,7 @@ class OrcamentoController extends Controller
             'itensConsulta',
             'todosDisponiveis',
             'ultimaAtualizacao',
-            'aprovacaoExpirada',
+            'prazoExpirado',
             'bloqueiaAprovado',
             'statusBloqueado',
         ));
@@ -1332,6 +1321,12 @@ class OrcamentoController extends Controller
                     $pdfService = new OrcamentoPdfService();
                     $pdfService->gerarOrcamentoPdf($orcamentoAtualizado);
                 }
+
+                \Log::info('Preços atualizados — prazo de aprovação reiniciado', [
+                    'orcamento_id' => $orcamento->id,
+                    'nova_validade' => $orcamento->validade,
+                    'user_id'       => auth()->id(),
+                ]);
             });
 
             if ($orcamento->condicao_id == 20) {
