@@ -1069,6 +1069,7 @@ class OrcamentoController extends Controller
             $validStatus = ['Aprovar desconto', 'Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado', 'Pagamento pendente'];
 
             if (!in_array($status, $validStatus)) {
+                Log::info("Tentativa de atualizar orçamento #{$id} com status inválido: {$status}");
                 return response()->json(['message' => 'Status inválido!'], 422);
             }
 
@@ -1087,6 +1088,7 @@ class OrcamentoController extends Controller
                         );
 
                         if ($semFornecedor->isNotEmpty()) {
+                            Log::info("Bloqueio de aprovação por falta de fornecedor no orçamento #{$id}");
                             return response()->json([
                                 'message' => 'Não é possível aprovar: ' . $semFornecedor->count() . ' item(ns) da encomenda ainda não possui(em) fornecedor selecionado. Acesse a cotação e precifique todos os itens antes de aprovar.',
                             ], 422);
@@ -1094,10 +1096,11 @@ class OrcamentoController extends Controller
                     }
                 }
 
-                // ✅ Bloqueia se houver itens (com produto) sem estoque suficiente — itens de encomenda (produto_id null) não têm estoque próprio
-                $itensSemEstoque = $orcamento->itens->filter(function ($item) use ($orcamento) {
+                // ✅ Bloqueia se houver itens (com produto) sem estoque suficiente
+                // Regra: Encomendas são ignoradas, pois o estoque será adquirido após a aprovação
+                $itensSemEstoque = $orcamento->encomenda ? collect() : $orcamento->itens->filter(function ($item) use ($orcamento) {
                     if (is_null($item->produto_id)) {
-                        return false; // item de encomenda: não verifica estoque
+                        return false; // item de encomenda (sem ID): não verifica estoque
                     }
                     $produto = $item->produto;
                     if (! $produto) {
@@ -1119,6 +1122,7 @@ class OrcamentoController extends Controller
                         ->map(fn($i) => $i->produto?->nome ?? "Item #{$i->id}")
                         ->join(', ');
 
+                    Log::info("Bloqueio de aprovação por falta de estoque no orçamento #{$id}: {$nomes}");
                     return response()->json([
                         'message' => "Estoque insuficiente para: {$nomes}. Status alterado para \"Sem estoque\".",
                     ], 422);
