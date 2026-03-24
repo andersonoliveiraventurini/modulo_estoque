@@ -46,7 +46,7 @@ class FaltaController extends Controller
     {
         $produtos = Produto::where('ativo', true)->orderBy('nome')->get();
         $vendedores = Vendedor::with('user')->get();
-        $clientes = Cliente::where('ativo', true)->orderBy('nome')->get();
+        $clientes = Cliente::orderBy('nome')->get();
         return view('paginas.faltas.create', compact('produtos', 'vendedores', 'clientes'));
     }
 
