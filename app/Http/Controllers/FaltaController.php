@@ -37,17 +37,16 @@ class FaltaController extends Controller
 
         $faltas = $query->paginate(20)->withQueryString();
         $vendedores = Vendedor::with('user')->get();
-        $produtos = Produto::where('ativo', true)->orderBy('nome')->get();
+        $produtos = Produto::orderBy('nome')->get();
 
         return view('paginas.faltas.index', compact('faltas', 'vendedores', 'produtos'));
     }
 
     public function create()
     {
-        $produtos = Produto::where('ativo', true)->orderBy('nome')->get();
         $vendedores = Vendedor::with('user')->get();
         $clientes = Cliente::orderBy('nome')->get();
-        return view('paginas.faltas.create', compact('produtos', 'vendedores', 'clientes'));
+        return view('paginas.faltas.create', compact('vendedores', 'clientes'));
     }
 
     public function store(Request $request)
@@ -130,15 +129,14 @@ class FaltaController extends Controller
 
         $faltas = $query->get();
         $vendedores = Vendedor::with('user')->get();
-        $produtos = Produto::where('ativo', true)->orderBy('nome')->get();
+        $produtos = Produto::orderBy('nome')->get();
 
         return view('paginas.faltas.relatorio', compact('faltas', 'vendedores', 'produtos'));
     }
 
     public function buscarProduto(Request $request)
     {
-        $produtos = Produto::where('ativo', true)
-            ->where(function($q) use ($request) {
+        $produtos = Produto::where(function($q) use ($request) {
                 $q->where('nome', 'like', '%'.$request->q.'%')
                   ->orWhere('id', 'like', '%'.$request->q.'%')
                   ->orWhere('sku', 'like', '%'.$request->q.'%');
