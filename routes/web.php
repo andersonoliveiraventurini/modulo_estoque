@@ -338,15 +338,29 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('posicoes', PosicaoController::class)->names('posicoes')->parameters(['posicoes' => 'posicao']);
     Route::resource('inconsistencias', InconsistenciaRecebimentoController::class)->names('inconsistencias')->only(['index', 'show', 'destroy']);
     // Pedidos de Compras
+    // Rotas específicas de pedido_compras devem vir ANTES do resource
+    Route::get('pedido_compras/consulta-prazo', [PedidoCompraController::class, 'consultaPrazo'])->name('pedido_compras.consulta_prazo');
+    Route::get('pedido_compras/relatorio', [PedidoCompraController::class, 'relatorio'])->name('pedido_compras.relatorio');
+    Route::get('pedido_compras/estoque-minimo', [PedidoCompraController::class, 'estoqueMinimo'])->name('pedido_compras.estoque_minimo');
     Route::get('pedido_compras/{pedidoCompra}/itens', [\App\Http\Controllers\PedidoCompraController::class, 'getItensApi'])->name('pedido_compras.itens.api');
     Route::resource('pedido_compras', PedidoCompraController::class)->names('pedido_compras');
     Route::get('/pedido_compras/{pedidoCompra}/itens-json', [PedidoCompraController::class, 'itensJson'])->name('pedido_compras.itens_json');
+
+    // Follow Ups de Pedidos de Compra
+    Route::post('pedido_compras/{pedidoCompra}/followups', [\App\Http\Controllers\PedidoCompraFollowupController::class, 'store'])->name('pedido_compra_followups.store');
+    Route::delete('pedido_compra_followups/{followup}', [\App\Http\Controllers\PedidoCompraFollowupController::class, 'destroy'])->name('pedido_compra_followups.destroy');
 
     // Requisições de Compras
     Route::resource('requisicao_compras', RequisicaoCompraController::class)->names('requisicao_compras');
     Route::post('/requisicao_compras/{requisicao_compra}/aprovar', [RequisicaoCompraController::class, 'aprovar'])->name('requisicao_compras.aprovar');
     Route::post('/requisicao_compras/{requisicao_compra}/rejeitar', [RequisicaoCompraController::class, 'rejeitar'])->name('requisicao_compras.rejeitar');
     Route::post('/requisicao_compras/{requisicao_compra}/gerar-pedido', [RequisicaoCompraController::class, 'gerarPedido'])->name('requisicao_compras.gerar_pedido');
+
+    // Faltas — rotas específicas antes do resource
+    Route::get('faltas/relatorio', [\App\Http\Controllers\FaltaController::class, 'relatorio'])->name('faltas.relatorio');
+    Route::get('faltas/buscar-produto', [\App\Http\Controllers\FaltaController::class, 'buscarProduto'])->name('faltas.buscar_produto');
+    Route::get('faltas/pendentes', [\App\Http\Controllers\FaltaController::class, 'pendentes'])->name('faltas.pendentes');
+    Route::resource('faltas', \App\Http\Controllers\FaltaController::class)->only(['index', 'create', 'store', 'show']);
 
     // Carregar corredores dinamicamente para JS
     Route::get('/corredores-by-armazem/{armazem_id}', function($armazem_id) {

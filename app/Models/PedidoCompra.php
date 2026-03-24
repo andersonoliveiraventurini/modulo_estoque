@@ -70,4 +70,10 @@ class PedidoCompra extends Model
     {
         return $this->hasMany(Movimentacao::class, 'pedido_compra_id');
     }
+
+    public function followUps(): HasMany
+    {
+        return $this->hasMany(PedidoCompraFollowup::class);
+    }
 }
+

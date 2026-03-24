@@ -76,6 +76,17 @@
                             Itens do Pedido
                         </h3>
 
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" onclick="puxarEstoqueMinimo()" class="flex items-center gap-1 px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md text-xs font-semibold hover:bg-amber-100 transition shadow-sm">
+                                <x-heroicon-o-arrow-path class="w-4 h-4" />
+                                Puxar Estoque Mínimo
+                            </button>
+                            <button type="button" onclick="puxarFaltas()" class="flex items-center gap-1 px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-md text-xs font-semibold hover:bg-indigo-100 transition shadow-sm">
+                                <x-heroicon-o-queue-list class="w-4 h-4" />
+                                Puxar Faltas Pendentes
+                            </button>
+                        </div>
+
                         <div class="ring-1 ring-black ring-opacity-5 dark:ring-white dark:ring-opacity-10 rounded-lg overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                 <thead class="bg-gray-50 dark:bg-neutral-800">
@@ -304,6 +315,65 @@
                     })
                     .catch(error => console.error('Erro ao verificar CNPJ:', error));
             });
+        }
+
+        function puxarEstoqueMinimo() {
+            const fornecedorId = document.getElementById('fornecedor_id_select').value;
+            let url = '{{ route("pedido_compras.estoque_minimo") }}';
+            if (fornecedorId) url += '?fornecedor_id=' + fornecedorId;
+
+            fetch(url)
+                .then(r => r.json())
+                .then(produtos => {
+                    if (produtos.length === 0) {
+                        alert('Nenhum produto abaixo do estoque mínimo encontrado.');
+                        return;
+                    }
+                    produtos.forEach(p => {
+                        const qtdNecessaria = Math.max(0, p.estoque_minimo - p.estoque_atual);
+                        adicionarOuAtualizar(p.id, p.nome, p.cor?.nome, qtdNecessaria, p.preco_custo || 0);
+                    });
+                    renderTable();
+                    alert(produtos.length + ' itens de estoque crítico adicionados.');
+                });
+        }
+
+        function puxarFaltas() {
+            fetch('{{ route("faltas.pendentes") }}')
+                .then(r => r.json())
+                .then(faltas => {
+                    if (faltas.length === 0) {
+                        alert('Nenhuma falta registrada no sistema.');
+                        return;
+                    }
+                    let count = 0;
+                    faltas.forEach(f => {
+                        f.itens.forEach(item => {
+                            if (item.produto_id) {
+                                adicionarOuAtualizar(item.produto_id, item.produto.nome, item.produto.cor?.nome, item.quantidade, item.valor_unitario);
+                                count++;
+                            }
+                        });
+                    });
+                    renderTable();
+                    alert(count + ' itens de faltas pendentes adicionados.');
+                });
+        }
+
+        function adicionarOuAtualizar(id, nome, cor, qtd, preco) {
+            const index = produtosNoPedido.findIndex(p => p.id === id);
+            if (index !== -1) {
+                produtosNoPedido[index].quantidade += qtd;
+            } else {
+                produtosNoPedido.push({
+                    id: id,
+                    nome: nome,
+                    cor: cor,
+                    quantidade: qtd,
+                    valor_unitario: preco,
+                    observacao: ''
+                });
+            }
         }
     </script>
     @endpush

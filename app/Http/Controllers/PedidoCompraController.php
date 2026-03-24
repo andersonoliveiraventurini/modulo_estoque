@@ -255,4 +255,76 @@ class PedidoCompraController extends Controller
             ];
         }));
     }
+
+    public function consultaPrazo(Request $request)
+    {
+        $query = \App\Models\PedidoCompra::with([
+            'fornecedor', 'usuario', 'itens.produto', 'followUps.user'
+        ])->whereNotIn('status', ['recebido', 'cancelado']);
+
+        if ($request->filled('fornecedor_id')) {
+            $query->where('fornecedor_id', $request->fornecedor_id);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('numero_pedido')) {
+            $query->where('numero_pedido', 'like', '%'.$request->numero_pedido.'%');
+        }
+        if ($request->filled('data_inicio')) {
+            $query->whereDate('data_pedido', '>=', $request->data_inicio);
+        }
+        if ($request->filled('data_fim')) {
+            $query->whereDate('data_pedido', '<=', $request->data_fim);
+        }
+        if ($request->filled('produto_id')) {
+            $query->whereHas('itens', fn($q) => $q->where('produto_id', $request->produto_id));
+        }
+
+        $pedidos = $query->orderBy('previsao_entrega')->paginate(30)->withQueryString();
+        $fornecedores = \App\Models\Fornecedor::where('ativo', true)->orderBy('nome')->get();
+        $produtos = \App\Models\Produto::where('ativo', true)->orderBy('nome')->get();
+
+        return view('paginas.pedido_compras.consulta_prazo', compact('pedidos', 'fornecedores', 'produtos'));
+    }
+
+    public function relatorio(Request $request)
+    {
+        $query = \App\Models\PedidoCompra::with(['fornecedor', 'usuario', 'itens.produto']);
+
+        if ($request->filled('fornecedor_id')) $query->where('fornecedor_id', $request->fornecedor_id);
+        if ($request->filled('status')) $query->where('status', $request->status);
+        if ($request->filled('numero_pedido')) $query->where('numero_pedido', 'like', '%'.$request->numero_pedido.'%');
+        if ($request->filled('data_inicio')) $query->whereDate('data_pedido', '>=', $request->data_inicio);
+        if ($request->filled('data_fim')) $query->whereDate('data_pedido', '<=', $request->data_fim);
+        if ($request->filled('valor_min')) $query->where('valor_total', '>=', $request->valor_min);
+        if ($request->filled('valor_max')) $query->where('valor_total', '<=', $request->valor_max);
+        if ($request->filled('previsao_inicio')) $query->whereDate('previsao_entrega', '>=', $request->previsao_inicio);
+        if ($request->filled('previsao_fim')) $query->whereDate('previsao_entrega', '<=', $request->previsao_fim);
+        if ($request->filled('produto_id')) {
+            $query->whereHas('itens', fn($q) => $q->where('produto_id', $request->produto_id));
+        }
+
+        $pedidos = $query->latest('data_pedido')->get();
+        $fornecedores = \App\Models\Fornecedor::where('ativo', true)->orderBy('nome')->get();
+        $produtos = \App\Models\Produto::where('ativo', true)->orderBy('nome')->get();
+
+        return view('paginas.pedido_compras.relatorio', compact('pedidos', 'fornecedores', 'produtos'));
+    }
+
+    public function estoqueMinimo(Request $request)
+    {
+        $query = \App\Models\Produto::where('ativo', true)
+            ->whereRaw('estoque_atual <= estoque_minimo')
+            ->with(['fornecedor', 'cor']);
+
+        if ($request->filled('fornecedor_id')) $query->where('fornecedor_id', $request->fornecedor_id);
+        if ($request->filled('cor_id')) $query->where('cor_id', $request->cor_id);
+
+        return response()->json($query->get([
+            'id', 'nome', 'sku', 'estoque_minimo', 'estoque_atual',
+            'preco_custo', 'fornecedor_id', 'cor_id'
+        ]));
+    }
 }
+

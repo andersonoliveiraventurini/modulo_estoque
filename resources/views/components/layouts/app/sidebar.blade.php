@@ -111,8 +111,15 @@
             <flux:navlist.item icon="pencil-square" :href="route('requisicao_compras.index')" :current="request()->routeIs('requisicao_compras.*')" wire:navigate>
                 {{ __('Requisições de Compra') }}
             </flux:navlist.item>
+            <flux:navlist.item icon="queue-list" :href="route('faltas.index')" :current="request()->routeIs('faltas.*')" wire:navigate>
+                {{ __('Faltas sem Pedido') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="clock" :href="route('pedido_compras.consulta_prazo')" :current="request()->routeIs('pedido_compras.consulta_prazo')" wire:navigate>
+                {{ __('Consulta de Prazos') }}
+            </flux:navlist.item>
 
             <flux:navlist.group heading="Relatórios de Compra" expandable :expanded="false">
+                <flux:navlist.item icon="document-chart-bar" :href="route('pedido_compras.relatorio')" :current="request()->routeIs('pedido_compras.relatorio')" wire:navigate>Relatório de Pedidos</flux:navlist.item>
                 <flux:navlist.item icon="document-chart-bar" :href="route('relatorios.historico_compras')" wire:navigate>Histórico de Compras</flux:navlist.item>
                 <flux:navlist.item icon="user-group" :href="route('relatorios.fornecedores_frequentes')" wire:navigate>Fornecedores Comuns</flux:navlist.item>
                 <flux:navlist.item icon="arrows-right-left" :href="route('relatorios.comparativo_precos')" wire:navigate>Comparativo de Preços</flux:navlist.item>

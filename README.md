@@ -129,9 +129,12 @@ Fluxo obrigatório para pedidos do tipo **ROTA** (transportes 1, 2, 3, 6, 7). Ga
 | `fornecedores.index` / `create` | Listagem e cadastro de fornecedores |
 | `consulta_preco.index` | Cotações e grupos de consulta de preço |
 | `pedido_compras.index` | Pedidos de compra pendentes/recebidos |
+| `pedido_compras.consulta_prazo` | Consulta de prazos e follow-ups |
+| `pedido_compras.relatorio` | Relatório tabular de pedidos de compra |
 | `requisicao_compras.index` | Requisições de compra (manuais ou automáticas) |
 | `entrada_encomendas.index` | Recebimento de encomendas |
 | `entrada_encomendas.kanban` | Kanban de encomendas por estágio |
+| `pedido_compra_followups.store` | Registro de interações e cobrança (AJAX) |
 | `relatorios.historico_compras` | Histórico de pedidos de compra |
 | `relatorios.fornecedores_frequentes` | Fornecedores mais utilizados |
 | `relatorios.comparativo_precos` | Comparativo de preços com gráfico |
@@ -141,6 +144,22 @@ Fluxo obrigatório para pedidos do tipo **ROTA** (transportes 1, 2, 3, 6, 7). Ga
 Quando o estoque cai abaixo do mínimo (via `EstoqueService::verificarAlertaEstoqueBaixo()`):
 - Envia e-mail para roles `admin` e `compras`
 - Cria uma `RequisicaoCompra` automática com 2x o estoque mínimo
+
+#### Novo: Follow-up de Entrega
+Ações de cobrança registradas na tela de **Consulta de Prazos**. Atualizam a previsão de entrega do pedido automaticamente quando o tipo é "Atualização de Prazo".
+
+---
+
+### Módulo: Faltas sem Pedido
+
+| Rota | Função |
+|---|---|
+| `faltas.index` | Listagem de faltas com filtros de cliente/vendedor |
+| `faltas.create` | Registro de demanda não atendida (Gera `FAL-XXXXX`) |
+| `faltas.relatorio` | Relatório detalhado para análise de reposição |
+| `faltas.pendentes` | API JSON para importação em Pedidos de Compra |
+
+**Funcionalidade**: Permite que o vendedor registre o que o cliente queria mas não havia em estoque. Esses itens podem ser "puxados" para um Pedido de Compra real posteriormente.
 
 ---
 
