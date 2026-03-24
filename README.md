@@ -1,10 +1,10 @@
-# 📦 Sistema de Gestão — ERP Modular
+# Sistema de Gestão — WT System
 
 > **Stack**: Laravel 12 · Livewire 3 · MySQL · Tailwind CSS · FluxUI Pro · Docker
 
 ---
 
-## 🚀 Instalação e Configuração
+## Instalação e Configuração
 
 ### Pré-requisitos
 - Docker + Docker Compose
