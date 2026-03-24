@@ -19,6 +19,10 @@ class RequisicaoCompraItem extends Model
         'valor_unitario_estimado',
     ];
 
+    protected $casts = [
+        'quantidade' => 'integer',
+    ];
+
     public function requisicao()
     {
         return $this->belongsTo(RequisicaoCompra::class, 'requisicao_compra_id');

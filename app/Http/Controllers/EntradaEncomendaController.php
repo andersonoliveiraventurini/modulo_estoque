@@ -96,8 +96,8 @@ class EntradaEncomendaController extends Controller
             'observacao'       => 'nullable|string|max:1000',
             'itens'            => 'required|array|min:1',
             'itens.*.consulta_preco_id'     => 'required|exists:consulta_precos,id',
-            'itens.*.quantidade_solicitada' => 'required|numeric|min:0',
-            'itens.*.quantidade_recebida'   => 'required|numeric|min:0',
+            'itens.*.quantidade_solicitada' => 'required|integer|min:0',
+            'itens.*.quantidade_recebida'   => 'required|integer|min:0',
             'itens.*.observacao'            => 'nullable|string|max:500',
             // Campos de produto — todos opcionais
             'itens.*.ncm'               => 'nullable|string|max:20',
@@ -297,7 +297,7 @@ class EntradaEncomendaController extends Controller
             'observacao'       => 'nullable|string|max:1000',
             'itens'            => 'required|array|min:1',
             'itens.*.id'                    => 'required|exists:entrada_encomenda_itens,id',
-            'itens.*.quantidade_recebida'   => 'required|numeric|min:0',
+            'itens.*.quantidade_recebida'   => 'required|integer|min:0',
             'itens.*.observacao'            => 'nullable|string|max:500',
             // Campos de produto — opcionais
             'itens.*.ncm'              => 'nullable|string|max:20',

@@ -127,7 +127,7 @@
                                         <label class="block text-xs font-medium text-zinc-500 mb-1">
                                             Qtd Recebida <span class="text-red-500">*</span>
                                         </label>
-                                        <input type="number" step="0.01" min="0" required
+                                        <input type="number" step="1" min="0" required
                                                name="itens[{{ $idx }}][quantidade_recebida]"
                                                value="{{ old("itens.{$idx}.quantidade_recebida", $itemEntrada->quantidade_recebida) }}"
                                                class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
@@ -214,7 +214,7 @@
 
                                         <div>
                                             <label class="block text-xs font-medium text-zinc-500 mb-1">Peso (kg)</label>
-                                            <input type="number" step="0.001" min="0"
+                                            <input type="number" step="1" min="0"
                                                    name="itens[{{ $idx }}][peso]"
                                                    value="{{ old("itens.{$idx}.peso", $itemEntrada->peso) }}"
                                                    placeholder="Ex: 1.250"

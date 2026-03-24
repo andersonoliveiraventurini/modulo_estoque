@@ -37,7 +37,7 @@
                                     <td class="py-2 text-neutral-900 dark:text-white">{{ $item->product->nome }}</td>
                                     <td class="py-2 text-right text-neutral-500 italic">{{ number_format($item->quantity_requested, 2, ',', '.') }}</td>
                                     <td class="py-2 text-right">
-                                        <input type="number" step="0.01" max="{{ $item->quantity_requested }}" 
+                                        <input type="number" step="1" max="{{ $item->quantity_requested }}" 
                                                wire:model.defer="approvedQuantities.{{ $item->id }}" 
                                                class="w-20 text-right rounded border-neutral-300 dark:bg-zinc-800 dark:border-neutral-700">
                                     </td>

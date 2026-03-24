@@ -171,7 +171,7 @@
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-zinc-300 mb-1.5">Quantidade</label>
                         <div class="relative">
-                            <input wire:model="quantidadeSolicitar" type="number" step="0.01" class="block w-full border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 py-2.5 pr-12">
+                            <input wire:model="quantidadeSolicitar" type="number" step="1" class="block w-full border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 py-2.5 pr-12">
                             <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 dark:text-zinc-500 text-xs font-bold">UN</span>
                         </div>
                         @error('quantidadeSolicitar') <span class="text-rose-500 text-xs mt-1 font-medium">{{ $message }}</span> @enderror
@@ -273,7 +273,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-zinc-300 mb-1.5">Quantidade</label>
-                        <input wire:model="quantidadeDevolver" type="number" step="0.01" class="block w-full border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 py-2.5">
+                        <input wire:model="quantidadeDevolver" type="number" step="1" class="block w-full border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 py-2.5">
                         @error('quantidadeDevolver') <span class="text-rose-500 text-xs mt-1 font-medium">{{ $message }}</span> @enderror
                     </div>
                     <div>

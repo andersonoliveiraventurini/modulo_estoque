@@ -218,7 +218,7 @@
                                         <div class="mt-2 flex flex-col items-end gap-1 animate-fade-in bg-white dark:bg-gray-900/50 p-2 rounded-lg border border-blue-100 dark:border-blue-900/30">
                                             <div class="flex items-center gap-2">
                                                 <span class="text-xs font-bold text-blue-700 dark:text-blue-400">Valor a Abater: R$</span>
-                                                <input type="number" step="0.01" wire:model.live.debounce.500ms="abaterValor" 
+                                                <input type="number" step="1" wire:model.live.debounce.500ms="abaterValor" 
                                                     class="w-32 px-3 py-1.5 text-lg font-black text-right border-2 border-blue-500 dark:border-blue-600 bg-white dark:bg-gray-900 text-blue-900 dark:text-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/40 focus:border-blue-600 transition-all shadow-sm"
                                                     placeholder="0,00">
                                             </div>
@@ -280,7 +280,7 @@
                                                 <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Valor *</label>
                                                 <input type="number" wire:model.live="formasPagamento.{{ $index }}.valor"
                                                        class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100"
-                                                       step="0.01" min="0" placeholder="0,00">
+                                                       step="1" min="0" placeholder="0,00">
                                             </div>
                                         </div>
                                         <div class="mt-3">

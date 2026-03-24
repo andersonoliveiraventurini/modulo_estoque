@@ -142,7 +142,7 @@
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Quantidade</label>
-                    <input id="modal-quantidade-input" type="number" step="0.001" value="1" min="0.001"
+                    <input id="modal-quantidade-input" type="number" step="1" value="1" min="0.001"
                         class="mt-1 block w-full border border-gray-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white rounded-md px-3 py-2" />
                 </div>
                 <div>
@@ -250,7 +250,7 @@
                         <td class="px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100">${p.nome}</td>
                         <td class="px-4 py-2 text-sm text-gray-500">${p.cor || '-'}</td>
                         <td class="px-4 py-2">
-                            <input type="number" step="0.001" name="itens[${i}][quantidade]" value="${p.quantidade}" 
+                            <input type="number" step="1" name="itens[${i}][quantidade]" value="${p.quantidade}" 
                                 onchange="updateRow(${i}, 'quantidade', this.value)"
                                 class="w-full text-center border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 rounded text-sm p-1">
                         </td>

@@ -29,8 +29,10 @@ class EntradaEncomendaItem extends Model {
     ];
 
     protected $casts = [
-        'recebido_completo' => 'boolean',
-        'peso'              => 'float',
+        'recebido_completo'     => 'boolean',
+        'quantidade_solicitada' => 'integer',
+        'quantidade_recebida'   => 'integer',
+        'peso'                  => 'float',
     ];
 
     // ── Relacionamentos ─────────────────────────────────────
@@ -57,8 +59,8 @@ class EntradaEncomendaItem extends Model {
 
     // ── Helpers ─────────────────────────────────────────────
 
-    public function quantidadePendente(): float
+    public function quantidadePendente(): int
     {
-        return max(0, (float) $this->quantidade_solicitada - (float) $this->quantidade_recebida);
+        return max(0, (int) $this->quantidade_solicitada - (int) $this->quantidade_recebida);
     }
 }

@@ -19,8 +19,8 @@ class HubStock extends Model
     ];
 
     protected $casts = [
-        'quantidade' => 'decimal:2',
-        'quantidade_reservada' => 'decimal:2',
+        'quantidade' => 'integer',
+        'quantidade_reservada' => 'integer',
     ];
 
     public function produto()

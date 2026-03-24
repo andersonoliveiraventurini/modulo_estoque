@@ -10,7 +10,7 @@ class FaltaItem extends Model
     ];
 
     protected $casts = [
-        'quantidade'     => 'decimal:3',
+        'quantidade'     => 'integer',
         'valor_unitario' => 'decimal:2',
         'valor_total'    => 'decimal:2',
     ];

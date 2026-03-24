@@ -90,7 +90,7 @@ class ReposicaoIndex extends Component
     {
         $this->validate([
             'produtoSolicitarId'  => 'required|exists:produtos,id',
-            'quantidadeSolicitar' => 'required|numeric|min:0.01',
+            'quantidadeSolicitar' => 'required|integer|min:1',
         ], [
             'produtoSolicitarId.required'  => 'Selecione o produto.',
             'quantidadeSolicitar.min'      => 'A quantidade deve ser maior que zero.',
@@ -184,7 +184,7 @@ class ReposicaoIndex extends Component
     {
         $this->validate([
             'produtoDevolverProdutoId' => 'required|exists:produtos,id',
-            'quantidadeDevolver'       => 'required|numeric|min:0.01',
+            'quantidadeDevolver'       => 'required|integer|min:1',
             'armazemDestinoId'         => 'required|exists:armazens,id',
             'executorDevolucaoId'      => 'required|exists:users,id',
         ], [

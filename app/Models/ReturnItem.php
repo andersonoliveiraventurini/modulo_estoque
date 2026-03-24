@@ -19,7 +19,7 @@ class ReturnItem extends Model
     ];
 
     protected $casts = [
-        'quantidade' => 'decimal:4',
+        'quantidade' => 'integer',
         'valor_unitario' => 'decimal:2',
         'subtotal' => 'decimal:2',
     ];

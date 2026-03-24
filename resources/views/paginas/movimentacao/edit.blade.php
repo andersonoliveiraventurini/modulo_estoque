@@ -174,7 +174,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Quantidade *</label>
-                    <input id="modal-quantidade-input" type="number" step="0.001" value="1"
+                    <input id="modal-quantidade-input" type="number" step="1" value="1"
                         class="mt-1 block w-full border border-gray-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white rounded-md px-3 py-2" />
                 </div>
                 <div>
@@ -351,7 +351,7 @@
                             <input type="hidden" name="produtos[${i}][fornecedor_nome]" value="${p.fornecedor || ''}">
                         </td>
                         <td class="px-4 py-2 text-center">
-                            <input type="number" step="0.001" name="produtos[${i}][quantidade]" value="${p.quantidade}" 
+                            <input type="number" step="1" name="produtos[${i}][quantidade]" value="${p.quantidade}" 
                                 onchange="updateItem(${i}, 'quantidade', this.value)"
                                 class="w-20 text-center border-gray-300 dark:border-neutral-700 dark:bg-neutral-900 rounded text-sm p-1">
                         </td>

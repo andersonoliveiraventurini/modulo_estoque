@@ -46,13 +46,13 @@ class Produto extends Model
      * Quantidade disponível para novos orçamentos:
      * estoque_atual menos a soma das reservas ativas na tabela estoque_reservas.
      */
-    public function getEstoqueDisponivelAttribute(): float
+    public function getEstoqueDisponivelAttribute(): int
     {
-        $reservado = \App\Models\EstoqueReserva::where('produto_id', $this->id)
+        $reservado = (int) \App\Models\EstoqueReserva::where('produto_id', $this->id)
             ->where('status', 'ativa')
             ->sum('quantidade');
 
-        return max(0, $this->estoque_atual - $reservado);
+        return (int) max(0, $this->estoque_atual - $reservado);
     }
 
     public function addEstoque($quantidade)

@@ -30,7 +30,7 @@
 
             <div>
                 <flux:label>Quantidade</flux:label>
-                <flux:input type="number" step="0.01" wire:model="quantidade" placeholder="0.00" />
+                <flux:input type="number" step="1" wire:model="quantidade" placeholder="0.00" />
                 @error('quantidade') <span class="text-xs text-red-500 block mt-1">{{ $message }}</span> @enderror
             </div>
 

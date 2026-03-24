@@ -100,11 +100,11 @@
             </td>
             <td class="px-4 py-2 text-center">
                 <input type="number" name="itens[__IDX__][quantidade]" class="w-full text-sm text-center border-gray-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 rounded-md campo-qtd"
-                       step="0.001" min="0.001" value="1">
+                       step="1" min="0.001" value="1">
             </td>
             <td class="px-4 py-2">
                 <input type="number" name="itens[__IDX__][valor_unitario]" class="w-full text-sm border-gray-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 rounded-md campo-valor"
-                       step="0.01" min="0" value="0">
+                       step="1" min="0" value="0">
             </td>
             <td class="px-4 py-2 text-sm font-bold text-gray-900 dark:text-zinc-100 campo-total">
                 R$ 0,00
@@ -157,10 +157,14 @@
                         // Estilização robusta com posicionamento FIXED para não ser cortado por overflow
                         sugestoes.className = 'fixed z-[9999] bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 shadow-2xl rounded-lg max-h-64 overflow-y-auto py-2 text-sm';
                         
-                        const rect = campoBusca.getBoundingClientRect();
-                        sugestoes.style.top = rect.bottom + 'px';
-                        sugestoes.style.left = rect.left + 'px';
-                        sugestoes.style.width = rect.width + 'px';
+                        function posicionarSugestoes() {
+                            const rect = campoBusca.getBoundingClientRect();
+                            sugestoes.style.top = rect.bottom + 'px';
+                            sugestoes.style.left = rect.left + 'px';
+                            sugestoes.style.width = rect.width + 'px';
+                        }
+                        
+                        posicionarSugestoes();
 
                         produtos.forEach(p => {
                             const li = document.createElement('li');
@@ -204,12 +208,16 @@
         document.getElementById('total-geral').textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    // Fecha sugestões ao clicar fora
+    // Fecha sugestões ao clicar fora ou rolar a página
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.campo-busca-produto')) {
-            document.querySelectorAll('ul.absolute').forEach(u => u.remove());
+            document.querySelectorAll('ul.fixed').forEach(u => u.remove());
         }
     });
+
+    window.addEventListener('scroll', () => {
+        document.querySelectorAll('ul.fixed').forEach(u => u.remove());
+    }, true);
 
     document.getElementById('form-falta').addEventListener('submit', function(e) {
         if (document.getElementById('itens-body').children.length === 0) {

@@ -78,7 +78,7 @@
                                 @endforeach
                             </x-select>
 
-                            <x-input type="number" step="0.01" name="peso" label="Peso"
+                            <x-input type="number" step="1" name="peso" label="Peso"
                                 value="{{ old('peso', $produto->peso) }}" />
 
                             <x-input name="estoque_minimo" label="Estoque Mínimo" placeholder="0.00"
@@ -124,16 +124,16 @@
                                  <x-input name="preco_base" label="Preço de Base - sem imposto" placeholder="0.00" 
                                    value="{{ old('preco_base', $produto->preco_base) }}" />
                                    
-                                <x-input type="number" step="0.01" name="icms" label="% ICMS"
+                                <x-input type="number" step="1" name="icms" label="% ICMS"
                                     value="{{ old('icms', $produto->icms) }}" />
 
-                                <x-input type="number" step="0.01" name="pis" label="PIS"
+                                <x-input type="number" step="1" name="pis" label="PIS"
                                     value="{{ old('pis', $produto->pis) }}" />
 
-                                <x-input type="number" step="0.01" name="cofins" label="Cofins"
+                                <x-input type="number" step="1" name="cofins" label="Cofins"
                                     value="{{ old('cofins', $produto->cofins) }}" />
 
-                                    <x-input type="number" step="0.01" name="mva" label="MVA"
+                                    <x-input type="number" step="1" name="mva" label="MVA"
                                     value="{{ old('mva', $produto->mva) }}" />
                             </div>
 
@@ -255,17 +255,17 @@
                                             placeholder="12345678" value="{{ old('ncm', $produto->ncm) }}"
                                             required />
 
-                                        <x-input type="number" step="0.01" name="substituicao_tributaria"
+                                        <x-input type="number" step="1" name="substituicao_tributaria"
                                             label="% Substituição Tributária"
                                             value="{{ old('substituicao_tributaria', $produto->substituicao_tributaria) }}" />
 
-                                        <x-input type="number" step="0.01" name="icms" label="% ICMS"
+                                        <x-input type="number" step="1" name="icms" label="% ICMS"
                                             value="{{ old('icms', $produto->icms) }}" />
 
-                                        <x-input type="number" step="0.01" name="pis" label="PIS"
+                                        <x-input type="number" step="1" name="pis" label="PIS"
                                             value="{{ old('pis', $produto->pis) }}" />
 
-                                        <x-input type="number" step="0.01" name="cofins" label="Cofins"
+                                        <x-input type="number" step="1" name="cofins" label="Cofins"
                                             value="{{ old('cofins', $produto->cofins) }}" />
 
                                         <x-input name="classificacao_fiscal" label="CL Fiscal"

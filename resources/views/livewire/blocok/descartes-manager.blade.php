@@ -57,7 +57,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <div>
                     <flux:label>Quantidade Descartada</flux:label>
-                    <flux:input type="number" step="0.01" wire:model="quantidade_descarte" placeholder="0.00" />
+                    <flux:input type="number" step="1" wire:model="quantidade_descarte" placeholder="0.00" />
                     @error('quantidade_descarte') <span class="text-xs text-red-500 block mt-1">{{ $message }}</span> @enderror
                 </div>
                 <div>

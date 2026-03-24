@@ -165,7 +165,7 @@
                                             <label class="block text-xs font-medium text-zinc-500 mb-1">
                                                 Qtd Recebida Agora @if(!$estaCompleto)<span class="text-red-500">*</span>@endif
                                             </label>
-                                            <input type="number" step="0.01" min="0"
+                                            <input type="number" step="1" min="0"
                                                    name="itens[{{ $index }}][quantidade_recebida]"
                                                    value="{{ old("itens.{$index}.quantidade_recebida", $estaCompleto ? 0 : $pendente) }}"
                                                    {{ $estaCompleto ? 'readonly' : 'required' }}

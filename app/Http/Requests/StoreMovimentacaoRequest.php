@@ -30,7 +30,7 @@ class StoreMovimentacaoRequest extends FormRequest
             'produtos' => 'required|array|min:1',
             'produtos.*.fornecedor_id' => 'nullable|exists:fornecedores,id',
             'produtos.*.produto_id' => 'required|exists:produtos,id',
-            'produtos.*.quantidade' => 'required|numeric|min:0.01',
+            'produtos.*.quantidade' => 'required|integer|min:1',
             'produtos.*.valor' => 'nullable|numeric|min:0',
             'produtos.*.valor_total' => 'nullable|numeric|min:0',
             'produtos.*.armazem_id' => 'nullable|exists:armazens,id',

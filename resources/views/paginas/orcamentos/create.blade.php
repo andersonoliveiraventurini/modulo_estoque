@@ -421,7 +421,7 @@
                         </div>
                         <div class="flex-1">
                             <label class="block text-sm font-medium text-gray-700">Preço do m²</label>
-                            <input type="number" step="0.01" name="vidros[${vidroIndex}][preco_m2]" placeholder="Digite o preço" 
+                            <input type="number" step="1" name="vidros[${vidroIndex}][preco_m2]" placeholder="Digite o preço" 
                                 oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
                         </div>
                         <div class="flex-1">
@@ -750,7 +750,7 @@
             <td class="px-3 py-2 border">
                 ${p.liberarDesconto === 1 ? `
                                                     <div class="flex flex-col gap-1">
-                                                        <input type="number" step="0.01" value="${valorUnitarioAtual.toFixed(2)}" 
+                                                        <input type="number" step="1" value="${valorUnitarioAtual.toFixed(2)}" 
                                                             onchange="alterarPrecoProduto(${i}, this.value)"
                                                             class="w-24 border rounded px-2 py-1 text-sm" 
                                                             title="Clique para alterar o preço"/>

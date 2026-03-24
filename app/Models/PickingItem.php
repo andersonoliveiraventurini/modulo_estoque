@@ -21,7 +21,9 @@ class PickingItem extends Model
     protected $casts = [
         'separado_em' => 'datetime',
         'inconsistencia_reportada' => 'bool',
-        'is_encomenda' => 'bool', // ✅
+        'is_encomenda' => 'bool',
+        'qty_solicitada' => 'integer',
+        'qty_separada' => 'integer',
     ];
 
     //  Relacionamento com item de cotação

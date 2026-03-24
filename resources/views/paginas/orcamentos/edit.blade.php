@@ -201,7 +201,7 @@
                                                             class="enc-preco-display">{{ number_format($precoVenda, 2, ',', '.') }}</span>
                                                     </td>
                                                     <td class="px-4 py-2 text-right text-sm">
-                                                        <input type="number" step="0.01" min="0"
+                                                        <input type="number" step="1" min="0"
                                                             value="{{ number_format($valorNovoUnit, 2, '.', '') }}"
                                                             placeholder="{{ number_format($precoVenda, 2, ',', '.') }}"
                                                             class="enc-valor-novo-input w-24 border rounded px-2 py-1 text-sm text-right"
@@ -380,7 +380,7 @@
                                                 <div class="flex-1">
                                                     <label class="block text-sm font-medium text-gray-700">Preço
                                                         m²</label>
-                                                    <input type="number" step="0.01"
+                                                    <input type="number" step="1"
                                                         name="vidros_existentes[{{ $loop->index }}][preco_m2]"
                                                         value="{{ old("vidros_existentes.{$loop->index}.preco_m2", $vidro->preco_metro_quadrado) }}"
                                                         oninput="calcularVidroExistente(this)"
@@ -1082,7 +1082,7 @@
             <td class="px-3 py-2 border">
                 ${p.liberarDesconto === 1 ? `
                     <div class="flex flex-col gap-1">
-                        <input type="number" step="0.01" value="${valorUnitarioAtual.toFixed(2)}"
+                        <input type="number" step="1" value="${valorUnitarioAtual.toFixed(2)}"
                             onchange="alterarPrecoProdutoNovo(${i}, this.value)"
                             class="w-24 border rounded px-2 py-1 text-sm" />
                         ${p.descontoProduto > 0 ? `<small class="text-xs text-gray-500">Original: R$ ${p.precoOriginal.toFixed(2)}</small>` : ''}
@@ -1327,7 +1327,7 @@
             '<input type="number" name="vidros[' + window.vidroIndex +
             '][quantidade]" value="1" oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" /></div>' +
             '<div class="flex-1"><label class="block text-sm font-medium text-gray-700">Preço m²</label>' +
-            '<input type="number" step="0.01" name="vidros[' + window.vidroIndex +
+            '<input type="number" step="1" name="vidros[' + window.vidroIndex +
             '][preco_m2]" oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" /></div>' +
             '<div class="flex-1"><label class="block text-sm font-medium text-gray-700">Altura (mm)</label>' +
             '<input type="number" name="vidros[' + window.vidroIndex +
@@ -1735,7 +1735,7 @@
                         const precoAtual = valorUnitario.toFixed(2);
                         cells[5].innerHTML = `
                         <div class="flex flex-col gap-1">
-                            <input type="number" step="0.01" value="${precoAtual}"
+                            <input type="number" step="1" value="${precoAtual}"
                                 onchange="alterarPrecoProdutoOriginal(${index}, this.value)"
                                 class="w-24 border rounded px-2 py-1 text-sm" />
                         </div>

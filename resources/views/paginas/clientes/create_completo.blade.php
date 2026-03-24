@@ -110,7 +110,7 @@
                                         <option value="{{ $v->id }}">{{ $v->name }}</option>
                                     @endforeach
                                 </x-select>
-                                <x-input name="desconto" label="Desconto (%)" type="number" step="0.01" />
+                                <x-input name="desconto" label="Desconto (%)" type="number" step="1" />
                                 <x-select name="bloqueado" label="Bloqueado">
                                     <option value="">Selecione</option>
                                     <option value="0">Não</option>
@@ -120,9 +120,9 @@
                                     <option value="">Selecione</option>
                                     <option value="0">Não</option>
                                     <option value="1">Sim</option>
-                                </x-select> <x-input type="number" step="0.01" name="limite_boleto"
+                                </x-select> <x-input type="number" step="1" name="limite_boleto"
                                     label="Limite Boleto (R$)" />
-                                <x-input type="number" step="0.01" name="limite_carteira"
+                                <x-input type="number" step="1" name="limite_carteira"
                                     label="Limite Carteira (R$)" />
                                 <x-input type="number" name="inativar_apos"
                                     label="Inativar após (meses sem comprar)" />

@@ -31,7 +31,10 @@ class ConferenciaItem extends Model
 
     protected $casts = [
         'conferido_em' => 'datetime',
-        'is_encomenda' => 'bool', // ✅
+        'is_encomenda' => 'bool',
+        'qty_separada' => 'integer',
+        'qty_conferida' => 'integer',
+        'divergencia' => 'integer',
     ];
 
 // ✅ Relacionamento com item de cotação

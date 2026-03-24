@@ -37,11 +37,11 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">Quantidade</label>
-                            <input type="number" step="0.001" name="itens[0][quantidade]" required class="mt-1 block w-full rounded-lg border-neutral-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-white sm:text-sm">
+                            <input type="number" step="1" name="itens[0][quantidade]" required class="mt-1 block w-full rounded-lg border-neutral-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-white sm:text-sm">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">V. Unit. Estimado (R$)</label>
-                            <input type="number" step="0.01" name="itens[0][valor_unitario_estimado]" class="mt-1 block w-full rounded-lg border-neutral-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-white sm:text-sm">
+                            <input type="number" step="1" name="itens[0][valor_unitario_estimado]" class="mt-1 block w-full rounded-lg border-neutral-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-white sm:text-sm">
                         </div>
                     </div>
                 </div>

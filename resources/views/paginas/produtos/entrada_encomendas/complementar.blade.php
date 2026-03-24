@@ -170,7 +170,7 @@
                                             Qtd Recebida Agora
                                             @if ($resumo['pendente'] > 0)<span class="text-red-500">*</span>@endif
                                         </label>
-                                        <input type="number" step="0.01" min="0"
+                                        <input type="number" step="1" min="0"
                                                name="itens[{{ $idx }}][quantidade_recebida]"
                                                value="{{ old("itens.{$idx}.quantidade_recebida", $resumo['pendente'] > 0 ? $resumo['pendente'] : 0) }}"
                                                {{ $resumo['pendente'] <= 0 ? 'readonly' : 'required' }}

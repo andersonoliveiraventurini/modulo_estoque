@@ -32,6 +32,7 @@ class MovimentacaoProduto extends Model
 
     protected $casts = [
         'data_vencimento' => 'date',
+        'quantidade' => 'integer',
     ];
 
     public function movimentacao()

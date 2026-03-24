@@ -21,7 +21,7 @@ class InsumosManager extends Component
 
     protected $rules = [
         'produto_id' => 'required|exists:produtos,id',
-        'quantidade' => 'required|numeric|min:0.01',
+        'quantidade' => 'required|integer|min:1',
         'unidade_medida' => 'required|string|max:10',
     ];
 

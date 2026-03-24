@@ -94,7 +94,7 @@
                                                 @if (in_array($item->id, $items_selecionados))
                                                     <flux:input 
                                                         type="number" 
-                                                        step="0.01" 
+                                                        step="1" 
                                                         wire:model.live="quantidades.{{ $item->id }}" 
                                                         size="sm"
                                                         class="text-right"

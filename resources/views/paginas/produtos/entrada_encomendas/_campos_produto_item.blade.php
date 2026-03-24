@@ -75,7 +75,7 @@
         <div>
             <label class="block text-xs font-medium text-zinc-500 mb-1">Peso (kg)</label>
             <input type="number"
-                   step="0.001"
+                   step="1"
                    min="0"
                    name="itens[{{ $index }}][peso]"
                    value="{{ old("itens.{$index}.peso") }}"

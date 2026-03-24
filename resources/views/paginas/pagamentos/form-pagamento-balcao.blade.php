@@ -220,7 +220,7 @@
                                                 <div>
                                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Valor *</label>
                                                     <input type="number" name="formas_pagamento[{{ $idx }}][valor]"
-                                                        step="0.01" min="0" required
+                                                        step="1" min="0" required
                                                         value="{{ $formaOld['valor'] ?? '' }}"
                                                         oninput="atualizarDesconto(); calcularValores()"
                                                         class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
@@ -311,7 +311,7 @@
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Valor do Desconto</label>
                                         <input type="number" name="desconto_balcao" id="inputDesconto"
-                                            step="0.01" min="0" max="0"
+                                            step="1" min="0" max="0"
                                             value="{{ old('desconto_balcao', 0) }}"
                                             oninput="enforceMaxDesconto(this)"
                                             class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
@@ -806,7 +806,7 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Valor *</label>
                                     <input type="number" name="formas_pagamento[${idx}][valor]"
-                                        step="0.01" min="0" required
+                                        step="1" min="0" required
                                         oninput="atualizarDesconto(); calcularValores()"
                                         class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                                         placeholder="0,00">

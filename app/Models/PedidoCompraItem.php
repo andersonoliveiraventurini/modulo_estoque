@@ -22,6 +22,10 @@ class PedidoCompraItem extends Model {
         'observacao',
     ];
 
+    protected $casts = [
+        'quantidade' => 'integer',
+    ];
+
     public function pedidoCompra(): BelongsTo
     {
         return $this->belongsTo(PedidoCompra::class, 'pedido_compra_id');

@@ -55,7 +55,7 @@ class FaltaController extends Controller
             'itens' => 'required|array|min:1',
             'itens.*.produto_id' => 'nullable|exists:produtos,id',
             'itens.*.descricao_produto' => 'nullable|string|max:255',
-            'itens.*.quantidade' => 'required|numeric|min:0.001',
+            'itens.*.quantidade' => 'required|integer|min:1',
             'itens.*.valor_unitario' => 'required|numeric|min:0',
         ]);
 

@@ -139,7 +139,7 @@
 
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Peso</label>
-                                <input type="number" step="0.001" name="peso"
+                                <input type="number" step="1" name="peso"
                                        value="{{ $p('peso') }}"
                                        placeholder="0.000"
                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
@@ -147,7 +147,7 @@
 
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Estoque Mínimo</label>
-                                <input type="number" step="0.01" name="estoque_minimo"
+                                <input type="number" step="1" name="estoque_minimo"
                                        value="{{ $p('estoque_minimo') }}"
                                        placeholder="0.00"
                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
@@ -205,31 +205,31 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Preço de Base (sem imposto)</label>
-                                <input type="number" step="0.01" name="preco_base"
+                                <input type="number" step="1" name="preco_base"
                                        value="{{ $p('preco_base') }}" placeholder="0.00"
                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">% ICMS</label>
-                                <input type="number" step="0.01" name="icms"
+                                <input type="number" step="1" name="icms"
                                        value="{{ $p('icms') }}"
                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">PIS</label>
-                                <input type="number" step="0.01" name="pis"
+                                <input type="number" step="1" name="pis"
                                        value="{{ $p('pis') }}"
                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Cofins</label>
-                                <input type="number" step="0.01" name="cofins"
+                                <input type="number" step="1" name="cofins"
                                        value="{{ $p('cofins') }}"
                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">MVA</label>
-                                <input type="number" step="0.01" name="mva"
+                                <input type="number" step="1" name="mva"
                                        value="{{ $p('mva') }}"
                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
                             </div>
@@ -246,31 +246,31 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Preço de Custo</label>
-                                <input type="number" step="0.01" name="preco_custo"
+                                <input type="number" step="1" name="preco_custo"
                                        value="{{ $p('preco_custo') }}" placeholder="0.00"
                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Custo Frete Fornecedor</label>
-                                <input type="number" step="0.01" name="custo_frete_fornecedor"
+                                <input type="number" step="1" name="custo_frete_fornecedor"
                                        value="{{ $p('custo_frete_fornecedor') }}" placeholder="0.00"
                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Custo Operacional</label>
-                                <input type="number" step="0.01" name="custo_operacional"
+                                <input type="number" step="1" name="custo_operacional"
                                        value="{{ $p('custo_operacional') }}" placeholder="0.00"
                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Margem de Lucro</label>
-                                <input type="number" step="0.01" name="margem_lucro"
+                                <input type="number" step="1" name="margem_lucro"
                                        value="{{ $p('margem_lucro') }}" placeholder="0.00"
                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Preço de Venda</label>
-                                <input type="number" step="0.01" name="preco_venda"
+                                <input type="number" step="1" name="preco_venda"
                                        value="{{ $p('preco_venda') }}" placeholder="0.00"
                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
                             </div>
@@ -285,13 +285,13 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Porcentagem de Desconto</label>
-                                <input type="number" step="0.01" name="porcentagem_desconto"
+                                <input type="number" step="1" name="porcentagem_desconto"
                                        value="{{ $p('porcentagem_desconto') }}" placeholder="0.00"
                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Valor do Desconto</label>
-                                <input type="number" step="0.01" name="valor_desconto"
+                                <input type="number" step="1" name="valor_desconto"
                                        value="{{ $p('valor_desconto') }}" placeholder="0.00"
                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
                             </div>
@@ -378,25 +378,25 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">% Substituição Tributária</label>
-                                <input type="number" step="0.01" name="substituicao_tributaria"
+                                <input type="number" step="1" name="substituicao_tributaria"
                                        value="{{ $p('substituicao_tributaria') }}"
                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">% ICMS</label>
-                                <input type="number" step="0.01" name="icms_saida"
+                                <input type="number" step="1" name="icms_saida"
                                        value="{{ $p('icms_saida') }}"
                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">PIS</label>
-                                <input type="number" step="0.01" name="pis_saida"
+                                <input type="number" step="1" name="pis_saida"
                                        value="{{ $p('pis_saida') }}"
                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Cofins</label>
-                                <input type="number" step="0.01" name="cofins_saida"
+                                <input type="number" step="1" name="cofins_saida"
                                        value="{{ $p('cofins_saida') }}"
                                        class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
                             </div>

@@ -42,9 +42,9 @@
                         <!-- Documentação -->
                         <div>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                                <x-input name="desconto" label="Desconto (%)" type="number" step="0.01" /> <x-input
-                                    type="number" step="0.01" name="limite_boleto" label="Limite Boleto (R$)" />
-                                <x-input type="number" step="0.01" name="limite_carteira"
+                                <x-input name="desconto" label="Desconto (%)" type="number" step="1" /> <x-input
+                                    type="number" step="1" name="limite_boleto" label="Limite Boleto (R$)" />
+                                <x-input type="number" step="1" name="limite_carteira"
                                     label="Limite Carteira (R$)" />
                                 <x-input type="date" name="data_ultima_analise" label="Data da Última Análise" />
                                 <x-input type="date" name="data_vencimento_analise"

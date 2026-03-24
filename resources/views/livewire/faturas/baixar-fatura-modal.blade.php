@@ -32,7 +32,7 @@
                         wire:model="form.valor_pago" 
                         label="Valor a Pagar (R$)" 
                         type="number" 
-                        step="0.01" 
+                        step="1" 
                         min="0.01" 
                         required 
                     />

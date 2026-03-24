@@ -24,7 +24,7 @@ class DescartesManager extends Component
     protected $rules = [
         'produto_id' => 'required|exists:produtos,id',
         'produto_descartado_id' => 'required|exists:produtos,id',
-        'quantidade_descarte' => 'required|numeric|min:0.01',
+        'quantidade_descarte' => 'required|integer|min:1',
         'unidade_medida_descarte' => 'required|string|max:10',
     ];
 

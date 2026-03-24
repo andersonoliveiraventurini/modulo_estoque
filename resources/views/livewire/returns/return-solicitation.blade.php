@@ -66,7 +66,7 @@
                                     {{ number_format($item['quantidade'], 2, ',', '.') }}
                                 </td>
                                 <td class="px-4 py-3 text-center">
-                                    <input type="number" step="0.01" max="{{ $item['quantidade'] }}" 
+                                    <input type="number" step="1" max="{{ $item['quantidade'] }}" 
                                            wire:model.defer="selectedItems.{{ $item['id'] }}.quantity" 
                                            class="w-24 px-2 py-1 text-center rounded-lg border-zinc-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm dark:bg-zinc-900 dark:border-zinc-600 border @if(!$selectedItems[$item['id']]['selected']) opacity-40 @endif"
                                            @if(!$selectedItems[$item['id']]['selected']) disabled @endif>
