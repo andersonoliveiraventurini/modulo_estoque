@@ -45,6 +45,7 @@ class ProdutoSeeder extends Seeder
 
         $ok   = 0;
         $fail = 0;
+        $line = 0;
         $skippedRecords = [];
         $startedAt = microtime(true);
 
