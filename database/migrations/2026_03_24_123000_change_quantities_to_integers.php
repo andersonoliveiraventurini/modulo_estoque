@@ -3,6 +3,8 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+
 
 return new class extends Migration
 {
@@ -11,6 +13,35 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Data cleanup: Update NULLs to 0 and round values for columns being changed to NOT NULL integer
+        DB::table('produtos')->whereNull('estoque_atual')->update(['estoque_atual' => 0]);
+        DB::table('produtos')->whereNull('estoque_minimo')->update(['estoque_minimo' => 0]);
+        DB::table('produtos')->whereNull('stock_reserved')->update(['stock_reserved' => 0]);
+        
+        DB::table('requisicao_compra_itens')->whereNull('quantidade')->update(['quantidade' => 0]);
+        DB::table('falta_itens')->whereNull('quantidade')->update(['quantidade' => 0]);
+        DB::table('order_return_items')->whereNull('quantity_requested')->update(['quantity_requested' => 0]);
+        DB::table('estoque_reservas')->whereNull('quantidade')->update(['quantidade' => 0]);
+        
+        DB::table('conferencia_items')->whereNull('qty_separada')->update(['qty_separada' => 0]);
+        DB::table('conferencia_items')->whereNull('qty_conferida')->update(['qty_conferida' => 0]);
+        DB::table('conferencia_items')->whereNull('divergencia')->update(['divergencia' => 0]);
+        
+        DB::table('picking_items')->whereNull('qty_solicitada')->update(['qty_solicitada' => 0]);
+        DB::table('picking_items')->whereNull('qty_separada')->update(['qty_separada' => 0]);
+        
+        DB::table('entrada_encomenda_itens')->whereNull('quantidade_solicitada')->update(['quantidade_solicitada' => 0]);
+        DB::table('entrada_encomenda_itens')->whereNull('quantidade_recebida')->update(['quantidade_recebida' => 0]);
+        
+        DB::table('pedido_compra_itens')->whereNull('quantidade')->update(['quantidade' => 0]);
+
+        // Round decimal values to avoid truncation warnings
+        DB::table('produtos')->update([
+            'estoque_atual' => DB::raw('ROUND(estoque_atual)'),
+            'estoque_minimo' => DB::raw('ROUND(estoque_minimo)'),
+            'stock_reserved' => DB::raw('ROUND(stock_reserved)'),
+        ]);
+
         Schema::table('produtos', function (Blueprint $table) {
             $table->integer('estoque_atual')->change();
             $table->integer('estoque_minimo')->change();
