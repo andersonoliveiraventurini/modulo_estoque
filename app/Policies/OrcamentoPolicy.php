@@ -32,7 +32,11 @@ class OrcamentoPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        return $user->checkPermissionTo('criar_orcamento');
     }
 
     /**
@@ -40,7 +44,17 @@ class OrcamentoPolicy
      */
     public function update(User $user, Orcamento $orcamento): bool
     {
-        return false;
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        if (!$user->checkPermissionTo('editar_orcamento')) {
+            return false;
+        }
+
+        // Se for vendedor, só pode editar o próprio (opcional, dependendo da regra de negócio)
+        // Por enquanto, permitimos se tiver a permissão geral.
+        return true;
     }
 
     /**
@@ -76,7 +90,7 @@ class OrcamentoPolicy
             return true;
         }
 
-        return $user->checkPermissionTo('route_billing_view_billing');
+        return $user->checkPermissionTo('faturamento_rota_ver_faturamento');
     }
 
     /**
@@ -91,7 +105,7 @@ class OrcamentoPolicy
         }
 
         // checkPermissionTo returns false (instead of throwing) when permission doesn't exist
-        return $user->checkPermissionTo('route_billing_view_loading');
+        return $user->checkPermissionTo('faturamento_rota_ver_carregamento');
     }
 
     /**
@@ -104,7 +118,7 @@ class OrcamentoPolicy
             return true;
         }
 
-        if (!$user->checkPermissionTo('route_billing_attach')) {
+        if (!$user->checkPermissionTo('faturamento_rota_anexar')) {
             return false;
         }
 
@@ -123,7 +137,7 @@ class OrcamentoPolicy
             return true;
         }
 
-        return $user->checkPermissionTo('route_billing_approve');
+        return $user->checkPermissionTo('faturamento_rota_aprovar');
     }
 
     /**
@@ -136,7 +150,7 @@ class OrcamentoPolicy
             return true;
         }
 
-        return $user->checkPermissionTo('route_billing_deny');
+        return $user->checkPermissionTo('faturamento_rota_rejeitar');
     }
 
     /**
@@ -145,6 +159,6 @@ class OrcamentoPolicy
      */
     public function validateAttachment(User $user)
     {
-        return $user->hasPermissionTo('route_billing_validate_attachment');
+        return $user->hasPermissionTo('faturamento_rota_validar_anexo');
     }
 }

@@ -268,7 +268,9 @@ class OrcamentoController extends Controller
 
     public function store(OrcamentoStoreRequest $request)
     {
-        $this->authorize('approve', Orcamento::class);
+        // Alterado de 'approve' para 'create' para permitir que vendedores criem orçamentos.
+        // A aprovação automática ou manual será tratada pela lógica de negócio adiante.
+        $this->authorize('create', Orcamento::class);
         $itenscomdesconto = false;
         $necessitaAprovacaoPagamento = false;
 
@@ -419,7 +421,7 @@ class OrcamentoController extends Controller
                         $itenscomdesconto = true;
                     } elseif ($tipoDesconto === 'percentual' && $descontoPercentual > 0) {
                         $valorComDesconto = $subtotal - ($subtotal * ($descontoPercentual / 100));
-                        $valorUnitarioComDesconto = $valorComDesconto / $quantidade;
+                        $valorUnitarioComDesconto = $quantidade > 0 ? $valorComDesconto / $quantidade : 0;
                         $descontoAplicadoItem = $descontoPercentual;
                     }
                 }
@@ -556,7 +558,7 @@ class OrcamentoController extends Controller
         $necessitaAprovacaoDesconto = $temQualquerDesconto && (
             $clienteBloqueado ||
             $descontoPercentual > (float)($request->desconto_aprovado ?? 0) ||
-            (auth()->user()->vendedor->desconto ?? 0) < $descontoPercentual ||
+            ($request->user()->vendedor?->desconto ?? 0) < $descontoPercentual ||
             $itenscomdesconto
         );
 
@@ -1575,7 +1577,7 @@ class OrcamentoController extends Controller
                             : null,
                         'data_primeiro_vencimento' => $request->data_primeiro_vencimento ?? null,
                         'intervalo_dias' => $request->intervalo_dias ?? null,
-                        'solicitado_por' => auth()->id(),
+                        'solicitado_por' => $request->user()->id,
                         'observacoes' => $request->observacoes_pagamento ?? null,
                         'status' => 'Pendente',
                     ]);
@@ -1585,7 +1587,7 @@ class OrcamentoController extends Controller
                     Log::info("Solicitação de pagamento criada para orçamento #{$orcamento->id} na edição", [
                         'orcamento_id' => $orcamento->id,
                         'descricao' => $request->outros_meios_pagamento,
-                        'vendedor_id' => auth()->id(),
+                        'vendedor_id' => $request->user()->id,
                     ]);
                 } else {
                     $solicitacaoExistente->update([
@@ -1699,7 +1701,7 @@ class OrcamentoController extends Controller
                             'produto_id' => null,
                             'consulta_preco_id' => $consultaPrecoId,
                             'cliente_id' => $orcamento->cliente_id,
-                            'user_id' => auth()->id(),
+                            'user_id' => $request->user()->id,
                         ]);
                         $itenscomdesconto = true;
                     }
@@ -1773,7 +1775,7 @@ class OrcamentoController extends Controller
                                 'tipo' => 'produto',
                                 'produto_id' => $produtoData['produto_id'],
                                 'cliente_id' => $orcamento->cliente_id,
-                                'user_id' => auth()->id(),
+                                'user_id' => $request->user()->id,
                             ]);
 
                             $itenscomdesconto = true;
@@ -1820,8 +1822,8 @@ class OrcamentoController extends Controller
                             'fornecedor_id' => !empty($item['fornecedor_id']) ? $item['fornecedor_id'] : null,
                             'observacao' => $item['observacoes'] ?? null,
                             'orcamento_id' => $orcamento->id,
-                            'usuario_id' => auth()->id(),
-                            'comprador_id' => auth()->id(),
+                            'usuario_id' => $request->user()->id,
+                            'comprador_id' => $request->user()->id,
                             'status' => 'Pendente',
                         ];
 
@@ -1875,7 +1877,7 @@ class OrcamentoController extends Controller
                                 'tipo' => 'produto',
                                 'produto_id' => $item['id'],
                                 'cliente_id' => $orcamento->cliente_id,
-                                'user_id' => auth()->id(),
+                                'user_id' => $request->user()->id,
                             ]);
 
                             $itenscomdesconto = true;
@@ -2055,7 +2057,7 @@ class OrcamentoController extends Controller
             $temQualquerDesconto = $temDescontoPercentual || $temDescontoEspecifico || $itenscomdesconto;
 
             $descontoAprovadoCliente = (float)($request->desconto_aprovado ?? 0);
-            $descontoVendedor = (float)(auth()->user()->vendedor->desconto ?? 0);
+            $descontoVendedor = (float)(auth()->user()->vendedor?->desconto ?? 0);
 
             $necessitaAprovacaoDesconto = $temQualquerDesconto && (
                 $descontoPercentual > $descontoAprovadoCliente ||
@@ -2074,6 +2076,9 @@ class OrcamentoController extends Controller
                 } else {
                     $orcamento->status = 'Aprovado';
                     $orcamento->save();
+                    
+                    // Garante que a reserva de estoque seja atualizada
+                    app(\App\Services\EstoqueService::class)->reservarParaOrcamento($orcamento);
                 }
             } elseif ($necessitaAprovacaoDesconto && $necessitaAprovacaoPagamento) {
                 $orcamento->status = 'Aprovar desconto';

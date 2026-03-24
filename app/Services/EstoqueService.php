@@ -14,19 +14,21 @@ final class EstoqueService
 {
     public function reservarParaOrcamento(Orcamento $orcamento): void
     {
+        /* 
         if ($orcamento->estoque_reservado_em !== null) {
             return;
-        }
+        } 
+        */
 
         Log::info("Iniciando reserva de estoque para Orçamento #{$orcamento->id}");
         $orcamento->load('itens.produto');
 
         try {
             DB::transaction(function () use ($orcamento) {
-                // Evita duplicidade de reserva ativa
+                // Se já existir reserva ativa, cancela para criar nova (atualizada)
                 if (EstoqueReserva::where('orcamento_id', $orcamento->id)->where('status', 'ativa')->exists()) {
-                    Log::info("Orçamento #{$orcamento->id} já possui reserva ativa. Pulando.");
-                    return;
+                    Log::info("Orçamento #{$orcamento->id} já possui reserva ativa. Re-calculando.");
+                    $this->liberarReservaDoOrcamento($orcamento);
                 }
 
                 foreach ($orcamento->itens->whereNotNull('produto_id') as $oi) {

@@ -43,6 +43,7 @@ class OrcamentoStoreRequest extends FormRequest
             'tipos_transporte' => 'required|integer|exists:tipos_transportes,id',
             'condicao_id' => 'required|exists:condicoes_pagamento,id',
             'venda_triangular' => 'required|boolean',
+            'homologacao' => 'required|boolean',
             'cnpj_triangular' => 'required_if:venda_triangular,1|nullable|string|max:18',
 
             'outros_meios_pagamento' => 'required_if:condicao_id,20|nullable|string|max:255',

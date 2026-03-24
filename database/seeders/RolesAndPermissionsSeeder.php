@@ -16,12 +16,12 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // 1. Criar Permissões de Usuários (Administração)
         $permissions = [
-            'view_any_user',
-            'view_user',
-            'create_user',
-            'update_user',
-            'delete_user',
-            'access_filament_admin',
+            'ver_usuarios',
+            'ver_usuario',
+            'criar_usuario',
+            'editar_usuario',
+            'excluir_usuario',
+            'acessar_painel_admin',
             
             // Permissões de Estoque
             'visualizar_movimentacao',
@@ -39,12 +39,16 @@ class RolesAndPermissionsSeeder extends Seeder
             'gerenciar_pedido_compra',
             
             // Permissões de Faturamento da Rota
-            'route_billing_attach',
-            'route_billing_approve',
-            'route_billing_deny',
-            'route_billing_validate_attachment',
-            'route_billing_view_billing',
-            'route_billing_view_loading',
+            'faturamento_rota_anexar',
+            'faturamento_rota_aprovar',
+            'faturamento_rota_rejeitar',
+            'faturamento_rota_validar_anexo',
+            'faturamento_rota_ver_faturamento',
+            'faturamento_rota_ver_carregamento',
+
+            // Permissões de Orçamento
+            'criar_orcamento',
+            'editar_orcamento',
         ];
 
         foreach ($permissions as $permission) {
@@ -66,7 +70,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'visualizar_requisicao_compra',
             'aprovar_requisicao_nivel_1',
             'aprovar_requisicao_nivel_2',
-            'route_billing_view_billing',
+            'faturamento_rota_ver_faturamento',
+            'criar_orcamento',
+            'editar_orcamento',
         ]);
 
         // COMPRAS: Operação comercial
@@ -88,30 +94,32 @@ class RolesAndPermissionsSeeder extends Seeder
         // VENDEDOR: Operação de vendas
         $roleVendedor = Role::findOrCreate('vendedor', 'web');
         $roleVendedor->syncPermissions([
-            'view_user',
-            'route_billing_attach',
+            'ver_usuario',
+            'faturamento_rota_anexar',
+            'criar_orcamento',
+            'editar_orcamento',
         ]);
 
         // FINANCEIRO: Operação financeira e Faturamento da Rota
         $roleFinanceiro = Role::findOrCreate('financeiro', 'web');
         $roleFinanceiro->syncPermissions([
-            'route_billing_view_billing',
-            'route_billing_approve',
-            'route_billing_deny',
-            'route_billing_validate_attachment',
-            'route_billing_view_loading',
+            'faturamento_rota_ver_faturamento',
+            'faturamento_rota_aprovar',
+            'faturamento_rota_rejeitar',
+            'faturamento_rota_validar_anexo',
+            'faturamento_rota_ver_carregamento',
         ]);
 
         // SEPARAÇÃO: Operação de separação (Faturamento da Rota)
         $roleSeparacao = Role::findOrCreate('separacao', 'web');
         $roleSeparacao->syncPermissions([
-            'route_billing_view_loading',
+            'faturamento_rota_ver_carregamento',
         ]);
 
         // CONFERÊNCIA: Operação de conferência (Faturamento da Rota)
         $roleConferencia = Role::findOrCreate('conferencia', 'web');
         $roleConferencia->syncPermissions([
-            'route_billing_view_loading',
+            'faturamento_rota_ver_carregamento',
         ]);
 
         // 3. Atribuir Admin ao Primeiro Usuário (se existir)
