@@ -21,7 +21,8 @@ class Conferencia extends Model
         'qtd_caixas',
         'qtd_sacos',
         'qtd_sacolas',
-        'outros_embalagem'
+        'outros_embalagem',
+        'usa_conferencia_anterior_id'
     ];
 
     protected $casts = [
@@ -53,5 +54,10 @@ class Conferencia extends Model
     public function conferente()
     {
         return $this->belongsTo(User::class, 'conferente_id');
+    }
+
+    public function conferenciaAnterior()
+    {
+        return $this->belongsTo(Conferencia::class, 'usa_conferencia_anterior_id');
     }
 }

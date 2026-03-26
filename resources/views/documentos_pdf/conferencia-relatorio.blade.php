@@ -403,7 +403,12 @@
                 </div>
 
                 {{-- Embalagem --}}
-                @if ($conf->qtd_caixas || $conf->qtd_sacos || $conf->qtd_sacolas || $conf->outros_embalagem)
+                @if ($conf->usa_conferencia_anterior_id)
+                    <div class="embalagem-box" style="background:#e0f2fe; border-color:#7dd3fc;">
+                        <strong>📦 Embalagem Compartilhada:</strong>&nbsp;
+                        <span style="color:#0369a1;">Itens acondicionados na mesma embalagem da <strong>Conferência #{{ $conf->usa_conferencia_anterior_id }}</strong></span>
+                    </div>
+                @elseif ($conf->qtd_caixas || $conf->qtd_sacos || $conf->qtd_sacolas || $conf->outros_embalagem)
                     <div class="embalagem-box">
                         <strong>📦 Embalagem:</strong>&nbsp;
                         @php $emb = []; @endphp

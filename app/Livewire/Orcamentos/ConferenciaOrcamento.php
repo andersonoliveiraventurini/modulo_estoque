@@ -42,6 +42,7 @@ class ConferenciaOrcamento extends Component
     public ?int    $sacos    = null;
     public ?int    $sacolas  = null;
     public ?string $outros   = null;
+    public ?int    $usaConferenciaAnteriorId = null;
 
     // ─── Estado carregado ──────────────────────────────────────────────────────
 
@@ -136,6 +137,7 @@ class ConferenciaOrcamento extends Component
             $this->sacos   = $this->conferencia->qtd_sacos;
             $this->sacolas = $this->conferencia->qtd_sacolas;
             $this->outros  = $this->conferencia->outros_embalagem;
+            $this->usaConferenciaAnteriorId = $this->conferencia->usa_conferencia_anterior_id;
         }
     }
 
@@ -162,6 +164,7 @@ class ConferenciaOrcamento extends Component
         return ($this->caixas  > 0)
             || ($this->sacos   > 0)
             || ($this->sacolas > 0)
+            || ($this->usaConferenciaAnteriorId > 0)
             || (!empty(trim($this->outros ?? '')));
     }
 
@@ -320,12 +323,13 @@ class ConferenciaOrcamento extends Component
 
         DB::transaction(function () use ($conf, $temDivergencia) {
             $conf->update([
-                'status'           => 'concluida',
-                'finished_at'      => now(),
-                'qtd_caixas'       => $this->caixas  ?: null,
-                'qtd_sacos'        => $this->sacos   ?: null,
-                'qtd_sacolas'      => $this->sacolas ?: null,
-                'outros_embalagem' => trim($this->outros ?? '') ?: null,
+                'status'                      => 'concluida',
+                'finished_at'                 => now(),
+                'qtd_caixas'                  => $this->caixas  ?: null,
+                'qtd_sacos'                   => $this->sacos   ?: null,
+                'qtd_sacolas'                 => $this->sacolas ?: null,
+                'outros_embalagem'            => trim($this->outros ?? '') ?: null,
+                'usa_conferencia_anterior_id' => $this->usaConferenciaAnteriorId ?: null,
             ]);
 
             if ($temDivergencia) {

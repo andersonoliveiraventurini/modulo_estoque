@@ -26,6 +26,7 @@ class ConferenciaPdfService
                 'itens.conferidoPor',
                 'itens.fotos',
                 'itens.consultaPreco.fornecedorSelecionado.fornecedor', // ✅
+                'conferenciaAnterior',
             ])
                 ->where('orcamento_id', $orcamento->id)
                 ->orderBy('created_at')

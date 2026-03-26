@@ -456,45 +456,70 @@
                         itens desta conferência. Preencha ao menos um campo.
                     </p>
 
-                    <div class="flex flex-col gap-3 md:flex-row md:items-end flex-wrap">
-                        <div class="flex-1 min-w-[100px]">
-                            <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 uppercase tracking-wider">
-                                Caixas
-                            </label>
-                            <input type="number" wire:model.live="caixas" min="0"
-                                   class="w-full rounded-md border-zinc-300 dark:border-zinc-600
-                                       bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
-                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"/>
-                        </div>
-                        <div class="flex-1 min-w-[100px]">
-                            <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 uppercase tracking-wider">
-                                Sacos
-                            </label>
-                            <input type="number" wire:model.live="sacos" min="0"
-                                   class="w-full rounded-md border-zinc-300 dark:border-zinc-600
-                                       bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
-                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"/>
-                        </div>
-                        <div class="flex-1 min-w-[100px]">
-                            <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 uppercase tracking-wider">
-                                Sacolas
-                            </label>
-                            <input type="number" wire:model.live="sacolas" min="0"
-                                   class="w-full rounded-md border-zinc-300 dark:border-zinc-600
-                                       bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
-                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"/>
-                        </div>
-                        <div class="flex-1 min-w-[140px]">
-                            <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 uppercase tracking-wider">
-                                Outros
-                            </label>
-                            <input type="text" wire:model.live="outros" placeholder="Ex: 2 Pallets"
-                                   class="w-full rounded-md border-zinc-300 dark:border-zinc-600
-                                       bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
-                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"/>
-                        </div>
+                    <div class="flex flex-col gap-4">
+                        {{-- OPÇÃO: MESMA CAIXA ANTERIOR --}}
+                        @if ($concludedConferencias && $concludedConferencias->isNotEmpty())
+                            <div class="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-md border border-indigo-100 dark:border-indigo-800/50">
+                                <label class="block text-xs font-bold text-indigo-700 dark:text-indigo-300 mb-2 uppercase tracking-wider">
+                                    Utilizar mesma embalagem de conferência anterior?
+                                </label>
+                                <select wire:model.live="usaConferenciaAnteriorId"
+                                        class="w-full md:w-80 rounded-md border-indigo-300 dark:border-indigo-600
+                                               bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
+                                               focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm">
+                                    <option value="">Não (Nova Embalagem / Volume)</option>
+                                    @foreach ($concludedConferencias as $pc)
+                                        <option value="{{ $pc->id }}">Sim, colocar na caixa da Conf #{{ $pc->id }}</option>
+                                    @endforeach
+                                </select>
+                                @if ($usaConferenciaAnteriorId)
+                                    <p class="mt-2 text-xs text-indigo-600 dark:text-indigo-400 font-medium">
+                                        ℹ️ Esta conferência será vinculada ao volume da #{{ $usaConferenciaAnteriorId }}.
+                                        No relatório, os itens aparecerão como parte dessa mesma embalagem.
+                                    </p>
+                                @endif
+                            </div>
+                        @endif
 
-                        <div class="shrink-0 flex gap-2">
+                        <div class="flex flex-col gap-3 md:flex-row md:items-end flex-wrap {{ $usaConferenciaAnteriorId ? 'opacity-40 pointer-events-none' : '' }}">
+                            <div class="flex-1 min-w-[100px]">
+                                <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 uppercase tracking-wider">
+                                    Caixas
+                                </label>
+                                <input type="number" wire:model.live="caixas" min="0" @if($usaConferenciaAnteriorId) disabled @endif
+                                       class="w-full rounded-md border-zinc-300 dark:border-zinc-600
+                                           bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
+                                           focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"/>
+                            </div>
+                            <div class="flex-1 min-w-[100px]">
+                                <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 uppercase tracking-wider">
+                                    Sacos
+                                </label>
+                                <input type="number" wire:model.live="sacos" min="0" @if($usaConferenciaAnteriorId) disabled @endif
+                                       class="w-full rounded-md border-zinc-300 dark:border-zinc-600
+                                           bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
+                                           focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"/>
+                            </div>
+                            <div class="flex-1 min-w-[100px]">
+                                <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 uppercase tracking-wider">
+                                    Sacolas
+                                </label>
+                                <input type="number" wire:model.live="sacolas" min="0" @if($usaConferenciaAnteriorId) disabled @endif
+                                       class="w-full rounded-md border-zinc-300 dark:border-zinc-600
+                                           bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
+                                           focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"/>
+                            </div>
+                            <div class="flex-1 min-w-[140px]">
+                                <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 uppercase tracking-wider">
+                                    Outros
+                                </label>
+                                <input type="text" wire:model.live="outros" placeholder="Ex: 2 Pallets" @if($usaConferenciaAnteriorId) disabled @endif
+                                       class="w-full rounded-md border-zinc-300 dark:border-zinc-600
+                                           bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
+                                           focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"/>
+                            </div>
+
+                            <div class="shrink-0 flex gap-2">
                             @if(!$conferencia && $orcamento->workflow_status === 'conferido' && !$orcamento->enviado_financeiro_em)
                                 <button wire:click="enviarFinanceiro" wire:loading.attr="disabled"
                                         class="px-5 py-2 rounded-md font-semibold text-sm shadow-sm transition-colors

@@ -312,7 +312,11 @@
         font-size: 10.5px;
         color: #7a5c00;
     ">
-        <strong>Atenção:</strong> Os valores apresentados referem-se a um preço teórico para encomenda, podendo sofrer alterações conforme variações de mercado e câmbio. O preço final será confirmado somente com a chegada do material e emissão da Nota Fiscal.
+        <strong>Atenção:</strong> Esta cotação refere-se a produto sob encomenda, não disponível para pronta entrega em estoque.
+<br>
+Os valores e prazos informados poderão sofrer alterações sem aviso prévio, em decorrência de fatores externos, incluindo, mas não se limitando, à variação cambial, disponibilidade do fornecedor e oscilações de demanda.
+<br>
+Ao aprovar este orçamento, o cliente declara, para todos os fins de direito, estar ciente e de acordo com as condições acima descritas, reconhecendo que tais fatores independem da vontade da empresa, não podendo, portanto, imputar à ACAV qualquer responsabilidade por eventuais alterações de preço, prazo ou indisponibilidade do produto decorrentes dessas circunstâncias.
     </div>
 @endif
 {{-- ===========================
