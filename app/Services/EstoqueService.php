@@ -55,7 +55,8 @@ final class EstoqueService
                     Log::info("Item reservado: Produto #{$produto->id}, Qtd: {$quantidade}");
                 }
 
-                $orcamento->update(['estoque_reservado_em' => now()]);
+                $orcamento->estoque_reservado_em = now();
+                $orcamento->saveQuietly();
             });
             Log::info("Reserva concluída com sucesso para Orçamento #{$orcamento->id}");
         } catch (\Exception $e) {

@@ -101,15 +101,18 @@ class SeparacaoPage extends Component
 
             // ✅ Itens com produto cadastrado (estoque normal)
             foreach ($orcamento->itens->whereNotNull('produto_id') as $oi) {
-                PickingItem::create([
-                    'picking_batch_id'  => $batch->id,
-                    'orcamento_item_id' => $oi->id,
-                    'produto_id'        => $oi->produto_id,
-                    'is_encomenda'      => false,
-                    'qty_solicitada'    => $oi->quantidade,
-                    'qty_separada'      => 0,
-                    'status'            => 'pendente',
-                ]);
+                $falta = $oi->quantidade_restante;
+                if ($falta > 0) {
+                    PickingItem::create([
+                        'picking_batch_id'  => $batch->id,
+                        'orcamento_item_id' => $oi->id,
+                        'produto_id'        => $oi->produto_id,
+                        'is_encomenda'      => false,
+                        'qty_solicitada'    => $falta,
+                        'qty_separada'      => 0,
+                        'status'            => 'pendente',
+                    ]);
+                }
             }
 
             // ✅ Itens de encomenda (cotação de preço)
@@ -119,27 +122,27 @@ class SeparacaoPage extends Component
 
             if ($grupo) {
                 foreach ($grupo->itens as $item) {
-                    PickingItem::create([
-                        'picking_batch_id'    => $batch->id,
-                        'orcamento_item_id'   => null,
-                        'produto_id'          => null,
-                        'consulta_preco_id'   => $item->id,
-                        'is_encomenda'        => true,
-                        'descricao_encomenda' => $item->descricao,
-                        'qty_solicitada'      => $item->quantidade,
-                        'qty_separada'        => 0,
-                        'status'              => 'pendente',
-                    ]);
+                    $falta = $item->quantidade_restante;
+                    if ($falta > 0) {
+                        PickingItem::create([
+                            'picking_batch_id'    => $batch->id,
+                            'orcamento_item_id'   => null,
+                            'produto_id'          => null,
+                            'consulta_preco_id'   => $item->id,
+                            'is_encomenda'        => true,
+                            'descricao_encomenda' => $item->descricao,
+                            'qty_solicitada'      => $falta,
+                            'qty_separada'        => 0,
+                            'status'              => 'pendente',
+                        ]);
+                    }
                 }
             }
 
             $orcamento->update(['workflow_status' => 'em_separacao']);
         });
 
-        $this->batch = PickingBatch::with('items.produto')
-            ->where('orcamento_id', $this->orcamento->id)
-            ->whereIn('status', ['aberto', 'em_separacao'])
-            ->first();
+        $this->carregar();
     }
 
     public function salvarItem(int $itemId)

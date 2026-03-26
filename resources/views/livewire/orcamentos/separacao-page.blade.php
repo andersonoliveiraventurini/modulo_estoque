@@ -35,6 +35,75 @@
         </div>
     @enderror
 
+    {{-- ═══════════════════════ PROGRESSO GERAL ════════════════════════════ --}}
+    <div class="mb-8 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+        <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-3">
+            Progresso Geral da Logística
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead>
+                    <tr class="text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                        <th class="pb-2 font-medium">Produto</th>
+                        <th class="pb-2 font-medium text-center">Solicitado</th>
+                        <th class="pb-2 font-medium text-center">Separado</th>
+                        <th class="pb-2 font-medium text-center">Conferido</th>
+                        <th class="pb-2 font-medium text-center">Pendente</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                    @foreach($orcamento->itens as $oi)
+                        <tr>
+                            <td class="py-2 text-gray-900 dark:text-gray-100 font-medium">
+                                {{ $oi->produto->nome }}
+                                <div class="text-[10px] text-gray-400 uppercase tracking-tighter">{{ $oi->produto->sku }}</div>
+                            </td>
+                            <td class="py-2 text-center text-gray-600 dark:text-gray-400">
+                                {{ rtrim(rtrim(number_format($oi->quantidade, 3, ',', '.'), '0'), ',') }}
+                            </td>
+                            <td class="py-2 text-center font-semibold {{ $oi->quantidade_separada >= $oi->quantidade ? 'text-emerald-600' : 'text-amber-600' }}">
+                                {{ rtrim(rtrim(number_format($oi->quantidade_separada, 3, ',', '.'), '0'), ',') }}
+                            </td>
+                            <td class="py-2 text-center font-semibold {{ $oi->quantidade_conferida >= $oi->quantidade ? 'text-emerald-600' : 'text-amber-600' }}">
+                                {{ rtrim(rtrim(number_format($oi->quantidade_conferida, 3, ',', '.'), '0'), ',') }}
+                            </td>
+                            <td class="py-2 text-center font-bold {{ ($oi->quantidade - $oi->quantidade_separada) > 0 ? 'text-rose-500' : 'text-emerald-600' }}">
+                                {{ rtrim(rtrim(number_format(max(0, $oi->quantidade - $oi->quantidade_separada), 3, ',', '.'), '0'), ',') }}
+                            </td>
+                        </tr>
+                    @endforeach
+
+                    {{-- Encomendas --}}
+                    @php
+                        $grupo = \App\Models\ConsultaPrecoGrupo::with(['itens'])->where('orcamento_id', $orcamento->id)->first();
+                    @endphp
+                    @if($grupo)
+                        @foreach($grupo->itens as $eni)
+                            <tr>
+                                <td class="py-2 text-gray-900 dark:text-gray-100 font-medium">
+                                    {{ $eni->descricao }}
+                                    <div class="text-[10px] text-purple-500 uppercase tracking-tighter">Encomenda</div>
+                                </td>
+                                <td class="py-2 text-center text-gray-600 dark:text-gray-400">
+                                    {{ rtrim(rtrim(number_format($eni->quantidade, 3, ',', '.'), '0'), ',') }}
+                                </td>
+                                <td class="py-2 text-center font-semibold {{ $eni->quantidade_separada >= $eni->quantidade ? 'text-emerald-600' : 'text-amber-600' }}">
+                                    {{ rtrim(rtrim(number_format($eni->quantidade_separada, 3, ',', '.'), '0'), ',') }}
+                                </td>
+                                <td class="py-2 text-center font-semibold —">
+                                    —
+                                </td>
+                                <td class="py-2 text-center font-bold {{ ($eni->quantidade - $eni->quantidade_separada) > 0 ? 'text-rose-500' : 'text-emerald-600' }}">
+                                    {{ rtrim(rtrim(number_format(max(0, $eni->quantidade - $eni->quantidade_separada), 3, ',', '.'), '0'), ',') }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    @endif
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     {{-- SEÇÃO 1: LOTE DE SEPARAÇÃO ATIVO --}}
     @if ($batch)
         <div class="rounded-lg border bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
@@ -105,7 +174,38 @@
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200 align-top">
-                                {{ rtrim(rtrim(number_format($it->qty_solicitada, 3, ',', '.'), '0'), ',') }}
+                                @php
+                                    $objItemResource = $it->orcamentoItem ?? $it->consultaPreco;
+                                    $solicitadoTotalResource = $objItemResource->quantidade ?? 0;
+                                    // quantidade_separada no model só soma lotes CONCLUÍDOS. 
+                                    // Como este lote ainda está aberto/em separação, o model ainda não conta o que está sendo feito aqui.
+                                    $jaSeparadoAnterior = $objItemResource->quantidade_separada ?? 0;
+                                    $separadoAgora = $it->qty_separada;
+                                    $totalConfirmadoSep = $jaSeparadoAnterior + $separadoAgora;
+                                    $faltaSepararTotal = max(0, $solicitadoTotalResource - $totalConfirmadoSep);
+                                @endphp
+
+                                <div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg space-y-1">
+                                    <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                                        <span>Total Solicitado:</span>
+                                        <span class="font-bold">{{ rtrim(rtrim(number_format($solicitadoTotalResource, 3, ',', '.'), '0'), ',') }}</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-blue-700 dark:text-blue-300">
+                                        <span>Já Separado:</span>
+                                        <span class="font-semibold">
+                                            {{ rtrim(rtrim(number_format($jaSeparadoAnterior, 3, ',', '.'), '0'), ',') }} + 
+                                            {{ rtrim(rtrim(number_format($separadoAgora, 3, ',', '.'), '0'), ',') }} = 
+                                            {{ rtrim(rtrim(number_format($totalConfirmadoSep, 3, ',', '.'), '0'), ',') }}
+                                        </span>
+                                    </div>
+                                    <div class="flex justify-between text-sm {{ $faltaSepararTotal > 0 ? 'text-amber-600' : 'text-emerald-600' }} font-bold border-t border-blue-100 dark:border-blue-800 pt-1">
+                                        <span>Falta Separar:</span>
+                                        <span>{{ rtrim(rtrim(number_format($faltaSepararTotal, 3, ',', '.'), '0'), ',') }}</span>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-xs text-gray-400">
+                                    Neste lote: <span class="font-bold">{{ rtrim(rtrim(number_format($it->qty_solicitada, 3, ',', '.'), '0'), ',') }}</span>
+                                </div>
                             </td>
                             <td class="px-4 py-3 align-top">
                                 {{-- Ações de separação (igual para ambos os tipos) --}}

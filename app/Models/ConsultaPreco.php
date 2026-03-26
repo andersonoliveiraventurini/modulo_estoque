@@ -86,6 +86,25 @@ class ConsultaPreco extends Model
         return $this->hasMany(Desconto::class, 'consulta_preco_id');
     }
 
+    public function getQuantidadeSeparadaAttribute()
+    {
+        return PickingItem::where('consulta_preco_id', $this->id)
+            ->whereHas('batch', function ($query) {
+                $query->where('status', 'concluido');
+            })
+            ->sum('qty_separada');
+    }
+
+    public function getQuantidadeRestanteAttribute()
+    {
+        return max(0, $this->quantidade - $this->quantidade_separada);
+    }
+
+    public function pickingItems()
+    {
+        return $this->hasMany(PickingItem::class, 'consulta_preco_id');
+    }
+
     public function fornecedorSelecionado()
     {
         return $this->hasOne(ConsultaPrecoFornecedor::class, 'consulta_preco_id')

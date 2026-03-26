@@ -1141,16 +1141,6 @@ class OrcamentoController extends Controller
 
             $orcamento->save();
 
-            // ── Reserva de Estoque ao Aprovar ───────────────────────────────────
-            if ($status === 'Aprovado') {
-                try {
-                    app(EstoqueService::class)->reservarParaOrcamento($orcamento);
-                } catch (\Exception $e) {
-                    Log::error("Erro ao reservar estoque ao aprovar orçamento #{$id}: " . $e->getMessage());
-                    // Retorna o erro se a reserva falhar (regra de negócio importante)
-                    return response()->json(['message' => 'Orçamento aprovado, mas falha na reserva: ' . $e->getMessage()], 500);
-                }
-            }
 
             // ── PENDENTE — só salva e retorna ────────────────────────────────────
             if ($status === 'Pendente') {
@@ -1234,10 +1224,6 @@ class OrcamentoController extends Controller
                     }
                 }
 
-                // ✅ Reservas só para produtos físicos
-                if ($itensProduto->isNotEmpty()) {
-                    app(\App\Services\EstoqueService::class)->reservarParaOrcamento($orcamento);
-                }
 
                 $orcamento->update(['workflow_status' => 'em_separacao']);
             });
