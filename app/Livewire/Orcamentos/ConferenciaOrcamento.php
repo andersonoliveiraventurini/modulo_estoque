@@ -342,14 +342,20 @@ class ConferenciaOrcamento extends Component
             ]);
 
             // Força recarregamento para ter certeza do estado
-            $this->orcamento = $this->orcamento->fresh();
+            $this->orcamento = $this->orcamento->fresh(['itens']);
+
+            $todosConferidos = $this->orcamento->itens->every(fn($oi) => $oi->quantidade_conferida >= $oi->quantidade);
 
             if ($temDivergencia) {
                 // Mantém como 'conferido' para revisão manual antes de finalizar
                 $this->orcamento->update(['workflow_status' => 'conferido']);
                 $msg = 'Conferência #'.$conf->id.' concluída com divergências — orçamento aguarda revisão.';
+            } elseif (!$todosConferidos) {
+                // Conferência OK, mas ainda há itens pendentes no orçamento global
+                $this->orcamento->update(['workflow_status' => 'conferido']);
+                $msg = 'Conferência #'.$conf->id.' concluída com sucesso! Alguns itens do orçamento ainda estão pendentes.';
             } else {
-                // Sem divergências: baixa o estoque, finaliza e gera Fatura automaticamente
+                // Sem divergências e tudo conferido: baixa o estoque, finaliza e gera Fatura automaticamente
                 app(EstoqueService::class)->baixarSaida($conf);
                 $this->orcamento->update(['workflow_status' => 'finalizado']);
                 app(FaturaService::class)->gerarFaturaPorOrcamento($this->orcamento);

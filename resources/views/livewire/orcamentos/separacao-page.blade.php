@@ -212,10 +212,10 @@
                                 <div class="flex flex-col gap-2">
                                     <div class="flex flex-wrap items-start gap-2">
                                         <input type="number" step="any" min="0"
-                                               wire:model.defer="inputs.{{ $it->id }}.qty"
+                                               wire:model="inputs.{{ $it->id }}.qty"
                                                class="w-24 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500">
                                         <input type="text" placeholder="Motivo (se não separar)"
-                                               wire:model.defer="inputs.{{ $it->id }}.motivo"
+                                               wire:model="inputs.{{ $it->id }}.motivo"
                                                class="flex-1 min-w-[200px] rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500">
                                         <button wire:click="salvarItem({{ $it->id }})"
                                                 class="px-3 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm transition-colors">

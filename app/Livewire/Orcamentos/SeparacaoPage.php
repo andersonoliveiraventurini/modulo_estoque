@@ -147,6 +147,10 @@ class SeparacaoPage extends Component
 
     public function salvarItem(int $itemId)
     {
+        Log::info("SeparacaoPage@salvarItem chamado", [
+            'item_id' => $itemId,
+            'inputs' => $this->inputs[$itemId] ?? 'não encontrado'
+        ]);
         if (!$this->batch) {
             session()->flash('error', 'Lote de separação não encontrado.');
             return;
