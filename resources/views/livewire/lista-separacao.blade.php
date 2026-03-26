@@ -112,6 +112,11 @@
             <thead class="bg-zinc-50 dark:bg-zinc-800">
                 <tr>
                     <th class="px-3 py-3 text-left">
+                        <button wire:click="sortBy('id')" class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                            Orçamento
+                        </button>
+                    </th>
+                    <th class="px-3 py-3 text-left">
                         <button wire:click="sortBy('obra')" class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                             Obra / Rota
                         </button>
@@ -138,7 +143,12 @@
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @if($orcamentos->isNotEmpty())
                     @foreach ($orcamentos as $o)
-                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
+                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">                        
+                        <td class="px-3 py-4">
+                            <a href="{{ route('orcamentos.show', $o) }}" class="font-bold text-zinc-900 dark:text-zinc-50 hover:underline">
+                                    {{ $o->id }}
+                                </a>
+                        </td>
                         <td class="px-3 py-4">
                             <div class="flex flex-col">
                                 <a href="{{ route('orcamentos.show', $o) }}" class="font-bold text-zinc-900 dark:text-zinc-50 hover:underline">
