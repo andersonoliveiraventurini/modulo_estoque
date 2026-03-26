@@ -42,7 +42,7 @@ class ConferenciaOrcamento extends Component
     public ?int    $sacos    = null;
     public ?int    $sacolas  = null;
     public ?string $outros   = null;
-    public ?int    $usaConferenciaAnteriorId = null;
+    public         $usaConferenciaAnteriorId = null; // Removi o tipo int? para aceitar string do select se houver
 
     // ─── Estado carregado ──────────────────────────────────────────────────────
 
@@ -164,7 +164,7 @@ class ConferenciaOrcamento extends Component
         return ($this->caixas  > 0)
             || ($this->sacos   > 0)
             || ($this->sacolas > 0)
-            || ($this->usaConferenciaAnteriorId > 0)
+            || (!empty($this->usaConferenciaAnteriorId))
             || (!empty(trim($this->outros ?? '')));
     }
 
