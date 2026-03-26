@@ -25,6 +25,9 @@ final class EstoqueService
 
         try {
             DB::transaction(function () use ($orcamento) {
+                // Garante que apenas um processo mexa neste orçamento por vez
+                Orcamento::where('id', $orcamento->id)->lockForUpdate()->first();
+
                 // Se já existir reserva ativa, cancela para criar nova (atualizada)
                 if (EstoqueReserva::where('orcamento_id', $orcamento->id)->where('status', 'ativa')->exists()) {
                     Log::info("Orçamento #{$orcamento->id} já possui reserva ativa. Re-calculando.");
@@ -90,6 +93,9 @@ final class EstoqueService
 
         try {
             DB::transaction(function () use ($conf) {
+                // Garante que apenas um processo mexa no orçamento relacionado por vez
+                Orcamento::where('id', $conf->orcamento_id)->lockForUpdate()->first();
+
                 $consumos = [];
 
                 foreach ($conf->itens as $ci) {
@@ -142,7 +148,7 @@ final class EstoqueService
             $recipients = $admins->concat($compras)->unique('id');
 
             if ($recipients->isNotEmpty()) {
-                \Illuminate\Support\Facades\Mail::to($recipients)->send(new \App\Mail\EstoqueBaixoMail($produto));
+                \Illuminate\Support\Facades\Mail::to($recipients)->queue(new \App\Mail\EstoqueBaixoMail($produto));
             }
 
             // 2. Gerar Requisição de Compra Automática (se não houver pendente)
@@ -192,6 +198,9 @@ final class EstoqueService
         $orcamento->load('itens.produto');
 
         DB::transaction(function () use ($orcamento) {
+            // Garante que apenas um processo mexa neste orçamento por vez
+            Orcamento::where('id', $orcamento->id)->lockForUpdate()->first();
+
             $consumos = [];
 
             foreach ($orcamento->itens->whereNotNull('produto_id') as $oi) {

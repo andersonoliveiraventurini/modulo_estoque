@@ -31,6 +31,16 @@ class SeparacaoController extends Controller
         $orcamento = Orcamento::with(['itens.produto'])->findOrFail($orcamentoId);
 
         DB::transaction(function () use ($orcamento, $estoque) {
+            // Garante que apenas um processo mexa neste orçamento por vez
+            $orcamento = Orcamento::where('id', $orcamento->id)->lockForUpdate()->first();
+
+            // Evita criar múltiplos lotes se dois cliques ocorrerem quase ao mesmo tempo
+            $existe = PickingBatch::where('orcamento_id', $orcamento->id)
+                ->whereIn('status', ['aberto', 'em_separacao'])
+                ->exists();
+
+            if ($existe) return;
+
             $batch = PickingBatch::create([
                 'orcamento_id' => $orcamento->id,
                 'status' => 'em_separacao',

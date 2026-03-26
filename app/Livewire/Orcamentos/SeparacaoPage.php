@@ -83,6 +83,9 @@ class SeparacaoPage extends Component
         $orcamento = $this->orcamento;
 
         DB::transaction(function () use ($orcamento) {
+            // Garante que apenas um processo mexa neste orçamento por vez
+            $orcamento = Orcamento::where('id', $orcamento->id)->lockForUpdate()->first();
+
             $existe = PickingBatch::where('orcamento_id', $orcamento->id)
                 ->whereIn('status', ['aberto', 'em_separacao'])
                 ->exists();

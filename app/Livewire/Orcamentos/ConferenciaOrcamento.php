@@ -211,6 +211,9 @@ class ConferenciaOrcamento extends Component
 
         iniciar:
         DB::transaction(function () use ($batch) {
+            // Garante que apenas um processo mexa neste orçamento por vez
+            $this->orcamento = Orcamento::where('id', $this->orcamento->id)->lockForUpdate()->first();
+
             $conf = Conferencia::create([
                 'orcamento_id'     => $this->orcamento->id,
                 'picking_batch_id' => $batch?->id,

@@ -595,13 +595,13 @@
                                                 </div>
                                             </div>
 
-                                            {{-- Base após desconto --}}
+                                            {{-- Todos os itens após desconto --}}
                                             <div class="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                                                 <div class="flex items-center justify-center w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-full">
                                                     <x-heroicon-o-calculator class="w-5 h-5 text-green-600 dark:text-green-400"/>
                                                 </div>
                                                 <div class="flex-1">
-                                                    <p class="text-xs text-green-600 dark:text-green-400 font-medium">Base Após Desconto</p>
+                                                    <p class="text-xs text-green-600 dark:text-green-400 font-medium">Todos os itens após desconto</p>
                                                     <p class="text-lg font-bold text-green-700 dark:text-green-300">
                                                         R$ {{ number_format($valorAposDesconto, 2, ',', '.') }}
                                                     </p>

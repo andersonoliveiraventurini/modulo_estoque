@@ -245,6 +245,8 @@ class SolicitacaoPagamentoController extends Controller
     {
         try {
             DB::transaction(function () use ($orcamento) {
+                // Garante que apenas um processo mexa neste orçamento por vez
+                Orcamento::where('id', $orcamento->id)->lockForUpdate()->first();
 
                 // Evita lote duplicado
                 $existe = \App\Models\PickingBatch::where('orcamento_id', $orcamento->id)
