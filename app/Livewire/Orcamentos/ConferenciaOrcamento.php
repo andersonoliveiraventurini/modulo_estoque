@@ -164,7 +164,7 @@ class ConferenciaOrcamento extends Component
         return ($this->caixas  > 0)
             || ($this->sacos   > 0)
             || ($this->sacolas > 0)
-            || (!empty($this->usaConferenciaAnteriorId))
+            || ($this->usaConferenciaAnteriorId != null && $this->usaConferenciaAnteriorId != '')
             || (!empty(trim($this->outros ?? '')));
     }
 
@@ -309,11 +309,19 @@ class ConferenciaOrcamento extends Component
 
     public function concluir(): void
     {
-        if (!$this->conferencia) return;
+        if (!$this->conferencia) {
+            session()->flash('error', 'Nenhuma conferência ativa encontrada para concluir.');
+            return;
+        }
+
+        // Se usaConferenciaAnteriorId for o ID da própria conferência atual, anula
+        if ($this->usaConferenciaAnteriorId == $this->conferencia->id) {
+            $this->usaConferenciaAnteriorId = null;
+        }
 
         // Embalagem obrigatória: ao menos um campo preenchido
         if (!$this->embalagemPreenchida()) {
-            session()->flash('error', 'Informe ao menos um tipo de embalagem (caixas, sacos, sacolas ou outros) antes de concluir.');
+            session()->flash('error', 'Informe ao menos um tipo de embalagem (caixas, sacos, sacolas, outros ou uma conferência anterior) antes de concluir.');
             return;
         }
 
@@ -321,7 +329,8 @@ class ConferenciaOrcamento extends Component
         $conf->load('itens');
         $temDivergencia = $conf->itens->contains('status', 'divergente');
 
-        DB::transaction(function () use ($conf, $temDivergencia) {
+        DB::beginTransaction();
+        try {
             $conf->update([
                 'status'                      => 'concluida',
                 'finished_at'                 => now(),
@@ -332,25 +341,37 @@ class ConferenciaOrcamento extends Component
                 'usa_conferencia_anterior_id' => $this->usaConferenciaAnteriorId ?: null,
             ]);
 
+            // Força recarregamento para ter certeza do estado
+            $this->orcamento = $this->orcamento->fresh();
+
             if ($temDivergencia) {
                 // Mantém como 'conferido' para revisão manual antes de finalizar
                 $this->orcamento->update(['workflow_status' => 'conferido']);
+                $msg = 'Conferência #'.$conf->id.' concluída com divergências — orçamento aguarda revisão.';
             } else {
                 // Sem divergências: baixa o estoque, finaliza e gera Fatura automaticamente
                 app(EstoqueService::class)->baixarSaida($conf);
                 $this->orcamento->update(['workflow_status' => 'finalizado']);
                 app(FaturaService::class)->gerarFaturaPorOrcamento($this->orcamento);
+                $msg = 'Conferência #'.$conf->id.' concluída! Estoque baixado e orçamento finalizado.';
             }
-        });
 
-        $this->conferencia = null;
-        $this->carregarConferencia();
+            DB::commit();
+            
+            $this->reset(['conferencia', 'caixas', 'sacos', 'sacolas', 'outros', 'usaConferenciaAnteriorId']);
+            $this->carregarConferencia();
+            
+            session()->flash('success', $msg);
 
-        $msg = $temDivergencia
-            ? 'Conferência concluída com divergências — orçamento aguarda revisão.'
-            : 'Conferência concluída! Estoque baixado e orçamento finalizado.';
-
-        session()->flash('success', $msg);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Erro ao concluir conferência: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Erro ao concluir conferencia: ' . $e->getMessage(), [
+                'stack' => $e->getTraceAsString(),
+                'conf_id' => $conf->id ?? null
+            ]);
+            return;
+        }
     }
 
     public function enviarFinanceiro(): void

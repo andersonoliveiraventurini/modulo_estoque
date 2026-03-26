@@ -481,45 +481,50 @@
                             </div>
                         @endif
 
-                        <div class="flex flex-col gap-3 md:flex-row md:items-end flex-wrap {{ $usaConferenciaAnteriorId ? 'opacity-40 pointer-events-none' : '' }}">
-                            <div class="flex-1 min-w-[100px]">
-                                <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 uppercase tracking-wider">
-                                    Caixas
-                                </label>
-                                <input type="number" wire:model.live="caixas" min="0" @if($usaConferenciaAnteriorId) disabled @endif
-                                       class="w-full rounded-md border-zinc-300 dark:border-zinc-600
-                                           bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
-                                           focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"/>
-                            </div>
-                            <div class="flex-1 min-w-[100px]">
-                                <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 uppercase tracking-wider">
-                                    Sacos
-                                </label>
-                                <input type="number" wire:model.live="sacos" min="0" @if($usaConferenciaAnteriorId) disabled @endif
-                                       class="w-full rounded-md border-zinc-300 dark:border-zinc-600
-                                           bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
-                                           focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"/>
-                            </div>
-                            <div class="flex-1 min-w-[100px]">
-                                <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 uppercase tracking-wider">
-                                    Sacolas
-                                </label>
-                                <input type="number" wire:model.live="sacolas" min="0" @if($usaConferenciaAnteriorId) disabled @endif
-                                       class="w-full rounded-md border-zinc-300 dark:border-zinc-600
-                                           bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
-                                           focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"/>
-                            </div>
-                            <div class="flex-1 min-w-[140px]">
-                                <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 uppercase tracking-wider">
-                                    Outros
-                                </label>
-                                <input type="text" wire:model.live="outros" placeholder="Ex: 2 Pallets" @if($usaConferenciaAnteriorId) disabled @endif
-                                       class="w-full rounded-md border-zinc-300 dark:border-zinc-600
-                                           bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
-                                           focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"/>
-                            </div>
+                        <div class="flex flex-col gap-3 md:flex-row md:items-end flex-wrap {{ $usaConferenciaAnteriorId ? 'opacity-50' : '' }}">
+                                <div class="flex-1 min-w-[100px]">
+                                    <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 uppercase tracking-wider">
+                                        Caixas
+                                    </label>
+                                    <input type="number" wire:model.live="caixas" min="0" 
+                                           @if($usaConferenciaAnteriorId) disabled @endif
+                                           class="w-full rounded-md border-zinc-300 dark:border-zinc-600
+                                               bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
+                                               focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm disabled:cursor-not-allowed"/>
+                                </div>
+                                <div class="flex-1 min-w-[100px]">
+                                    <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 uppercase tracking-wider">
+                                        Sacos
+                                    </label>
+                                    <input type="number" wire:model.live="sacos" min="0" 
+                                           @if($usaConferenciaAnteriorId) disabled @endif
+                                           class="w-full rounded-md border-zinc-300 dark:border-zinc-600
+                                               bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
+                                               focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm disabled:cursor-not-allowed"/>
+                                </div>
+                                <div class="flex-1 min-w-[100px]">
+                                    <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 uppercase tracking-wider">
+                                        Sacolas
+                                    </label>
+                                    <input type="number" wire:model.live="sacolas" min="0" 
+                                           @if($usaConferenciaAnteriorId) disabled @endif
+                                           class="w-full rounded-md border-zinc-300 dark:border-zinc-600
+                                               bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
+                                               focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm disabled:cursor-not-allowed"/>
+                                </div>
+                                <div class="flex-1 min-w-[140px]">
+                                    <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 uppercase tracking-wider">
+                                        Outros
+                                    </label>
+                                    <input type="text" wire:model.live="outros" placeholder="Ex: 2 Pallets" 
+                                           @if($usaConferenciaAnteriorId) disabled @endif
+                                           class="w-full rounded-md border-zinc-300 dark:border-zinc-600
+                                               bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
+                                               focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm disabled:cursor-not-allowed"/>
+                                </div>
+                        </div>
 
-                            <div class="shrink-0 flex gap-2">
+                        <div class="mt-4 flex flex-col md:flex-row justify-end gap-2 border-t dark:border-zinc-800 pt-4">
                             @if(!$conferencia && $orcamento->workflow_status === 'conferido' && !$orcamento->enviado_financeiro_em)
                                 <button wire:click="enviarFinanceiro" wire:loading.attr="disabled"
                                         class="px-5 py-2 rounded-md font-semibold text-sm shadow-sm transition-colors
@@ -533,31 +538,42 @@
 
                             @if($conferencia)
                                 <button wire:click="concluir" wire:loading.attr="disabled"
-                                        @if(!$embalagemOk) disabled title="Preencha ao menos um tipo de embalagem" @endif
-                                        class="px-5 py-2 rounded-md font-semibold text-sm shadow-sm transition-colors
+                                        @if(!$embalagemOk) disabled @endif
+                                        class="px-5 py-2 rounded-md font-semibold text-sm shadow-sm transition-all duration-200
                                            {{ $embalagemOk
-                                               ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                                               : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' }}
-                                           disabled:opacity-60">
-                                    <span wire:loading.remove wire:target="concluir">
-                                        {{ $embalagemOk ? '✓ Concluir Conferência' : '⚠ Preencha a embalagem' }}
+                                               ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200 dark:shadow-none translate-y-0 active:translate-y-0.5'
+                                               : 'bg-zinc-300 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-500 cursor-not-allowed' }}
+                                           disabled:opacity-60 disabled:cursor-not-allowed relative overflow-hidden">
+                                    <span wire:loading.remove wire:target="concluir" class="flex items-center gap-1.5">
+                                        @if($embalagemOk)
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                        @endif
+                                        {{ $embalagemOk ? 'Concluir Conferência' : '⚠ Preencha a embalagem' }}
                                     </span>
-                                    <span wire:loading wire:target="concluir">Concluindo…</span>
+                                    <span wire:loading wire:target="concluir" class="flex items-center gap-2">
+                                        <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Concluindo…
+                                    </span>
                                 </button>
                             @endif
                         </div>
-                    </div>
 
-                    @if(!$embalagemOk)
-                        <p class="mt-3 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                            <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                                      clip-rule="evenodd"/>
-                            </svg>
-                            Informe ao menos um campo de embalagem para habilitar a conclusão.
-                        </p>
-                    @endif
+                        @if(!$embalagemOk)
+                            <p class="mt-3 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                          d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                          clip-rule="evenodd"/>
+                                </svg>
+                                Informe ao menos um campo de embalagem para habilitar a conclusão.
+                            </p>
+                        @endif
+                    </div>
                 </div>
             </div>
         @endif
@@ -768,18 +784,17 @@
         </div>
     @endif
 
-</div>
-
-<script>
-    function fotoPreview() {
-        return {
-            lightboxSrc: null,
-            init() {
-                // Escuta evento global para abrir lightbox
-                window.addEventListener('open-lightbox', (e) => {
-                    this.lightboxSrc = e.detail.src;
-                });
+    <script>
+        function fotoPreview() {
+            return {
+                lightboxSrc: null,
+                init() {
+                    // Escuta evento global para abrir lightbox
+                    window.addEventListener('open-lightbox', (e) => {
+                        this.lightboxSrc = e.detail.src;
+                    });
+                }
             }
         }
-    }
-</script>
+    </script>
+</div>
