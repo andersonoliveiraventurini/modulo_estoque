@@ -105,7 +105,7 @@
                             <p class="text-sm font-bold text-gray-800 dark:text-gray-200">Lote #{{ $aBatch->id }}</p>
                             <p class="text-xs text-gray-500 dark:text-gray-400">Status: <span class="capitalize">{{ str_replace('_', ' ', $aBatch->status) }}</span> • Iniciado em {{ $aBatch->started_at?->format('d/m/Y H:i') }}</p>
                         </div>
-                        <a href="{{ route('separacao.show', $orcamento->id) }}" 
+                        <a href="{{ route('orcamentos.separacao.show', $orcamento->id) }}" 
                            class="inline-flex items-center px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded shadow-sm transition">
                             Finalizar Separação
                         </a>
@@ -118,7 +118,7 @@
     {{-- ═══════════════════════ CONFERÊNCIA ATIVA ════════════════════════════ --}}
     @if ($conferencia)
 
-        <div class="rounded-lg border bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+        <div class="rounded-lg border bg-zinc-50 dark:bg-gray-900 border-zinc-200 dark:border-gray-700">
 
             {{-- Cabeçalho da conferência --}}
             <div class="p-4 border-b border-gray-200 dark:border-gray-700">
@@ -235,25 +235,25 @@
                                     {{-- Qty + Motivo --}}
                                     <div class="flex flex-wrap gap-2">
                                         <div>
-                                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                            <label class="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1 uppercase tracking-wider">
                                                 Quantidade conferida
                                             </label>
                                             <input type="number" step="any" min="0"
                                                    wire:model.defer="inputs.{{ $it->id }}.qty"
-                                                   class="w-28 rounded-md border-gray-300 dark:border-gray-600
-                                                       bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm"/>
+                                                   class="w-28 rounded-md border-zinc-300 dark:border-zinc-600
+                                                       bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
+                                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"/>
                                         </div>
                                         <div class="flex-1 min-w-[180px]">
-                                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                            <label class="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1 uppercase tracking-wider">
                                                 Motivo (se divergir)
                                             </label>
                                             <input type="text"
                                                    wire:model.defer="inputs.{{ $it->id }}.motivo"
                                                    placeholder="Motivo da divergência…"
-                                                   class="w-full rounded-md border-gray-300 dark:border-gray-600
-                                                       bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm"/>
+                                                   class="w-full rounded-md border-zinc-300 dark:border-zinc-600
+                                                       bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
+                                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"/>
                                         </div>
                                     </div>
 
@@ -439,8 +439,8 @@
 
         {{-- ── EMBALAGEM + CONCLUIR ─────────────────────────────────────────── --}}
         @if ($podeEditar)
-            <div class="mt-6 rounded-lg border bg-white dark:bg-gray-900
-                        {{ !$embalagemOk ? 'border-amber-400 dark:border-amber-600' : 'border-gray-200 dark:border-gray-700' }}">
+            <div class="mt-6 rounded-lg border bg-zinc-50 dark:bg-gray-900
+                        {{ !$embalagemOk ? 'border-amber-400 dark:border-amber-600' : 'border-zinc-200 dark:border-zinc-700' }}">
                 <div class="p-4">
                     <div class="flex items-center gap-2 mb-1">
                         <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
@@ -458,40 +458,40 @@
 
                     <div class="flex flex-col gap-3 md:flex-row md:items-end flex-wrap">
                         <div class="flex-1 min-w-[100px]">
-                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 uppercase tracking-wider">
                                 Caixas
                             </label>
                             <input type="number" wire:model.live="caixas" min="0"
-                                   class="w-full rounded-md border-gray-300 dark:border-gray-600
-                                       bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm"/>
+                                   class="w-full rounded-md border-zinc-300 dark:border-zinc-600
+                                       bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
+                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"/>
                         </div>
                         <div class="flex-1 min-w-[100px]">
-                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 uppercase tracking-wider">
                                 Sacos
                             </label>
                             <input type="number" wire:model.live="sacos" min="0"
-                                   class="w-full rounded-md border-gray-300 dark:border-gray-600
-                                       bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm"/>
+                                   class="w-full rounded-md border-zinc-300 dark:border-zinc-600
+                                       bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
+                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"/>
                         </div>
                         <div class="flex-1 min-w-[100px]">
-                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 uppercase tracking-wider">
                                 Sacolas
                             </label>
                             <input type="number" wire:model.live="sacolas" min="0"
-                                   class="w-full rounded-md border-gray-300 dark:border-gray-600
-                                       bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm"/>
+                                   class="w-full rounded-md border-zinc-300 dark:border-zinc-600
+                                       bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
+                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"/>
                         </div>
                         <div class="flex-1 min-w-[140px]">
-                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 uppercase tracking-wider">
                                 Outros
                             </label>
                             <input type="text" wire:model.live="outros" placeholder="Ex: 2 Pallets"
-                                   class="w-full rounded-md border-gray-300 dark:border-gray-600
-                                       bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm"/>
+                                   class="w-full rounded-md border-zinc-300 dark:border-zinc-600
+                                       bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
+                                       focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"/>
                         </div>
 
                         <div class="shrink-0 flex gap-2">
@@ -539,8 +539,13 @@
 
         {{-- ═══════════════════════ SEM CONFERÊNCIA ATIVA ════════════════════════ --}}
     @else
-        <div class="rounded-lg border-2 border-dashed p-8 text-center
-                    border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
+        @php
+            $hasPendingItemsGlobal = $orcamentoItens->contains(fn($oi) => $oi->quantidade_conferida < $oi->quantidade);
+        @endphp
+
+        @if($hasPendingItemsGlobal || ($activeSeparationBatches && $activeSeparationBatches->isNotEmpty()))
+            <div class="rounded-lg border-2 border-dashed p-8 text-center
+                        border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
             <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
                 Nenhuma conferência em andamento
             </h3>
@@ -571,7 +576,9 @@
                     </span>
                 </p>
             @endif
+
         </div>
+        @endif
     @endif
 
     {{-- ═══════════════════ HISTÓRICO DE CONFERÊNCIAS ════════════════════════ --}}
