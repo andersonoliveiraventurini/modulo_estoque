@@ -9,6 +9,6 @@ class LiberarReservaAoFinalizar
 {
     public function handle(OrcamentoFinalizado $event): void
     {
-        app(EstoqueService::class)->liberarReservaDoOrcamento($event->orcamento);
+        app(EstoqueService::class)->consumirReservaDoOrcamento($event->orcamento);
     }
 }

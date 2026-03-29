@@ -190,6 +190,18 @@ final class EstoqueService
     }
 
     /**
+     * Marca todas as reservas ativas de um orçamento como consumidas.
+     */
+    public function consumirReservaDoOrcamento(Orcamento $orcamento): void
+    {
+        Log::info("Marcando todas as reservas ativas como consumidas para Orçamento #{$orcamento->id}");
+        
+        EstoqueReserva::where('orcamento_id', $orcamento->id)
+            ->where('status', 'ativa')
+            ->update(['status' => 'consumida']);
+    }
+
+    /**
      * Realiza a baixa definitiva do estoque para um orçamento pago.
      * Decrementa o estoque atual e marca a reserva como consumida.
      */

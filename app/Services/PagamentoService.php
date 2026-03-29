@@ -106,7 +106,7 @@ class PagamentoService
                     }
      
                     if ($dadosValidados['finalizar_registro'] ?? true) {
-                        $this->atualizarStatusRegistro($registro, 'pago');
+                        $this->atualizarStatusRegistro($registro, 'Pago');
                     }
      
                     return [
@@ -526,6 +526,10 @@ class PagamentoService
             'status' => $novoStatus,
             'data_pagamento' => now(),
         ]);
+
+        if ($registro instanceof Orcamento && in_array(strtolower($novoStatus), ['pago', 'finalizado'])) {
+            \App\Events\OrcamentoPago::dispatch($registro);
+        }
     }
 
     public function estornarPagamento($pagamentoId, $motivo, bool $gerarDevolucao = true)

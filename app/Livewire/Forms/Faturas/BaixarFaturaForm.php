@@ -83,6 +83,22 @@ class BaixarFaturaForm extends Form
                     'status' => $status,
                 ]);
 
+                // Etapa 2: Baixa definitiva para Rota/Transportadora ao concluir pagamento (exceto Encomendas)
+                if ($this->fatura->orcamento_id) {
+                    $orcamento = $this->fatura->orcamento;
+                    if ($orcamento->pagamentoFinalizado()) {
+                        if (!$orcamento->isEncomenda() && $orcamento->isEntregaAgendada()) {
+                            Log::info("Pagamento total atingido para Orçamento de Rota/Transporte #{$orcamento->id}. Baixando estoque definitivo.");
+                            app(\App\Services\EstoqueService::class)->baixarEstoqueDefinitivo($orcamento);
+                            $orcamento->update(['status' => 'Pago']);
+                        } elseif ($orcamento->isEncomenda()) {
+                            // Etapa 3: Garantir status 'Pago' para encomendas para que apareçam na tela de retirada
+                            Log::info("Pagamento total atingido para Encomenda #{$orcamento->id}. Definindo status como 'Pago'.");
+                            $orcamento->update(['status' => 'Pago']);
+                        }
+                    }
+                }
+
                 Log::info('Fatura baixada com sucesso', [
                     'fatura_id' => $this->fatura->id,
                     'valor_pago' => $this->valor_pago,

@@ -414,11 +414,14 @@ class ConfirmarSolicitacaoPagamento extends Component
         } else {
             // Verifica estoque antes de definir status final
             $temItensSemEstoque = false;
+            $estoqueService = app(\App\Services\EstoqueService::class);
 
             foreach ($this->orcamento->itens as $item) {
+                if (!$item->produto_id) continue;
+                
                 $produto = \App\Models\Produto::find($item->produto_id);
-                if ($produto && $produto->estoque_atual !== null) {
-                    if ((float) $item->quantidade > (float) $produto->estoque_atual) {
+                if ($produto) {
+                    if (!$estoqueService->checarEstoqueMinimo($produto, (float) $item->quantidade)) {
                         $temItensSemEstoque = true;
                         break;
                     }
@@ -432,14 +435,14 @@ class ConfirmarSolicitacaoPagamento extends Component
                     'novo_status' => 'Sem estoque'
                 ]);
 
-                return; // ← não gera PDF
+                return; // ← não gera PDF e não aprova reserva
             }
 
-            // Não tem mais nada pendente e tem estoque — muda para Pendente e gera PDF
-            $this->orcamento->update(['status' => 'Pendente']);
+            // Não tem mais nada pendente e tem estoque — muda para 'Aprovado' (para disparar reserva) e gera PDF
+            $this->orcamento->update(['status' => 'Aprovado']);
 
-            Log::info("Orçamento #{$this->orcamentoId} aprovado - gerando PDF", [
-                'novo_status' => 'Pendente'
+            Log::info("Orçamento #{$this->orcamentoId} aprovado - status definido como 'Aprovado' para reserva de estoque", [
+                'novo_status' => 'Aprovado'
             ]);
 
             try {
