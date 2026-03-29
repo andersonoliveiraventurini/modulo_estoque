@@ -25,6 +25,9 @@ class BaixarFaturaForm extends Form
     #[Validate('required|exists:metodos_pagamento,id')]
     public $metodo_pagamento_id = '';
 
+    #[Validate('required|integer|min:1')]
+    public $parcelas = 1;
+
     #[Validate('nullable|string')]
     public $observacoes = '';
 
@@ -73,8 +76,8 @@ class BaixarFaturaForm extends Form
                     'metodo_pagamento_id' => $this->metodo_pagamento_id,
                     'valor' => $this->valor_pago,
                     'usa_credito' => false,
-                    'parcelas' => 1,
-                    'valor_parcela' => $this->valor_pago,
+                    'parcelas' => $this->parcelas,
+                    'valor_parcela' => (float) $this->valor_pago / $this->parcelas,
                 ]);
 
                 $this->fatura->update([

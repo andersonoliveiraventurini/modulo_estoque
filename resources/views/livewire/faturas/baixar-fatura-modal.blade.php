@@ -44,12 +44,27 @@
                         required 
                     />
 
-                    <flux:select wire:model="form.metodo_pagamento_id" label="Método de Pagamento" required>
+                    <flux:select wire:model.live="form.metodo_pagamento_id" label="Método de Pagamento" required>
                         <flux:select.option value="" disabled>Selecione...</flux:select.option>
                         @foreach($metodosDisponiveis as $metodo)
                             <flux:select.option value="{{ $metodo->id }}">{{ $metodo->nome }}</flux:select.option>
                         @endforeach
                     </flux:select>
+
+                    @php
+                        $metodoSelecionado = collect($metodosDisponiveis)->firstWhere('id', $form->metodo_pagamento_id);
+                    @endphp
+
+                    @if($metodoSelecionado && ($metodoSelecionado->tipo === 'cartao_credito' || $metodoSelecionado->permite_parcelamento))
+                        <flux:input 
+                            wire:model="form.parcelas" 
+                            label="Quantidade de Parcelas" 
+                            type="number" 
+                            min="1" 
+                            max="{{ $metodoSelecionado->max_parcelas ?? '' }}"
+                            required 
+                        />
+                    @endif
 
                     <flux:textarea 
                         wire:model="form.observacoes" 

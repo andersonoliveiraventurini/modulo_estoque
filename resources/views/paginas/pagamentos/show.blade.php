@@ -189,6 +189,19 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
                                 </svg>
                                 Formas de Pagamento
+                                
+                                @php
+                                    $condicaoOrcamentoId = $pagamento->orcamento->condicao_pagamento_id;
+                                    $metodoAlterado = $pagamento->formas->contains(function($forma) use ($condicaoOrcamentoId) {
+                                        return $forma->condicao_pagamento_id != $condicaoOrcamentoId;
+                                    });
+                                @endphp
+
+                                @if($metodoAlterado)
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 animate-pulse border border-orange-200 dark:border-orange-800 uppercase tracking-tighter">
+                                        ⚠ Condição Alterada
+                                    </span>
+                                @endif
                             </h3>
                             <div class="space-y-3">
                                 @foreach($pagamento->formas as $forma)
@@ -198,6 +211,14 @@
                                                 <span class="font-semibold text-gray-900 dark:text-gray-100 text-sm">
                                                     {{ $forma->condicaoPagamento->nome ?? 'N/A' }}
                                                 </span>
+                                                @if($forma->parcelas > 1 || ($forma->condicaoPagamento && $forma->condicaoPagamento->tipo === 'cartao_credito'))
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                                                        {{ $forma->parcelas }}x
+                                                        @if($forma->valor_parcela > 0)
+                                                            (R$ {{ number_format($forma->valor_parcela, 2, ',', '.') }})
+                                                        @endif
+                                                    </span>
+                                                @endif
                                                 @if($forma->usa_credito)
                                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
                                                         Crédito cliente

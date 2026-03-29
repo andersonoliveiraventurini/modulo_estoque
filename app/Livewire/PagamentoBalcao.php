@@ -321,6 +321,21 @@ class PagamentoBalcao extends Component
         if ($this->precisaNotaFiscal && $this->notaOutroCnpjCpf && empty($this->cnpjCpfNota)) {
             throw new \Exception('CNPJ/CPF da nota fiscal é obrigatório quando selecionado.');
         }
+
+        // Nova Regra de Negócio: Sempre que a forma de pagamento selecionada for 'Cartão de Crédito',
+        // o sistema deve exigir que o operador registre a 'quantidade de parcelas'.
+        foreach ($this->formasPagamento as $index => $forma) {
+            if (!empty($forma['condicao_id'])) {
+                $metodo = MetodoPagamento::find($forma['condicao_id']);
+                if ($metodo && $metodo->tipo === 'cartao_credito') {
+                    if (empty($forma['parcelas']) || (int)$forma['parcelas'] < 1) {
+                        throw new \Exception(
+                            "Para o método '{$metodo->nome}', a quantidade de parcelas deve ser pelo menos 1."
+                        );
+                    }
+                }
+            }
+        }
     }
 
     protected function prepararDadosPagamento()

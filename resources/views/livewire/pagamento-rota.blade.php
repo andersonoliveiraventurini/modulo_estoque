@@ -265,7 +265,7 @@
                                         @endif
                                     </div>
                                     <div class="bg-white dark:bg-zinc-900 p-4">
-                                        <div class="grid grid-cols-2 gap-3">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                             <div>
                                                 <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Método *</label>
                                                 <select wire:model.live="formasPagamento.{{ $index }}.condicao_id"
@@ -282,6 +282,19 @@
                                                        class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100"
                                                        step="1" min="0" placeholder="0,00">
                                             </div>
+                                            @php
+                                                $condId = $forma['condicao_id'] ?? null;
+                                                $metodoObj = $condId ? $condicoesPagamento->find($condId) : null;
+                                                $showParcelas = $metodoObj && ($metodoObj->tipo === 'cartao_credito' || $metodoObj->permite_parcelamento);
+                                            @endphp
+                                            @if($showParcelas)
+                                                <div class="animate-fade-in">
+                                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Parcelas *</label>
+                                                    <input type="number" wire:model.live="formasPagamento.{{ $index }}.parcelas"
+                                                           class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500"
+                                                           min="1" max="{{ $metodoObj->max_parcelas ?? '' }}">
+                                                </div>
+                                            @endif
                                         </div>
                                         <div class="mt-3">
                                             <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Comprovante (opcional)</label>

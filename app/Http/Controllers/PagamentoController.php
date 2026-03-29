@@ -134,6 +134,18 @@ class PagamentoController extends Controller
             'comprovantes.*.mimes'                    => 'Formatos aceitos: PDF, JPG, PNG, WEBP',
             'comprovantes.*.max'                      => 'Cada comprovante deve ter no máximo 10 MB',
         ]);
+
+        // Validação adicional para Cartão de Crédito
+        foreach ($request->formas_pagamento as $idx => $forma) {
+            $condicao = CondicoesPagamento::find($forma['condicao_id']);
+            if ($condicao && $condicao->tipo === 'cartao_credito') {
+                if (empty($forma['parcelas']) || (int)$forma['parcelas'] < 1) {
+                    return back()->withErrors([
+                        "formas_pagamento.{$idx}.parcelas" => 'A quantidade de parcelas é obrigatória para Cartão de Crédito (mínimo 1).'
+                    ])->withInput();
+                }
+            }
+        }
     } catch (\Illuminate\Validation\ValidationException $e) {
         return back()->withErrors($e->validator)->withInput();
     }

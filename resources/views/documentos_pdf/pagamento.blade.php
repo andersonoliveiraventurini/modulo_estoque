@@ -438,9 +438,15 @@
                             <td class="text-muted">{{ $i + 1 }}</td>
                             <td class="font-bold">{{ $nomeMetodo }}</td>
                             <td><span class="badge {{ $badgeClass }}">{{ $tipoLabel }}</span></td>
-                            <td class="right">{{ $parcelas }}x</td>
                             <td class="right">
-                                @if($parcelas > 1 && $valorParcela > 0)
+                                @if($parcelas > 1 || $tipo === 'cartao_credito')
+                                    {{ $parcelas }}x
+                                @else
+                                    1x
+                                @endif
+                            </td>
+                            <td class="right">
+                                @if(($parcelas > 1 || $tipo === 'cartao_credito') && $valorParcela > 0)
                                     R$ {{ number_format($valorParcela, 2, ',', '.') }}
                                 @else
                                     —

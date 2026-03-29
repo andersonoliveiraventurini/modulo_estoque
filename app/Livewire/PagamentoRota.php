@@ -424,6 +424,19 @@ class PagamentoRota extends Component
             $faltando = $this->valorComDesconto - $totalPago;
             throw new \Exception('Valor pago insuficiente. Falta: R$ ' . number_format($faltando, 2, ',', '.'));
         }
+
+        // Nova Regra de Negócio: Sempre que a forma de pagamento selecionada for 'Cartão de Crédito',
+        // o sistema deve exigir que o operador registre a 'quantidade de parcelas'.
+        foreach ($formasValidas as $forma) {
+            $metodo = MetodoPagamento::find($forma['condicao_id']);
+            if ($metodo && $metodo->tipo === 'cartao_credito') {
+                if (empty($forma['parcelas']) || (int)$forma['parcelas'] < 1) {
+                    throw new \Exception(
+                        "Para o método '{$metodo->nome}', a quantidade de parcelas deve ser pelo menos 1."
+                    );
+                }
+            }
+        }
     }
 
     protected function prepararDadosPagamento(): array

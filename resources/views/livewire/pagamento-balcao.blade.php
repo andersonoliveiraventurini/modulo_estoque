@@ -149,7 +149,7 @@
                                 </div>
                             </div>
                             <div class="bg-white dark:bg-zinc-900 p-4">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                             Forma de Pagamento *
@@ -176,6 +176,24 @@
                                             <p class="text-xs text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
                                         @enderror
                                     </div>
+                                    @php
+                                        $condId = $formasPagamento[$index]['condicao_id'] ?? null;
+                                        $metodoObj = $condId ? $condicoesPagamento->find($condId) : null;
+                                        $showParcelas = $metodoObj && ($metodoObj->tipo === 'cartao_credito' || $metodoObj->permite_parcelamento);
+                                    @endphp
+                                    @if($showParcelas)
+                                        <div class="animate-fade-in">
+                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                Parcelas *
+                                            </label>
+                                            <input type="number" wire:model.live="formasPagamento.{{ $index }}.parcelas"
+                                                   class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                   min="1" max="{{ $metodoObj->max_parcelas ?? '' }}">
+                                            @error('formasPagamento.' . $index . '.parcelas')
+                                                <p class="text-xs text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>

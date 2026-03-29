@@ -343,6 +343,16 @@ class PagamentoService
             // Valida parcelamento
             $parcelas = (int) ($metodoPag['parcelas'] ?? 1);
             
+            // Nova Regra de Negócio: Sempre que a forma de pagamento selecionada for 'Cartão de Crédito',
+            // o sistema deve exigir que o operador registre a 'quantidade de parcelas'.
+            if (stripos($metodo->nome, 'Cartão de Crédito') !== false || $metodo->tipo === 'cartao_credito') {
+                if ($parcelas < 1) {
+                    throw new \Exception(
+                        "Para o método '{$metodo->nome}', a quantidade de parcelas deve ser pelo menos 1."
+                    );
+                }
+            }
+
             if ($parcelas > 1) {
                 if (!$metodo->permite_parcelamento) {
                     throw new \Exception("Método '{$metodo->nome}' não permite parcelamento");
