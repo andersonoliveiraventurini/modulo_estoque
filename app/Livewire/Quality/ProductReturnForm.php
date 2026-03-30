@@ -70,6 +70,7 @@ class ProductReturnForm extends Component
 
     public function save(ProductReturnService $service)
     {
+        $this->authorize('create', ProductReturn::class);
         $this->validate();
 
         if (empty($this->items_selecionados)) {

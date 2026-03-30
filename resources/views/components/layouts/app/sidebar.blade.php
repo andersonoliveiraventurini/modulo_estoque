@@ -160,12 +160,16 @@
             <flux:navlist.item icon="presentation-chart-line" :href="route('quality.dashboard')"
                 :current="request()->routeIs('quality.dashboard')" wire:navigate>{{ __('Painel de Gestão') }}
             </flux:navlist.item>
+            @can('create', App\Models\NonConformity::class)
             <flux:navlist.item icon="document-plus" :href="route('rnc.create')"
                 :current="request()->routeIs('rnc.create')" wire:navigate>{{ __('Nova RNC') }}
             </flux:navlist.item>
+            @endcan
+            @can('create', App\Models\ProductReturn::class)
             <flux:navlist.item icon="arrow-path-rounded-square" :href="route('product_returns.create')"
                 :current="request()->routeIs('product_returns.create')" wire:navigate>{{ __('Solicitar Devolução') }}
             </flux:navlist.item>
+            @endcan
         </flux:navlist.group>
 
         <flux:navlist.group heading="Produtos" expandable :expanded="false">

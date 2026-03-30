@@ -5,8 +5,12 @@
             <p class="text-zinc-500 dark:text-zinc-400 mt-1">Acompanhamento de Devoluções e Não Conformidades (RNC).</p>
         </div>
         <div class="flex items-center gap-3">
+            @can('create', App\Models\NonConformity::class)
             <flux:button href="{{ route('rnc.create') }}" variant="ghost" icon="plus">Nova RNC</flux:button>
+            @endcan
+            @can('create', App\Models\ProductReturn::class)
             <flux:button href="{{ route('product_returns.create') }}" variant="primary" icon="arrow-path">Solicitar Devolução</flux:button>
+            @endcan
         </div>
     </div>
 
@@ -80,7 +84,13 @@
                                 </flux:table.cell>
                                 <flux:table.cell align="right">
                                     <div class="flex justify-end gap-2">
-                                        <flux:button href="{{ route('product_returns.approve', $ret->id) }}" variant="ghost" size="sm" icon="eye">Ver / Aprovar</flux:button>
+                                        @if(($ret->status === 'pendente_supervisor' && auth()->user()->hasAnyRole(['supervisor', 'admin'])) || 
+                                            ($ret->status === 'pendente_estoque' && auth()->user()->hasAnyRole(['estoquista', 'admin'])))
+                                            <flux:button href="{{ route('product_returns.approve', $ret->id) }}" variant="primary" size="sm" icon="shield-check">Aprovar</flux:button>
+                                        @else
+                                            <flux:button href="{{ route('product_returns.approve', $ret->id) }}" variant="ghost" size="sm" icon="eye">Ver Detalhes</flux:button>
+                                        @endif
+                                        
                                         @if ($ret->status === 'finalizado')
                                             <flux:button variant="ghost" size="sm" icon="document-text" title="Ver Autorização"></flux:button>
                                         @else
@@ -128,7 +138,9 @@
                                 <flux:table.cell>{{ $rnc->usuario->name }}</flux:cell>
                                 <flux:table.cell align="right">
                                     <div class="flex justify-end gap-2">
+                                        @can('update', $rnc)
                                         <flux:button href="{{ route('rnc.edit', $rnc->id) }}" variant="ghost" size="sm" icon="pencil-square"></flux:button>
+                                        @endcan
                                         <flux:button variant="ghost" size="sm" icon="printer"></flux:button>
                                     </div>
                                 </flux:table.cell>

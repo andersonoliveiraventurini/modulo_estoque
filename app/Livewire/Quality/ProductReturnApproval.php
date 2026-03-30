@@ -35,9 +35,11 @@ class ProductReturnApproval extends Component
     {
         try {
             if ($this->return->status === 'pendente_supervisor') {
+                $this->authorize('approveSupervisor', $this->return);
                 $service->authorizeSupervisor($this->return, true, $this->observacoes);
                 session()->flash('success', 'Aprovação do supervisor registrada com sucesso!');
             } elseif ($this->return->status === 'pendente_estoque') {
+                $this->authorize('approveEstoque', $this->return);
                 $service->authorizeEstoque($this->return, true, [
                     'observacoes_estoque' => $this->observacoes,
                     'retorno_estoque' => $this->retorno_estoque
@@ -61,8 +63,10 @@ class ProductReturnApproval extends Component
 
         try {
             if ($this->return->status === 'pendente_supervisor') {
+                $this->authorize('approveSupervisor', $this->return);
                 $service->authorizeSupervisor($this->return, false, $this->observacoes);
             } elseif ($this->return->status === 'pendente_estoque') {
+                $this->authorize('approveEstoque', $this->return);
                 $service->authorizeEstoque($this->return, false, ['observacoes_estoque' => $this->observacoes]);
             }
 

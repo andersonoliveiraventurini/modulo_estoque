@@ -49,6 +49,13 @@ class RolesAndPermissionsSeeder extends Seeder
             // Permissões de Orçamento
             'criar_orcamento',
             'editar_orcamento',
+
+            // Permissões de Qualidade e Devoluções
+            'qualidade_visualizar_dashboard',
+            'qualidade_criar_rnc',
+            'qualidade_solicitar_devolucao',
+            'qualidade_aprovar_supervisor',
+            'qualidade_aprovar_estoque',
         ];
 
         foreach ($permissions as $permission) {
@@ -73,6 +80,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'faturamento_rota_ver_faturamento',
             'criar_orcamento',
             'editar_orcamento',
+            'qualidade_visualizar_dashboard',
+            'qualidade_criar_rnc',
+            'qualidade_solicitar_devolucao',
+            'qualidade_aprovar_supervisor',
         ]);
 
         // COMPRAS: Operação comercial
@@ -89,6 +100,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'visualizar_movimentacao',
             'criar_movimentacao',
             'realizar_conferencia',
+            'qualidade_visualizar_dashboard',
+            'qualidade_criar_rnc',
+            'qualidade_aprovar_estoque',
         ]);
 
         // VENDEDOR: Operação de vendas
@@ -98,6 +112,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'faturamento_rota_anexar',
             'criar_orcamento',
             'editar_orcamento',
+            'qualidade_visualizar_dashboard',
+            'qualidade_solicitar_devolucao',
         ]);
 
         // FINANCEIRO: Operação financeira e Faturamento da Rota

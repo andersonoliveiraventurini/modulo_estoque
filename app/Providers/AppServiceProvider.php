@@ -20,6 +20,11 @@ use App\Listeners\LiberarReservaAoFinalizar;
 use App\Services\CreditoService;
 use App\Services\PagamentoService;
 
+use App\Models\ProductReturn;
+use App\Models\NonConformity;
+use App\Policies\ProductReturnPolicy;
+use App\Policies\NonConformityPolicy;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -45,6 +50,8 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(Orcamento::class, OrcamentoPolicy::class);
         Gate::policy(Cliente::class, ClientePolicy::class);
+        Gate::policy(ProductReturn::class, ProductReturnPolicy::class);
+        Gate::policy(NonConformity::class, NonConformityPolicy::class);
         Orcamento::observe(OrcamentoObserver::class);
 
         // ─── Eventos de Orçamento ─────────────────────────────────────────────

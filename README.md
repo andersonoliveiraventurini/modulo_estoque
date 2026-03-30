@@ -92,18 +92,25 @@ Retorna `null` se o cliente não tiver contato com telefone.
 
 ---
 
-### Módulo: Devoluções e Reembolsos
+### Módulo: Devoluções e Reembolsos (Gestão de Qualidade)
 
-| Rota | Função |
-|---|---|
-| `devolucoes.solicitar` | Solicitação de devolução de itens por orçamento/pedido |
-| `devolucoes.aprovacao-vendas` | Aprovação comercial da devolução (Supervisor) |
-| `devolucoes.aprovacao-estoque` | Conferência física e autorização de crédito (Estoque) |
+| Rota | Função | Permissão |
+|---|---|---|
+| `quality.dashboard` | Painel de Gestão de Devoluções e RNC | Todos (Visualização) |
+| `product_returns.create` | Solicitação de devolução de itens por orçamento/pedido | **Vendedor**, **Supervisor**, **Admin** |
+| `product_returns.approve` | Aprovação e Autorização de Devolução | **Supervisor** (1ª etapa), **Estoque** (Final) |
 
-#### Fluxo de Devolução:
-1. **Solicitação**: Vendedor seleciona itens e quantidades devolvidas.
-2. **Aprovação Vendas**: Supervisor valida o motivo e autoriza o processo.
-3. **Aprovação Estoque**: O responsável pelo estoque confirma o recebimento dos itens. Ao finalizar, o sistema gera automaticamente um **Crédito de Devolução** para o cliente.
+#### Fluxo de Devolução e Regras de Acesso:
+1. **Solicitação**: O **Vendedor** seleciona os itens e quantidades. O sistema gera o **Romaneio de Solicitação** (`DEV-YYYY-NNNN`) em PDF.
+2. **Aprovação Vendas**: O **Supervisor de Vendas** (Role: `supervisor`) valida o motivo e autoriza o processo para a conferência física.
+3. **Aprovação Estoque**: Somente o **Responsável do Estoque** (Role: `estoquista`) possui permissão para:
+   - Finalizar a devolução após conferência física.
+   - Confirmar o retorno automático dos itens ao saldo do estoque.
+   - Gerar o **Crédito de Devolução** para o cliente.
+   - Gerar o **Romaneio de Troca** (caso a opção de troca esteja marcada).
+
+> [!NOTE]
+> As travas de segurança são aplicadas via `ProductReturnPolicy` e verificadas em tempo real nos componentes Livewire e na interface (UI).
 
 ---
 

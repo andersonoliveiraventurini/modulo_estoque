@@ -23,6 +23,8 @@ class QualityDashboard extends Component
 
     public function render()
     {
+        $this->authorize('viewAny', ProductReturn::class);
+
         $returns = ProductReturn::query()
             ->when($this->status_filter, fn($q) => $q->where('status', $this->status_filter))
             ->when($this->search, function($q) {

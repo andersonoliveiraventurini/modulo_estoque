@@ -67,6 +67,12 @@ class NonConformityForm extends Component
 
     public function save(NonConformityService $service)
     {
+        if ($this->isEdit) {
+            $this->authorize('update', NonConformity::findOrFail($this->rncId));
+        } else {
+            $this->authorize('create', NonConformity::class);
+        }
+
         $data = $this->validate();
         $data['produto_id'] = $this->produto_id;
         $data['fornecedor_id'] = $this->fornecedor_id;
