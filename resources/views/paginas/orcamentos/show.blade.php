@@ -163,7 +163,7 @@
                                     <span
                                         class="text-xs text-neutral-500 dark:text-neutral-400 font-medium flex-shrink-0">{{ $c['label'] }}:</span>
                                     <span
-                                        class="text-sm truncate {{ $c['bold'] ?? false ? 'text-white font-semibold' : 'text-neutral-200' }}">
+                                        class="text-sm truncate {{ $c['bold'] ?? false ? 'text-neutral-900 dark:text-white font-semibold' : 'text-neutral-700 dark:text-neutral-300' }}">
                                         {{ $c['value'] ?: '---' }}
                                     </span>
                                 </div>
@@ -176,15 +176,15 @@
                                 <div class="flex items-baseline gap-1.5 min-w-0">
                                     <span
                                         class="text-xs text-neutral-500 dark:text-neutral-400 font-medium flex-shrink-0">{{ $c['label'] }}:</span>
-                                    <span class="text-sm truncate text-neutral-200">{{ $c['value'] ?: '---' }}</span>
+                                    <span class="text-sm truncate text-neutral-700 dark:text-neutral-300">{{ $c['value'] ?: '---' }}</span>
                                 </div>
                             @endforeach
 
                             @if ($orcamento->outros_meios_pagamento)
                                 <div class="flex items-baseline gap-1.5 min-w-0">
-                                    <span class="text-xs text-blue-400 font-medium flex-shrink-0">Meio especial:</span>
+                                    <span class="text-xs text-blue-600 dark:text-blue-400 font-medium flex-shrink-0">Meio especial:</span>
                                     <span
-                                        class="text-sm truncate text-blue-400 font-semibold">{{ $orcamento->outros_meios_pagamento }}</span>
+                                        class="text-sm truncate text-blue-600 dark:text-blue-400 font-semibold">{{ $orcamento->outros_meios_pagamento }}</span>
                                 </div>
                             @endif
                         </div>
