@@ -112,6 +112,14 @@ Retorna `null` se o cliente não tiver contato com telefone.
 > [!NOTE]
 > As travas de segurança são aplicadas via `ProductReturnPolicy` e verificadas em tempo real nos componentes Livewire e na interface (UI).
 
+### **Ação Necessária** 
+Para que estas permissões sejam criadas no seu banco de dados local ou de produção, você precisa rodar o comando do seeder no terminal: 
+ 
+```bash
+php artisan db:seed --class=RolesAndPermissionsSeeder 
+``` 
+Este comando irá registrar as novas permissões e associá-las aos cargos existentes sem apagar os dados atuais.
+
 ---
 
 ### Módulo: Faturamento de Rota (Compliance)
