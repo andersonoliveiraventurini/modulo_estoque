@@ -279,56 +279,74 @@
                                     </thead>
                                     <tbody id="produtos-originais" class="divide-y">
                                         @foreach ($orcamento->itens->whereNotNull('produto_id') as $item)
+                                            @php
+                                                // Tenta encontrar um desconto específico para este produto
+                                                $descontoItem = $orcamento->descontos
+                                                    ->where('produto_id', $item->produto_id)
+                                                    ->where('tipo', 'produto')
+                                                    ->first();
+                                                
+                                                $descontoProduto = $descontoItem ? ($descontoItem->valor / $item->quantidade) : 0;
+                                                $tipoDesconto = $descontoItem ? 'produto' : 'percentual';
+                                                
+                                                $valorUnitario = (float) $item->valor_unitario;
+                                                $quantidade = (float) $item->quantidade;
+                                                $subtotal = $valorUnitario * $quantidade;
+                                                $valorComDesconto = (float) $item->valor_com_desconto;
+                                            @endphp
                                             <tr data-estoque="{{ $item->produto->estoque_atual ?? 'null' }}">
-                                                <input type="hidden"
-                                                    name="produtos[{{ $loop->index }}][produto_id]"
-                                                    value="{{ old("produtos.{$loop->index}.produto_id", $item->produto->id) }}">
-                                                <input type="hidden"
-                                                    name="produtos[{{ $loop->index }}][valor_unitario]"
-                                                    class="valor-unitario-hidden"
-                                                    value="{{ old("produtos.{$loop->index}.valor_unitario", $item->valor_unitario) }}">
-                                                <input type="hidden"
-                                                    name="produtos[{{ $loop->index }}][part_number]"
-                                                    value="{{ old("produtos.{$loop->index}.part_number", $item->produto->part_number ?? '') }}">
-                                                <input type="hidden"
-                                                    name="produtos[{{ $loop->index }}][quantidade]"
-                                                    value="{{ old("produtos.{$loop->index}.quantidade", $item->quantidade) }}">
-                                                <input type="hidden" name="produtos[{{ $loop->index }}][subtotal]"
-                                                    value="{{ old("produtos.{$loop->index}.subtotal", number_format($item->valor_unitario * $item->quantidade, 2, '.', '')) }}">
-                                                <input type="hidden"
-                                                    name="produtos[{{ $loop->index }}][subtotal_com_desconto]"
-                                                    value="{{ old("produtos.{$loop->index}.subtotal_com_desconto", number_format($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0), 2, '.', '')) }}">
-                                                <input type="hidden"
-                                                    name="produtos[{{ $loop->index }}][preco_unitario_com_desconto]"
-                                                    value="{{ old("produtos.{$loop->index}.preco_unitario_com_desconto", number_format(($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0)) / $item->quantidade, 2, '.', '')) }}">
+                                                <input type="hidden" name="produtos[{{ $loop->index }}][produto_id]" value="{{ $item->produto->id }}">
+                                                <input type="hidden" name="produtos[{{ $loop->index }}][preco_original]" value="{{ $valorUnitario }}">
+                                                <input type="hidden" name="produtos[{{ $loop->index }}][liberar_desconto]" value="{{ $item->produto->liberar_desconto ? 1 : 0 }}">
+                                                <input type="hidden" name="produtos[{{ $loop->index }}][desconto_produto]" class="input-desconto-produto" value="{{ $descontoProduto }}">
+                                                <input type="hidden" name="produtos[{{ $loop->index }}][tipo_desconto]" class="input-tipo-desconto" value="{{ $tipoDesconto }}">
+                                                
+                                                <input type="hidden" name="produtos[{{ $loop->index }}][subtotal]" class="input-subtotal" value="{{ number_format($subtotal, 2, '.', '') }}">
+                                                <input type="hidden" name="produtos[{{ $loop->index }}][subtotal_com_desconto]" class="input-subtotal-com-desconto" value="{{ number_format($valorComDesconto, 2, '.', '') }}">
+                                                <input type="hidden" name="produtos[{{ $loop->index }}][preco_unitario_com_desconto]" class="input-preco-unitario-com-desconto" value="{{ number_format($valorComDesconto / $quantidade, 2, '.', '') }}">
 
                                                 <td class="px-3 py-2 border">{{ $item->produto->id }}</td>
                                                 <td class="px-3 py-2 border">{{ $item->produto->nome }}</td>
-                                                <td class="px-3 py-2 border">{{ $item->produto->part_number ?? '' }}
-                                                </td>
-                                                <td class="px-3 py-2 border">
-                                                    {{ $item->produto->fornecedor->nome ?? '' }}</td>
+                                                <td class="px-3 py-2 border">{{ $item->produto->part_number ?? '' }}</td>
+                                                <td class="px-3 py-2 border">{{ $item->produto->fornecedor->nome ?? '' }}</td>
                                                 <td class="px-3 py-2 border">{{ $item->produto->cor ?? '' }}</td>
-                                                <td class="px-3 py-2 border">R$
-                                                    {{ number_format($item->valor_unitario, 2, ',', '.') }}</td>
+                                                <td class="px-3 py-2 border">
+                                                    @if($item->produto->liberar_desconto)
+                                                        <div class="flex flex-col gap-1">
+                                                            <input type="number" step="0.01" 
+                                                                name="produtos[{{ $loop->index }}][valor_unitario]"
+                                                                value="{{ number_format($valorUnitario, 2, '.', '') }}"
+                                                                onchange="alterarPrecoProdutoOriginal({{ $loop->index }}, this.value)"
+                                                                class="input-valor-unitario w-24 border rounded px-2 py-1 text-sm" />
+                                                            @if($descontoProduto > 0)
+                                                                <small class="text-xs text-gray-500">Original: R$ {{ number_format($valorUnitario + $descontoProduto, 2, ',', '.') }}</small>
+                                                            @endif
+                                                        </div>
+                                                    @else
+                                                        R$ {{ number_format($valorUnitario, 2, ',', '.') }}
+                                                        <input type="hidden" name="produtos[{{ $loop->index }}][valor_unitario]" value="{{ $valorUnitario }}" class="input-valor-unitario">
+                                                    @endif
+                                                </td>
                                                 <td class="px-3 py-2 border">
                                                     <input type="number"
                                                         name="produtos[{{ $loop->index }}][quantidade]"
-                                                        value="{{ old("produtos.{$loop->index}.quantidade", $item->quantidade) }}" min="1"
+                                                        value="{{ $item->quantidade }}" min="1" step="1"
+                                                        oninput="alterarQuantidadeOriginal({{ $loop->index }}, this.value)"
                                                         onchange="alterarQuantidadeOriginal({{ $loop->index }}, this.value)"
-                                                        class="w-12 border rounded px-2 py-1 text-center"
-                                                        style="max-width: 4rem;" />
+                                                        class="input-quantidade w-16 border rounded px-2 py-1 text-center font-bold" />
                                                 </td>
-                                                <td class="px-3 py-2 border">R$
-                                                    {{ number_format($item->valor_unitario * $item->quantidade, 2, ',', '.') }}
+                                                <td class="px-3 py-2 border label-subtotal font-medium">
+                                                    R$ {{ number_format($subtotal, 2, ',', '.') }}
                                                 </td>
-                                                <td class="px-3 py-2 border text-green-600">R$
-                                                    {{ number_format($item->valor_unitario * $item->quantidade - ($item->desconto ?? 0), 2, ',', '.') }}
+                                                <td class="px-3 py-2 border text-green-600 label-subtotal-desconto font-bold">
+                                                    R$ {{ number_format($valorComDesconto, 2, ',', '.') }}
                                                 </td>
                                                 <td class="px-3 py-2 border text-center">
                                                     <button type="button"
                                                         onclick="removerProdutoOriginal({{ $loop->index }})"
-                                                        class="text-red-600 hover:text-red-800">🗑</button>
+                                                        class="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50 transition-colors">
+                                                        <x-heroicon-o-trash class="w-5 h-5" />
+                                                    </button>
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -579,6 +597,8 @@
 
                     <!-- Seção de Valores e Descontos -->
                     <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                        <input type="hidden" id="desconto_aprovado" value="{{ $cliente->desconto ?? 0 }}">
+                        
                         <flux:input name="desconto" label="Desconto na vendedor %" 
                             :value="old('desconto', $desconto_percentual ?? 0)" 
                             placeholder="0" 
@@ -663,42 +683,59 @@
 <script src="{{ asset('js/valida.js') }}"></script>
 
 <script>
-    // Dados passados do Laravel para JavaScript
+    // ==================== VARIÁVEIS GLOBAIS ====================
     const cores = @json($cores);
     const fornecedores = @json($fornecedores);
-    const oldItens = @json($itensParaJs ?? []);
+    const oldItensRaw = @json($itensParaJs ?? []);
+    let itemIndex = oldItensRaw.length;
 
-    // Inicializa o índice baseado na quantidade de itens existentes
-    let itemIndex = oldItens.length;
+    window.vidroIndex = 0;
+    window.produtos = [];
+    window.produtoSelecionado = null;
 
-    /**
-     * Adiciona um novo item ao formulário
-     */
+    // ==================== INICIALIZAÇÃO DE DADOS ====================
+    
+    // Restauração de novos itens (produtos adicionados via busca)
+    const oldItens = @json(old('itens', []));
+    if (oldItens.length > 0) {
+        oldItens.forEach(item => {
+            window.produtos.push({
+                id: item.id,
+                nome: item.nome,
+                preco: parseFloat(item.preco_unitario) || 0,
+                precoOriginal: parseFloat(item.preco_original) || 0,
+                quantidade: parseInt(item.quantidade) || 1,
+                fornecedor: item.fornecedor || '',
+                cor: item.cor || '',
+                partNumber: item.partNumber || '',
+                liberarDesconto: parseInt(item.liberar_desconto) || 1,
+                descontoProduto: parseFloat(item.desconto_produto) || 0,
+                estoqueDisponivel: null
+            });
+        });
+    }
+
+    // ==================== FUNÇÕES DE INTERFACE (ITENS CONSULTA) ====================
     function addItem() {
         const wrapper = document.getElementById('itens-wrapper');
         const itemDiv = document.createElement('div');
         itemDiv.className = "space-y-2 relative border border-neutral-200 dark:border-neutral-700 rounded-lg p-4";
 
-        // Recupera valores old para este índice (se existirem)
-        const oldData = oldItens[itemIndex] || {};
+        const oldData = oldItensRaw[itemIndex] || {};
 
-        // Monta opções de cores
         let coresOptions = `<option value="">Selecione...</option>`;
         cores.forEach(cor => {
             const selected = oldData.cor === cor.nome ? 'selected' : '';
             coresOptions += `<option value="${cor.nome}" ${selected}>${cor.nome}</option>`;
         });
 
-        // Monta opções de fornecedores
         let fornecedoresOptions = `<option value="">Selecione...</option>`;
         fornecedores.forEach(f => {
             const selected = oldData.fornecedor_id == f.id ? 'selected' : '';
             fornecedoresOptions += `<option value="${f.id}" ${selected}>${f.nome_fantasia}</option>`;
         });
 
-        // Campo hidden para ID (se existir no oldData - necessário para UPDATE)
-        const idField = oldData.id ? `<input type="hidden" name="itens[${itemIndex}][id]" value="${oldData.id}" />` :
-            '';
+        const idField = oldData.id ? `<input type="hidden" name="itens[${itemIndex}][id]" value="${oldData.id}" />` : '';
 
         itemDiv.innerHTML = `
             <button type="button" onclick="removeItem(this)"
@@ -744,104 +781,34 @@
         itemIndex++;
     }
 
-    /**
-     * Remove um item do formulário
-     */
     function removeItem(button) {
         const itemDiv = button.closest('.space-y-2');
-        if (itemDiv) {
-            itemDiv.remove();
-        }
+        if (itemDiv) itemDiv.remove();
     }
 
-    /**
-     * Ao carregar a página, adiciona os itens que já existem (edição) ou old() (validação)
-     */
-    document.addEventListener('DOMContentLoaded', function() {
-        // Se houver itens existentes além do primeiro (índice 0 já existe no HTML)
-        for (let i = 1; i < oldItens.length; i++) {
-            addItem();
-        }
-    });
-</script>
-
-<script>
-    // ==================== SUBSTITUIR TODO O JAVASCRIPT DO BLADE EDIT ====================
-
-    console.log('Script carregando...');
-
-    // ==================== VARIÁVEIS GLOBAIS ====================
-    window.vidroIndex = 0;
-    window.produtos = [];
-    window.produtoSelecionado = null;
-
-    // Restauração de dados old() para novos itens
-    const oldItens = @json(old('itens', []));
-    if (oldItens.length > 0) {
-        oldItens.forEach(item => {
-            window.produtos.push({
-                id: item.id,
-                nome: item.nome,
-                preco: parseFloat(item.preco_unitario),
-                precoOriginal: parseFloat(item.preco_original),
-                quantidade: parseInt(item.quantidade),
-                fornecedor: item.fornecedor,
-                cor: item.cor,
-                partNumber: item.partNumber,
-                liberarDesconto: parseInt(item.liberar_desconto),
-                descontoProduto: parseFloat(item.desconto_produto) || 0,
-                estoqueDisponivel: null
-            });
-        });
-        setTimeout(renderProdutosNovos, 100);
-    }
-
-    const oldVidros = @json(old('vidros', []));
-    if (oldVidros.length > 0) {
-        document.addEventListener('DOMContentLoaded', () => {
-            oldVidros.forEach((vidro, idx) => {
-                addVidro();
-                const container = document.querySelector(`#vidros-wrapper > div:nth-child(${idx + 1 + @json(count($orcamento->vidros ?? []))})`);
-                if (container) {
-                    container.querySelector('[name*="[descricao]"]').value = vidro.descricao || '';
-                    container.querySelector('[name*="[quantidade]"]').value = vidro.quantidade || 1;
-                    container.querySelector('[name*="[preco_m2]"]').value = vidro.preco_m2 || 0;
-                    container.querySelector('[name*="[altura]"]').value = vidro.altura || 0;
-                    container.querySelector('[name*="[largura]"]').value = vidro.largura || 0;
-                    
-                    // Disparar cálculo
-                    calcularVidro(container.querySelector('[name*="[altura]"]'));
-                }
-            });
-        });
-    }
-
-    // ==================== MODAL ====================
-    window.selecionarProdutoComQuantidade = function(id, nome, preco, fornecedor, cor, partNumber, liberarDesconto,
-        estoqueDisponivel = null) {
+    // ==================== MODAL DE PRODUTOS ====================
+    window.selecionarProdutoComQuantidade = function(id, nome, preco, fornecedor, cor, partNumber, liberarDesconto, estoqueDisponivel = null) {
         window.produtoSelecionado = {
             id: id,
             nome: nome,
-            preco: parseFloat(preco),
-            precoOriginal: parseFloat(preco),
+            preco: parseFloat(preco) || 0,
+            precoOriginal: parseFloat(preco) || 0,
             fornecedor: fornecedor || '',
             cor: cor || '',
             partNumber: partNumber || '',
             liberarDesconto: parseInt(liberarDesconto || 1),
             quantidade: 1,
             descontoProduto: 0,
-            estoqueDisponivel: estoqueDisponivel !== null ? parseInt(estoqueDisponivel) : null // ✅
+            estoqueDisponivel: estoqueDisponivel !== null ? parseInt(estoqueDisponivel) : null
         };
 
         document.getElementById('produto-nome').textContent = nome;
         document.getElementById('quantidade-produto').value = 1;
-
-        // Reset visual do modal
         document.getElementById('aviso-estoque').classList.add('hidden');
+        
         const btnConfirmar = document.getElementById('btn-confirmar-quantidade');
         btnConfirmar.textContent = 'Adicionar';
-        btnConfirmar.classList.add('bg-blue-500', 'hover:bg-blue-600');
-        btnConfirmar.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+        btnConfirmar.className = "bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full transition-colors";
 
         const modalBody = document.getElementById('modal-quantidade').querySelector('.bg-white');
         const avisoExistente = modalBody.querySelector('.aviso-desconto-modal');
@@ -849,8 +816,7 @@
 
         if (parseInt(liberarDesconto) === 0) {
             const aviso = document.createElement('div');
-            aviso.className =
-                'aviso-desconto-modal bg-red-50 border border-red-200 rounded p-2 mb-3 text-sm text-red-700';
+            aviso.className = 'aviso-desconto-modal bg-red-50 border border-red-200 rounded p-2 mb-3 text-sm text-red-700';
             aviso.innerHTML = '⚠️ Este produto não permite desconto';
             const inputQuantidade = document.getElementById('quantidade-produto');
             inputQuantidade.parentNode.insertBefore(aviso, inputQuantidade);
@@ -861,20 +827,12 @@
 
     window.fecharModal = function() {
         document.getElementById('modal-quantidade').classList.add('hidden');
-        document.getElementById('aviso-estoque').classList.add('hidden');
-
-        const btnConfirmar = document.getElementById('btn-confirmar-quantidade');
-        btnConfirmar.textContent = 'Adicionar';
-        btnConfirmar.classList.add('bg-blue-500', 'hover:bg-blue-600');
-        btnConfirmar.classList.remove('bg-amber-500', 'hover:bg-amber-600');
-
         window.produtoSelecionado = null;
     };
 
     window.confirmarQuantidade = function() {
         if (!window.produtoSelecionado) return;
 
-        // ✅ Se já confirmou o aviso, adiciona direto
         if (window.produtoSelecionado._pendente) {
             _adicionarProdutoConfirmado(window.produtoSelecionado._pendente);
             return;
@@ -883,20 +841,14 @@
         const quantidade = parseInt(document.getElementById('quantidade-produto').value) || 1;
         const estoque = window.produtoSelecionado.estoqueDisponivel;
 
-        document.getElementById('aviso-estoque').classList.add('hidden');
-
-        // ✅ Verifica estoque
         if (estoque !== null && estoque !== undefined && quantidade > estoque) {
-            document.getElementById('aviso-estoque-texto').textContent =
-                `Você solicitou ${quantidade} unidade(s), mas há apenas ${estoque} em estoque. ` +
-                `O pedido será gerado, mas pode haver indisponibilidade na entrega.`;
-
+            document.getElementById('aviso-estoque-texto').textContent = 
+                `Você solicitou ${quantidade} unidade(s), mas há apenas ${estoque} em estoque. O pedido será gerado, mas pode haver indisponibilidade na entrega.`;
             document.getElementById('aviso-estoque').classList.remove('hidden');
 
             const btnConfirmar = document.getElementById('btn-confirmar-quantidade');
             btnConfirmar.textContent = '⚠️ Estou ciente, adicionar mesmo assim';
-            btnConfirmar.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-            btnConfirmar.classList.add('bg-amber-500', 'hover:bg-amber-600');
+            btnConfirmar.className = "bg-amber-500 text-white px-4 py-2 rounded hover:bg-amber-600 w-full transition-colors";
 
             window.produtoSelecionado._pendente = quantidade;
             return;
@@ -907,7 +859,6 @@
 
     function _adicionarProdutoConfirmado(quantidade) {
         window.produtoSelecionado.quantidade = quantidade;
-
         window.adicionarProduto(
             window.produtoSelecionado.id,
             window.produtoSelecionado.nome,
@@ -917,15 +868,13 @@
             window.produtoSelecionado.partNumber,
             window.produtoSelecionado.quantidade,
             window.produtoSelecionado.liberarDesconto,
-            window.produtoSelecionado.estoqueDisponivel // ✅ passa estoque
+            window.produtoSelecionado.estoqueDisponivel
         );
-
         window.fecharModal();
     }
-    // ==================== PRODUTOS NOVOS ====================
-    window.adicionarProduto = function(id, nome, preco, fornecedor, cor, partNumber, quantidade, liberarDesconto,
-        estoqueDisponivel = null) {
-        // Verificar duplicados
+
+    // ==================== GESTÃO DE PRODUTOS NOVOS ====================
+    window.adicionarProduto = function(id, nome, preco, fornecedor, cor, partNumber, quantidade, liberarDesconto, estoqueDisponivel = null) {
         const produtosOriginais = document.getElementById('produtos-originais');
         if (produtosOriginais) {
             const rows = produtosOriginais.querySelectorAll('tr');
@@ -955,7 +904,7 @@
             partNumber: partNumber || '',
             liberarDesconto: parseInt(liberarDesconto || 1),
             descontoProduto: 0,
-            estoqueDisponivel: estoqueDisponivel !== null ? parseInt(estoqueDisponivel) : null // ✅
+            estoqueDisponivel: estoqueDisponivel !== null ? parseInt(estoqueDisponivel) : null
         });
 
         renderProdutosNovos();
@@ -963,43 +912,28 @@
 
     window.alterarPrecoProdutoNovo = function(index, novoPreco) {
         const produto = window.produtos[index];
-
         if (produto.liberarDesconto === 0) {
             alert("Este produto não permite alteração de preço!");
+            renderProdutosNovos();
             return;
         }
 
         novoPreco = parseFloat(novoPreco) || produto.precoOriginal;
         if (novoPreco < 0) novoPreco = 0;
 
-        const descontoEmReais = produto.precoOriginal - novoPreco;
-
         window.produtos[index].preco = novoPreco;
-        window.produtos[index].descontoProduto = descontoEmReais;
-
+        window.produtos[index].descontoProduto = produto.precoOriginal - novoPreco;
         renderProdutosNovos();
     };
 
     window.alterarQuantidade = function(index, valor) {
         if (!window.produtos[index]) return;
-
         const novaQuantidade = parseInt(valor) || 1;
         const produto = window.produtos[index];
 
-        // ✅ Valida estoque
-        if (
-            produto.estoqueDisponivel !== null &&
-            produto.estoqueDisponivel !== undefined &&
-            novaQuantidade > produto.estoqueDisponivel
-        ) {
-            const confirmado = confirm(
-                `⚠️ Estoque insuficiente!\n\n` +
-                `Você solicitou ${novaQuantidade} unidade(s) de "${produto.nome}", ` +
-                `mas há apenas ${produto.estoqueDisponivel} em estoque.\n\n` +
-                `Deseja adicionar mesmo assim?`
-            );
-            if (!confirmado) {
-                renderProdutosNovos(); // Reverte o input
+        if (produto.estoqueDisponivel !== null && novaQuantidade > produto.estoqueDisponivel) {
+            if (!confirm(`⚠️ Estoque insuficiente! Há apenas ${produto.estoqueDisponivel} em estoque. Deseja adicionar mesmo assim?`)) {
+                renderProdutosNovos();
                 return;
             }
         }
@@ -1016,335 +950,165 @@
     function renderProdutosNovos() {
         const wrapper = document.getElementById('produtos-selecionados');
         if (!wrapper) return;
-
         wrapper.innerHTML = '';
 
-        const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]')?.value) || 0;
-        let descontoOrcamento = parseFloat((document.querySelector('[name="desconto"]')?.value || '').replace(',', '.')) || 0;
-        descontoOrcamento = Math.min(Math.max(descontoOrcamento, 0), 100);
-        const descontoPercentual = Math.max(descontoCliente, descontoOrcamento);
+        const descontoPercentual = obterDescontoAplicado();
 
         window.produtos.forEach((p, i) => {
-            const valorUnitarioAtual = p.preco;
-            const subtotal = valorUnitarioAtual * p.quantidade;
-
+            const subtotal = p.preco * p.quantidade;
             let subtotalComDesconto;
-            let descontoEfetivo = 0;
             let tipoDesconto = 'nenhum';
 
             if (p.descontoProduto > 0) {
                 subtotalComDesconto = subtotal;
                 tipoDesconto = 'produto';
-                descontoEfetivo = ((p.descontoProduto / p.precoOriginal) * 100).toFixed(2);
             } else if (p.liberarDesconto === 1 && descontoPercentual > 0) {
                 subtotalComDesconto = subtotal - (subtotal * (descontoPercentual / 100));
-                descontoEfetivo = descontoPercentual;
                 tipoDesconto = 'percentual';
             } else {
                 subtotalComDesconto = subtotal;
             }
 
-            let descontoStatus = '';
-            if (p.liberarDesconto === 0) {
-                descontoStatus =
-                    '<span class="inline-block px-2 py-1 text-xs font-semibold text-red-700 bg-red-100 rounded-full">Desconto bloqueado</span>';
-            } else if (tipoDesconto === 'produto') {
-                descontoStatus =
-                    `<span class="inline-block px-2 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full">Preço alterado (-R$ ${p.descontoProduto.toFixed(2)})</span>`;
-            } else if (tipoDesconto === 'percentual') {
-                descontoStatus =
-                    `<span class="inline-block px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">${descontoEfetivo}% aplicado</span>`;
-            }
-
             const row = document.createElement('tr');
             row.className = p.liberarDesconto === 0 ? 'bg-red-50 dark:bg-red-900/10' : '';
-
             row.innerHTML = `
-            <td class="px-3 py-2 border">
-                <input type="hidden" name="itens[${i}][id]" value="${p.id}">
-                <input type="hidden" name="itens[${i}][nome]" value="${p.nome}">
-                <input type="hidden" name="itens[${i}][partNumber]" value="${p.partNumber || ''}">
-                <input type="hidden" name="itens[${i}][fornecedor]" value="${p.fornecedor || ''}">
-                <input type="hidden" name="itens[${i}][cor]" value="${p.cor || ''}">
-                <input type="hidden" name="itens[${i}][liberar_desconto]" value="${p.liberarDesconto}">
-                <input type="hidden" name="itens[${i}][preco_original]" value="${p.precoOriginal}">
-                <input type="hidden" name="itens[${i}][desconto_produto]" value="${p.descontoProduto}">
-                <input type="hidden" name="itens[${i}][tipo_desconto]" value="${tipoDesconto}">
-                ${p.id}
-            </td>
-            <td class="px-3 py-2 border">
-                ${escaparHTML(p.nome)}
-                <div class="mt-1">${descontoStatus}</div>
-            </td>
-            <td class="px-3 py-2 border">${escaparHTML(p.partNumber)}</td>
-            <td class="px-3 py-2 border">${escaparHTML(p.fornecedor)}</td>
-            <td class="px-3 py-2 border">${escaparHTML(p.cor)}</td>
-            <td class="px-3 py-2 border">
-                ${p.liberarDesconto === 1 ? `
-                    <div class="flex flex-col gap-1">
-                        <input type="number" step="1" value="${valorUnitarioAtual.toFixed(2)}"
-                            onchange="alterarPrecoProdutoNovo(${i}, this.value)"
-                            class="w-24 border rounded px-2 py-1 text-sm" />
-                        ${p.descontoProduto > 0 ? `<small class="text-xs text-gray-500">Original: R$ ${p.precoOriginal.toFixed(2)}</small>` : ''}
-                    </div>
-                ` : `R$ ${valorUnitarioAtual.toFixed(2)}`}
-                <input type="hidden" name="itens[${i}][preco_unitario]" value="${valorUnitarioAtual}">
-            </td>
-            <td class="px-3 py-2 border">
-                <input type="number" name="itens[${i}][quantidade]" value="${p.quantidade}" min="1"
-                    onchange="alterarQuantidade(${i}, this.value)"
-                    class="w-12 border rounded px-2 py-1 text-center" style="max-width:4rem"/>
-            </td>
-            <td class="px-3 py-2 border">
-                R$ ${formatarMoeda(p.precoOriginal * p.quantidade)}
-                <input type="hidden" name="itens[${i}][subtotal_original]" value="${(p.precoOriginal * p.quantidade).toFixed(2)}">
-                <input type="hidden" name="itens[${i}][subtotal]" value="${subtotal.toFixed(2)}">
-            </td>
-            <td class="px-3 py-2 border ${tipoDesconto !== 'nenhum' ? 'text-green-600' : 'text-gray-600'}">
-                R$ ${formatarMoeda(subtotalComDesconto)}
-                <input type="hidden" name="itens[${i}][subtotal_com_desconto]" value="${subtotalComDesconto.toFixed(2)}">
-                <input type="hidden" name="itens[${i}][preco_unitario_com_desconto]" value="${(subtotalComDesconto / p.quantidade).toFixed(2)}">
-                <input type="hidden" name="itens[${i}][desconto_percentual_aplicado]" value="${tipoDesconto === 'percentual' ? descontoPercentual : 0}">
-            </td>
-            <td class="px-3 py-2 border text-center">
-                <button type="button" onclick="removerProduto(${i})"
-                        class="text-red-600 hover:text-red-800">🗑</button>
-            </td>
-        `;
-
+                <td class="px-3 py-2 border">
+                    <input type="hidden" name="itens[${i}][id]" value="${p.id}">
+                    <input type="hidden" name="itens[${i}][nome]" value="${p.nome}">
+                    <input type="hidden" name="itens[${i}][preco_original]" value="${p.precoOriginal}">
+                    <input type="hidden" name="itens[${i}][liberar_desconto]" value="${p.liberarDesconto}">
+                    <input type="hidden" name="itens[${i}][desconto_produto]" value="${p.descontoProduto}">
+                    <input type="hidden" name="itens[${i}][tipo_desconto]" value="${tipoDesconto}">
+                    ${p.id}
+                </td>
+                <td class="px-3 py-2 border">${escaparHTML(p.nome)}</td>
+                <td class="px-3 py-2 border">${escaparHTML(p.partNumber)}</td>
+                <td class="px-3 py-2 border">${escaparHTML(p.fornecedor)}</td>
+                <td class="px-3 py-2 border">${escaparHTML(p.cor)}</td>
+                <td class="px-3 py-2 border">
+                    <input type="number" step="0.01" value="${p.preco.toFixed(2)}" 
+                        ${p.liberarDesconto === 0 ? 'disabled' : ''}
+                        onchange="alterarPrecoProdutoNovo(${i}, this.value)"
+                        class="w-24 border rounded px-2 py-1 text-sm" />
+                </td>
+                <td class="px-3 py-2 border">
+                    <input type="number" name="itens[${i}][quantidade]" value="${p.quantidade}" min="1"
+                        onchange="alterarQuantidade(${i}, this.value)"
+                        class="w-16 border rounded px-2 py-1 text-center" />
+                </td>
+                <td class="px-3 py-2 border">R$ ${formatarMoeda(p.precoOriginal * p.quantidade)}</td>
+                <td class="px-3 py-2 border text-green-600 font-bold">R$ ${formatarMoeda(subtotalComDesconto)}</td>
+                <td class="px-3 py-2 border text-center">
+                    <button type="button" onclick="removerProduto(${i})" class="text-red-600">🗑</button>
+                </td>
+            `;
             wrapper.appendChild(row);
         });
-
         recalcularTotais();
     }
 
-    // ==================== PRODUTOS ORIGINAIS ====================
+    // ==================== GESTÃO DE PRODUTOS ORIGINAIS ====================
     window.alterarPrecoProdutoOriginal = function(index, novoPreco) {
-        const tbody = document.getElementById('produtos-originais');
-        if (!tbody) return;
-
-        const row = tbody.querySelectorAll('tr')[index];
-        if (!row || row.style.display === 'none') return;
-
-        const liberarDescontoInput = row.querySelector('input[name="produtos[' + index + '][liberar_desconto]"]');
-        const liberarDesconto = liberarDescontoInput ? parseInt(liberarDescontoInput.value) : 1;
-
+        const row = document.getElementById('produtos-originais').querySelectorAll('tr')[index];
+        const liberarDesconto = parseInt(row.querySelector('input[name*="[liberar_desconto]"]').value);
         if (liberarDesconto === 0) {
             alert("Este produto não permite alteração de preço!");
+            recalcularTotais();
             return;
         }
 
-        const precoOriginalInput = row.querySelector('input[name="produtos[' + index + '][preco_original]"]');
-        const precoOriginal = precoOriginalInput ? parseFloat(precoOriginalInput.value) : 0;
-
+        const precoOriginal = parseFloat(row.querySelector('input[name*="[preco_original]"]').value);
         novoPreco = parseFloat(novoPreco) || precoOriginal;
-        if (novoPreco < 0) novoPreco = 0;
-
         const descontoEmReais = precoOriginal - novoPreco;
 
-        // Atualizar valor unitário
-        const valorUnitarioInput = row.querySelector('.valor-unitario-hidden');
-        if (valorUnitarioInput) {
-            valorUnitarioInput.value = novoPreco;
-        }
+        row.querySelector('.input-valor-unitario').value = novoPreco.toFixed(2);
+        row.querySelector('.input-desconto-produto').value = descontoEmReais.toFixed(2);
+        row.querySelector('.input-tipo-desconto').value = descontoEmReais > 0 ? 'produto' : 'percentual';
 
-        // Atualizar desconto produto
-        let descontoProdutoInput = row.querySelector('input[name="produtos[' + index + '][desconto_produto]"]');
-        if (!descontoProdutoInput) {
-            descontoProdutoInput = document.createElement('input');
-            descontoProdutoInput.type = 'hidden';
-            descontoProdutoInput.name = 'produtos[' + index + '][desconto_produto]';
-            row.appendChild(descontoProdutoInput);
-        }
-        descontoProdutoInput.value = descontoEmReais;
-
-        // Atualizar tipo desconto
-        let tipoDescontoInput = row.querySelector('input[name="produtos[' + index + '][tipo_desconto]"]');
-        if (!tipoDescontoInput) {
-            tipoDescontoInput = document.createElement('input');
-            tipoDescontoInput.type = 'hidden';
-            tipoDescontoInput.name = 'produtos[' + index + '][tipo_desconto]';
-            row.appendChild(tipoDescontoInput);
-        }
-        tipoDescontoInput.value = descontoEmReais > 0 ? 'produto' : 'percentual';
-
-        const quantidadeInput = row.querySelector('input[name="produtos[' + index + '][quantidade]"]');
-        const quantidade = quantidadeInput ? parseInt(quantidadeInput.value) : 1;
-
-        recalcularProdutoOriginal(row, index, quantidade, novoPreco, descontoEmReais);
         recalcularTotais();
     };
 
     window.alterarQuantidadeOriginal = function(index, novaQuantidade) {
-        const tbody = document.getElementById('produtos-originais');
-        if (!tbody) return;
-
-        const row = tbody.querySelectorAll('tr')[index];
-        if (!row || row.style.display === 'none') return;
-
+        const row = document.getElementById('produtos-originais').querySelectorAll('tr')[index];
         const quantidade = parseInt(novaQuantidade) || 1;
-
-        // ✅ Verifica estoque via data-attribute da row
-        const estoqueAttr = row.getAttribute('data-estoque');
-        const estoque = estoqueAttr !== 'null' && estoqueAttr !== null ? parseInt(estoqueAttr) : null;
+        const estoque = row.getAttribute('data-estoque') !== 'null' ? parseInt(row.getAttribute('data-estoque')) : null;
 
         if (estoque !== null && quantidade > estoque) {
-            const nomeProduto = row.querySelectorAll('td')[1]?.textContent?.trim() || 'este produto';
-            const confirmado = confirm(
-                `⚠️ Estoque insuficiente!\n\n` +
-                `Você solicitou ${quantidade} unidade(s) de "${nomeProduto}", ` +
-                `mas há apenas ${estoque} em estoque.\n\n` +
-                `Deseja salvar mesmo assim?`
-            );
-            if (!confirmado) {
-                // Reverte o input para o valor anterior
-                const quantidadeInput = row.querySelector(`input[name="produtos[${index}][quantidade]"]`);
-                if (quantidadeInput) {
-                    quantidadeInput.value = window.produtos[index]?.quantidade ||
-                        quantidadeInput.getAttribute('data-valor-anterior') || 1;
-                }
+            if (!confirm(`⚠️ Estoque insuficiente! Há apenas ${estoque} em estoque. Deseja salvar mesmo assim?`)) {
+                row.querySelector('.input-quantidade').value = row.querySelector('.input-quantidade').getAttribute('data-valor-anterior') || 1;
                 return;
             }
         }
 
-        // Guarda o valor atual antes de alterar (para reverter se necessário)
-        const quantidadeInput = row.querySelector(`input[name="produtos[${index}][quantidade]"]`);
-        if (quantidadeInput) {
-            quantidadeInput.setAttribute('data-valor-anterior', quantidade);
-            quantidadeInput.value = quantidade;
-        }
-
-        const valorUnitarioInput = row.querySelector('.valor-unitario-hidden');
-        const valorUnitario = valorUnitarioInput ? parseFloat(valorUnitarioInput.value) : 0;
-
-        const descontoProdutoInput = row.querySelector(`input[name="produtos[${index}][desconto_produto]"]`);
-        const descontoProduto = descontoProdutoInput ? parseFloat(descontoProdutoInput.value) : 0;
-
-        recalcularProdutoOriginal(row, index, quantidade, valorUnitario, descontoProduto);
+        row.querySelector('.input-quantidade').setAttribute('data-valor-anterior', quantidade);
         recalcularTotais();
     };
 
     window.removerProdutoOriginal = function(index) {
-        const tbody = document.getElementById('produtos-originais');
-        if (!tbody) return;
-
-        const row = tbody.querySelectorAll('tr')[index];
-        if (row) {
-            row.style.display = 'none';
-
-            let removeInput = row.querySelector('input[name="produtos[' + index + '][_remove]"]');
-            if (!removeInput) {
-                removeInput = document.createElement('input');
-                removeInput.type = 'hidden';
-                removeInput.name = 'produtos[' + index + '][_remove]';
-                removeInput.value = '1';
-                row.appendChild(removeInput);
-            }
+        const row = document.getElementById('produtos-originais').querySelectorAll('tr')[index];
+        row.style.display = 'none';
+        let removeInput = row.querySelector('input[name*="[_remove]"]');
+        if (!removeInput) {
+            removeInput = document.createElement('input');
+            removeInput.type = 'hidden';
+            removeInput.name = `produtos[${index}][_remove]`;
+            removeInput.value = '1';
+            row.appendChild(removeInput);
         }
-
         recalcularTotais();
     };
 
-    function recalcularProdutoOriginal(row, index, quantidade, valorUnitario, descontoProduto) {
-        const precoOriginalInput = row.querySelector('input[name="produtos[' + index + '][preco_original]"]');
-        const precoOriginal = precoOriginalInput ? parseFloat(precoOriginalInput.value) : valorUnitario;
+    function recalcularProdutoOriginal(row, index) {
+        const quantidade = parseInt(row.querySelector('.input-quantidade').value) || 1;
+        const valorUnitario = parseFloat(row.querySelector('.input-valor-unitario').value) || 0;
+        const descontoProduto = parseFloat(row.querySelector('.input-desconto-produto').value) || 0;
+        const descontoPercentual = obterDescontoAplicado();
 
-        const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado]"')?.value) || 0;
-        let descontoOrcamento = parseFloat((document.querySelector('[name="desconto"]')?.value || '').replace(',', '.')) || 0;
-        descontoOrcamento = Math.min(Math.max(descontoOrcamento, 0), 100);
-        const descontoPercentual = Math.max(descontoCliente, descontoOrcamento);
-
-        const subtotalOriginal = precoOriginal * quantidade;
         const subtotal = valorUnitario * quantidade;
-
         let subtotalComDesconto;
-        let tipoDesconto = 'nenhum';
 
         if (descontoProduto > 0) {
             subtotalComDesconto = subtotal;
-            tipoDesconto = 'produto';
         } else {
             subtotalComDesconto = subtotal - (subtotal * (descontoPercentual / 100));
-            tipoDesconto = 'percentual';
         }
 
-        const precoUnitarioComDesconto = subtotalComDesconto / quantidade;
+        row.querySelector('.input-subtotal').value = subtotal.toFixed(2);
+        row.querySelector('.input-subtotal-com-desconto').value = subtotalComDesconto.toFixed(2);
+        row.querySelector('.input-preco-unitario-com-desconto').value = (subtotalComDesconto / quantidade).toFixed(2);
 
-        // Atualizar inputs hidden
-        const subtotalInput = row.querySelector('input[name="produtos[' + index + '][subtotal]"]');
-        const subtotalComDescontoInput = row.querySelector('input[name="produtos[' + index +
-            '][subtotal_com_desconto]"]');
-        const precoComDescontoInput = row.querySelector('input[name="produtos[' + index +
-            '][preco_unitario_com_desconto]"]');
-
-        if (subtotalInput) subtotalInput.value = subtotal.toFixed(2);
-        if (subtotalComDescontoInput) subtotalComDescontoInput.value = subtotalComDesconto.toFixed(2);
-        if (precoComDescontoInput) precoComDescontoInput.value = precoUnitarioComDesconto.toFixed(2);
-
-        // Atualizar células visíveis
-        const cells = row.querySelectorAll('td');
-        if (cells[7]) cells[7].innerHTML = 'R$ ' + formatarMoeda(subtotal);
-        if (cells[8]) cells[8].innerHTML = 'R$ ' + formatarMoeda(subtotalComDesconto);
+        row.querySelector('.label-subtotal').innerHTML = 'R$ ' + formatarMoeda(subtotal);
+        row.querySelector('.label-subtotal-desconto').innerHTML = 'R$ ' + formatarMoeda(subtotalComDesconto);
     }
 
-    function recalcularTodosProdutosOriginais() {
-        const tbody = document.getElementById('produtos-originais');
-        if (!tbody) return;
-
-        const rows = tbody.querySelectorAll('tr');
-
-        for (let i = 0; i < rows.length; i++) {
-            const row = rows[i];
-            if (row.style.display === 'none') continue;
-
-            const quantidadeInput = row.querySelector('input[name="produtos[' + i + '][quantidade]"]');
-            if (!quantidadeInput) continue;
-
-            const quantidade = parseInt(quantidadeInput.value) || 1;
-            const valorUnitarioInput = row.querySelector('.valor-unitario-hidden');
-            const valorUnitario = valorUnitarioInput ? parseFloat(valorUnitarioInput.value) : 0;
-
-            const descontoProdutoInput = row.querySelector('input[name="produtos[' + i + '][desconto_produto]"]');
-            const descontoProduto = descontoProdutoInput ? parseFloat(descontoProdutoInput.value) : 0;
-
-            recalcularProdutoOriginal(row, i, quantidade, valorUnitario, descontoProduto);
-        }
-    }
-
-    // ==================== VIDROS (mantém mesma lógica) ====================
+    // ==================== VIDROS ====================
     window.addVidro = function() {
         const wrapper = document.getElementById('vidros-wrapper');
-        if (!wrapper) return;
-
         const vidroDiv = document.createElement('div');
         vidroDiv.className = "space-y-2 relative border border-neutral-200 dark:border-neutral-700 rounded-lg p-4";
-        vidroDiv.innerHTML =
-            '<div class="overflow-x-auto"><div class="flex gap-4 min-w-max">' +
-            '<div class="flex-1"><label class="block text-sm font-medium text-gray-700">Descrição</label>' +
-            '<input type="text" name="vidros[' + window.vidroIndex +
-            '][descricao]" placeholder="Ex: Vidro incolor 8mm" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" /></div>' +
-            '<div class="flex-1"><label class="block text-sm font-medium text-gray-700">Quantidade</label>' +
-            '<input type="number" name="vidros[' + window.vidroIndex +
-            '][quantidade]" value="1" oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" /></div>' +
-            '<div class="flex-1"><label class="block text-sm font-medium text-gray-700">Preço m²</label>' +
-            '<input type="number" step="1" name="vidros[' + window.vidroIndex +
-            '][preco_m2]" oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" /></div>' +
-            '<div class="flex-1"><label class="block text-sm font-medium text-gray-700">Altura (mm)</label>' +
-            '<input type="number" name="vidros[' + window.vidroIndex +
-            '][altura]" oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" /></div>' +
-            '<div class="flex-1"><label class="block text-sm font-medium text-gray-700">Largura (mm)</label>' +
-            '<input type="number" name="vidros[' + window.vidroIndex +
-            '][largura]" oninput="calcularVidro(this)" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" /></div>' +
-            '</div></div>' +
-            '<input type="hidden" name="vidros[' + window.vidroIndex + '][area]" class="area-hidden" />' +
-            '<input type="hidden" name="vidros[' + window.vidroIndex + '][valor_total]" class="valor-hidden" />' +
-            '<input type="hidden" name="vidros[' + window.vidroIndex +
-            '][valor_com_desconto]" class="valor-desconto-hidden" />' +
-            '<div class="mt-2 text-sm"><strong>Área:</strong> <span class="area">0.00</span> m² | ' +
-            '<strong>Valor:</strong> R$ <span class="valor">0.00</span> | ' +
-            '<strong>c/ desc:</strong> R$ <span class="valor-desconto">0.00</span>' +
-            '<button type="button" onclick="removeVidro(this)" class="absolute right-2 text-red-600 hover:text-red-800" style="padding-top: -1rem;">Remover</button></div>';
-
+        vidroDiv.innerHTML = `
+            <div class="overflow-x-auto"><div class="flex gap-4 min-w-max">
+                <div class="flex-1"><label class="block text-sm font-medium">Descrição</label>
+                <input type="text" name="vidros[${window.vidroIndex}][descricao]" class="mt-1 block w-full border rounded px-3 py-2" /></div>
+                <div class="flex-1"><label class="block text-sm font-medium">Quantidade</label>
+                <input type="number" name="vidros[${window.vidroIndex}][quantidade]" value="1" oninput="calcularVidro(this)" class="mt-1 block w-full border rounded px-3 py-2" /></div>
+                <div class="flex-1"><label class="block text-sm font-medium">Preço m²</label>
+                <input type="number" step="0.01" name="vidros[${window.vidroIndex}][preco_m2]" oninput="calcularVidro(this)" class="mt-1 block w-full border rounded px-3 py-2" /></div>
+                <div class="flex-1"><label class="block text-sm font-medium">Altura (mm)</label>
+                <input type="number" name="vidros[${window.vidroIndex}][altura]" oninput="calcularVidro(this)" class="mt-1 block w-full border rounded px-3 py-2" /></div>
+                <div class="flex-1"><label class="block text-sm font-medium">Largura (mm)</label>
+                <input type="number" name="vidros[${window.vidroIndex}][largura]" oninput="calcularVidro(this)" class="mt-1 block w-full border rounded px-3 py-2" /></div>
+            </div></div>
+            <input type="hidden" name="vidros[${window.vidroIndex}][area]" class="area-hidden" value="0">
+            <input type="hidden" name="vidros[${window.vidroIndex}][valor_total]" class="valor-hidden" value="0">
+            <input type="hidden" name="vidros[${window.vidroIndex}][valor_com_desconto]" class="valor-desconto-hidden" value="0">
+            <div class="mt-2 text-sm">
+                <strong>Área:</strong> <span class="area">0.00</span> m² | 
+                <strong>Valor:</strong> R$ <span class="valor">0.00</span> | 
+                <strong>c/ desc:</strong> R$ <span class="valor-desconto">0.00</span>
+                <button type="button" onclick="removeVidro(this)" class="absolute right-2 text-red-600">Remover</button>
+            </div>
+        `;
         wrapper.appendChild(vidroDiv);
         window.vidroIndex++;
     };
@@ -1354,29 +1118,8 @@
         recalcularTotais();
     };
 
-    window.removeVidroExistente = function(button) {
-        const container = button.closest('div.space-y-2');
-        const vidroId = container.getAttribute('data-vidro-id');
-
-        if (vidroId) {
-            let removeInput = container.querySelector('input[name="vidros_removidos[]"]');
-            if (!removeInput) {
-                removeInput = document.createElement('input');
-                removeInput.type = 'hidden';
-                removeInput.name = 'vidros_removidos[]';
-                removeInput.value = vidroId;
-                container.appendChild(removeInput);
-            }
-        }
-
-        container.style.display = 'none';
-        recalcularTotais();
-    };
-
     window.calcularVidro = function(element) {
         const container = element.closest('div.space-y-2');
-        if (!container) return;
-
         const altura = parseFloat(container.querySelector('[name*="[altura]"]').value) || 0;
         const largura = parseFloat(container.querySelector('[name*="[largura]"]').value) || 0;
         const quantidade = parseFloat(container.querySelector('[name*="[quantidade]"]').value) || 1;
@@ -1384,12 +1127,7 @@
 
         const area = (altura / 1000) * (largura / 1000);
         const valor = area * precoM2 * quantidade;
-
-        const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]')?.value) || 0;
-        let descontoOrcamento = parseFloat((document.querySelector('[name="desconto"]')?.value || '').replace(',', '.')) || 0;
-        descontoOrcamento = Math.min(Math.max(descontoOrcamento, 0), 100);
-        const desconto = Math.max(descontoCliente, descontoOrcamento);
-
+        const desconto = obterDescontoAplicado();
         const valorComDesconto = valor - (valor * (desconto / 100));
 
         container.querySelector('.area').textContent = area.toFixed(2);
@@ -1400,461 +1138,125 @@
         container.querySelector('.valor-hidden').value = valor.toFixed(2);
         container.querySelector('.valor-desconto-hidden').value = valorComDesconto.toFixed(2);
 
-        setTimeout(recalcularTotais, 10);
+        recalcularTotais();
     };
 
-    window.calcularVidroExistente = function(element) {
-        calcularVidro(element);
-    };
-
-    function calcularTotalVidros() {
-        let totalVidros = 0;
-        let totalVidrosComDesconto = 0;
-        const wrapper = document.getElementById('vidros-wrapper');
-
-        if (wrapper) {
-            const containers = wrapper.querySelectorAll('.space-y-2');
-            for (let container of containers) {
-                if (container.style.display === 'none') continue;
-
-                const valorEl = container.querySelector('.valor-hidden');
-                const valorDescEl = container.querySelector('.valor-desconto-hidden');
-                if (valorEl && valorDescEl) {
-                    totalVidros += parseFloat(valorEl.value) || 0;
-                    totalVidrosComDesconto += parseFloat(valorDescEl.value) || 0;
-                }
-            }
-        }
-
-        return {
-            totalVidros,
-            totalVidrosComDesconto
-        };
-    }
-
-    function recalcularTodosVidros() {
-        const wrapper = document.getElementById('vidros-wrapper');
-        if (!wrapper) return;
-
-        const containers = wrapper.querySelectorAll('.space-y-2');
-        for (let container of containers) {
-            if (container.style.display === 'none') continue;
-
-            const firstInput = container.querySelector('input[type="number"]');
-            if (firstInput) {
-                calcularVidro(firstInput);
-            }
-        }
-    }
-
-    // ==================== TOTAIS ====================
+    // ==================== CÁLCULOS TOTAIS ====================
     function obterDescontoAplicado() {
-        const descontoCliente = parseFloat(document.querySelector('[name="desconto_aprovado"]')?.value) || 0;
-        // Normaliza o campo de desconto do orçamento:
-        // - remove tudo que não for dígito
-        // - interpreta como inteiro de 0 a 100 (ex.: "45" => 45)
-        let raw = (document.querySelector('[name="desconto"]')?.value || '').toString();
-        raw = raw.replace(/[^\d]/g, '');
-        let descontoOrcamento = raw ? parseInt(raw, 10) : 0;
-        descontoOrcamento = Math.min(Math.max(descontoOrcamento, 0), 100);
-        // Se o usuário informar um desconto no campo do orçamento, usa esse valor;
-        // se deixar em branco/zero, cai no desconto aprovado do cliente (se existir).
-        return descontoOrcamento > 0 ? descontoOrcamento : descontoCliente;
-    }
-
-    function calcularTotalProdutosOriginais() {
-        let total = 0;
-        let totalComDesconto = 0;
-        const tbody = document.getElementById('produtos-originais');
-
-        if (tbody) {
-            const rows = tbody.querySelectorAll('tr');
-            for (let row of rows) {
-                if (row.style.display === 'none') continue;
-
-                const subtotalInput = row.querySelector('input[name*="[subtotal]"]:not([name*="com_desconto"])');
-                const subtotalComDescontoInput = row.querySelector('input[name*="[subtotal_com_desconto]"]');
-
-                if (subtotalInput && subtotalComDescontoInput) {
-                    total += parseFloat(subtotalInput.value) || 0;
-                    totalComDesconto += parseFloat(subtotalComDescontoInput.value) || 0;
-                }
-            }
-        }
-
-        return {
-            total,
-            totalComDesconto
-        };
-    }
-    // ==================== CONTINUAÇÃO DO JAVASCRIPT ====================
-
-    function calcularTotalProdutosNovos() {
-        let total = 0;
-        let totalComDesconto = 0;
-        const descontoPercentual = obterDescontoAplicado();
-
-        window.produtos.forEach(p => {
-            const subtotalOriginal = p.precoOriginal * p.quantidade;
-            const subtotal = p.preco * p.quantidade;
-
-            let subtotalComDesc;
-            if (p.descontoProduto > 0) {
-                subtotalComDesc = subtotal;
-            } else if (p.liberarDesconto === 1 && descontoPercentual > 0) {
-                subtotalComDesc = subtotal - (subtotal * (descontoPercentual / 100));
-            } else {
-                subtotalComDesc = subtotal;
-            }
-
-            total += subtotalOriginal;
-            totalComDesconto += subtotalComDesc;
-        });
-
-        return {
-            total,
-            totalComDesconto
-        };
+        const descontoCliente = parseFloat(document.getElementById('desconto_aprovado')?.value) || 0;
+        const descontoOrcamentoEl = document.querySelector('[name="desconto"]');
+        let descontoOrcamento = parseFloat(descontoOrcamentoEl?.value?.replace(',', '.')) || 0;
+        return Math.max(descontoOrcamento, descontoCliente);
     }
 
     function recalcularTotais() {
-        recalcularTodosProdutosOriginais();
-
-        const totaisOriginais = calcularTotalProdutosOriginais();
-        const totaisNovos = calcularTotalProdutosNovos();
-        const totaisVidros = calcularTotalVidros();
-
-        const totalGeral = totaisOriginais.total + totaisNovos.total + totaisVidros.totalVidros;
-        const totalGeralComDesconto = totaisOriginais.totalComDesconto + totaisNovos.totalComDesconto + totaisVidros
-            .totalVidrosComDesconto;
-
-        const valorTotalInput = document.getElementById('valor_total');
-        if (valorTotalInput) {
-            valorTotalInput.value = totalGeral.toFixed(2);
-        }
-
-        const guia = parseFloat(document.querySelector('[name="guia_recolhimento"]')?.value) || 0;
-        const descontoEspecifico = parseFloat(document.querySelector('[name="desconto_especifico"]')?.value) || 0;
-
-        let valorFinal = totalGeralComDesconto - descontoEspecifico + guia;
-        if (valorFinal < 0) valorFinal = 0;
-
-        const maxDesconto = totalGeralComDesconto + guia;
-        if (descontoEspecifico > maxDesconto) {
-            const descontoEspecificoInput = document.querySelector('[name="desconto_especifico"]');
-            if (descontoEspecificoInput) {
-                descontoEspecificoInput.value = maxDesconto.toFixed(2);
+        console.log('Recalculando orçamento...');
+        
+        // 1. Produtos Originais
+        let totalOriginais = 0, totalOriginaisDesc = 0;
+        const rowsOriginais = document.getElementById('produtos-originais')?.querySelectorAll('tr') || [];
+        rowsOriginais.forEach((row, i) => {
+            if (row.style.display !== 'none') {
+                recalcularProdutoOriginal(row, i);
+                totalOriginais += parseFloat(row.querySelector('.input-subtotal').value) || 0;
+                totalOriginaisDesc += parseFloat(row.querySelector('.input-subtotal-com-desconto').value) || 0;
             }
-        }
+        });
 
-        const valorFinalInput = document.getElementById('valor_final');
-        if (valorFinalInput) {
-            valorFinalInput.value = valorFinal.toFixed(2);
-        }
-    }
+        // 2. Produtos Novos
+        let totalNovos = 0, totalNovosDesc = 0;
+        const descPercent = obterDescontoAplicado();
+        window.produtos.forEach(p => {
+            const subtotal = p.preco * p.quantidade;
+            let subtotalDesc = (p.descontoProduto > 0 || p.liberarDesconto === 0) ? subtotal : subtotal * (1 - descPercent/100);
+            totalNovos += p.precoOriginal * p.quantidade;
+            totalNovosDesc += subtotalDesc;
+        });
 
-    // ==================== FUNÇÕES AUXILIARES ====================
-    function escaparHTML(texto) {
-        return String(texto || '')
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-    }
+        // 3. Vidros
+        let totalVidros = 0, totalVidrosDesc = 0;
+        document.querySelectorAll('#vidros-wrapper .space-y-2').forEach(v => {
+            if (v.style.display !== 'none') {
+                totalVidros += parseFloat(v.querySelector('.valor-hidden').value) || 0;
+                totalVidrosDesc += parseFloat(v.querySelector('.valor-desconto-hidden').value) || 0;
+            }
+        });
 
-    function formatarMoeda(valor) {
-        return parseFloat(valor).toFixed(2).replace('.', ',');
-    }
-    window.recalcularItemEncomenda = function(input) {
-        const index = input.getAttribute('data-index');
-        const row = input.closest('tr');
-        const precoOri = parseFloat(row.querySelector('.enc-preco-original').value) || 0;
-        const qtd = parseFloat(row.querySelector('input[name="encomenda_itens[' + index + '][quantidade]"]')
-            .value) || 1;
-        // Input é o valor novo unitário (preço com desconto) — vendedor informa o novo preço, não o valor do desconto
-        let valorNovo = parseFloat(input.value) || precoOri;
-        valorNovo = Math.max(0, Math.min(valorNovo, precoOri));
-
-        const precoFinal = valorNovo;
-        const descItem = precoOri - precoFinal;
-        const subtotal = precoOri * qtd;
-        const subtotalComDesconto = precoFinal * qtd;
-
-        // Atualiza hiddens
-        row.querySelector('.enc-desconto-item').value = descItem.toFixed(2);
-        row.querySelector('.enc-preco-final').value = precoFinal.toFixed(2);
-        row.querySelector('.enc-tipo-desconto').value = descItem > 0 ? 'produto' : 'percentual';
-
-        // Atualiza display
-        row.querySelector('.enc-subtotal').textContent = formatarMoeda(subtotal);
-        row.querySelector('.enc-subtotal-desc').textContent = formatarMoeda(subtotalComDesconto);
-
-        recalcularTotaisEncomenda();
-    };
-
-    function recalcularTotaisEncomenda() {
-        // Aplica desconto percentual global nos itens de encomenda sem desconto individual
-        const descontoPercentual = obterDescontoAplicado();
-        let totalEncomenda = 0;
-        let totalEncomendaComDesc = 0;
-
-        document.querySelectorAll('#itens-encomenda tr').forEach(function(row) {
+        // 4. Encomendas (se houver)
+        let totalEnc = 0, totalEncDesc = 0;
+        document.querySelectorAll('#itens-encomenda tr').forEach(row => {
             const precoOri = parseFloat(row.querySelector('.enc-preco-original')?.value) || 0;
             const precoFinal = parseFloat(row.querySelector('.enc-preco-final')?.value) || precoOri;
             const qtd = parseFloat(row.dataset.quantidade) || 1;
-            const tipo = row.querySelector('.enc-tipo-desconto')?.value;
-
             const subtotal = precoOri * qtd;
-            let subtotalDesc;
-
-            if (tipo === 'produto') {
-                // Valor novo unitário definido manualmente pelo vendedor (ignora percentual global)
-                subtotalDesc = precoFinal * qtd;
-            } else if (descontoPercentual > 0) {
-                // Aplica percentual global
-                subtotalDesc = subtotal - (subtotal * (descontoPercentual / 100));
-                // Atualiza o hidden preco_final com valor pós-percentual
-                const precoFinalInput = row.querySelector('.enc-preco-final');
-                if (precoFinalInput) {
-                    precoFinalInput.value = ((precoOri) - (precoOri * descontoPercentual / 100)).toFixed(4);
-                }
-            } else {
-                subtotalDesc = subtotal;
-            }
-
-            // Atualiza display da coluna c/ desconto
-            const spanDesc = row.querySelector('.enc-subtotal-desc');
-            if (spanDesc) spanDesc.textContent = formatarMoeda(subtotalDesc);
-
-            totalEncomenda += subtotal;
-            totalEncomendaComDesc += subtotalDesc;
+            let subtotalDesc = (row.querySelector('.enc-tipo-desconto')?.value === 'produto') ? precoFinal * qtd : subtotal * (1 - descPercent/100);
+            totalEnc += subtotal;
+            totalEncDesc += subtotalDesc;
         });
 
-        return {
-            totalEncomenda,
-            totalEncomendaComDesc
-        };
-    }
-
-    // Sobrescreve recalcularTotais para incluir encomenda
-    const _recalcularTotaisOriginal = recalcularTotais;
-    recalcularTotais = function() {
-        recalcularTodosProdutosOriginais();
-
-        const totaisOriginais = calcularTotalProdutosOriginais();
-        const totaisNovos = calcularTotalProdutosNovos();
-        const totaisVidros = calcularTotalVidros();
-        const totaisEncomenda = recalcularTotaisEncomenda();
-
-        const totalGeral = totaisOriginais.total + totaisNovos.total +
-            totaisVidros.totalVidros + totaisEncomenda.totalEncomenda;
-
-        const totalGeralComDesconto = totaisOriginais.totalComDesconto + totaisNovos.totalComDesconto +
-            totaisVidros.totalVidrosComDesconto + totaisEncomenda.totalEncomendaComDesc;
+        const totalBruto = totalOriginais + totalNovos + totalVidros + totalEnc;
+        const totalComDesc = totalOriginaisDesc + totalNovosDesc + totalVidrosDesc + totalEncDesc;
 
         const valorTotalInput = document.getElementById('valor_total');
-        if (valorTotalInput) valorTotalInput.value = totalGeral.toFixed(2);
+        if (valorTotalInput) valorTotalInput.value = totalBruto.toFixed(2);
 
-        const guia = parseFloat(document.querySelector('[name="guia_recolhimento"]')?.value) || 0;
-        const descontoEspecifico = parseFloat(document.querySelector('[name="desconto_especifico"]')?.value) || 0;
+        const guia = parseFloat(document.querySelector('[name="guia_recolhimento"]')?.value.replace(',', '.')) || 0;
+        const descEsp = parseFloat(document.querySelector('[name="desconto_especifico"]')?.value.replace(',', '.')) || 0;
 
-        let valorFinal = totalGeralComDesconto - descontoEspecifico + guia;
-        if (valorFinal < 0) valorFinal = 0;
-
+        let valorFinal = totalComDesc - descEsp + guia;
         const valorFinalInput = document.getElementById('valor_final');
-        if (valorFinalInput) valorFinalInput.value = valorFinal.toFixed(2);
-    };
+        if (valorFinalInput) valorFinalInput.value = Math.max(0, valorFinal).toFixed(2);
+    }
+
+    // ==================== AUXILIARES ====================
+    function formatarMoeda(v) { return parseFloat(v).toFixed(2).replace('.', ','); }
+    function escaparHTML(t) { return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
     // ==================== INICIALIZAÇÃO ====================
     function inicializar() {
-        console.log('Inicializando sistema de orçamento - EDIT...');
-
-        // Inicializar vidroIndex
-        const vidrosWrapper = document.getElementById('vidros-wrapper');
-        if (vidrosWrapper) {
-            const vidrosExistentes = vidrosWrapper.querySelectorAll('.space-y-2');
-            window.vidroIndex = vidrosExistentes.length;
-        }
-
-        // Adicionar campos necessários aos produtos originais
-        const tbody = document.getElementById('produtos-originais');
-        if (tbody) {
-            const rows = tbody.querySelectorAll('tr');
-            rows.forEach((row, index) => {
-                const produtoId = row.querySelector('input[name="produtos[' + index + '][produto_id]"]')?.value;
-                if (!produtoId) return;
-
-                // Buscar dados do produto para verificar liberar_desconto
-                // Por enquanto, assume que todos permitem desconto por padrão
-                const valorUnitarioInput = row.querySelector('.valor-unitario-hidden');
-                const valorUnitario = valorUnitarioInput ? parseFloat(valorUnitarioInput.value) : 0;
-
-                // Adicionar campo preco_original se não existir
-                if (!row.querySelector('input[name="produtos[' + index + '][preco_original]"]')) {
-                    const precoOriginalInput = document.createElement('input');
-                    precoOriginalInput.type = 'hidden';
-                    precoOriginalInput.name = 'produtos[' + index + '][preco_original]';
-                    precoOriginalInput.value = valorUnitario;
-                    row.appendChild(precoOriginalInput);
-                }
-
-                // Adicionar campo liberar_desconto se não existir
-                if (!row.querySelector('input[name="produtos[' + index + '][liberar_desconto]"]')) {
-                    const liberarDescontoInput = document.createElement('input');
-                    liberarDescontoInput.type = 'hidden';
-                    liberarDescontoInput.name = 'produtos[' + index + '][liberar_desconto]';
-                    liberarDescontoInput.value = '1'; // Assume que permite desconto
-                    row.appendChild(liberarDescontoInput);
-                }
-
-                // Adicionar campo desconto_produto se não existir
-                if (!row.querySelector('input[name="produtos[' + index + '][desconto_produto]"]')) {
-                    const descontoProdutoInput = document.createElement('input');
-                    descontoProdutoInput.type = 'hidden';
-                    descontoProdutoInput.name = 'produtos[' + index + '][desconto_produto]';
-                    descontoProdutoInput.value = '0';
-                    row.appendChild(descontoProdutoInput);
-                }
-
-                // Adicionar campo tipo_desconto se não existir
-                if (!row.querySelector('input[name="produtos[' + index + '][tipo_desconto]"]')) {
-                    const tipoDescontoInput = document.createElement('input');
-                    tipoDescontoInput.type = 'hidden';
-                    tipoDescontoInput.name = 'produtos[' + index + '][tipo_desconto]';
-                    tipoDescontoInput.value = 'percentual';
-                    row.appendChild(tipoDescontoInput);
-                }
-
-                // Tornar o preço editável
-                const cells = row.querySelectorAll('td');
-                if (cells[5]) { // Coluna do preço
-                    const liberarDesconto = parseInt(row.querySelector('input[name="produtos[' + index +
-                        '][liberar_desconto]"]')?.value) || 1;
-
-                    if (liberarDesconto === 1) {
-                        const precoAtual = valorUnitario.toFixed(2);
-                        cells[5].innerHTML = `
-                        <div class="flex flex-col gap-1">
-                            <input type="number" step="1" value="${precoAtual}"
-                                onchange="alterarPrecoProdutoOriginal(${index}, this.value)"
-                                class="w-24 border rounded px-2 py-1 text-sm" />
-                        </div>
-                        <input type="hidden" class="valor-unitario-hidden" name="produtos[${index}][valor_unitario]" value="${valorUnitario}">
-                    `;
-                    }
-                }
-            });
-        }
-
-        // Recalcular vidros existentes
-        recalcularTodosVidros();
-
-        // Recalcular tudo
-        recalcularTotais();
-
-        // Event listeners
-        const camposDesconto = [
-            '[name="desconto"]',
-            '[name="desconto_especifico"]',
-            '[name="guia_recolhimento"]'
-        ];
-
-        camposDesconto.forEach(selector => {
-            const campo = document.querySelector(selector);
-            if (campo) {
-                campo.addEventListener('input', function() {
-                    recalcularTodosVidros();
-                    recalcularTotais();
+        ['desconto', 'desconto_especifico', 'guia_recolhimento'].forEach(name => {
+            document.querySelector(`[name="${name}"]`)?.addEventListener('input', () => {
+                document.querySelectorAll('#vidros-wrapper .space-y-2').forEach(v => {
+                    const inp = v.querySelector('input[type="number"]');
+                    if (inp) calcularVidro(inp);
                 });
-            }
+                recalcularTotais();
+            });
         });
 
-        // Listener para condição de pagamento
-        const condicaoPagamentoSelect = document.getElementById('condicao_id');
-        const outrosMeiosInput = document.getElementById('outros_meios_pagamento');
-
-        if (condicaoPagamentoSelect && outrosMeiosInput) {
-            function toggleOutrosMeios() {
-                if (condicaoPagamentoSelect.value == 20) {
-                    outrosMeiosInput.disabled = false;
-                    outrosMeiosInput.required = true;
-                } else {
-                    outrosMeiosInput.disabled = true;
-                    outrosMeiosInput.required = false;
-                    outrosMeiosInput.value = '';
-                }
-            }
-
-            condicaoPagamentoSelect.addEventListener('change', toggleOutrosMeios);
-            toggleOutrosMeios();
-        }
-
-        // Listener para venda triangular
-        const vendaTriangularSelect = document.getElementById('venda_triangular');
-        const cnpjTriangularInput = document.getElementById('cnpj_triangular');
-
-        if (vendaTriangularSelect && cnpjTriangularInput) {
-            function toggleVendaTriangular() {
-                if (vendaTriangularSelect.value === '1') {
-                    cnpjTriangularInput.disabled = false;
-                    cnpjTriangularInput.required = true;
-                } else {
-                    cnpjTriangularInput.disabled = true;
-                    cnpjTriangularInput.required = false;
-                    cnpjTriangularInput.value = '';
-                }
-            }
-
-            vendaTriangularSelect.addEventListener('change', toggleVendaTriangular);
-            toggleVendaTriangular();
-        }
-
-        console.log('Sistema inicializado com sucesso!');
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', inicializar);
-    } else {
-        inicializar();
-    }
-</script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const vendaTriangular = document.getElementById('venda_triangular');
-        const cnpj_triangular = document.getElementById('cnpj_triangular');
-        const condicaoPagamento = document.getElementById('condicao_id');
+        // Condição de pagamento
+        const condSelect = document.getElementById('condicao_id');
         const outrosMeios = document.getElementById('outros_meios_pagamento');
-
-        function toggleVendaTriangular() {
-            if (vendaTriangular.value === '1') {
-                cnpj_triangular.disabled = false;
-                cnpj_triangular.required = true;
-            } else {
-                cnpj_triangular.disabled = true;
-                cnpj_triangular.required = false;
-                cnpj_triangular.value = '';
-            }
+        if (condSelect && outrosMeios) {
+            const toggle = () => {
+                const is20 = condSelect.value == '20';
+                outrosMeios.disabled = !is20;
+                outrosMeios.required = is20;
+            };
+            condSelect.addEventListener('change', toggle);
+            toggle();
         }
 
-        function toggleOutrosMeios() {
-            if (condicaoPagamento.value == 20) {
-                outrosMeios.disabled = false;
-                outrosMeios.required = true;
-            } else {
-                outrosMeios.disabled = true;
-                outrosMeios.required = false;
-                outrosMeios.value = '';
-            }
+        // Venda triangular
+        const triSelect = document.getElementById('venda_triangular');
+        const cnpjTri = document.getElementById('cnpj_triangular');
+        if (triSelect && cnpjTri) {
+            const toggle = () => {
+                const isTri = triSelect.value === '1';
+                cnpjTri.disabled = !isTri;
+                cnpjTriangular.required = isTri;
+            };
+            triSelect.addEventListener('change', toggle);
+            toggle();
         }
 
-        if (vendaTriangular) {
-            vendaTriangular.addEventListener('change', toggleVendaTriangular);
-            toggleVendaTriangular();
-        }
+        // Itens iniciais
+        for (let i = 1; i < oldItensRaw.length; i++) addItem();
 
-        if (condicaoPagamento) {
-            condicaoPagamento.addEventListener('change', toggleOutrosMeios);
-            toggleOutrosMeios();
-        }
-    });
+        recalcularTotais();
+        console.log('Sistema de orçamento pronto.');
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', inicializar);
+    else inicializar();
 </script>

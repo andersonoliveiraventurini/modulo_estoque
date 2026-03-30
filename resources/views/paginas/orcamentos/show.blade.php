@@ -1134,7 +1134,8 @@
                                 @if ($descontoPercentual)
                                     @if ($descontoPercentual->aprovado_em)
                                         <span
-                                            class="inline-flex items-center px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200">
+                                            class="inline-flex items-center px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200"
+                                            title="{{ $descontoPercentual->motivo }}">
                                             <x-heroicon-o-check-circle class="w-3 h-3 mr-1" />
                                             Aprovado
                                         </span>
@@ -1158,7 +1159,8 @@
                                 -R$ {{ number_format($desc->valor, 2, ',', '.') }}
                                 @if ($desc->aprovado_em || $desc->aprovado_por)
                                     <span
-                                        class="inline-flex items-center px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200">
+                                        class="inline-flex items-center px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200"
+                                        title="{{ $desc->motivo }}">
                                         <x-heroicon-o-check-circle class="w-3 h-3 mr-1" />
                                         Aprovado
                                     </span>
@@ -1182,7 +1184,8 @@
                                 -R$ {{ number_format($desc->valor, 2, ',', '.') }}
                                 @if ($desc->aprovado_em || $desc->aprovado_por)
                                     <span
-                                        class="inline-flex items-center px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200">
+                                        class="inline-flex items-center px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200"
+                                        title="{{ $desc->motivo }}">
                                         <x-heroicon-o-check-circle class="w-3 h-3 mr-1" />
                                         Aprovado
                                     </span>

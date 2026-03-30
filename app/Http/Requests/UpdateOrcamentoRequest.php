@@ -11,6 +11,53 @@ class UpdateOrcamentoRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $normalizarValor = function ($valor) {
+            if (is_null($valor) || $valor === '' || $valor === '0') {
+                return null;
+            }
+
+            $valor = trim((string) $valor);
+
+            // Se for string com vírgula (ex: 1.250,50 ou 10,00)
+            if (str_contains($valor, ',')) {
+                // Remove pontos de milhar e troca vírgula por ponto
+                return str_replace(',', '.', str_replace('.', '', $valor));
+            }
+
+            return $valor;
+        };
+
+        $this->merge([
+            'desconto_especifico' => $normalizarValor($this->desconto_especifico),
+            'guia_recolhimento'   => $normalizarValor($this->guia_recolhimento),
+            'frete'               => $normalizarValor($this->frete),
+            'valor_total'         => $normalizarValor($this->valor_total),
+        ]);
+
+        // Também para vidros
+        if ($this->has('vidros_existentes')) {
+            $vidros = $this->get('vidros_existentes');
+            foreach ($vidros as $i => $v) {
+                if (isset($v['preco_m2'])) {
+                    $vidros[$i]['preco_m2'] = $normalizarValor($v['preco_m2']);
+                }
+            }
+            $this->merge(['vidros_existentes' => $vidros]);
+        }
+
+        if ($this->has('vidros')) {
+            $vidros = $this->get('vidros');
+            foreach ($vidros as $i => $v) {
+                if (isset($v['preco_m2'])) {
+                    $vidros[$i]['preco_m2'] = $normalizarValor($v['preco_m2']);
+                }
+            }
+            $this->merge(['vidros' => $vidros]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -97,38 +144,5 @@ class UpdateOrcamentoRequest extends FormRequest
             'vidros_removidos.*.exists'             => 'Um ou mais vidros a remover não foram encontrados.',
             'vidros_existentes.*.id.exists'         => 'Um ou mais vidros existentes não foram encontrados.',
         ];
-    }
-
-    protected function prepareForValidation(): void
-    {
-        $normalizarValor = function ($valor) {
-            if (is_null($valor) || $valor === '' || $valor === '0') {
-                return null;
-            }
-
-            $valor = trim((string) $valor);
-
-            if (!str_contains($valor, ',') && !str_contains($valor, '.')) {
-                return $valor;
-            }
-
-            if (str_contains($valor, ',')) {
-                return str_replace(',', '.', str_replace('.', '', $valor));
-            }
-
-            $partes = explode('.', $valor);
-            if (count($partes) === 2 && strlen($partes[1]) === 3 && !str_contains($valor, ' ')) {
-                return str_replace('.', '', $valor);
-            }
-
-            return $valor;
-        };
-
-        $this->merge([
-            'desconto_especifico' => $normalizarValor($this->desconto_especifico),
-            'guia_recolhimento'   => $normalizarValor($this->guia_recolhimento),
-            'frete'               => $normalizarValor($this->frete),
-            'valor_total'         => $normalizarValor($this->valor_total),
-        ]);
     }
 }

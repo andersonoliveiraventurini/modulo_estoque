@@ -380,6 +380,12 @@ class OrcamentoController extends Controller
             ]);
         }
 
+        $cliente = $orcamento->cliente;
+        $clienteBloqueado = $cliente->bloqueado ?? false;
+        $margemVendedor = (float)($request->user()->vendedor?->desconto ?? 0);
+        $margemCliente = (float)($cliente->desconto ?? 0);
+        $maxMargem = max($margemVendedor, $margemCliente);
+
         if ($request->tipos_transporte) {
             $orcamento->transportes()->sync($request->tipos_transporte);
         }
@@ -408,14 +414,30 @@ class OrcamentoController extends Controller
                         $valorComDesconto = $subtotal;
                         $valorUnitarioComDesconto = $precoUnitario;
 
+                        $percentualItem = $precoOriginal > 0 ? ($descontoProduto / $precoOriginal) * 100 : 0;
+                        $motivoAutoAprovado = null;
+                        $dataAprovado = null;
+
+                        if (!$clienteBloqueado) {
+                            if ($percentualItem <= $margemCliente) {
+                                $motivoAutoAprovado = "Aprovado pelo limite do cliente (" . number_format($margemCliente, 2, ',', '.') . "%)";
+                                $dataAprovado = now();
+                            } elseif ($percentualItem <= $margemVendedor) {
+                                $motivoAutoAprovado = "Aprovado pelo limite do vendedor (" . number_format($margemVendedor, 2, ',', '.') . "%)";
+                                $dataAprovado = now();
+                            }
+                        }
+
                         $orcamento->descontos()->create([
-                            'motivo' => "Desconto individual " . $quantidade . " em unidades do produto ID " . $item['id'],
+                            'motivo' => ($motivoAutoAprovado ? $motivoAutoAprovado . " - " : "") . "Desconto individual " . $quantidade . " em unidades do produto ID " . $item['id'],
                             'valor' => $descontoProduto * $quantidade,
-                            'porcentagem' => null,
+                            'porcentagem' => $percentualItem,
                             'tipo' => 'produto',
                             'produto_id' => $item['id'],
                             'cliente_id' => $request->cliente_id,
                             'user_id' => Auth()->id(),
+                            'aprovado_em' => $dataAprovado,
+                            'aprovado_por' => $dataAprovado ? Auth()->id() : null,
                         ]);
 
                         $itenscomdesconto = true;
@@ -485,13 +507,28 @@ class OrcamentoController extends Controller
             }
 
             if ($totalDescontoPercentual > 0) {
+                $motivoAutoAprovado = null;
+                $dataAprovado = null;
+
+                if (!$clienteBloqueado) {
+                    if ($descontoPercentual <= $margemCliente) {
+                        $motivoAutoAprovado = "Aprovado pelo limite do cliente (" . number_format($margemCliente, 2, ',', '.') . "%)";
+                        $dataAprovado = now();
+                    } elseif ($descontoPercentual <= $margemVendedor) {
+                        $motivoAutoAprovado = "Aprovado pelo limite do vendedor (" . number_format($margemVendedor, 2, ',', '.') . "%)";
+                        $dataAprovado = now();
+                    }
+                }
+
                 $orcamento->descontos()->create([
-                    'motivo' => 'Desconto percentual aplicado pelo vendedor',
+                    'motivo' => ($motivoAutoAprovado ? $motivoAutoAprovado . " - " : "") . 'Desconto percentual aplicado pelo vendedor',
                     'valor' => $totalDescontoPercentual,
                     'porcentagem' => $descontoPercentual,
                     'tipo' => 'percentual',
                     'cliente_id' => $request->cliente_id,
                     'user_id' => Auth()->id(),
+                    'aprovado_em' => $dataAprovado,
+                    'aprovado_por' => $dataAprovado ? Auth()->id() : null,
                 ]);
             }
         }
@@ -553,17 +590,37 @@ class OrcamentoController extends Controller
         $temDescontoEspecifico = $descontoEspecifico > 0;
         $temQualquerDesconto = $temDescontoPercentual || $temDescontoEspecifico || $itenscomdesconto;
 
-        $clienteBloqueado = $orcamento->cliente->bloqueado ?? false;
-
         $necessitaAprovacaoDesconto = $temQualquerDesconto && (
             $clienteBloqueado ||
-            $descontoPercentual > (float)($request->desconto_aprovado ?? 0) ||
-            ($request->user()->vendedor?->desconto ?? 0) < $descontoPercentual ||
-            $itenscomdesconto
+            $descontoPercentual > $maxMargem ||
+            $itenscomdesconto ||
+            $temDescontoEspecifico
         );
 
         // ✅ DETERMINA O STATUS FINAL DO ORÇAMENTO
-        if (!$temQualquerDesconto && !$necessitaAprovacaoPagamento) {
+        if ($necessitaAprovacaoPagamento) {
+            // Prioridade para aprovação de pagamento se condição for 20
+            $orcamento->status = 'Aprovar pagamento';
+            $orcamento->save();
+
+            Log::info("Orçamento #{$orcamento->id} aguardando aprovação de pagamento", [
+                'orcamento_id' => $orcamento->id,
+                'status' => $orcamento->status,
+                'necessita_desconto' => $necessitaAprovacaoDesconto
+            ]);
+
+            return redirect()
+                ->route('orcamentos.index')
+                ->with('info', 'Orçamento criado com sucesso! Aguardando aprovação do meio de pagamento especial para gerar o PDF.');
+        } elseif ($necessitaAprovacaoDesconto) {
+            // Só desconto precisa de aprovação (ou pagamento já está ok/não é 20)
+            $orcamento->status = 'Aprovar desconto';
+            $orcamento->save();
+
+            return redirect()
+                ->route('orcamentos.index')
+                ->with('error', 'Orçamento criado, mas é necessária a aprovação do desconto.');
+        } else {
             // Nenhuma aprovação necessária — verifica estoque antes de aprovar
             if ($temItensSemEstoque) {
                 $orcamento->status = 'Sem estoque';
@@ -582,40 +639,6 @@ class OrcamentoController extends Controller
                     Log::error("Erro ao sincronizar venda com RD Station: " . $e->getMessage());
                 }
             }
-        } elseif ($necessitaAprovacaoDesconto && $necessitaAprovacaoPagamento) {
-            // Ambos precisam de aprovação — prioriza desconto
-            $orcamento->status = 'Aprovar desconto';
-            $orcamento->save();
-
-            Log::info("Orçamento #{$orcamento->id} aguardando aprovação de desconto E pagamento", [
-                'orcamento_id' => $orcamento->id,
-                'status' => $orcamento->status,
-            ]);
-
-            return redirect()
-                ->route('orcamentos.index')
-                ->with('warning', 'Orçamento criado, mas é necessária a aprovação do desconto e do meio de pagamento antes de gerar o PDF.');
-        } elseif ($necessitaAprovacaoDesconto) {
-            // Só desconto precisa de aprovação
-            $orcamento->status = 'Aprovar desconto';
-            $orcamento->save();
-
-            return redirect()
-                ->route('orcamentos.index')
-                ->with('error', 'Orçamento criado, mas é necessária a aprovação do desconto.');
-        } elseif ($necessitaAprovacaoPagamento) {
-            // Só pagamento precisa de aprovação
-            $orcamento->status = 'Aprovar pagamento';
-            $orcamento->save();
-
-            Log::info("Orçamento #{$orcamento->id} aguardando aprovação de pagamento", [
-                'orcamento_id' => $orcamento->id,
-                'status' => $orcamento->status,
-            ]);
-
-            return redirect()
-                ->route('orcamentos.index')
-                ->with('info', 'Orçamento criado com sucesso! Aguardando aprovação do meio de pagamento especial para gerar o PDF.');
         }
 
         // ✅ NÃO PRECISA DE APROVAÇÃO — GERA O PDF NORMALMENTE
@@ -825,26 +848,50 @@ class OrcamentoController extends Controller
 
         // 3) Copiar descontos (SE HOUVER)
         $necessitaAprovacaoDesconto = false;
+        
+        // Re-avaliação de necessidade de aprovação de desconto para o novo vendedor
+        $cliente = $novoOrcamento->cliente;
+        $clienteBloqueado = $cliente->bloqueado ?? false;
+        $margemVendedor = (float)(Auth()->user()->vendedor?->desconto ?? 0);
+        $margemCliente = (float)($cliente->desconto ?? 0);
+        $maxMargem = max($margemVendedor, $margemCliente);
+
         foreach ($orcamentoOriginal->descontos as $descontoOriginal) {
 
             // Força leitura direta do atributo para evitar problema com fillable/cast
             $produtoIdOriginal = $descontoOriginal->getAttributes()['produto_id'] ?? $descontoOriginal->produto_id ?? null;
 
+            $percentualOriginal = (float)($descontoOriginal->porcentagem ?? 0);
+            $motivoAutoAprovado = null;
+            $dataAprovado = null;
+
+            if (!$clienteBloqueado && $percentualOriginal > 0) {
+                if ($percentualOriginal <= $margemCliente) {
+                    $motivoAutoAprovado = "Aprovado pelo limite do cliente (" . number_format($margemCliente, 2, ',', '.') . "%)";
+                    $dataAprovado = now();
+                } elseif ($percentualOriginal <= $margemVendedor) {
+                    $motivoAutoAprovado = "Aprovado pelo limite do vendedor (" . number_format($margemVendedor, 2, ',', '.') . "%)";
+                    $dataAprovado = now();
+                }
+            }
+
             $novoOrcamento->descontos()->create([
-                'motivo' => $descontoOriginal->motivo . ' (Duplicado)',
+                'motivo' => ($motivoAutoAprovado ? $motivoAutoAprovado . " - " : "") . $descontoOriginal->motivo . ' (Duplicado)',
                 'valor' => $descontoOriginal->valor,
                 'porcentagem' => $descontoOriginal->porcentagem,
                 'tipo' => $descontoOriginal->tipo,
                 'produto_id' => $produtoIdOriginal,
                 'cliente_id' => $clienteID ?? $descontoOriginal->cliente_id,
                 'user_id' => Auth()->id(),
-                'aprovado_em' => null,
-                'aprovado_por' => null,
+                'aprovado_em' => $dataAprovado,
+                'aprovado_por' => $dataAprovado ? Auth()->id() : null,
                 'rejeitado_em' => null,
                 'rejeitado_por' => null,
             ]);
 
-            $necessitaAprovacaoDesconto = true;
+            if (!$dataAprovado) {
+                $necessitaAprovacaoDesconto = true;
+            }
         }
 
 
@@ -852,6 +899,21 @@ class OrcamentoController extends Controller
         if ($itensComDesconto && !$necessitaAprovacaoDesconto) {
             $necessitaAprovacaoDesconto = true;
         }
+
+        // Re-avaliação de necessidade de aprovação de desconto para o novo vendedor
+        $cliente = $novoOrcamento->cliente;
+        $clienteBloqueado = $cliente->bloqueado ?? false;
+        $margemVendedor = (float)(Auth()->user()->vendedor?->desconto ?? 0);
+        $margemCliente = (float)($cliente->desconto ?? 0);
+        $maxMargem = max($margemVendedor, $margemCliente);
+
+        $descontoPercentualOriginal = $orcamentoOriginal->descontos->where('tipo', 'percentual')->max('porcentagem') ?? 0;
+        $temDescontoEspecifico = $orcamentoOriginal->descontos->where('tipo', 'fixo')->isNotEmpty();
+
+        $necessitaAprovacaoDesconto = ($descontoPercentualOriginal > 0 || $temDescontoEspecifico || $itensComDesconto) && (
+            $clienteBloqueado ||
+            $novoOrcamento->descontos()->whereNull('aprovado_em')->exists()
+        );
 
         // 4) Copiar endereço de entrega
         if ($orcamentoOriginal->endereco) {
@@ -870,31 +932,18 @@ class OrcamentoController extends Controller
         }
 
         // ✅ VALIDAÇÃO FINAL: PRIORIDADE PARA MEIO DE PAGAMENTO
-        if ($necessitaAprovacaoPagamento && $necessitaAprovacaoDesconto) {
-            // ✅ PRIORIDADE: Primeiro aprova PAGAMENTO, depois DESCONTO
+        if ($necessitaAprovacaoPagamento) {
             $novoOrcamento->update(['status' => 'Aprovar pagamento']);
 
-            Log::info("Orçamento duplicado #{$novoOrcamento->id} aguardando aprovação de PAGAMENTO (depois desconto)", [
+            Log::info("Orçamento duplicado #{$novoOrcamento->id} aguardando aprovação de PAGAMENTO", [
                 'original_id' => $orcamentoOriginal->id,
                 'status' => 'Aprovar pagamento',
-                'tem_desconto_pendente' => true,
+                'necessita_desconto' => $necessitaAprovacaoDesconto,
             ]);
 
             return redirect()
                 ->route('orcamentos.index')
-                ->with('warning', 'Orçamento duplicado com sucesso! É necessária a aprovação do meio de pagamento e depois do desconto antes de gerar o PDF.');
-        } elseif ($necessitaAprovacaoPagamento) {
-            // Só pagamento precisa de aprovação
-            $novoOrcamento->update(['status' => 'Aprovar pagamento']);
-
-            Log::info("Orçamento duplicado #{$novoOrcamento->id} aguardando aprovação de pagamento", [
-                'original_id' => $orcamentoOriginal->id,
-                'status' => 'Aprovar pagamento',
-            ]);
-
-            return redirect()
-                ->route('orcamentos.index')
-                ->with('info', 'Orçamento duplicado com sucesso! Aguardando aprovação do meio de pagamento especial para gerar o PDF.');
+                ->with('warning', 'Orçamento duplicado com sucesso! É necessária a aprovação do meio de pagamento especial antes de gerar o PDF.');
         } elseif ($necessitaAprovacaoDesconto) {
             // Só desconto precisa de aprovação
             $novoOrcamento->update(['status' => 'Aprovar desconto']);
@@ -1632,6 +1681,19 @@ class OrcamentoController extends Controller
             }
 
             // ----------------------------------------------------------------
+            // Verificar necessidade de aprovações
+            // ----------------------------------------------------------------
+            $temDescontoPercentual = $descontoPercentual > 0;
+            $temDescontoEspecifico = $descontoEspecifico > 0;
+            $temQualquerDesconto = $temDescontoPercentual || $temDescontoEspecifico || $itenscomdesconto;
+
+            $cliente = $orcamento->cliente;
+            $clienteBloqueado = $cliente->bloqueado ?? false;
+            $margemVendedor = (float)(auth()->user()->vendedor?->desconto ?? 0);
+            $margemCliente = (float)($cliente->desconto ?? 0);
+            $maxMargem = max($margemVendedor, $margemCliente);
+
+            // ----------------------------------------------------------------
             // Limpar descontos anteriores antes de recalcular
             // ----------------------------------------------------------------
             $orcamento->descontos()->delete();
@@ -1679,15 +1741,31 @@ class OrcamentoController extends Controller
                             $motivo .= ' — Item encomenda #' . $consultaPrecoId;
                         }
 
+                        $percentualItem = $precoOriginal > 0 ? ($descontoReais / $precoOriginal) * 100 : 0;
+                        $motivoAutoAprovado = null;
+                        $dataAprovado = null;
+
+                        if (!$clienteBloqueado) {
+                            if ($percentualItem <= $margemCliente) {
+                                $motivoAutoAprovado = "Aprovado pelo limite do cliente (" . number_format($margemCliente, 2, ',', '.') . "%)";
+                                $dataAprovado = now();
+                            } elseif ($percentualItem <= $margemVendedor) {
+                                $motivoAutoAprovado = "Aprovado pelo limite do vendedor (" . number_format($margemVendedor, 2, ',', '.') . "%)";
+                                $dataAprovado = now();
+                            }
+                        }
+
                         $orcamento->descontos()->create([
-                            'motivo' => $motivo,
+                            'motivo' => ($motivoAutoAprovado ? $motivoAutoAprovado . " - " : "") . $motivo,
                             'valor' => round($descontoReais * $quantidade, 2),
-                            'porcentagem' => null,
+                            'porcentagem' => $percentualItem,
                             'tipo' => 'produto',
                             'produto_id' => null,
                             'consulta_preco_id' => $consultaPrecoId,
                             'cliente_id' => $orcamento->cliente_id,
                             'user_id' => $request->user()->id,
+                            'aprovado_em' => $dataAprovado,
+                            'aprovado_por' => $dataAprovado ? auth()->id() : null,
                         ]);
                         $itenscomdesconto = true;
                     }
@@ -1727,6 +1805,11 @@ class OrcamentoController extends Controller
                     }
 
                     $quantidade = (float)($produtoData['quantidade'] ?? 0);
+                    if ($quantidade <= 0) {
+                        $orcamento->itens()->where('produto_id', $produtoData['produto_id'])->delete();
+                        continue;
+                    }
+
                     $liberarDesconto = isset($produtoData['liberar_desconto'])
                         ? (int)$produtoData['liberar_desconto']
                         : 1;
@@ -1752,16 +1835,32 @@ class OrcamentoController extends Controller
                             $valorUnitarioComDesconto = $precoOriginalSemDesconto - $descontoProduto;
                             $valorComDesconto = $valorUnitarioComDesconto * $quantidade;
 
+                            $percentualItem = $precoOriginalSemDesconto > 0 ? ($descontoProduto / $precoOriginalSemDesconto) * 100 : 0;
+                            $motivoAutoAprovado = null;
+                            $dataAprovado = null;
+
+                            if (!$clienteBloqueado) {
+                                if ($percentualItem <= $margemCliente) {
+                                    $motivoAutoAprovado = "Aprovado pelo limite do cliente (" . number_format($margemCliente, 2, ',', '.') . "%)";
+                                    $dataAprovado = now();
+                                } elseif ($percentualItem <= $margemVendedor) {
+                                    $motivoAutoAprovado = "Aprovado pelo limite do vendedor (" . number_format($margemVendedor, 2, ',', '.') . "%)";
+                                    $dataAprovado = now();
+                                }
+                            }
+
                             $orcamento->descontos()->create([
-                                'motivo' => "Desconto individual de R$ "
+                                'motivo' => ($motivoAutoAprovado ? $motivoAutoAprovado . " - " : "") . "Desconto individual de R$ "
                                     . number_format($descontoProduto, 2, ',', '.')
                                     . " por unidade do produto ID {$produtoData['produto_id']}",
                                 'valor' => $descontoProduto * $quantidade,
-                                'porcentagem' => null,
+                                'porcentagem' => $percentualItem,
                                 'tipo' => 'produto',
                                 'produto_id' => $produtoData['produto_id'],
                                 'cliente_id' => $orcamento->cliente_id,
                                 'user_id' => $request->user()->id,
+                                'aprovado_em' => $dataAprovado,
+                                'aprovado_por' => $dataAprovado ? auth()->id() : null,
                             ]);
 
                             $itenscomdesconto = true;
@@ -1831,6 +1930,10 @@ class OrcamentoController extends Controller
                     // Produto novo com preço definido
                     $precoOriginalSemDesconto = (float)($item['preco_original'] ?? $item['preco_unitario'] ?? 0);
                     $quantidade = (float)($item['quantidade'] ?? 0);
+                    if ($quantidade <= 0) {
+                        continue;
+                    }
+
                     $liberarDesconto = isset($item['liberar_desconto']) ? (int)$item['liberar_desconto'] : 1;
                     $tipoDesconto = $item['tipo_desconto'] ?? 'nenhum';
                     $descontoProduto = (float)($item['desconto_produto'] ?? 0);
@@ -1854,16 +1957,32 @@ class OrcamentoController extends Controller
                             $valorUnitarioComDesconto = $precoOriginalSemDesconto - $descontoProduto;
                             $valorComDesconto = $valorUnitarioComDesconto * $quantidade;
 
+                            $percentualItem = $precoOriginalSemDesconto > 0 ? ($descontoProduto / $precoOriginalSemDesconto) * 100 : 0;
+                            $motivoAutoAprovado = null;
+                            $dataAprovado = null;
+
+                            if (!$clienteBloqueado) {
+                                if ($percentualItem <= $margemCliente) {
+                                    $motivoAutoAprovado = "Aprovado pelo limite do cliente (" . number_format($margemCliente, 2, ',', '.') . "%)";
+                                    $dataAprovado = now();
+                                } elseif ($percentualItem <= $margemVendedor) {
+                                    $motivoAutoAprovado = "Aprovado pelo limite do vendedor (" . number_format($margemVendedor, 2, ',', '.') . "%)";
+                                    $dataAprovado = now();
+                                }
+                            }
+
                             $orcamento->descontos()->create([
-                                'motivo' => "Desconto individual de R$ "
+                                'motivo' => ($motivoAutoAprovado ? $motivoAutoAprovado . " - " : "") . "Desconto individual de R$ "
                                     . number_format($descontoProduto, 2, ',', '.')
                                     . " por unidade do produto ID {$item['id']}",
                                 'valor' => $descontoProduto * $quantidade,
-                                'porcentagem' => null,
+                                'porcentagem' => $percentualItem,
                                 'tipo' => 'produto',
                                 'produto_id' => $item['id'],
                                 'cliente_id' => $orcamento->cliente_id,
                                 'user_id' => $request->user()->id,
+                                'aprovado_em' => $dataAprovado,
+                                'aprovado_por' => $dataAprovado ? auth()->id() : null,
                             ]);
 
                             $itenscomdesconto = true;
@@ -1986,13 +2105,28 @@ class OrcamentoController extends Controller
                 }
 
                 if ($totalDescontoPercentual > 0) {
+                    $motivoAutoAprovado = null;
+                    $dataAprovado = null;
+
+                    if (!$clienteBloqueado) {
+                        if ($descontoPercentual <= $margemCliente) {
+                            $motivoAutoAprovado = "Aprovado pelo limite do cliente (" . number_format($margemCliente, 2, ',', '.') . "%)";
+                            $dataAprovado = now();
+                        } elseif ($descontoPercentual <= $margemVendedor) {
+                            $motivoAutoAprovado = "Aprovado pelo limite do vendedor (" . number_format($margemVendedor, 2, ',', '.') . "%)";
+                            $dataAprovado = now();
+                        }
+                    }
+
                     $orcamento->descontos()->create([
-                        'motivo' => 'Desconto percentual aplicado pelo vendedor',
+                        'motivo' => ($motivoAutoAprovado ? $motivoAutoAprovado . " - " : "") . 'Desconto percentual aplicado pelo vendedor',
                         'valor' => $totalDescontoPercentual,
                         'porcentagem' => $descontoPercentual,
                         'tipo' => 'percentual',
                         'cliente_id' => $orcamento->cliente_id,
                         'user_id' => auth()->id(),
+                        'aprovado_em' => $dataAprovado,
+                        'aprovado_por' => $dataAprovado ? auth()->id() : null,
                     ]);
                 }
             }
@@ -2035,26 +2169,31 @@ class OrcamentoController extends Controller
 
             DB::commit();
 
-            // ----------------------------------------------------------------
-            // Verificar necessidade de aprovações
-            // ----------------------------------------------------------------
-            $temDescontoPercentual = $descontoPercentual > 0;
-            $temDescontoEspecifico = $descontoEspecifico > 0;
-            $temQualquerDesconto = $temDescontoPercentual || $temDescontoEspecifico || $itenscomdesconto;
-
-            $descontoAprovadoCliente = (float)($request->desconto_aprovado ?? 0);
-            $descontoVendedor = (float)(auth()->user()->vendedor?->desconto ?? 0);
-
             $necessitaAprovacaoDesconto = $temQualquerDesconto && (
-                $descontoPercentual > $descontoAprovadoCliente ||
-                $descontoVendedor < $descontoPercentual ||
-                $itenscomdesconto
+                $clienteBloqueado ||
+                $descontoPercentual > $maxMargem ||
+                $itenscomdesconto ||
+                $temDescontoEspecifico
             );
 
             // ----------------------------------------------------------------
             // Definir status e redirecionar
             // ----------------------------------------------------------------
-            if (!$temQualquerDesconto && !$necessitaAprovacaoPagamento) {
+            if ($necessitaAprovacaoPagamento) {
+                $orcamento->status = 'Aprovar pagamento';
+                $orcamento->save();
+
+                return redirect()
+                    ->route('orcamentos.show', $orcamento->id)
+                    ->with('info', "Orçamento atualizado (Revisão {$novaVersao})! Aguardando aprovação do meio de pagamento especial.");
+            } elseif ($necessitaAprovacaoDesconto) {
+                $orcamento->status = 'Aprovar desconto';
+                $orcamento->save();
+
+                return redirect()
+                    ->route('orcamentos.show', $orcamento->id)
+                    ->with('warning', "Orçamento atualizado (Revisão {$novaVersao}), mas é necessária a aprovação do desconto.");
+            } else {
                 //  Sem desconto e sem pagamento especial — verifica estoque antes de aprovar
                 if ($temItensSemEstoque) {
                     $orcamento->status = 'Sem estoque';
@@ -2066,27 +2205,6 @@ class OrcamentoController extends Controller
                     // Garante que a reserva de estoque seja atualizada
                     app(\App\Services\EstoqueService::class)->reservarParaOrcamento($orcamento);
                 }
-            } elseif ($necessitaAprovacaoDesconto && $necessitaAprovacaoPagamento) {
-                $orcamento->status = 'Aprovar desconto';
-                $orcamento->save();
-
-                return redirect()
-                    ->route('orcamentos.show', $orcamento->id)
-                    ->with('warning', "Orçamento atualizado (Revisão {$novaVersao}), mas é necessária a aprovação do desconto e do meio de pagamento.");
-            } elseif ($necessitaAprovacaoDesconto) {
-                $orcamento->status = 'Aprovar desconto';
-                $orcamento->save();
-
-                return redirect()
-                    ->route('orcamentos.show', $orcamento->id)
-                    ->with('warning', "Orçamento atualizado (Revisão {$novaVersao}), mas é necessária a aprovação do desconto.");
-            } elseif ($necessitaAprovacaoPagamento) {
-                $orcamento->status = 'Aprovar pagamento';
-                $orcamento->save();
-
-                return redirect()
-                    ->route('orcamentos.show', $orcamento->id)
-                    ->with('info', "Orçamento atualizado (Revisão {$novaVersao})! Aguardando aprovação do meio de pagamento especial.");
             }
 
             // ----------------------------------------------------------------
