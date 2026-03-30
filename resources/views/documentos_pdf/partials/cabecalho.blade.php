@@ -21,7 +21,7 @@
                 <p style="margin:2px 0; font-size:11px; line-height:1.5;">
                     <strong>ACAV</strong> - Comércio de Acessórios LTDA<br/>
                     R. São Luís do Paraitinga, 1338 - Jardim do Trevo - Campinas - SP - CEP: 13030-105<br/>
-                    (19) 3273-3783 &nbsp; (19) 3274-1717 &nbsp;
+                    (19) (19) 3274-1717 &nbsp; (19) 99960-9258 &nbsp;
                     contato@acavacessorios.com.br &nbsp;|&nbsp; www.acavacessorios.com.br
                 </p>
             </div>
