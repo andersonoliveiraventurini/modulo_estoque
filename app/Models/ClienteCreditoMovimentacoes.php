@@ -54,7 +54,28 @@ class ClienteCreditoMovimentacoes extends Model
      */
     public function usuario()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'usuario_id');
+    }
+
+    /**
+     * Alias para o relacionamento de usuário (compatibilidade com views)
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'usuario_id');
+    }
+
+    /**
+     * Relacionamento genérico com a referência (Pagamento ou Orçamento)
+     */
+    public function pagamento()
+    {
+        return $this->belongsTo(Pagamento::class, 'referencia_id');
+    }
+
+    public function orcamento()
+    {
+        return $this->belongsTo(Orcamento::class, 'referencia_id');
     }
 
     /**

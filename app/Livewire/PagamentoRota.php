@@ -409,6 +409,24 @@ class PagamentoRota extends Component
             throw new \Exception('Adicione pelo menos uma forma de pagamento válida.');
         }
 
+        // Validação de Saldo de Crédito (Carteira)
+        $valorCreditoGrid = 0;
+        foreach ($formasValidas as $forma) {
+            $metodo = MetodoPagamento::find($forma['condicao_id']);
+            if ($metodo && $metodo->isCreditoCliente()) {
+                $valorCreditoGrid += (float) $forma['valor'];
+            }
+        }
+
+        $totalCreditoUtilizado = $valorCreditoGrid + $this->valorCreditoAbatido;
+        if ($totalCreditoUtilizado > $this->saldoDisponivel) {
+            throw new \Exception(
+                'Saldo de crédito insuficiente! ' .
+                'Disponível: R$ ' . number_format($this->saldoDisponivel, 2, ',', '.') . ' | ' .
+                'Tentando usar: R$ ' . number_format($totalCreditoUtilizado, 2, ',', '.')
+            );
+        }
+
         // Proteção para cliente bloqueado
         if ($this->isBlocked) {
             foreach ($formasValidas as $forma) {
@@ -461,10 +479,11 @@ class PagamentoRota extends Component
         }
 
         foreach ($formasValidas as $forma) {
+            $metodo = MetodoPagamento::find($forma['condicao_id']);
             $metodosPagamento[] = [
                 'metodo_id'  => $forma['condicao_id'],
                 'valor'      => (float) $forma['valor'],
-                'usa_credito' => false,
+                'usa_credito' => $metodo && $metodo->isCreditoCliente(),
                 'parcelas'   => (int) ($forma['parcelas'] ?? 1),
             ];
         }
@@ -519,6 +538,7 @@ class PagamentoRota extends Component
                     }
 
                     // 3. Prepara os dados para o NOVO registro (ou atualização via re-criação)
+                    $metodo = MetodoPagamento::find($forma['condicao_id']);
                     $dadosItem = [
                         'orcamento_id'          => $this->orcamentoId,
                         'condicao_pagamento_id' => $this->orcamento->condicao_id,
@@ -528,6 +548,7 @@ class PagamentoRota extends Component
                             [
                                 'metodo_id' => $forma['condicao_id'],
                                 'valor'     => $forma['valor'],
+                                'usa_credito' => $metodo && $metodo->isCreditoCliente(),
                                 'parcelas'  => 1,
                             ]
                         ],

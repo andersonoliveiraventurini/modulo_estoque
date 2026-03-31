@@ -133,6 +133,15 @@
                                     </p>
                                 </div>
                             </div>
+                            <div class="flex items-start gap-2">
+                                <x-heroicon-o-gift class="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Crédito Disponível</p>
+                                    <p class="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                                        R$ {{ number_format($saldoDisponivel, 2, ',', '.') }}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

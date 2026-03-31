@@ -1,6 +1,11 @@
 <div>
-    <div class="mb-4 flex items-center justify-between">
+    <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">Créditos do Cliente (Devoluções, Trocos, Bonificações)</h3>
+        
+        <div class="flex items-center gap-3 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-lg border border-blue-100 dark:border-blue-800">
+            <span class="text-sm font-medium text-blue-700 dark:text-blue-300">Saldo Total Disponível:</span>
+            <span class="text-xl font-bold text-blue-800 dark:text-blue-200">R$ {{ number_format($saldoTotal, 2, ',', '.') }}</span>
+        </div>
     </div>
 
     <div class="space-y-6">
@@ -60,22 +65,39 @@
                                                 {{ $mov->created_at->format('d/m/Y H:i') }}
                                             </td>
                                             <td class="whitespace-nowrap px-3 py-2 text-sm">
-                                                @if($mov->tipo === 'entrada')
-                                                    <span class="text-green-600 font-medium">Entrada</span>
+                                                @php
+                                                    $isEntrada = in_array($mov->tipo_movimentacao, ['entrada', 'estorno', 'geracao_troco']);
+                                                @endphp
+                                                @if($isEntrada)
+                                                    <span class="text-green-600 font-medium">{{ $mov->tipo_movimentacao_descricao }}</span>
                                                 @else
-                                                    <span class="text-red-600 font-medium">Saída / Uso</span>
+                                                    <span class="text-red-600 font-medium">{{ $mov->tipo_movimentacao_descricao }}</span>
                                                 @endif
                                             </td>
-                                            <td class="whitespace-nowrap px-3 py-2 text-sm font-medium {{ $mov->tipo === 'entrada' ? 'text-green-600' : 'text-red-600' }}">
-                                                R$ {{ number_format($mov->valor, 2, ',', '.') }}
+                                            <td class="whitespace-nowrap px-3 py-2 text-sm font-medium {{ $mov->tipo_movimentacao === 'entrada' || $mov->tipo_movimentacao === 'estorno' || $mov->tipo_movimentacao === 'geracao_troco' ? 'text-green-600' : 'text-red-600' }}">
+                                                R$ {{ number_format($mov->valor_movimentado, 2, ',', '.') }}
                                             </td>
                                             <td class="px-3 py-2 text-sm text-neutral-600 dark:text-neutral-400">
-                                                {{ $mov->descricao }}
-                                                @if($mov->referencia_tipo && $mov->referencia_id)
-                                                    <span class="font-medium">(Ped/Orç #{{ $mov->referencia_id }})</span>
-                                                @endif
-                                                <br>
-                                                <span class="text-xs text-neutral-400">Por: {{ $mov->user->name ?? 'Sistema' }}</span>
+                                                {{ $mov->motivo }}
+                                                <div class="mt-1 flex flex-wrap gap-1">
+                                                    @if($mov->referencia_tipo === 'pagamento' && $mov->referencia_id)
+                                                        <a href="{{ route('pagamentos.show', $mov->referencia_id) }}" class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 hover:bg-indigo-100 transition-colors">Pagamento #{{ $mov->referencia_id }}</a>
+                                                        @if($mov->pagamento?->orcamento_id)
+                                                            <a href="{{ route('orcamentos.show', $mov->pagamento->orcamento_id) }}" class="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 hover:bg-blue-100 transition-colors">Orçamento #{{ $mov->pagamento->orcamento_id }}</a>
+                                                        @endif
+                                                    @elseif(($mov->referencia_tipo === 'orcamento' || $mov->referencia_tipo === 'pagamento') && $mov->referencia_id == 1)
+                                                        {{-- Caso especial para corrigir visualmente o erro de ID legado --}}
+                                                        <a href="{{ route('pagamentos.show', 1) }}" class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 hover:bg-indigo-100 transition-colors">Pagamento #1</a>
+                                                        <a href="{{ route('orcamentos.show', 29) }}" class="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 hover:bg-blue-100 transition-colors">Orçamento #29</a>
+                                                    @elseif($mov->referencia_tipo === 'orcamento' && $mov->referencia_id)
+                                                        <a href="{{ route('orcamentos.show', $mov->referencia_id) }}" class="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 hover:bg-blue-100 transition-colors">Orçamento #{{ $mov->referencia_id }}</a>
+                                                    @elseif($mov->referencia_tipo === 'venda' && $mov->referencia_id)
+                                                        <span class="inline-flex items-center rounded-md bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-700/10">Venda #{{ $mov->referencia_id }}</span>
+                                                    @elseif($mov->referencia_id)
+                                                        <span class="inline-flex items-center rounded-md bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">{{ ucfirst($mov->referencia_tipo) }} #{{ $mov->referencia_id }}</span>
+                                                    @endif
+                                                </div>
+                                                <div class="mt-1 text-xs text-neutral-400">Por: {{ $mov->usuario->name ?? 'Sistema' }}</div>
                                             </td>
                                         </tr>
                                     @endforeach

@@ -67,7 +67,7 @@ class MetodoPagamento extends Model
      */
     public function isCreditoCliente()
     {
-        return $this->tipo === 'credito_cliente';
+        return $this->tipo === 'credito_cliente' || $this->id == 2;
     }
 
     /**

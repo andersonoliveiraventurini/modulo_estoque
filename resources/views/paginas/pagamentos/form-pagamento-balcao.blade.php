@@ -93,6 +93,12 @@
                                         </p>
                                     </div>
                                 @endif
+                                <div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Crédito Disponível</p>
+                                    <p class="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                        R$ {{ number_format($saldoDisponivel, 2, ',', '.') }}
+                                    </p>
+                                </div>
                             </div>
 
                             @if($condicaoEspecial && $orcamento->outros_meios_pagamento)
@@ -529,6 +535,7 @@
                 const valorTotalOrcamento = {{ $orcamento->valor_total_itens - ($orcamento->totalDescontosAprovados() ?? 0) }};
                 const condicaoPadraoId    = {{ $condicaoPadrao->id ?? 'null' }};
                 const permiteDesconto     = {{ $permiteDescontoBalcao ? 'true' : 'false' }};
+                const saldoDisponivel     = {{ $saldoDisponivel }};
 
                 // Mapa condicao_id → tipo (gerado pelo PHP)
                 const condicaoTipo = {
@@ -596,6 +603,39 @@
                     const troco    = Math.max(0, valorPago - valorFinal);
                     const faltando = Math.max(0, valorFinal - valorPago);
 
+                    // Validação de Saldo de Crédito
+                    let totalCredito = 0;
+                    document.querySelectorAll('.forma-card').forEach(card => {
+                        const select = card.querySelector('.select-condicao');
+                        const input  = card.querySelector('[name$="[valor]"]');
+                        if (!select || !input) return;
+                        const condId = parseInt(select.value);
+                        const tipo = condicaoTipo[condId];
+                        if (tipo === 'credito_cliente' || condId === 2) {
+                            totalCredito += parseFloat(input.value || 0);
+                        }
+                    });
+
+                    const btn = document.getElementById('btnFinalizar');
+                    const alertaCredito = document.getElementById('alertaSaldoInsuficiente');
+                    let saldoExcedido = totalCredito > saldoDisponivel + 0.01;
+
+                    if (saldoExcedido) {
+                        if (!alertaCredito) {
+                            const container = document.getElementById('alertaFaltando').parentNode;
+                            container.insertAdjacentHTML('beforeend', `
+                                <div id="alertaSaldoInsuficiente" class="mt-3 bg-red-600 border-2 border-red-800 rounded-md p-3 text-white animate-pulse">
+                                    <p class="text-sm font-bold">⚠️ Saldo de crédito insuficiente!</p>
+                                    <p class="text-xs font-medium">Disponível: ${fmt(saldoDisponivel)} | Tentando usar: ${fmt(totalCredito)}</p>
+                                </div>
+                            `);
+                        } else {
+                            alertaCredito.querySelector('p:last-child').textContent = `Disponível: ${fmt(saldoDisponivel)} | Tentando usar: ${fmt(totalCredito)}`;
+                        }
+                    } else {
+                        alertaCredito?.remove();
+                    }
+
                     document.getElementById('valorTotal').textContent = fmt(valorFinal);
                     document.getElementById('valorPago').textContent  = fmt(valorPago);
                     document.getElementById('valorTroco').textContent = fmt(troco);
@@ -610,9 +650,8 @@
                         trocoEl.classList.add('text-orange-700', 'dark:text-orange-300');
                     }
 
-                    const btn = document.getElementById('btnFinalizar');
-                    if (faltando > 0.01) {
-                        document.getElementById('alertaFaltando').classList.remove('hidden');
+                    if (faltando > 0.01 || saldoExcedido) {
+                        document.getElementById('alertaFaltando').classList.toggle('hidden', faltando <= 0.01);
                         document.getElementById('alertaPronto').classList.add('hidden');
                         document.getElementById('valorFaltando').textContent = fmt(faltando);
                         btn.disabled = true;

@@ -144,8 +144,11 @@ class PagamentoBalcao extends Component
         foreach ($this->formasPagamento as $index => $forma) {
             if (!empty($forma['condicao_id'])) {
                 $metodo = MetodoPagamento::find($forma['condicao_id']);
+                // Considera crédito do cliente se o tipo for credito_cliente OU se o ID for 2 (Carteira)
                 if ($metodo && $metodo->isCreditoCliente()) {
                     $this->formasPagamento[$index]['usa_credito'] = true;
+                } else {
+                    $this->formasPagamento[$index]['usa_credito'] = false;
                 }
             }
         }
@@ -297,6 +300,24 @@ class PagamentoBalcao extends Component
 
         if (empty($formasValidas)) {
             throw new \Exception('É necessário adicionar pelo menos uma forma de pagamento válida.');
+        }
+
+        // Validação de Saldo de Crédito (Carteira)
+        $valorCreditoGrid = 0;
+        foreach ($formasValidas as $forma) {
+            $metodo = MetodoPagamento::find($forma['condicao_id']);
+            if ($metodo && $metodo->isCreditoCliente()) {
+                $valorCreditoGrid += (float) $forma['valor'];
+            }
+        }
+
+        $totalCreditoUtilizado = $valorCreditoGrid + $this->valorCreditoAbatido;
+        if ($totalCreditoUtilizado > $this->saldoDisponivel) {
+            throw new \Exception(
+                'Saldo de crédito insuficiente! ' .
+                'Disponível: R$ ' . number_format($this->saldoDisponivel, 2, ',', '.') . ' | ' .
+                'Tentando usar: R$ ' . number_format($totalCreditoUtilizado, 2, ',', '.')
+            );
         }
 
         if ($this->valorPago + $this->valorCreditoAbatido < $this->valorComDesconto) {

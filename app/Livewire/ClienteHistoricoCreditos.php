@@ -21,13 +21,16 @@ class ClienteHistoricoCreditos extends Component
 
     public function render()
     {
-        $creditos = ClienteCreditos::with(['usuarioCriacao', 'movimentacoes.user'])
+        $creditos = ClienteCreditos::with(['usuarioCriacao', 'movimentacoes.usuario', 'movimentacoes.pagamento'])
             ->where('cliente_id', $this->clienteId)
             ->latest('created_at')
             ->paginate(10);
 
+        $saldoTotal = app(\App\Services\CreditoService::class)->getSaldoDisponivel($this->clienteId);
+
         return view('livewire.cliente-historico-creditos', [
-            'creditos' => $creditos
+            'creditos' => $creditos,
+            'saldoTotal' => $saldoTotal
         ]);
     }
 }

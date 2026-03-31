@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use App\Services\PagamentoPdfService;
+use App\Services\CreditoService;
 
 class PagamentoController extends Controller
 {
@@ -76,6 +77,10 @@ class PagamentoController extends Controller
         $ativo = strtoupper(trim($body['descricao_situacao_cadastral'] ?? '')) === 'ATIVA';
         $isBlocked = $cliente->bloqueado ?? false;
 
+        // Saldo de crédito do cliente
+        $creditoService = app(CreditoService::class);
+        $saldoDisponivel = $creditoService->getSaldoDisponivel($cliente->id);
+
         return view('paginas.pagamentos.form-pagamento-balcao', compact(
             'orcamento',
             'condicoes',
@@ -85,7 +90,8 @@ class PagamentoController extends Controller
             'condicaoPadrao',
             'condicaoEspecial',
             'precisaNotaFiscal',
-            'permiteDescontoBalcao'
+            'permiteDescontoBalcao',
+            'saldoDisponivel'
         ));
     }
 
@@ -226,7 +232,7 @@ class PagamentoController extends Controller
             // ── Cria o pagamento ──────────────────────────────────────────
             $pagamento = Pagamento::create([
                 'orcamento_id'          => $orcamentoId,
-                'condicao_pagamento_id' => $orcamento->condicao_id,
+                'condicao_pagamento_id' => $validated['formas_pagamento'][0]['condicao_id'], // Usa a primeira forma como principal
                 'desconto_aplicado'     => $descontoOriginal,
                 'desconto_balcao'       => $descontoBalcao,
                 'valor_final'           => $valorFinal,
@@ -245,11 +251,13 @@ class PagamentoController extends Controller
                 $usaCredito = $cond?->isCreditoCliente() ?? false;
  
                 if ($usaCredito) {
-                    $this->utilizarCreditos(
+                    app(CreditoService::class)->utilizarCreditos(
                         $orcamento->cliente_id,
-                        $forma['valor'],
-                        $pagamento->id,
-                        'orcamento'
+                        (float) $forma['valor'],
+                        $pagamento->id, // Voltamos para o ID do pagamento para rastreabilidade financeira
+                        'pagamento',    // Alteramos o tipo para 'pagamento'
+                        Auth::id(),
+                        "Pagamento do Orçamento #{$orcamento->id}"
                     );
                 }
  
@@ -443,7 +451,7 @@ class PagamentoController extends Controller
     }
 
     /**
-     * Utiliza créditos do cliente em ordem FIFO por validade.
+     * @deprecated Use app(CreditoService::class)->utilizarCreditos()
      */
     protected function utilizarCreditos(
         int $clienteId,
@@ -451,54 +459,13 @@ class PagamentoController extends Controller
         int $pagamentoId,
         string $referenciaTipo
     ): array {
-        $creditos = ClienteCreditos::where('cliente_id', $clienteId)
-            ->where('status', 'ativo')
-            ->where('valor_disponivel', '>', 0)
-            ->where(fn($q) => $q->whereNull('data_validade')->orWhere('data_validade', '>=', now()))
-            ->orderBy('data_validade')
-            ->orderBy('created_at')
-            ->get();
-
-        if ($creditos->isEmpty()) {
-            throw new \Exception('Cliente não possui créditos disponíveis');
-        }
-
-        $saldoTotal = $creditos->sum('valor_disponivel');
-        if ($saldoTotal < $valorUtilizar) {
-            throw new \Exception('Créditos insuficientes. Disponível: R$ ' . number_format($saldoTotal, 2, ',', '.'));
-        }
-
-        $valorRestante      = $valorUtilizar;
-        $creditosUtilizados = [];
-
-        foreach ($creditos as $credito) {
-            if ($valorRestante <= 0) break;
-
-            $valorUsar      = min($credito->valor_disponivel, $valorRestante);
-            $saldoAnterior  = $credito->valor_disponivel;
-            $saldoPosterior = $saldoAnterior - $valorUsar;
-
-            ClienteCreditoMovimentacoes::create([
-                'credito_id'        => $credito->id,
-                'cliente_id'        => $clienteId,
-                'tipo_movimentacao' => 'utilizacao',
-                'valor_movimentado' => $valorUsar,
-                'saldo_anterior'    => $saldoAnterior,
-                'saldo_posterior'   => $saldoPosterior,
-                'motivo'            => "Utilização no pagamento #{$pagamentoId}",
-                'referencia_tipo'   => $referenciaTipo,
-                'referencia_id'     => $pagamentoId,
-                'usuario_id'        => Auth::id(),
-            ]);
-
-            $credito->valor_disponivel = $saldoPosterior;
-            if ($saldoPosterior == 0) $credito->status = 'utilizado';
-            $credito->save();
-
-            $creditosUtilizados[] = ['credito_id' => $credito->id, 'valor_usado' => $valorUsar];
-            $valorRestante -= $valorUsar;
-        }
-
-        return $creditosUtilizados;
-    }
-}
+        return app(CreditoService::class)->utilizarCreditos(
+            $clienteId,
+            $valorUtilizar,
+            $pagamentoId,
+            $referenciaTipo,
+            Auth::id(),
+            "Utilização no pagamento #{$pagamentoId}"
+         );
+     }
+ }
