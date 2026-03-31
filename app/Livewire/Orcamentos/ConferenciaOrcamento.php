@@ -48,6 +48,7 @@ class ConferenciaOrcamento extends Component
 
     public ?Conferencia $conferencia      = null;
     public $concludedConferencias         = null;
+    public $concludedBatches              = null;
     public $activeSeparationBatches       = [];
     public $orcamentoItens                = [];
 
@@ -119,6 +120,12 @@ class ConferenciaOrcamento extends Component
 
         $this->activeSeparationBatches = PickingBatch::where('orcamento_id', $this->orcamento->id)
             ->whereIn('status', ['aberto', 'em_separacao'])
+            ->get();
+
+        $this->concludedBatches = PickingBatch::with(['items.produto', 'criadoPor'])
+            ->where('orcamento_id', $this->orcamento->id)
+            ->where('status', 'concluido')
+            ->orderByDesc('finished_at')
             ->get();
 
         $this->orcamentoItens = $this->orcamento->itens()->with('produto')->get();
@@ -429,6 +436,7 @@ class ConferenciaOrcamento extends Component
             'orcamento'             => $this->orcamento,
             'conferencia'           => $this->conferencia,
             'concludedConferencias' => $this->concludedConferencias,
+            'concludedBatches'      => $this->concludedBatches,
             'podeEditar'            => $this->podeEditar(),
             'embalagemOk'           => $this->embalagemPreenchida(),
         ]);

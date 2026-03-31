@@ -185,22 +185,29 @@
                                     $faltaSepararTotal = max(0, $solicitadoTotalResource - $totalConfirmadoSep);
                                 @endphp
 
-                                <div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg space-y-1">
-                                    <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                                <div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg space-y-2 border border-blue-100 dark:border-blue-800/50 shadow-sm">
+                                    {{-- Total Solicitado - Estilo discreto mas claro --}}
+                                    <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400">
                                         <span>Total Solicitado:</span>
                                         <span class="font-bold">{{ rtrim(rtrim(number_format($solicitadoTotalResource, 3, ',', '.'), '0'), ',') }}</span>
                                     </div>
-                                    <div class="flex justify-between text-xs text-blue-700 dark:text-blue-300">
-                                        <span>Já Separado:</span>
-                                        <span class="font-semibold">
+
+                                    {{-- Já Separado - Destaque visual melhorado (WCAG AA) --}}
+                                    <div class="flex justify-between items-center text-xs text-blue-800 dark:text-blue-200 bg-blue-100/60 dark:bg-blue-800/40 p-1.5 rounded-md border border-blue-200 dark:border-blue-700">
+                                        <span class="font-semibold uppercase tracking-tighter">Já Separado:</span>
+                                        <span class="font-bold text-sm">
                                             {{ rtrim(rtrim(number_format($jaSeparadoAnterior, 3, ',', '.'), '0'), ',') }} + 
                                             {{ rtrim(rtrim(number_format($separadoAgora, 3, ',', '.'), '0'), ',') }} = 
-                                            {{ rtrim(rtrim(number_format($totalConfirmadoSep, 3, ',', '.'), '0'), ',') }}
+                                            <span class="text-blue-900 dark:text-blue-50 underline decoration-2 decoration-blue-400/50 underline-offset-2">
+                                                {{ rtrim(rtrim(number_format($totalConfirmadoSep, 3, ',', '.'), '0'), ',') }}
+                                            </span>
                                         </span>
                                     </div>
-                                    <div class="flex justify-between text-sm {{ $faltaSepararTotal > 0 ? 'text-amber-600' : 'text-emerald-600' }} font-bold border-t border-blue-100 dark:border-blue-800 pt-1">
-                                        <span>Falta Separar:</span>
-                                        <span>{{ rtrim(rtrim(number_format($faltaSepararTotal, 3, ',', '.'), '0'), ',') }}</span>
+
+                                    {{-- Falta Separar - Destaque para atenção se > 0 --}}
+                                    <div class="flex justify-between items-center text-sm {{ $faltaSepararTotal > 0 ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-emerald-700 bg-emerald-50 border-emerald-200' }} dark:bg-opacity-10 dark:border-opacity-20 font-bold border p-1.5 rounded-md shadow-inner">
+                                        <span class="uppercase tracking-tighter text-[10px]">Falta Separar:</span>
+                                        <span class="text-base">{{ rtrim(rtrim(number_format($faltaSepararTotal, 3, ',', '.'), '0'), ',') }}</span>
                                     </div>
                                 </div>
                                 <div class="mt-2 text-xs text-gray-400">
@@ -210,17 +217,32 @@
                             <td class="px-4 py-3 align-top">
                                 {{-- Ações de separação (igual para ambos os tipos) --}}
                                 <div class="flex flex-col gap-2">
-                                    <div class="flex flex-wrap items-start gap-2">
-                                        <input type="number" step="any" min="0"
-                                               wire:model="inputs.{{ $it->id }}.qty"
-                                               class="w-24 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500">
-                                        <input type="text" placeholder="Motivo (se não separar)"
-                                               wire:model="inputs.{{ $it->id }}.motivo"
-                                               class="flex-1 min-w-[200px] rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500">
-                                        <button wire:click="salvarItem({{ $it->id }})"
-                                                class="px-3 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm transition-colors">
-                                            Salvar
-                                        </button>
+                                    <div class="flex flex-wrap items-stretch gap-2">
+                                        {{-- Campo de Quantidade - Destaque máximo para o separador --}}
+                                        <div class="flex flex-col">
+                                            <label class="text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400 mb-0.5 ml-1">Qtd p/ Embalar</label>
+                                            <input type="number" step="any" min="0"
+                                                wire:model="inputs.{{ $it->id }}.qty"
+                                                class="w-28 h-11 rounded-md border-2 border-indigo-400 dark:border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20 text-gray-900 dark:text-gray-100 font-bold text-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 hover:border-indigo-500 transition-all shadow-sm disabled:opacity-50 disabled:bg-gray-100"
+                                                placeholder="0">
+                                        </div>
+
+                                        {{-- Campo de Motivo --}}
+                                        <div class="flex-1 min-w-[200px] flex flex-col">
+                                            <label class="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-0.5 ml-1">Motivo (se divergente)</label>
+                                            <input type="text" placeholder="Opcional..."
+                                                wire:model="inputs.{{ $it->id }}.motivo"
+                                                class="w-full h-11 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500">
+                                        </div>
+
+                                        {{-- Botão Salvar --}}
+                                        <div class="flex flex-col justify-end">
+                                            <button wire:click="salvarItem({{ $it->id }})"
+                                                    class="h-11 px-4 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold shadow-md transition-all active:scale-95 flex items-center gap-2">
+                                                <x-heroicon-o-check-circle class="w-5 h-5" />
+                                                Salvar
+                                            </button>
+                                        </div>
                                     </div>
                                     @if ($it->separado_por_id)
                                         <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -269,37 +291,83 @@
         {{-- SEÇÃO DE EMBALAGEM - Antes de concluir o lote --}}
         {{-- Liberado para: orçamentos normais Aprovados (dentro da validade) OU encomendas com status Pago --}}
         @if ($orcamento->validade >= now() || in_array($orcamento->status, ['Aprovado']) || ($orcamento->encomenda != null && $orcamento->status === 'Pago'))
-            <div class="mt-6 rounded-lg border bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
-                <div class="p-4">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Informações de Embalagem</h3>
-                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                        Declare como foram armazenados os {{ $batch->items->count() }} itens presentes neste lote:
-                    </p>
-                    <div class="flex flex-col gap-3 md:flex-row md:items-end">
-                        <div class="flex-1">
-                            <label for="caixas" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Caixas</label>
+            <div class="mt-8 rounded-xl border-2 border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/30 dark:bg-emerald-900/10 overflow-hidden shadow-sm">
+                <div class="p-5">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-2 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg text-emerald-600 dark:text-emerald-400">
+                            <x-heroicon-o-archive-box class="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">Informações de Embalagem</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                Declare como foram armazenados os <span class="font-bold text-emerald-700 dark:text-emerald-400">{{ $batch->items->count() }}</span> itens deste lote:
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        {{-- Card Caixas --}}
+                        <div class="relative group bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:border-emerald-400 dark:hover:border-emerald-500 transition-all">
+                            <label for="caixas" class="flex items-center gap-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">
+                                <x-heroicon-o-cube class="w-4 h-4 text-emerald-500" />
+                                Caixas
+                            </label>
                             <input type="number" id="caixas" wire:model="caixas" min="0"
-                                class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500" />
+                                class="w-full text-2xl font-bold bg-transparent border-none focus:ring-0 p-0 text-gray-900 dark:text-gray-100 placeholder-gray-300"
+                                placeholder="0" />
+                            <div class="absolute bottom-0 left-0 h-1 w-0 group-focus-within:w-full bg-emerald-500 transition-all duration-300"></div>
                         </div>
-                        <div class="flex-1">
-                            <label for="sacos" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Sacos</label>
+
+                        {{-- Card Sacos --}}
+                        <div class="relative group bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:border-emerald-400 dark:hover:border-emerald-500 transition-all">
+                            <label for="sacos" class="flex items-center gap-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">
+                                <x-heroicon-o-shopping-bag class="w-4 h-4 text-emerald-500" />
+                                Sacos
+                            </label>
                             <input type="number" id="sacos" wire:model="sacos" min="0"
-                                class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500" />
+                                class="w-full text-2xl font-bold bg-transparent border-none focus:ring-0 p-0 text-gray-900 dark:text-gray-100 placeholder-gray-300"
+                                placeholder="0" />
+                            <div class="absolute bottom-0 left-0 h-1 w-0 group-focus-within:w-full bg-emerald-500 transition-all duration-300"></div>
                         </div>
-                        <div class="flex-1">
-                            <label for="sacolas" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Sacolas</label>
+
+                        {{-- Card Sacolas --}}
+                        <div class="relative group bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:border-emerald-400 dark:hover:border-emerald-500 transition-all">
+                            <label for="sacolas" class="flex items-center gap-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">
+                                <x-heroicon-o-hand-raised class="w-4 h-4 text-emerald-500" />
+                                Sacolas
+                            </label>
                             <input type="number" id="sacolas" wire:model="sacolas" min="0"
-                                class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500" />
+                                class="w-full text-2xl font-bold bg-transparent border-none focus:ring-0 p-0 text-gray-900 dark:text-gray-100 placeholder-gray-300"
+                                placeholder="0" />
+                            <div class="absolute bottom-0 left-0 h-1 w-0 group-focus-within:w-full bg-emerald-500 transition-all duration-300"></div>
                         </div>
-                        <div class="flex-1">
-                            <label for="outros" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Outros</label>
+
+                        {{-- Card Outros --}}
+                        <div class="relative group bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:border-emerald-400 dark:hover:border-emerald-500 transition-all">
+                            <label for="outros" class="flex items-center gap-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">
+                                <x-heroicon-o-ellipsis-horizontal-circle class="w-4 h-4 text-emerald-500" />
+                                Outros
+                            </label>
                             <input type="text" id="outros" wire:model="outros" placeholder="Ex: Pallets"
-                                class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500" />
+                                class="w-full text-lg font-semibold bg-transparent border-none focus:ring-0 p-0 text-gray-900 dark:text-gray-100 placeholder-gray-400" />
+                            <div class="absolute bottom-0 left-0 h-1 w-0 group-focus-within:w-full bg-emerald-500 transition-all duration-300"></div>
                         </div>
+                    </div>
+
+                    <div class="flex justify-end">
                         <button wire:click="concluirLote" wire:loading.attr="disabled"
-                            class="px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-sm transition-colors disabled:opacity-50">
-                            <span wire:loading.remove wire:target="concluirLote">Concluir Lote</span>
-                            <span wire:loading wire:target="concluirLote">Concluindo...</span>
+                            class="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-base shadow-lg shadow-emerald-200 dark:shadow-none transition-all active:scale-95 disabled:opacity-50">
+                            <span wire:loading.remove wire:target="concluirLote" class="flex items-center gap-2">
+                                <x-heroicon-o-check-badge class="w-6 h-6" />
+                                Concluir Lote de Separação
+                            </span>
+                            <span wire:loading wire:target="concluirLote" class="flex items-center gap-2">
+                                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Processando...
+                            </span>
                         </button>
                     </div>
                     @error('batch')

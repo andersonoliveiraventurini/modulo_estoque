@@ -87,6 +87,103 @@
         </div>
     </div>
 
+    {{-- ═══════════════════════ HISTÓRICO DE SEPARAÇÃO ════════════════════════ --}}
+    @if ($concludedBatches && $concludedBatches->isNotEmpty())
+        <div class="mb-8">
+            <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-3">
+                Histórico de Separação e Embalagem
+            </h3>
+            <div class="space-y-4" x-data="{ openBatch: null }">
+                @foreach ($concludedBatches as $cBatch)
+                    <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden transition-all duration-200">
+                        <button @click="openBatch = openBatch === {{ $cBatch->id }} ? null : {{ $cBatch->id }}"
+                                class="w-full flex justify-between items-center p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 uppercase tracking-tighter">
+                                        Lote #{{ $cBatch->id }}
+                                    </span>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">
+                                        • Concluído em {{ optional($cBatch->finished_at)->format('d/m/Y H:i') }}
+                                        por {{ optional($cBatch->criadoPor)->name ?? 'N/A' }}
+                                    </span>
+                                </div>
+                                <div class="flex flex-wrap gap-3 mt-2">
+                                    @if($cBatch->qtd_caixas)
+                                        <div class="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/30 rounded text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                                            <x-heroicon-o-cube class="w-3.5 h-3.5" />
+                                            {{ $cBatch->qtd_caixas }} caixas
+                                        </div>
+                                    @endif
+                                    @if($cBatch->qtd_sacos)
+                                        <div class="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/30 rounded text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                                            <x-heroicon-o-shopping-bag class="w-3.5 h-3.5" />
+                                            {{ $cBatch->qtd_sacos }} sacos
+                                        </div>
+                                    @endif
+                                    @if($cBatch->qtd_sacolas)
+                                        <div class="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/30 rounded text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                                            <x-heroicon-o-hand-raised class="w-3.5 h-3.5" />
+                                            {{ $cBatch->qtd_sacolas }} sacolas
+                                        </div>
+                                    @endif
+                                    @if($cBatch->outros_embalagem)
+                                        <div class="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/30 rounded text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                                            <x-heroicon-o-ellipsis-horizontal-circle class="w-3.5 h-3.5" />
+                                            {{ $cBatch->outros_embalagem }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-400 transform transition-transform duration-200"
+                                :class="{ 'rotate-180': openBatch === {{ $cBatch->id }} }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        
+                        <div x-show="openBatch === {{ $cBatch->id }}" x-collapse
+                             class="border-t border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/30 p-4">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead>
+                                        <tr class="text-gray-500 dark:text-gray-400 uppercase tracking-tighter">
+                                            <th class="pb-2 font-bold">Produto</th>
+                                            <th class="pb-2 font-bold text-center">Qtd Separada</th>
+                                            <th class="pb-2 font-bold text-right">Motivo/Obs</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                        @foreach ($cBatch->items as $cItem)
+                                            <tr>
+                                                <td class="py-2 text-gray-800 dark:text-gray-200">
+                                                    @if ($cItem->is_encomenda)
+                                                        <span class="font-bold">{{ $cItem->descricao_encomenda }}</span>
+                                                        <span class="text-[10px] text-purple-500 ml-1">ENCOMENDA</span>
+                                                    @else
+                                                        <span class="font-bold">{{ $cItem->produto->nome ?? '—' }}</span>
+                                                        <div class="text-[10px] text-gray-400 uppercase tracking-tighter">{{ $cItem->produto->sku ?? '' }}</div>
+                                                    @endif
+                                                </td>
+                                                <td class="py-2 text-center">
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-bold">
+                                                        {{ rtrim(rtrim(number_format($cItem->qty_separada, 3, ',', '.'), '0'), ',') }}
+                                                    </span>
+                                                </td>
+                                                <td class="py-2 text-right italic text-gray-500 dark:text-gray-400">
+                                                    {{ $cItem->motivo_nao_separado ?: '—' }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     {{-- ═══════════════════════ LOTES EM SEPARAÇÃO ══════════════════════════ --}}
     @if($activeSeparationBatches && $activeSeparationBatches->isNotEmpty())
         <div class="mb-8 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800/50">
