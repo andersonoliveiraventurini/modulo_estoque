@@ -1157,7 +1157,8 @@ class OrcamentoController extends Controller
                 });
 
                 if ($itensSemEstoque->isNotEmpty()) {
-                    $orcamento->status = 'Sem estoque';
+                    $orcamento->status          = 'Sem estoque';
+                    $orcamento->workflow_status = null; // ✅ Limpa workflow ao travar por estoque
                     $orcamento->save();
 
                     $nomes = $itensSemEstoque
@@ -1166,8 +1167,8 @@ class OrcamentoController extends Controller
 
                     Log::info("Bloqueio de aprovação por falta de estoque no orçamento #{$id}: {$nomes}");
                     return response()->json([
-                        'message' => "Estoque insuficiente para: {$nomes}. Status alterado para \"Sem estoque\".",
-                    ], 422);
+                        'message' => "Atenção: Não há estoque suficiente para os itens: {$nomes}. O status do orçamento foi alterado para \"Sem estoque\".",
+                    ]);
                 }
             }
 
@@ -1177,14 +1178,17 @@ class OrcamentoController extends Controller
 
             if ($status === 'Aprovado') {
                 $orcamento->workflow_status = 'aguardando_separacao';
+            } elseif ($status === 'Pendente' || $status === 'Sem estoque') {
+                $orcamento->workflow_status = null; // ✅ Limpa workflow ao voltar para Pendente ou Sem estoque
             }
 
             $orcamento->save();
 
 
-            // ── PENDENTE — só salva e retorna ────────────────────────────────────
-            if ($status === 'Pendente') {
-                return response()->json(['message' => 'Status atualizado para Pendente com sucesso!']);
+            // ── PENDENTE / SEM ESTOQUE ───────────────────────────────────────────
+            if ($status === 'Pendente' || $status === 'Sem estoque') {
+                $orcamento->cancelarLoteDeSeparacaoAtivo();
+                return response()->json(['message' => "Status atualizado para {$status} com sucesso!"]);
             }
 
             // ── CANCELADO / REJEITADO / EXPIRADO ─────────────────────────────────

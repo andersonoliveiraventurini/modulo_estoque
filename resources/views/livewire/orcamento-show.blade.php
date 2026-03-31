@@ -23,10 +23,13 @@
                 <span class="text-sm text-gray-500">Status atual:</span>
                 <select wire:model="status" wire:change="atualizarStatus"
                         class="border border-gray-300 rounded px-2 py-1 text-sm bg-white dark:bg-zinc-800">
-                    @foreach(['Em análise','Aprovado','Reprovado','Cancelado'] as $s)
+                    @foreach(['Em análise','Aprovado','Reprovado','Cancelado', 'Sem estoque'] as $s)
                         <option value="{{ $s }}">{{ $s }}</option>
                     @endforeach
                 </select>
+                @error('status')
+                    <span class="text-xs text-red-500 font-medium max-w-[200px] text-right">{{ $message }}</span>
+                @enderror
             </div>
         </div>
     </div>

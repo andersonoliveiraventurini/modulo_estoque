@@ -196,7 +196,23 @@
                         <div class="lg:w-72 flex-shrink-0">
                             <div class="space-y-4">
 
-                                {{-- ── APROVAR DESCONTO ── --}}
+                                @php
+                                    // Cálculo global de itens sem estoque para uso em múltiplas seções
+                                    $itensSemEstoqueViewGlobal = $orcamento->encomenda ? collect() : $orcamento->itens->filter(function ($item) use ($orcamento) {
+                                        $produto = $item->produto;
+                                        if (!$produto) {
+                                            return is_null($item->produto_id) ? false : true;
+                                        }
+                                        $reservadoOutros = \App\Models\EstoqueReserva::where('produto_id', $produto->id)
+                                            ->where('status', 'ativa')
+                                            ->where('orcamento_id', '!=', $orcamento->id)
+                                            ->sum('quantidade');
+                                        $disponivel = max(0, ($produto->estoque_atual ?? 0) - $reservadoOutros);
+                                        return $disponivel < $item->quantidade;
+                                    });
+                                @endphp
+
+                                {{-- ── STATUS: APROVAR DESCONTO ── --}}
                                 @if ($orcamento->status === 'Aprovar desconto')
                                     <div class="space-y-3">
                                         <div class="flex items-center gap-2">
@@ -246,12 +262,17 @@
                                 @elseif ($orcamento->status === 'Sem estoque')
                                     @php
                                         // Itens pendentes / sem estoque: produtos com falta + itens sem produto (ex.: encomenda listados para informação)
-                                        $itensSemEstoqueView = $orcamento->itens->filter(function ($item) {
+                                        $itensSemEstoqueView = $orcamento->encomenda ? collect() : $orcamento->itens->filter(function ($item) use ($orcamento) {
                                             $produto = $item->produto;
                                             if (!$produto) {
-                                                return true;
+                                                return is_null($item->produto_id) ? false : true;
                                             }
-                                            $disponivel = ($produto->estoque_atual ?? 0) - ($produto->estoque_web ?? 0);
+                                            // Regra unificada: Estoque Atual - Reservas de OUTROS orçamentos
+                                            $reservadoOutros = \App\Models\EstoqueReserva::where('produto_id', $produto->id)
+                                                ->where('status', 'ativa')
+                                                ->where('orcamento_id', '!=', $orcamento->id)
+                                                ->sum('quantidade');
+                                            $disponivel = max(0, ($produto->estoque_atual ?? 0) - $reservadoOutros);
                                             return $disponivel < $item->quantidade;
                                         });
                                         $ehEncomendaSemProdutos =
@@ -282,12 +303,16 @@
                                                 @foreach ($itensSemEstoqueView as $item)
                                                     @php
                                                         $prod = $item->produto;
-                                                        $disponivel = $prod
-                                                            ? ($prod->estoque_atual ?? 0) - ($prod->estoque_web ?? 0)
-                                                            : 0;
-                                                        $faltam = $prod
-                                                            ? max(0, $item->quantidade - $disponivel)
-                                                            : (int) $item->quantidade;
+                                                        if ($prod) {
+                                                            $reservadoOutros = \App\Models\EstoqueReserva::where('produto_id', $prod->id)
+                                                                ->where('status', 'ativa')
+                                                                ->where('orcamento_id', '!=', $orcamento->id)
+                                                                ->sum('quantidade');
+                                                            $disponivel = max(0, ($prod->estoque_atual ?? 0) - $reservadoOutros);
+                                                            $faltam = max(0, $item->quantidade - $disponivel);
+                                                        } else {
+                                                            $faltam = (int) $item->quantidade;
+                                                        }
                                                     @endphp
                                                     <li
                                                         class="flex items-center justify-between text-xs bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded px-2 py-1">
@@ -461,6 +486,19 @@
                                                     <p class="text-xs text-neutral-500 dark:text-neutral-400">
                                                         💡 Selecione o novo status e clique em <strong>Salvar</strong> para alterar.
                                                     </p>
+
+                                                    {{-- Aviso permanente de falta de estoque --}}
+                                                    @if($itensSemEstoqueViewGlobal->isNotEmpty() && $orcamento->status !== 'Aprovado')
+                                                        <div class="mt-3 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-2 animate-pulse">
+                                                            <x-heroicon-o-exclamation-triangle class="w-4 h-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                                                            <div>
+                                                                <p class="text-[10px] font-bold text-red-700 dark:text-red-400 uppercase tracking-tight">Bloqueio de Aprovação</p>
+                                                                <p class="text-[11px] text-red-600 dark:text-red-300 leading-tight">
+                                                                    Existem <strong>{{ $itensSemEstoqueViewGlobal->count() }} item(ns)</strong> sem saldo suficiente. A aprovação não será permitida até que o estoque seja regularizado.
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    @endif
                                                 </form>
 
                                                 @if ($orcamento->encomenda && $orcamento->status === 'Aprovado')
@@ -543,6 +581,17 @@
                                                 <span
                                                     class="w-1.5 h-1.5 rounded-full bg-current opacity-70 {{ $badge['dot'] ?? '' }}"></span>
                                                 {{ $badge['label'] }}
+                                            </span>
+                                        </div>
+                                    @elseif($orcamento->status === 'Sem estoque')
+                                        <div>
+                                            <p
+                                                class="text-xs font-semibold text-red-500 dark:text-red-400 uppercase tracking-wider mb-1.5">
+                                                Logística</p>
+                                            <span
+                                                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200 border border-red-200 dark:border-red-800">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-current opacity-70"></span>
+                                                Bloqueado por Estoque
                                             </span>
                                         </div>
                                     @endif
@@ -1395,9 +1444,15 @@
                         var emsg = (err && err.message) ? err.message :
                             'Não foi possível atualizar o status.';
                         Swal.fire({
-                            title: 'Erro',
+                            title: 'Atenção',
                             text: emsg,
-                            icon: 'error'
+                            icon: 'warning' // Mudado para warning para ser menos 'erro de sistema' e mais 'regra de negócio'
+                        }).then(function() {
+                            // Recarrega a página mesmo em erro de validação (422), 
+                            // pois o status pode ter sido alterado para 'Sem estoque' no backend
+                            if (err.status === 422) {
+                                window.location.reload();
+                            }
                         });
                         setLoading(btn, false);
                     });

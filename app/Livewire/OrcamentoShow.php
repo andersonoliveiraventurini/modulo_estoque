@@ -46,15 +46,27 @@ class OrcamentoShow extends Component
             }
 
             if (!empty($itensSemEstoque)) {
+                $this->orcamento->update([
+                    'status' => 'Sem estoque',
+                    'workflow_status' => null
+                ]);
+                $this->status = 'Sem estoque';
                 $this->addError(
                     'status',
-                    'Estoque insuficiente: ' . implode(' | ', $itensSemEstoque)
+                    'Estoque insuficiente: ' . implode(' | ', $itensSemEstoque) . '. O status foi alterado para "Sem estoque".'
                 );
                 return;
             }
         }
 
-        $this->orcamento->update(['status' => $this->status]);
+        $updateData = ['status' => $this->status];
+        if ($this->status === 'Aprovado') {
+            $updateData['workflow_status'] = 'aguardando_separacao';
+        } elseif (in_array($this->status, ['Pendente', 'Sem estoque', 'Cancelado', 'Rejeitado'])) {
+            $updateData['workflow_status'] = null;
+        }
+
+        $this->orcamento->update($updateData);
         $this->dispatch('notify', 'Status atualizado com sucesso!');
     }
 
