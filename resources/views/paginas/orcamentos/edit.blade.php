@@ -318,8 +318,8 @@
                                                 <td class="px-3 py-2 border">{{ $item->produto->id }}</td>
                                                 <td class="px-3 py-2 border">{{ $item->produto->nome }}</td>
                                                 <td class="px-3 py-2 border">{{ $item->produto->part_number ?? '' }}</td>
-                                                <td class="px-3 py-2 border">{{ $item->produto->fornecedor->nome ?? '' }}</td>
-                                                <td class="px-3 py-2 border">{{ $item->produto->cor ?? '' }}</td>
+                                                <td class="px-3 py-2 border">{{ $item->produto->fornecedor->nome_fantasia ?? '' }}</td>
+                                                <td class="px-3 py-2 border">{{ $item->produto->cor->nome ?? '' }}</td>
                                                 <td class="px-3 py-2 border">
                                                     @if($item->produto->liberar_desconto)
                                                         <div class="flex flex-col gap-1">
@@ -329,7 +329,7 @@
                                                                 onchange="alterarPrecoProdutoOriginal({{ $loop->index }}, this.value)"
                                                                 class="input-valor-unitario w-24 border rounded px-2 py-1 text-sm" />
                                                             @if($descontoProduto > 0)
-                                                                <small class="text-xs text-gray-500">Original: R$ {{ number_format($valorUnitario + $descontoProduto, 2, ',', '.') }}</small>
+                                                                <small class="text-xs text-gray-500">Original: R$ {{ number_format($valorUnitario, 2, ',', '.') }}</small>
                                                             @endif
                                                         </div>
                                                     @else
@@ -697,6 +697,7 @@
     const cores = @json($cores);
     const fornecedores = @json($fornecedores);
     const oldItensRaw = @json($itensParaJs ?? []);
+    let totalProdutosExistentes = {{ $orcamento->itens->whereNotNull('produto_id')->count() }};
     let itemIndex = oldItensRaw.length;
 
     window.vidroIndex = 0;
@@ -965,6 +966,7 @@
         const descontoPercentual = obterDescontoAplicado();
 
         window.produtos.forEach((p, i) => {
+            const index = totalProdutosExistentes + i;
             const subtotal = p.preco * p.quantidade;
             let subtotalComDesconto;
             let tipoDesconto = 'nenhum';
@@ -983,12 +985,15 @@
             row.className = p.liberarDesconto === 0 ? 'bg-red-50 dark:bg-red-900/10' : '';
             row.innerHTML = `
                 <td class="px-3 py-2 border">
-                    <input type="hidden" name="itens[${i}][id]" value="${p.id}">
-                    <input type="hidden" name="itens[${i}][nome]" value="${p.nome}">
-                    <input type="hidden" name="itens[${i}][preco_original]" value="${p.precoOriginal}">
-                    <input type="hidden" name="itens[${i}][liberar_desconto]" value="${p.liberarDesconto}">
-                    <input type="hidden" name="itens[${i}][desconto_produto]" value="${p.descontoProduto}">
-                    <input type="hidden" name="itens[${i}][tipo_desconto]" value="${tipoDesconto}">
+                    <input type="hidden" name="produtos[${index}][produto_id]" value="${p.id}">
+                    <input type="hidden" name="produtos[${index}][nome]" value="${p.nome}">
+                    <input type="hidden" name="produtos[${index}][preco_original]" value="${p.precoOriginal}">
+                    <input type="hidden" name="produtos[${index}][liberar_desconto]" value="${p.liberarDesconto}">
+                    <input type="hidden" name="produtos[${index}][desconto_produto]" value="${p.descontoProduto}">
+                    <input type="hidden" name="produtos[${index}][tipo_desconto]" value="${tipoDesconto}">
+                    <input type="hidden" name="produtos[${index}][subtotal]" class="input-subtotal" value="${subtotal.toFixed(2)}">
+                    <input type="hidden" name="produtos[${index}][subtotal_com_desconto]" class="input-subtotal-com-desconto" value="${subtotalComDesconto.toFixed(2)}">
+                    <input type="hidden" name="produtos[${index}][preco_unitario_com_desconto]" class="input-preco-unitario-com-desconto" value="${(subtotalComDesconto / p.quantidade).toFixed(2)}">
                     ${p.id}
                 </td>
                 <td class="px-3 py-2 border">${escaparHTML(p.nome)}</td>
@@ -996,20 +1001,20 @@
                 <td class="px-3 py-2 border">${escaparHTML(p.fornecedor)}</td>
                 <td class="px-3 py-2 border">${escaparHTML(p.cor)}</td>
                 <td class="px-3 py-2 border">
-                    <input type="number" step="0.01" value="${p.preco.toFixed(2)}" 
-                        ${p.liberarDesconto === 0 ? 'disabled' : ''}
+                    <input type="number" step="0.01" name="produtos[${index}][valor_unitario]" value="${p.preco.toFixed(2)}" 
+                        ${p.liberarDesconto === 0 ? 'readonly' : ''}
                         onchange="alterarPrecoProdutoNovo(${i}, this.value)"
                         class="w-24 border rounded px-2 py-1 text-sm" />
                 </td>
                 <td class="px-3 py-2 border">
-                    <input type="number" name="itens[${i}][quantidade]" value="${p.quantidade}" min="1"
+                    <input type="number" name="produtos[${index}][quantidade]" value="${p.quantidade}" min="1"
                         onchange="alterarQuantidade(${i}, this.value)"
-                        class="w-16 border rounded px-2 py-1 text-center" />
+                        class="w-16 border rounded px-2 py-1 text-center font-bold" />
                 </td>
                 <td class="px-3 py-2 border">R$ ${formatarMoeda(p.precoOriginal * p.quantidade)}</td>
                 <td class="px-3 py-2 border text-green-600 font-bold">R$ ${formatarMoeda(subtotalComDesconto)}</td>
                 <td class="px-3 py-2 border text-center">
-                    <button type="button" onclick="removerProduto(${i})" class="text-red-600">🗑</button>
+                    <button type="button" onclick="removerProduto(${i})" class="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50 transition-colors">🗑</button>
                 </td>
             `;
             wrapper.appendChild(row);

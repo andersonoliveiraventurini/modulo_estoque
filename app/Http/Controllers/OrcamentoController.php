@@ -1414,8 +1414,8 @@ class OrcamentoController extends Controller
     public function edit($id, CnpjService $cnpjService)
     {
         $orcamento = Orcamento::with([
-            'itens.produto',
-            'itens.cor',
+            'itens.produto.cor',
+            'itens.produto.fornecedor',
             'vidros',
             'descontos'
         ])->findOrFail($id);
@@ -1906,83 +1906,6 @@ class OrcamentoController extends Controller
 
                         continue;
                     }
-
-                    // Produto novo com preço definido
-                    $precoOriginalSemDesconto = (float)($item['preco_original'] ?? $item['preco_unitario'] ?? 0);
-                    $quantidade = (float)($item['quantidade'] ?? 0);
-                    if ($quantidade <= 0) {
-                        continue;
-                    }
-
-                    $liberarDesconto = isset($item['liberar_desconto']) ? (int)$item['liberar_desconto'] : 1;
-                    $tipoDesconto = $item['tipo_desconto'] ?? 'nenhum';
-                    $descontoProduto = (float)($item['desconto_produto'] ?? 0);
-
-                    // Valores padrão (sem desconto)
-                    $valorUnitarioComDesconto = $precoOriginalSemDesconto;
-                    $valorComDesconto = $precoOriginalSemDesconto * $quantidade;
-                    $descontoAplicadoItem = 0;
-
-                    Log::info("Processando novo produto na edição", [
-                        'produto_id' => $item['id'],
-                        'preco_original' => $precoOriginalSemDesconto,
-                        'tipo_desconto' => $tipoDesconto,
-                        'desconto_produto' => $descontoProduto,
-                        'quantidade' => $quantidade,
-                    ]);
-
-                    // Aplicar desconto conforme tipo
-                    if ($liberarDesconto === 1) {
-                        if ($tipoDesconto === 'produto' && $descontoProduto > 0) {
-                            $valorUnitarioComDesconto = $precoOriginalSemDesconto - $descontoProduto;
-                            $valorComDesconto = $valorUnitarioComDesconto * $quantidade;
-
-                            $percentualItem = $precoOriginalSemDesconto > 0 ? ($descontoProduto / $precoOriginalSemDesconto) * 100 : 0;
-                            $motivoAutoAprovado = null;
-                            $dataAprovado = null;
-
-                            if (!$clienteBloqueado) {
-                                if ($percentualItem <= $margemCliente) {
-                                    $motivoAutoAprovado = "Aprovado pelo limite do cliente (" . number_format($margemCliente, 2, ',', '.') . "%)";
-                                    $dataAprovado = now();
-                                } elseif ($percentualItem <= $margemVendedor) {
-                                    $motivoAutoAprovado = "Aprovado pelo limite do vendedor (" . number_format($margemVendedor, 2, ',', '.') . "%)";
-                                    $dataAprovado = now();
-                                }
-                            }
-
-                            $orcamento->descontos()->create([
-                                'motivo' => ($motivoAutoAprovado ? $motivoAutoAprovado . " - " : "") . "Desconto individual de R$ "
-                                    . number_format($descontoProduto, 2, ',', '.')
-                                    . " por unidade do produto ID {$item['id']}",
-                                'valor' => $descontoProduto * $quantidade,
-                                'porcentagem' => $percentualItem,
-                                'tipo' => 'produto',
-                                'produto_id' => $item['id'],
-                                'cliente_id' => $orcamento->cliente_id,
-                                'user_id' => $request->user()->id,
-                                'aprovado_em' => $dataAprovado,
-                                'aprovado_por' => $dataAprovado ? auth()->id() : null,
-                            ]);
-
-                            $itenscomdesconto = true;
-                        } elseif ($tipoDesconto === 'percentual' && $descontoPercentual > 0) {
-                            $subtotal = $precoOriginalSemDesconto * $quantidade;
-                            $valorComDesconto = $subtotal - ($subtotal * ($descontoPercentual / 100));
-                            $valorUnitarioComDesconto = $valorComDesconto / $quantidade;
-                            $descontoAplicadoItem = $descontoPercentual;
-                        }
-                    }
-
-                    $orcamento->itens()->create([
-                        'produto_id' => $item['id'],
-                        'quantidade' => $quantidade,
-                        'valor_unitario' => $precoOriginalSemDesconto,
-                        'valor_unitario_com_desconto' => $valorUnitarioComDesconto,
-                        'desconto' => $descontoAplicadoItem,
-                        'valor_com_desconto' => $valorComDesconto,
-                        'user_id' => $request->user()->id ?? null,
-                    ]);
                 }
 
                 // Remover consultas de preço que não vieram no request

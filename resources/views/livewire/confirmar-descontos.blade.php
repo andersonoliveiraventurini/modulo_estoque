@@ -695,7 +695,7 @@
                                                                     {{ $itemEl->produto->nome ?? "Produto #{$itemEl->produto_id}" }}
                                                                     <span class="text-gray-400">({{ (int) $itemEl->quantidade }}x R$ {{ number_format((float) $itemEl->valor_unitario, 2, ',', '.') }})</span>
                                                                     @if ($itemEl->produto?->preco_custo)
-                                                                        - <b>Custo: R$ {{ number_format($itemEl->produto->preco_custo, 2, ',', '.') }}</b>
+                                                                        - <b>Custo unitário: R$ {{ number_format($itemEl->produto->preco_custo, 2, ',', '.') }} - custo total: R$ {{ number_format($itemEl->produto->preco_custo * $itemEl->quantidade, 2, ',', '.') }}</b>
                                                                     @endif
                                                                 </span>
                                                                 <span class="font-semibold">R$ {{ number_format($subtotalItemEl, 2, ',', '.') }}</span>
