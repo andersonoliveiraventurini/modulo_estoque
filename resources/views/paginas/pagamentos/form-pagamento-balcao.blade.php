@@ -168,13 +168,22 @@
                                         @php
                                             $isPrimeira = $idx === 0;
                                             $isExtra    = $idx > 0;
-                                            $isAlterada = $isPrimeira
-                                                && !empty($formaOld['condicao_id'])
-                                                && (int)$formaOld['condicao_id'] !== ($condicaoPadrao->id ?? 0);
+                                            
+                                            // Se houver apenas uma forma, ela só será considerada "alterada" 
+                                            // se a condição for explicitamente diferente da padrão do orçamento.
+                                            // Se houver mais de uma forma, todas são consideradas parte de um pagamento "diferente".
+                                            $isAlterada = false;
+                                            if (count($formasIniciais) > 1) {
+                                                $isAlterada = true;
+                                            } elseif (!empty($formaOld['condicao_id']) && $condicaoPadrao) {
+                                                if ((int)$formaOld['condicao_id'] !== (int)$condicaoPadrao->id) {
+                                                    $isAlterada = true;
+                                                }
+                                            }
                                         @endphp
                                         <div class="forma-card rounded-xl border-2 p-4 transition-all
                                             {{ $isExtra    ? 'bg-orange-50 dark:bg-orange-900/10 border-orange-300 dark:border-orange-700' : '' }}
-                                            {{ $isAlterada ? 'bg-orange-50 dark:bg-orange-900/10 border-orange-300 dark:border-orange-700' : '' }}
+                                            {{ (!$isExtra && $isAlterada) ? 'bg-orange-50 dark:bg-orange-900/10 border-orange-300 dark:border-orange-700' : '' }}
                                             {{ (!$isExtra && !$isAlterada) ? 'bg-gray-50 dark:bg-gray-800 border-transparent' : '' }}"
                                             data-index="{{ $idx }}"
                                             data-extra="{{ $isExtra ? 'true' : 'false' }}">
@@ -186,8 +195,8 @@
                                                     @if($isExtra)
                                                         <span class="badge-extra inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">⚠ Forma adicional</span>
                                                     @endif
-                                                    <span class="badge-alterada hidden inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">⚠ Diferente do orçamento</span>
-                                                </div>
+                                                   <!-- <span class="badge-alterada {{ $isAlterada ? '' : 'hidden' }} inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">⚠ Diferente do orçamento</span>
+                                                   -->  </div>
                                                 @if($isExtra)
                                                     <button type="button" onclick="removerForma(this)" class="text-red-500 hover:text-red-700 text-sm font-medium">Remover</button>
                                                 @endif
@@ -729,9 +738,9 @@
                 // ─── Alteração de condição ───────────────────────────────────────────────
                 function onCondicaoChange(selectEl) {
                     const card      = selectEl.closest('.forma-card');
-                    const isExtra   = card.dataset.extra === 'true';
-                    const badge     = card.querySelector('.badge-alterada');
-                    const selecionado = parseInt(selectEl.value) || null;
+                    // const isExtra   = card.dataset.extra === 'true'; // Removido logicamente daqui
+                    // const badge     = card.querySelector('.badge-alterada'); // Removido logicamente daqui
+                    // const selecionado = parseInt(selectEl.value) || null; // Removido logicamente daqui
 
                     // Tratamento de parcelas
                     const divParcelas = card.querySelector('.div-parcelas');
@@ -754,32 +763,62 @@
                         }
                     }
 
-                    if (!isExtra && condicaoPadraoId !== null) {
-                        const alterado = selecionado !== condicaoPadraoId;
-                        card.classList.toggle('bg-orange-50',          alterado);
-                        card.classList.toggle('dark:bg-orange-900/10', alterado);
-                        card.classList.toggle('border-orange-300',     alterado);
-                        card.classList.toggle('dark:border-orange-700',alterado);
-                        card.classList.toggle('bg-gray-50',            !alterado);
-                        card.classList.toggle('dark:bg-gray-800',      !alterado);
-                        card.classList.toggle('border-transparent',    !alterado);
-                        badge?.classList.toggle('hidden', !alterado);
-                    }
-
                     atualizarAlertaGlobal();
                     atualizarDesconto();
                     calcularValores();
                 }
 
-                // ─── Alerta global ───────────────────────────────────────────────────────
+                // ─── Alerta global e badges individuais ──────────────────────────────────
                 function atualizarAlertaGlobal() {
-                    let exibir = false;
-                    document.querySelectorAll('.forma-card').forEach(card => {
-                        if (card.dataset.extra === 'true') { exibir = true; return; }
+                    const cards = document.querySelectorAll('.forma-card');
+                    const totalFormas = cards.length;
+                    let algumaDiferente = totalFormas > 1;
+
+                    cards.forEach(card => {
                         const sel = card.querySelector('.select-condicao');
-                        if (sel && condicaoPadraoId && (parseInt(sel.value) || null) !== condicaoPadraoId) exibir = true;
+                        const selecionado = (sel && sel.value) ? parseInt(sel.value) : null;
+                        const isExtra = card.dataset.extra === 'true';
+                        
+                        // Se for a primeira forma, verifica se a condição mudou
+                        if (!isExtra && condicaoPadraoId !== null && selecionado !== null) {
+                            if (parseInt(selecionado) !== parseInt(condicaoPadraoId)) {
+                                algumaDiferente = true;
+                            }
+                        }
                     });
-                    document.getElementById('alertaMetodoAlterado')?.classList.toggle('hidden', !exibir);
+
+                    // Atualiza badges e estilos de cada card
+                    cards.forEach(card => {
+                        const sel = card.querySelector('.select-condicao');
+                        const selecionado = (sel && sel.value) ? parseInt(sel.value) : null;
+                        const isExtra = card.dataset.extra === 'true';
+                        const badge = card.querySelector('.badge-alterada');
+                        
+                        // A condição de exibir o badge é: 
+                        // 1. Mais de uma forma de pagamento OU
+                        // 2. A única forma de pagamento tem condição diferente da original do orçamento
+                        let mostrarBadge = totalFormas > 1;
+                        
+                        // Se houver apenas uma forma, verificamos se a condição foi alterada
+                        if (totalFormas === 1 && condicaoPadraoId !== null && selecionado !== null) {
+                            if (parseInt(selecionado) !== parseInt(condicaoPadraoId)) {
+                                mostrarBadge = true;
+                            }
+                        }
+
+                        badge?.classList.toggle('hidden', !mostrarBadge);
+
+                        // Estilização do card (cor de fundo e borda)
+                        if (isExtra || mostrarBadge) {
+                            card.classList.add('bg-orange-50', 'dark:bg-orange-900/10', 'border-orange-300', 'dark:border-orange-700');
+                            card.classList.remove('bg-gray-50', 'dark:bg-gray-800', 'border-transparent');
+                        } else {
+                            card.classList.remove('bg-orange-50', 'dark:bg-orange-900/10', 'border-orange-300', 'dark:border-orange-700');
+                            card.classList.add('bg-gray-50', 'dark:bg-gray-800', 'border-transparent');
+                        }
+                    });
+
+                    document.getElementById('alertaMetodoAlterado')?.classList.toggle('hidden', !algumaDiferente);
                 }
 
                 // ─── Adicionar / remover formas ──────────────────────────────────────────
