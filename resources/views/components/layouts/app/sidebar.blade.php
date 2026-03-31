@@ -151,10 +151,16 @@
             <flux:navlist.item icon="exclamation-triangle" :href="route('inconsistencias.index')" :current="request()->routeIs('inconsistencias.*')" wire:navigate>
                 {{ __('Inconsistências') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="presentation-chart-line" :href="route('relatorios.index')" :current="request()->routeIs('relatorios.*')" wire:navigate>
-                {{ __('Relatórios') }}
-            </flux:navlist.item>
-        </flux:navlist.group>
+                <flux:navlist.item icon="clock" :href="route('relatorios.vencimento_produtos')" :current="request()->routeIs('relatorios.vencimento_produtos')" wire:navigate>
+                    {{ __('Vencimento de Produtos') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="arrow-path" :href="route('relatorios.reposicao_estoque')" :current="request()->routeIs('relatorios.reposicao_estoque')" wire:navigate>
+                    {{ __('Movimentação Reposição') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="presentation-chart-line" :href="route('relatorios.index')" :current="request()->routeIs('relatorios.*')" wire:navigate>
+                    {{ __('Relatórios') }}
+                </flux:navlist.item>
+            </flux:navlist.group>
         
         <flux:navlist.group heading="RNC & Devoluções" expandable :expanded="true">
             <flux:navlist.item icon="presentation-chart-line" :href="route('quality.dashboard')"
