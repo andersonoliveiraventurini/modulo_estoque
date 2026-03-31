@@ -37,8 +37,14 @@ class ProductReturnPolicy
     /**
      * Determine whether the user can approve the first stage (Supervisor, Admin).
      */
-    public function approveSupervisor(User $user, ProductReturn $productReturn): bool
+    public function approveSupervisor(User $user, ?ProductReturn $productReturn = null): bool
     {
+        // Se for uma verificação genérica (ex: menu sidebar)
+        if (is_null($productReturn)) {
+            return $user->hasPermissionTo('qualidade_aprovar_supervisor');
+        }
+
+        // Verificação específica da instância
         if ($productReturn->status !== 'pendente_supervisor') {
             return false;
         }
@@ -49,8 +55,14 @@ class ProductReturnPolicy
     /**
      * Determine whether the user can approve the final stage (Estoquista, Admin).
      */
-    public function approveEstoque(User $user, ProductReturn $productReturn): bool
+    public function approveEstoque(User $user, ?ProductReturn $productReturn = null): bool
     {
+        // Se for uma verificação genérica (ex: menu sidebar)
+        if (is_null($productReturn)) {
+            return $user->hasPermissionTo('qualidade_aprovar_estoque');
+        }
+
+        // Verificação específica da instância
         if ($productReturn->status !== 'pendente_estoque') {
             return false;
         }
