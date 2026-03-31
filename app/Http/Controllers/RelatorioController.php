@@ -331,6 +331,10 @@ class RelatorioController extends Controller
             $query->where('produtos.sku', 'like', '%' . $request->sku . '%');
         }
 
+        if ($request->filled('tipo_produto')) {
+            $query->where('produtos.tipo_produto_sped', $request->tipo_produto);
+        }
+
         if ($request->filled('data_inicio')) {
             $query->where('movimentacao_produtos.data_vencimento', '>=', $request->data_inicio);
         }
@@ -370,6 +374,18 @@ class RelatorioController extends Controller
             $query->where('supervisor_id', $request->supervisor_id);
         }
 
+        if ($request->filled('sku')) {
+            $query->whereHas('itens.produto', function($q) use ($request) {
+                $q->where('sku', 'like', '%' . $request->sku . '%');
+            });
+        }
+
+        if ($request->filled('tipo_produto')) {
+            $query->whereHas('itens.produto', function($q) use ($request) {
+                $q->where('tipo_produto_sped', $request->tipo_produto);
+            });
+        }
+
         $movimentacoes = $query->latest('data_movimentacao')->paginate(20);
         $fornecedores = Fornecedor::all(['id', 'nome_fantasia']);
         $usuarios = User::all(['id', 'name']);
@@ -391,6 +407,30 @@ class RelatorioController extends Controller
         if ($request->filled('fornecedor_id')) $query->where('fornecedor_id', $request->fornecedor_id);
         if ($request->filled('nf')) $query->where('nota_fiscal_fornecedor', 'like', '%' . $request->nf . '%');
         if ($request->filled('romaneio')) $query->where('romaneiro', 'like', '%' . $request->romaneio . '%');
+
+        if ($request->filled('produto_nome')) {
+            $query->whereHas('itens.produto', function($q) use ($request) {
+                $q->where('nome', 'like', '%' . $request->produto_nome . '%');
+            });
+        }
+        if ($request->filled('sku')) {
+            $query->whereHas('itens.produto', function($q) use ($request) {
+                $q->where('sku', 'like', '%' . $request->sku . '%');
+            });
+        }
+        if ($request->filled('responsavel_id')) {
+            $query->where('usuario_id', $request->responsavel_id);
+        }
+        if ($request->filled('pedido_compra_id')) {
+            $query->where('pedido_compra_id', $request->pedido_compra_id);
+        }
+        if ($request->filled('vendedor_id')) {
+            $query->whereHas('pedidoCompra', function($q) use ($request) {
+                $q->where('usuario_id', $request->vendedor_id); // In PedidoCompra, usuario_id is the buyer
+            })->orWhereHas('pedido.vendedor', function($q) use ($request) {
+                $q->where('id', $request->vendedor_id);
+            });
+        }
 
         $recebimentos = $query->latest('data_movimentacao')->paginate(20);
         $fornecedores = Fornecedor::all(['id', 'nome_fantasia']);

@@ -10,6 +10,8 @@
             <flux:input name="produto_nome" label="Descrição" value="{{ request('produto_nome') }}" placeholder="Nome do produto..." />
             <flux:input name="sku" label="Cód. Produto (SKU)" value="{{ request('sku') }}" placeholder="SKU..." />
             
+            <flux:input name="tipo_produto" label="Tipo de Produto" value="{{ request('tipo_produto') }}" placeholder="Tipo (SPED)..." />
+
             <flux:select name="fornecedor_id" label="Fornecedor">
                 <option value="">Todos</option>
                 @foreach($fornecedores as $fornecedor)

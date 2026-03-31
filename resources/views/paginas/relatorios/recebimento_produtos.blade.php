@@ -16,8 +16,30 @@
                 @endforeach
             </flux:select>
 
+            <flux:input name="produto_nome" label="Produto" value="{{ request('produto_nome') }}" placeholder="Nome do produto..." />
+            <flux:input name="sku" label="Cód. Produto (SKU)" value="{{ request('sku') }}" placeholder="SKU..." />
+
+            <flux:select name="responsavel_id" label="Responsável">
+                <option value="">Todos</option>
+                @foreach($vendedores as $user) {{-- Usando $vendedores que são todos os Users --}}
+                    <option value="{{ $user->id }}" {{ request('responsavel_id') == $user->id ? 'selected' : '' }}>
+                        {{ $user->name }}
+                    </option>
+                @endforeach
+            </flux:select>
+
             <flux:input name="nf" label="Nr. Nota Fiscal" value="{{ request('nf') }}" placeholder="000.000..." />
             <flux:input name="romaneio" label="Nr. Romaneio" value="{{ request('romaneio') }}" placeholder="Romaneio..." />
+            <flux:input name="pedido_compra_id" label="Encomenda/PC" value="{{ request('pedido_compra_id') }}" placeholder="#ID..." />
+            
+            <flux:select name="vendedor_id" label="Vendedor">
+                <option value="">Todos</option>
+                @foreach($vendedores as $vendedor)
+                    <option value="{{ $vendedor->id }}" {{ request('vendedor_id') == $vendedor->id ? 'selected' : '' }}>
+                        {{ $vendedor->name }}
+                    </option>
+                @endforeach
+            </flux:select>
 
             <flux:input type="date" name="data_inicio" label="Início Período" value="{{ request('data_inicio') }}" />
             <flux:input type="date" name="data_fim" label="Fim Período" value="{{ request('data_fim') }}" />

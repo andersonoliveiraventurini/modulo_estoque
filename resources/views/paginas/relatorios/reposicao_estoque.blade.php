@@ -16,6 +16,9 @@
                 @endforeach
             </flux:select>
 
+            <flux:input name="sku" label="Cód. Produto (SKU)" value="{{ request('sku') }}" placeholder="SKU..." />
+            <flux:input name="tipo_produto" label="Tipo de Produto" value="{{ request('tipo_produto') }}" placeholder="Tipo (SPED)..." />
+
             <flux:select name="repositor_id" label="Repositor">
                 <option value="">Todos</option>
                 @foreach($usuarios as $user)

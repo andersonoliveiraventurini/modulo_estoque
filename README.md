@@ -189,8 +189,25 @@ Ações de cobrança registradas na tela de **Consulta de Prazos**. Atualizam a 
 | `posicoes.index` | Cadastro de posições (endereçamento) |
 | `inconsistencias.index` | Inconsistências de recebimento detectadas |
 | `relatorios.index` | Central de relatórios de estoque |
+| `relatorios.vencimento_produtos` | Relatório de validade por lote (Filtros: Fornecedor, SKU, Tipo SPED) |
+| `relatorios.reposicao_estoque` | Histórico de reposição (Filtros: SKU, Tipo SPED, Repositor) |
+| `relatorios.recebimento_produtos` | Recebimento detalhado (Filtros: NF, Romaneio, Produto, SKU, Vendedor) |
+| `relatorios.saida_produtos` | Histórico de saídas aprovadas |
+| `relatorios.vendas_margem` | Análise de lucratividade e descontos por produto |
+| `relatorios.nao_conformidade` | Relatório de divergências (RNC) no recebimento |
+| `relatorios.devolucoes` | Histórico de produtos devolvidos ao estoque |
 | `reposicao.index` | **HUB Reposição** — Gestão de saldo e ordens |
 | `reposicao.pdf` | Formulário de retirada para reposição |
+
+#### Regras de Negócio — Relatórios Gerenciais
+
+| Relatório | Lógica de Cálculo / Filtros |
+|---|---|
+| **Estoque Crítico** | Query: `estoque_atual <= estoque_minimo`. Compara dinamicamente o saldo com a meta do produto. |
+| **Vendas e Margem** | Analisa um produto por vez. Calcula o **Desconto Médio** (%) baseado no campo `desconto` de `orcamento_itens`. |
+| **Vencimento** | Filtra por lote de entrada aprovado. Permite segmentar por `tipo_produto_sped`. |
+| **Não Conformidade** | Lista divergências entre `quantidade_esperada` e `quantidade_recebida` no recebimento. |
+| **Recebimento** | Permite filtrar por **Vendedor** (Responsável pelo pedido) e **Encomenda** (ID do Pedido de Compra). |
 
 #### Serviço: `EstoqueService`
 
