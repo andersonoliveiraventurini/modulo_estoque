@@ -252,6 +252,7 @@ class PedidoCompraController extends Controller
                 'fornecedor_id'=> optional($item->produto)->fornecedor_id ?? null,
                 'quantidade'   => $item->quantidade,
                 'valor_unitario'=> $item->valor_unitario,
+                'is_perishable' => optional($item->produto)->is_perishable ?? false,
             ];
         }));
     }

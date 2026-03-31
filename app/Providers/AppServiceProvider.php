@@ -25,6 +25,9 @@ use App\Models\NonConformity;
 use App\Policies\ProductReturnPolicy;
 use App\Policies\NonConformityPolicy;
 
+use App\Events\StockMovementRegistered;
+use App\Listeners\LogStockMovement;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -59,5 +62,6 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(OrcamentoAprovado::class, GerarFaturaAoAprovar::class);
         Event::listen(OrcamentoCancelado::class, LiberarReservaAoCancelar::class);
         Event::listen(OrcamentoFinalizado::class, LiberarReservaAoFinalizar::class);
+        Event::listen(StockMovementRegistered::class, LogStockMovement::class);
     }
 }

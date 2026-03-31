@@ -30,6 +30,16 @@ class ConferenciaCompra extends Component
             foreach ($this->conferencia->itens as $it) {
                 $rules["inputs.{$it->id}.qty"] = 'nullable|numeric|min:0';
                 $rules["inputs.{$it->id}.motivo"] = 'nullable|string|max:500';
+                $rules["inputs.{$it->id}.data_vencimento"] = [
+                    'nullable',
+                    'date',
+                    'after:today',
+                    function ($attribute, $value, $fail) use ($it) {
+                        if ($it->produto->is_perishable && empty($value)) {
+                            $fail("A data de vencimento é obrigatória para o produto perecível: {$it->produto->nome}.");
+                        }
+                    }
+                ];
             }
             foreach (array_keys($this->novasFotos) as $itemId) {
                 $rules["novasFotos.{$itemId}.*"] = 'nullable|file|mimes:jpg,jpeg,png,webp|max:10240';
@@ -62,6 +72,7 @@ class ConferenciaCompra extends Component
                 $this->inputs[$it->id] = [
                     'qty' => $it->qty_conferida > 0 ? (string) $it->qty_conferida : '',
                     'motivo' => $it->motivo_divergencia ?? '',
+                    'data_vencimento' => $it->data_vencimento ? $it->data_vencimento->format('Y-m-d') : '',
                 ];
                 $this->novasFotos[$it->id] ??= [];
                 $this->legendas[$it->id] ??= '';
@@ -111,6 +122,7 @@ class ConferenciaCompra extends Component
             'status' => $status,
             'divergencia' => $divergencia,
             'motivo_divergencia' => $this->inputs[$itemId]['motivo'] ?? null,
+            'data_vencimento' => $this->inputs[$itemId]['data_vencimento'] ?: null,
             'conferido_por_id' => Auth::id(),
             'conferido_em' => now(),
         ]);
@@ -161,6 +173,7 @@ class ConferenciaCompra extends Component
                 'quantidade' => $item->qty_conferida,
                 'valor_unitario' => $item->pedidoCompraItem->valor_unitario ?? 0,
                 'valor_total' => $item->qty_conferida * ($item->pedidoCompraItem->valor_unitario ?? 0),
+                'data_vencimento' => $item->data_vencimento,
                 'observacao' => $item->motivo_divergencia,
             ]);
         }

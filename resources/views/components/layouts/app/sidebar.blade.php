@@ -131,11 +131,15 @@
             <flux:navlist.item icon="arrows-right-left" :href="route('movimentacao.index')"
                 :current="request()->routeIs('movimentacao.index')" wire:navigate>{{ __('Movimentações') }}
             </flux:navlist.item>
-            <flux:navlist.item icon="home-modern" :href="route('reposicao.index')"
-                :current="request()->routeIs('reposicao.*')" wire:navigate>{{ __('HUB Reposição') }}
-            </flux:navlist.item>
             <flux:navlist.item icon="plus-circle" :href="route('movimentacao.create')" :current="request()->routeIs('movimentacao.create')" wire:navigate>
-                {{ __('Nova Movimentação') }}</flux:navlist.item>
+                {{ __('Nova Entrada') }}</flux:navlist.item>
+            
+            <flux:navlist.item icon="home-modern" :href="route('estoque.reposicao.index')" :current="request()->routeIs('estoque.reposicao.index')" wire:navigate>
+                {{ __('HUB - Painel Controle') }}
+            </flux:navlist.item>
+            <flux:navlist.item icon="arrow-path" :href="route('estoque.reposicao.manual')" :current="request()->routeIs('estoque.reposicao.manual')" wire:navigate>
+                {{ __('HUB - Reposição Manual') }}
+            </flux:navlist.item>
 
             <flux:navlist.group heading="Endereços Físicos" expandable :expanded="false">
                 <flux:navlist.item icon="building-office" :href="route('armazens.index')" :current="request()->routeIs('armazens.*')" wire:navigate>
@@ -148,19 +152,23 @@
                     {{ __('Posições') }}
                 </flux:navlist.item>
             </flux:navlist.group>
-            <flux:navlist.item icon="exclamation-triangle" :href="route('inconsistencias.index')" :current="request()->routeIs('inconsistencias.*')" wire:navigate>
-                {{ __('Inconsistências') }}
+
+            <flux:navlist.item icon="list-bullet" :href="route('estoque.logs')" :current="request()->routeIs('estoque.logs')" wire:navigate>
+                {{ __('Logs de Movimentação') }}
             </flux:navlist.item>
+
+            <flux:navlist.group heading="Relatórios Estoque" expandable :expanded="false">
                 <flux:navlist.item icon="clock" :href="route('relatorios.vencimento_produtos')" :current="request()->routeIs('relatorios.vencimento_produtos')" wire:navigate>
                     {{ __('Vencimento de Produtos') }}
                 </flux:navlist.item>
                 <flux:navlist.item icon="arrow-path" :href="route('relatorios.reposicao_estoque')" :current="request()->routeIs('relatorios.reposicao_estoque')" wire:navigate>
-                    {{ __('Movimentação Reposição') }}
+                    {{ __('Relatório Reposição') }}
                 </flux:navlist.item>
-                <flux:navlist.item icon="presentation-chart-line" :href="route('relatorios.index')" :current="request()->routeIs('relatorios.*')" wire:navigate>
-                    {{ __('Relatórios') }}
+                <flux:navlist.item icon="exclamation-triangle" :href="route('inconsistencias.index')" :current="request()->routeIs('inconsistencias.*')" wire:navigate>
+                    {{ __('Inconsistências') }}
                 </flux:navlist.item>
             </flux:navlist.group>
+        </flux:navlist.group>
         
         <flux:navlist.group heading="RNC & Devoluções" expandable :expanded="true">
             <flux:navlist.item icon="presentation-chart-line" :href="route('quality.dashboard')"

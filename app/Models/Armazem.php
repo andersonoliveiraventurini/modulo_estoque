@@ -17,5 +17,16 @@ class Armazem extends Model
         'nome',
         'localizacao',
         'descricao',
+        'tipo',
+        'is_active',
     ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
+    public function corredores()
+    {
+        return $this->hasMany(Corredor::class);
+    }
 }

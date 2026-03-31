@@ -43,7 +43,19 @@
     </div>
 
     {{-- Linha 2: Unidade · Peso · Categoria · Subcategoria --}}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div>
+            <label class="block text-xs font-medium text-zinc-500 mb-1">
+                Validade @if($item->produto && $item->produto->is_perishable)<span class="text-red-500">*</span>@endif
+            </label>
+            <input type="date"
+                   name="itens[{{ $index }}][data_vencimento]"
+                   value="{{ old("itens.{$index}.data_vencimento") }}"
+                   {{ ($item->produto && $item->produto->is_perishable) ? 'required' : '' }}
+                   {{ (!$item->produto || !$item->produto->is_perishable) ? 'disabled' : '' }}
+                   class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none disabled:bg-zinc-100 dark:disabled:bg-zinc-700">
+        </div>
+
         <div>
             <label class="block text-xs font-medium text-zinc-500 mb-1">Unidade de Medida</label>
             <select name="itens[{{ $index }}][unidade_medida]"

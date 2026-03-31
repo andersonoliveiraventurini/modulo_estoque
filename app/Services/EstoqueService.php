@@ -8,10 +8,26 @@ use App\Models\Orcamento;
 use App\Models\Produto;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use App\Events\StockMovementRegistered;
 use Illuminate\Support\Facades\Log;
 
 final class EstoqueService
 {
+    /**
+     * Registra o log de movimentação de estoque.
+     */
+    private function logMovement(array $data): void
+    {
+        event(new StockMovementRegistered([
+            'produto_id' => $data['produto_id'],
+            'posicao_id' => $data['posicao_id'] ?? null,
+            'tipo_movimentacao' => $data['tipo_movimentacao'],
+            'quantidade' => $data['quantidade'],
+            'colaborador_id' => $data['colaborador_id'] ?? auth()->id(),
+            'observacao' => $data['observacao'] ?? null,
+        ]));
+    }
+
     public function reservarParaOrcamento(Orcamento $orcamento): void
     {
         /* 
@@ -108,8 +124,27 @@ final class EstoqueService
 
                     if ($q <= 0) continue;
 
+                    // REGRA: Baixa SOMENTE no HUB
+                    $hubStock = \App\Models\HubStock::where('produto_id', $produto->id)->lockForUpdate()->first();
+                    $saldoHub = $hubStock ? (float) $hubStock->quantidade : 0;
+
+                    if ($saldoHub < $q) {
+                        throw new \Exception("Produto {$produto->nome} (SKU: {$produto->sku}) sem saldo suficiente no HUB para baixa de venda. Disponível no HUB: {$saldoHub}. Solicite reposição ao operador de estoque.");
+                    }
+
+                    $hubStock->decrement('quantidade', $q);
                     $produto->decrement('estoque_atual', $q);
-                    Log::info("Estoque atualizado (Saída): Produto #{$produto->id}, Qtd: -{$q}");
+
+                    // Registrar Log
+                    $this->logMovement([
+                        'produto_id' => $produto->id,
+                        'posicao_id' => null, // Baixa do HUB (virtualmente agnóstico de posição específica aqui)
+                        'tipo_movimentacao' => 'sale_output',
+                        'quantidade' => -$q, // Corrigido: Valor negativo para saída
+                        'observacao' => "Saída por venda - Conferência #{$conf->id} / Orçamento #{$conf->orcamento_id}",
+                    ]);
+
+                    Log::info("Estoque atualizado (Saída HUB): Produto #{$produto->id}, Qtd: -{$q}");
                     
                     $this->verificarAlertaEstoqueBaixo($produto);
 
@@ -123,6 +158,12 @@ final class EstoqueService
             Log::error("Erro ao processar baixa de saída da Conferência #{$conf->id}: " . $e->getMessage());
             throw $e;
         }
+    }
+
+    public function getHubStock(int $productId): float
+    {
+        $hubStock = \App\Models\HubStock::where('produto_id', $productId)->first();
+        return $hubStock ? (float) $hubStock->quantidade : 0;
     }
 
     public function checarEstoqueMinimo(Produto $produto, float $quantidadeReservar): bool
@@ -222,11 +263,28 @@ final class EstoqueService
 
                 if (!$produto || $quantidade <= 0) continue;
 
-                // Decrementa o estoque real
+                // REGRA: Baixa SOMENTE no HUB
+                $hubStock = \App\Models\HubStock::where('produto_id', $produto->id)->lockForUpdate()->first();
+                $saldoHub = $hubStock ? (float) $hubStock->quantidade : 0;
+
+                if ($saldoHub < $quantidade) {
+                    throw new \Exception("Produto {$produto->nome} (SKU: {$produto->sku}) sem saldo suficiente no HUB para baixa de venda. Disponível no HUB: {$saldoHub}. Solicite reposição ao operador de estoque.");
+                }
+
+                $hubStock->decrement('quantidade', $quantidade);
                 $produto->decrement('estoque_atual', $quantidade);
+
+                // Registrar Log
+                $this->logMovement([
+                    'produto_id' => $produto->id,
+                    'posicao_id' => null,
+                    'tipo_movimentacao' => 'sale_output',
+                    'quantidade' => -$quantidade, // Corrigido: Valor negativo para saída
+                    'observacao' => "Baixa definitiva HUB - Orçamento #{$orcamento->id}",
+                ]);
                 
-                // Log da movimentação (se houver tabela de logs específica, podemos usar aqui)
-                Log::info("Baixa definitiva: Produto #{$produto->id}, Qtd: -{$quantidade}");
+                // Log da movimentação
+                Log::info("Baixa definitiva HUB: Produto #{$produto->id}, Qtd: -{$quantidade}");
 
                 $this->verificarAlertaEstoqueBaixo($produto);
 

@@ -13,8 +13,14 @@ class ArmazemSeeder extends Seeder
      */
     public function run(): void
     {
-        Armazem::factory()->create([
-            'nome' => 'HUB',
-        ]);
+        Armazem::updateOrCreate(
+            ['nome' => 'HUB'],
+            [
+                'tipo' => 'hub',
+                'is_active' => true,
+                'localizacao' => 'Central',
+                'descricao' => 'Armazém Principal de Recebimento'
+            ]
+        );
     }
 }

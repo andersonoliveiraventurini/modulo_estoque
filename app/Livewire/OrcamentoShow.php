@@ -27,6 +27,8 @@ class OrcamentoShow extends Component
             // mas ignorando reserva do próprio orçamento atual
             $itens = $this->orcamento->itens;
             $itensSemEstoque = [];
+            $itensSemHub = [];
+            $estoqueService = app(\App\Services\EstoqueService::class);
 
             foreach ($itens as $item) {
                 $produto = $item->produto;
@@ -38,23 +40,34 @@ class OrcamentoShow extends Component
                     ->sum('quantidade');
 
                 $disponivel = max(0, ($produto->estoque_atual ?? 0) - $reservadoOutros);
+                $saldoHub = $estoqueService->getHubStock($produto->id);
 
                 if ($disponivel < $item->quantidade) {
-                    $itensSemEstoque[] = "{$produto->descricao}: "
-                        . "disponível {$disponivel}, necessário {$item->quantidade}";
+                    $itensSemEstoque[] = "{$produto->nome}: disponível {$disponivel}, necessário {$item->quantidade}";
+                }
+
+                if ($saldoHub < $item->quantidade) {
+                    $itensSemHub[] = "{$produto->nome}: saldo no HUB {$saldoHub}, necessário {$item->quantidade}";
                 }
             }
 
-            if (!empty($itensSemEstoque)) {
+            if (!empty($itensSemEstoque) || !empty($itensSemHub)) {
+                $statusAnterior = $this->orcamento->status;
                 $this->orcamento->update([
                     'status' => 'Sem estoque',
                     'workflow_status' => null
                 ]);
                 $this->status = 'Sem estoque';
-                $this->addError(
-                    'status',
-                    'Estoque insuficiente: ' . implode(' | ', $itensSemEstoque) . '. O status foi alterado para "Sem estoque".'
-                );
+                
+                $msg = '';
+                if (!empty($itensSemEstoque)) {
+                    $msg .= 'Estoque Global Insuficiente: ' . implode(' | ', $itensSemEstoque) . '. ';
+                }
+                if (!empty($itensSemHub)) {
+                    $msg .= 'Sem saldo no HUB: ' . implode(' | ', $itensSemHub) . '. Solicite reposição ao operador de estoque.';
+                }
+
+                $this->addError('status', $msg . ' O status foi alterado para "Sem estoque".');
                 return;
             }
         }

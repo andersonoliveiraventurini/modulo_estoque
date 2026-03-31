@@ -316,6 +316,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Módulo de Entrega e Retirada
     Route::get('estoque/encomendas/retirada', \App\Livewire\Estoque\EncomendaRetirada::class)->name('estoque.encomendas.retirada');
+    Route::get('estoque/reposicao/manual', \App\Livewire\Estoque\StockReplenishment::class)->name('estoque.reposicao.manual');
+    Route::get('estoque/logs', \App\Livewire\Estoque\StockMovementLogs::class)->name('estoque.logs');
 
     Route::resource('bloqueios', BloqueioController::class)->names('bloqueios');
     Route::get('bloquear/{cliente_id}/cliente', [BloqueioController::class, 'bloquear'])->name('bloquear.cliente');
@@ -420,8 +422,11 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ─── HUB Reposição ─────────────────────────────────────────────────────
-    Route::get('/reposicao', ReposicaoIndex::class)->name('reposicao.index');
-    Route::get('/reposicao/{ordem}/pdf', ReposicaoPdfController::class)->name('reposicao.pdf');
+    Route::get('/reposicao', ReposicaoIndex::class)->name('estoque.reposicao.index');
+    Route::get('/reposicao/{ordem}/pdf', ReposicaoPdfController::class)->name('estoque.reposicao.pdf');
+    Route::get('estoque/encomendas/retirada', \App\Livewire\Estoque\EncomendaRetirada::class)->name('estoque.encomendas.retirada');
+    Route::get('estoque/reposicao/manual', \App\Livewire\Estoque\StockReplenishment::class)->name('estoque.reposicao.manual');
+    Route::get('estoque/logs', \App\Livewire\Estoque\StockMovementLogs::class)->name('estoque.logs');
 });
 
 require __DIR__ . '/auth.php';

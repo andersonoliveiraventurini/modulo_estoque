@@ -13,6 +13,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+use App\Events\StockMovementRegistered;
+
 /**
  * Serviço responsável por toda a lógica de reposição de produtos ao HUB.
  *
@@ -31,19 +33,19 @@ final class ReposicaoService
     /**
      * Cria uma nova Ordem de Reposição ao HUB (status: pendente).
      */
-    public function solicitarReposicao(int $produtoId, float $quantidade): OrdemReposicao
+    public function solicitarReposicao(int $produtoId, float $quantidade, ?int $solicitanteId = null): OrdemReposicao
     {
         Log::info('ReposicaoService: solicitando reposição ao HUB', [
             'produto_id'    => $produtoId,
             'quantidade'    => $quantidade,
-            'solicitado_por' => auth()->id(),
+            'solicitado_por' => $solicitanteId ?? auth()->id(),
         ]);
 
         $ordem = OrdemReposicao::create([
             'produto_id'           => $produtoId,
             'quantidade_solicitada' => $quantidade,
             'status'               => 'pendente',
-            'solicitado_por_id'    => auth()->id(),
+            'solicitado_por_id'    => $solicitanteId ?? auth()->id(),
         ]);
 
         Log::info('ReposicaoService: ordem criada', ['ordem_id' => $ordem->id]);
@@ -112,6 +114,16 @@ final class ReposicaoService
                         'corredor_id' => $corredorOrigemId,
                         'posicao_id'  => $posicaoOrigemId,
                     ]);
+
+                    // Registrar Log de Saída da Origem
+                    event(new StockMovementRegistered([
+                        'produto_id' => $produto->id,
+                        'posicao_id' => $posicaoOrigemId,
+                        'tipo_movimentacao' => 'replenishment',
+                        'quantidade' => -$ordem->quantidade_solicitada,
+                        'colaborador_id' => $executorId,
+                        'observacao' => "Saída para Reposição HUB - Ordem #{$ordem->id}",
+                    ]));
                 }
 
                 // 2. Registrar movimentação de ENTRADA no HUB
@@ -142,6 +154,16 @@ final class ReposicaoService
                     'quantidade' => $ordem->quantidade_solicitada,
                     'armazem_id' => self::HUB_ARMAZEM_ID,
                 ]);
+
+                // Registrar Log de Entrada no HUB
+                event(new StockMovementRegistered([
+                    'produto_id' => $produto->id,
+                    'posicao_id' => null,
+                    'tipo_movimentacao' => 'replenishment',
+                    'quantidade' => $ordem->quantidade_solicitada,
+                    'colaborador_id' => $executorId,
+                    'observacao' => "Entrada por Reposição HUB - Ordem #{$ordem->id}",
+                ]));
 
                 // 3. Atualizar saldo no HubStock (updateOrCreate para manter consistência)
                 $hubStock = HubStock::lockForUpdate()->firstOrCreate(
@@ -233,6 +255,16 @@ final class ReposicaoService
                     'armazem_id' => self::HUB_ARMAZEM_ID,
                 ]);
 
+                // Registrar Log de Saída do HUB (Devolução)
+                event(new StockMovementRegistered([
+                    'produto_id' => $produtoId,
+                    'posicao_id' => null,
+                    'tipo_movimentacao' => 'stock_transfer',
+                    'quantidade' => -$quantidade,
+                    'colaborador_id' => $executorId,
+                    'observacao' => "Saída HUB p/ Devolução - Movimentação #{$saida->id}",
+                ]));
+
                 // 2. Entrada no endereço de destino
                 Log::info('ReposicaoService: registrando entrada no destino (devolução)', [
                     'tipo'            => 'entrada',
@@ -259,6 +291,16 @@ final class ReposicaoService
                     'corredor_id' => $corredorDestinoId,
                     'posicao_id'  => $posicaoDestinoId,
                 ]);
+
+                // Registrar Log de Entrada no Destino (Devolução)
+                event(new StockMovementRegistered([
+                    'produto_id' => $produtoId,
+                    'posicao_id' => $posicaoDestinoId,
+                    'tipo_movimentacao' => 'stock_transfer',
+                    'quantidade' => $quantidade,
+                    'colaborador_id' => $executorId,
+                    'observacao' => "Entrada por Devolução HUB - Movimentação #{$entrada->id}",
+                ]));
 
                 // 3. Decrementar saldo no HubStock
                 $hubStock->decrement('quantidade', $quantidade);

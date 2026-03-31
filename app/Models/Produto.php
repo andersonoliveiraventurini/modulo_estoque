@@ -40,6 +40,13 @@ class Produto extends Model
         'observacoes',
         'imagem_principal',
         'ativo',
+        'is_perishable',
+    ];
+
+    protected $casts = [
+        'is_perishable' => 'boolean',
+        'ativo' => 'boolean',
+        'liberar_desconto' => 'boolean',
     ];
 
     /**

@@ -33,6 +33,15 @@
                             <input type="number" wire:model.blur="inputs.{{ $item->id }}.qty" class="w-full rounded-lg border-neutral-300 dark:border-neutral-600 dark:bg-neutral-900 dark:text-white text-sm" placeholder="Ex: 10">
                         </div>
                         <div>
+                            <label class="block text-xs font-bold uppercase text-neutral-500 mb-1">
+                                Validade @if($item->produto->is_perishable)<span class="text-red-500">*</span>@endif
+                            </label>
+                            <input type="date" wire:model.blur="inputs.{{ $item->id }}.data_vencimento" 
+                                class="w-full rounded-lg border-neutral-300 dark:border-neutral-600 dark:bg-neutral-900 dark:text-white text-sm disabled:bg-gray-100"
+                                @if(!$item->produto->is_perishable) disabled @endif>
+                            @error("inputs.{$item->id}.data_vencimento") <span class="text-red-500 text-[10px]">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="col-span-2">
                             <label class="block text-xs font-bold uppercase text-neutral-500 mb-1">Motivo/Obs</label>
                             <input type="text" wire:model.blur="inputs.{{ $item->id }}.motivo" class="w-full rounded-lg border-neutral-300 dark:border-neutral-600 dark:bg-neutral-900 dark:text-white text-sm" placeholder="Ex: Avaria, Falta...">
                         </div>

@@ -1,10 +1,16 @@
 <div class="p-6 bg-white dark:bg-zinc-800 min-h-screen">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800 dark:text-zinc-100 tracking-tight">HUB – Controle e Reposição</h1>
-        <button wire:click="abrirModalSolicitar()" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white px-5 py-2.5 rounded-xl shadow-lg transition duration-200 flex items-center space-x-2 transform hover:scale-105 active:scale-95">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-            <span class="font-semibold">Nova Solicitação</span>
-        </button>
+        <div class="flex gap-2">
+            <a href="{{ route('estoque.reposicao.manual') }}" class="bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-xl shadow-lg transition duration-200 flex items-center space-x-2 transform hover:scale-105 active:scale-95">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                <span class="font-semibold">Reposição Manual</span>
+            </a>
+            <button wire:click="abrirModalSolicitar()" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white px-5 py-2.5 rounded-xl shadow-lg transition duration-200 flex items-center space-x-2 transform hover:scale-105 active:scale-95">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                <span class="font-semibold">Nova Solicitação</span>
+            </button>
+        </div>
     </div>
 
     <!-- Abas -->
@@ -131,7 +137,7 @@
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                                 </button>
                                             @else
-                                                <a href="{{ route('reposicao.pdf', ['ordem' => $ordem->id]) }}" target="_blank" class="px-3 py-1.5 text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300 font-semibold underline underline-offset-4 decoration-dotted">
+                                                <a href="{{ route('estoque.reposicao.pdf', ['ordem' => $ordem->id]) }}" target="_blank" class="px-3 py-1.5 text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300 font-semibold underline underline-offset-4 decoration-dotted">
                                                     PDF
                                                 </a>
                                             @endif
@@ -158,6 +164,16 @@
                 </button>
                 <h2 class="text-2xl font-bold text-gray-800 dark:text-zinc-100 mb-6">Solicitar Reposição</h2>
                 <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-zinc-300 mb-1.5">Solicitante <span class="text-red-500">*</span></label>
+                        <select wire:model="solicitanteId" class="block w-full border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 py-2.5">
+                            <option value="">Quem está solicitando?</option>
+                            @foreach($usuarios as $u)
+                                <option value="{{ $u->id }}">{{ $u->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('solicitanteId') <span class="text-rose-500 text-xs mt-1 font-medium">{{ $message }}</span> @enderror
+                    </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-zinc-300 mb-1.5">Produto</label>
                         <select wire:model="produtoSolicitarId" class="block w-full border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 py-2.5">

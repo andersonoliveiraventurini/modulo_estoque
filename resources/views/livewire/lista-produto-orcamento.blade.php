@@ -81,7 +81,8 @@
                                                 '{{ addslashes($produto->cor?->nome ?? 'Sem cor') }}',
                                                 '{{ addslashes($produto->part_number ?? '') }}',
                                                 '{{ $produto->liberar_desconto }}',
-                                                {{ $produto->estoque_atual !== null ? $produto->estoque_atual : 'null' }}
+                                                {{ $produto->estoque_atual !== null ? $produto->estoque_atual : 'null' }},
+                                                {{ $produto->is_perishable ? 'true' : 'false' }}
                                             )">
                                     <x-heroicon-o-plus class="w-4 h-4" />
                                     Selecionar

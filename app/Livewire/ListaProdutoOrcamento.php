@@ -103,6 +103,7 @@ class ListaProdutoOrcamento extends Component
                 'partNumber' => $produto->part_number ?? '',
                 'liberarDesconto' => $produto->liberar_desconto,
                 'estoqueAtual' => $produto->estoque_atual,
+                'is_perishable' => $produto->is_perishable,
                 'purpose' => $this->purpose
             ])->to($this->context === 'orcamento' ? null : $this->context);
         }

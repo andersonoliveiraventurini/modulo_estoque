@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Mail;
 
 use Illuminate\Support\Facades\Log;
 
+use App\Events\StockMovementRegistered;
+
 class MovimentacaoController extends Controller
 {
     public function index()
@@ -41,7 +43,8 @@ class MovimentacaoController extends Controller
             ->get();
         $armazens = Armazem::all();
         $produtos = Produto::with('cor')->where('ativo', true)->get(['id', 'nome', 'sku', 'fornecedor_id', 'cor_id']);
-        return view('paginas.movimentacao.create', compact('fornecedores', 'pedidos', 'pedidoCompras', 'armazens', 'produtos'));
+        $vendedores = \App\Models\Vendedor::with('user')->get();
+        return view('paginas.movimentacao.create', compact('fornecedores', 'pedidos', 'pedidoCompras', 'armazens', 'produtos', 'vendedores'));
     }
 
     public function store(StoreMovimentacaoRequest $request)
@@ -75,21 +78,41 @@ class MovimentacaoController extends Controller
             ]);
 
             foreach ($request->produtos as $produtoData) {
-                $movimentacao->itens()->create([
+                $item = $movimentacao->itens()->create([
                     'fornecedor_id' => $produtoData['fornecedor_id'] ?? null,
                     'produto_id' => $produtoData['produto_id'],
                     'quantidade' => $produtoData['quantidade'],
+                    'quantidade_vendida' => $produtoData['quantidade_vendida'] ?? 0,
+                    'wt_code' => $produtoData['wt_code'] ?? null,
+                    'cor' => $produtoData['cor'] ?? null,
+                    'codigo_fornecedor' => $produtoData['codigo_fornecedor'] ?? null,
                     'valor_unitario' => $produtoData['valor'] ?? 0,
                     'valor_total' => $produtoData['valor_total'] ?? 0,
-                    'armazem_id' => $produtoData['armazem_id'] ?? null,
-                    'corredor_id' => $produtoData['corredor_id'] ?? null,
-                    'posicao_id' => $produtoData['posicao_id'] ?? null,
-                    'endereco' => $produtoData['armazem'] ?? null,
-                    'corredor' => $produtoData['corredor'] ?? null,
-                    'posicao' => $produtoData['posicao'] ?? null,
                     'observacao' => $produtoData['observacao'] ?? null,
                     'data_vencimento' => $produtoData['data_vencimento'] ?? null,
+                    'is_encomenda' => $produtoData['is_encomenda'] ?? false,
+                    'numero_pedido' => $produtoData['numero_pedido'] ?? null,
+                    'vendedor_id' => $produtoData['vendedor_id'] ?? null,
                 ]);
+
+                // Salvar Alocações
+                if (isset($produtoData['alocacoes']) && is_array($produtoData['alocacoes'])) {
+                    $totalAlocado = 0;
+                    foreach ($produtoData['alocacoes'] as $alocacao) {
+                        $item->alocacoes()->create([
+                            'posicao_id' => $alocacao['posicao_id'],
+                            'quantidade' => $alocacao['quantidade'],
+                        ]);
+                        $totalAlocado += $alocacao['quantidade'];
+                    }
+
+                    // Validação de segurança no backend
+                    if (abs($totalAlocado - $produtoData['quantidade']) > 0.001) {
+                        throw new \Exception("A soma das alocações para o produto {$produtoData['nome']} não confere com a quantidade total.");
+                    }
+                } else {
+                    throw new \Exception("Nenhuma alocação informada para o produto {$produtoData['nome']}.");
+                }
                 
                 // O estoque NÃO é alterado aqui. Aguarda aprovação.
             }
@@ -138,9 +161,76 @@ class MovimentacaoController extends Controller
 
                 if ($movimentacao->tipo == 'entrada') {
                     $produto->addEstoque($item->quantidade);
+
+                    // REGRA: Se houver alocações para o HUB, atualizar saldo no HubStock
+                    foreach ($item->alocacoes as $alocacao) {
+                        $posicao = $alocacao->posicao;
+                        if ($posicao && $posicao->corredor && $posicao->corredor->armazem_id == 1) {
+                            $hubStock = \App\Models\HubStock::firstOrCreate(
+                                ['produto_id' => $produto->id],
+                                ['quantidade' => 0, 'quantidade_reservada' => 0]
+                            );
+                            $hubStock->increment('quantidade', $alocacao->quantidade);
+
+                            // Registrar Log de Entrada (HUB)
+                            event(new StockMovementRegistered([
+                                'produto_id' => $produto->id,
+                                'posicao_id' => $posicao->id,
+                                'tipo_movimentacao' => 'entry',
+                                'quantidade' => $alocacao->quantidade,
+                                'colaborador_id' => $movimentacao->usuario_id,
+                                'observacao' => "Entrada de estoque HUB - Movimentação #{$movimentacao->id}",
+                            ]));
+
+                            Log::info("Saldo HUB incrementado (Entrada): Produto #{$produto->id}, Qtd: +{$alocacao->quantidade}");
+                        } else {
+                            // Registrar Log de Entrada (Secundário)
+                            event(new StockMovementRegistered([
+                                'produto_id' => $produto->id,
+                                'posicao_id' => $posicao->id ?? null,
+                                'tipo_movimentacao' => 'entry',
+                                'quantidade' => $alocacao->quantidade,
+                                'colaborador_id' => $movimentacao->usuario_id,
+                                'observacao' => "Entrada de estoque secundário - Movimentação #{$movimentacao->id}",
+                            ]));
+                        }
+                    }
                 } else {
                     $produto->removerEstoque($item->quantidade);
                     app(\App\Services\EstoqueService::class)->verificarAlertaEstoqueBaixo($produto);
+
+                    // REGRA: Se houver alocações para o HUB em uma SAÍDA (raro mas possível), decrementar
+                    foreach ($item->alocacoes as $alocacao) {
+                        $posicao = $alocacao->posicao;
+                        if ($posicao && $posicao->corredor && $posicao->corredor->armazem_id == 1) {
+                            $hubStock = \App\Models\HubStock::where('produto_id', $produto->id)->first();
+                            if ($hubStock) {
+                                $hubStock->decrement('quantidade', $alocacao->quantidade);
+
+                                // Registrar Log de Saída (HUB)
+                                event(new StockMovementRegistered([
+                                    'produto_id' => $produto->id,
+                                    'posicao_id' => $posicao->id,
+                                    'tipo_movimentacao' => 'sale_output',
+                                    'quantidade' => -$alocacao->quantidade,
+                                    'colaborador_id' => $movimentacao->usuario_id,
+                                    'observacao' => "Saída de estoque HUB - Movimentação #{$movimentacao->id}",
+                                ]));
+
+                                Log::info("Saldo HUB decrementado (Saída): Produto #{$produto->id}, Qtd: -{$alocacao->quantidade}");
+                            }
+                        } else {
+                            // Registrar Log de Saída (Secundário)
+                            event(new StockMovementRegistered([
+                                'produto_id' => $produto->id,
+                                'posicao_id' => $posicao->id ?? null,
+                                'tipo_movimentacao' => 'sale_output',
+                                'quantidade' => -$alocacao->quantidade,
+                                'colaborador_id' => $movimentacao->usuario_id,
+                                'observacao' => "Saída de estoque secundário - Movimentação #{$movimentacao->id}",
+                            ]));
+                        }
+                    }
                 }
             }
 
@@ -256,8 +346,9 @@ class MovimentacaoController extends Controller
         $pedidos = Pedido::all();
         $armazens = Armazem::all();
         $produtos = Produto::with('cor')->where('ativo', true)->get(['id', 'nome', 'sku', 'fornecedor_id', 'cor_id']);
+        $vendedores = \App\Models\Vendedor::with('user')->get();
         $movimentacao->load('itens');
-        return view('paginas.movimentacao.edit', compact('movimentacao', 'fornecedores', 'pedidos', 'armazens', 'produtos'));
+        return view('paginas.movimentacao.edit', compact('movimentacao', 'fornecedores', 'pedidos', 'armazens', 'produtos', 'vendedores'));
     }
 
     public function update(UpdateMovimentacaoRequest $request, Movimentacao $movimentacao)
@@ -310,6 +401,10 @@ class MovimentacaoController extends Controller
                     'fornecedor_id' => $produtoData['fornecedor_id'] ?? null,
                     'produto_id' => $produtoData['produto_id'],
                     'quantidade' => $produtoData['quantidade'],
+                    'quantidade_vendida' => $produtoData['quantidade_vendida'] ?? 0,
+                    'wt_code' => $produtoData['wt_code'] ?? null,
+                    'cor' => $produtoData['cor'] ?? null,
+                    'codigo_fornecedor' => $produtoData['codigo_fornecedor'] ?? null,
                     'valor_unitario' => $produtoData['valor'] ?? 0,
                     'valor_total' => $produtoData['valor_total'] ?? 0,
                     'endereco' => $produtoData['armazem'] ?? null,
@@ -317,6 +412,9 @@ class MovimentacaoController extends Controller
                     'posicao' => $produtoData['posicao'] ?? null,
                     'observacao' => $produtoData['observacao'] ?? null,
                     'data_vencimento' => $produtoData['data_vencimento'] ?? null,
+                    'is_encomenda' => $produtoData['is_encomenda'] ?? false,
+                    'numero_pedido' => $produtoData['numero_pedido'] ?? null,
+                    'vendedor_id' => $produtoData['vendedor_id'] ?? null,
                 ]);
             }
 

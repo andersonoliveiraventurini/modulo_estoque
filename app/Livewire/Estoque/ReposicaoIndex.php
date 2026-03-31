@@ -30,6 +30,7 @@ class ReposicaoIndex extends Component
     public bool $modalSolicitar = false;
     public ?int $produtoSolicitarId = null;
     public float $quantidadeSolicitar = 1;
+    public ?int $solicitanteId = null; // Novo campo
 
     // --- Modal executar reposição ---
     public bool $modalExecutar = false;
@@ -74,7 +75,7 @@ class ReposicaoIndex extends Component
     // ─── Abrir modal solicitar ────────────────────────────────────────────────
     public function abrirModalSolicitar(?int $produtoId = null): void
     {
-        $this->reset(['produtoSolicitarId', 'quantidadeSolicitar']);
+        $this->reset(['produtoSolicitarId', 'quantidadeSolicitar', 'solicitanteId']);
         $this->produtoSolicitarId = $produtoId;
         $this->quantidadeSolicitar = 1;
         $this->modalSolicitar = true;
@@ -91,13 +92,15 @@ class ReposicaoIndex extends Component
         $this->validate([
             'produtoSolicitarId'  => 'required|exists:produtos,id',
             'quantidadeSolicitar' => 'required|integer|min:1',
+            'solicitanteId'       => 'required|exists:users,id', // Novo campo obrigatório
         ], [
             'produtoSolicitarId.required'  => 'Selecione o produto.',
             'quantidadeSolicitar.min'      => 'A quantidade deve ser maior que zero.',
+            'solicitanteId.required'       => 'Selecione quem está solicitando.',
         ]);
 
         try {
-            $service->solicitarReposicao($this->produtoSolicitarId, $this->quantidadeSolicitar);
+            $service->solicitarReposicao($this->produtoSolicitarId, $this->quantidadeSolicitar, $this->solicitanteId);
             $this->modalSolicitar = false;
             $this->tab = 'ordens';
             session()->flash('success', 'Solicitação de reposição criada com sucesso!');
@@ -220,7 +223,7 @@ class ReposicaoIndex extends Component
             $ordem->update(['impresso_em' => now()]);
         }
         
-        return redirect()->route('reposicao.pdf', ['ordem' => $ordemId]);
+        return redirect()->route('estoque.reposicao.pdf', ['ordem' => $ordemId]);
     }
 
     // ─── Cancelar ordem de reposição ─────────────────────────────────────────

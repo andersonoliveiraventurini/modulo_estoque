@@ -15,4 +15,9 @@ class Posicao extends Model {
     {
         return $this->belongsTo(Corredor::class);
     }
+
+    public function getNomeCompletoAttribute()
+    {
+        return ($this->corredor?->armazem?->nome ?? '?') . ' - ' . ($this->corredor?->nome ?? '?') . ' - ' . $this->nome;
+    }
 }

@@ -92,6 +92,24 @@ Retorna `null` se o cliente não tiver contato com telefone.
 
 ---
 
+### Módulo: Gestão de Estoque e HUB
+
+| Rota | Função |
+|---|---|
+| `movimentacao.index` | Histórico de entradas e saídas de estoque |
+| `movimentacao.create` | Lançamento de nova movimentação com **multi-alocação** |
+| `estoque.reposicao.index` | Painel de controle do HUB e solicitações de reposição |
+| `estoque.reposicao.manual` | **Reposição Manual** — Transferência direta para o HUB |
+| `estoque.logs` | **Logs de Movimentação** — Auditoria completa por item/posição |
+
+#### Regras de Negócio de Estoque
+- **Baixa de Venda**: Ocorre exclusivamente no armazém **HUB** (ID 1). Se o saldo do HUB for insuficiente, a venda é bloqueada com status "Sem estoque", mesmo que haja saldo global.
+- **Perecíveis**: Produtos marcados como perecíveis exigem obrigatoriamente a data de vencimento no momento da entrada.
+- **Multi-alocação**: Uma única linha de entrada de nota fiscal pode ser distribuída em múltiplas posições físicas diferentes.
+- **Auditoria (Logs)**: Toda movimentação física (entrada, saída por venda, transferência, reposição) gera um registro no `stock_movement_logs` com data, quantidade, posição e o colaborador responsável.
+
+---
+
 ### Módulo de Devoluções e Saldo de Clientes
 
 Este módulo gerencia o ciclo completo de retorno de mercadorias, desde a solicitação vinculada a um orçamento até a utilização do crédito financeiro gerado em futuras compras.
@@ -187,21 +205,18 @@ Ações de cobrança registradas na tela de **Consulta de Prazos**. Atualizam a 
 | Rota | Função |
 |---|---|
 | `movimentacao.index` | Lista de movimentações de entrada/saída |
-| `movimentacao.create` | Nova movimentação de estoque |
+| `movimentacao.create` | Nova movimentação de estoque (Multi-alocação) |
 | `armazens.index` | Cadastro de armazéns físicos |
 | `corredores.index` | Cadastro de corredores nos armazéns |
 | `posicoes.index` | Cadastro de posições (endereçamento) |
 | `inconsistencias.index` | Inconsistências de recebimento detectadas |
+| `estoque.logs` | **Audit Log** — Histórico físico detalhado |
 | `relatorios.index` | Central de relatórios de estoque |
-| `relatorios.vencimento_produtos` | Relatório de validade por lote (Filtros: Fornecedor, SKU, Tipo SPED) |
-| `relatorios.reposicao_estoque` | Histórico de reposição (Filtros: SKU, Tipo SPED, Repositor) |
-| `relatorios.recebimento_produtos` | Recebimento detalhado (Filtros: NF, Romaneio, Produto, SKU, Vendedor) |
-| `relatorios.saida_produtos` | Histórico de saídas aprovadas |
-| `relatorios.vendas_margem` | Análise de lucratividade e descontos por produto |
-| `relatorios.nao_conformidade` | Relatório de divergências (RNC) no recebimento |
-| `relatorios.devolucoes` | Histórico de produtos devolvidos ao estoque |
-| `reposicao.index` | **HUB Reposição** — Gestão de saldo e ordens |
-| `reposicao.pdf` | Formulário de retirada para reposição |
+| `relatorios.vencimento_produtos` | Relatório de validade por lote |
+| `relatorios.reposicao_estoque` | Histórico de reposição |
+| `estoque.reposicao.index` | **HUB Reposição** — Gestão de saldo e ordens |
+| `estoque.reposicao.manual` | **Transferência Manual** — Envio direto para o HUB |
+| `estoque.reposicao.pdf` | Formulário de retirada para reposição |
 
 ---
 
@@ -248,10 +263,11 @@ O sistema realiza a validação automática da situação cadastral de Clientes 
 | `liberarReservaDoOrcamento(Orcamento $orc)`| Cancela reservas ativas. |
 
 #### Automação de Fluxo (Events & Observers)
-O sistema utiliza o `OrcamentoObserver` para disparar eventos automáticos baseados na mudança de status:
-- **Aprovado**: Dispara `OrcamentoAprovado` → `ReservarEstoqueAoAprovar` & `GerarFaturaAoAprovar`.
-- **Cancelado**: Dispara `OrcamentoCancelado` → `LiberarReservaAoCancelar`.
-- **Finalizado**: Dispara `OrcamentoFinalizado` → `LiberarReservaAoFinalizar`.
+O sistema utiliza o `OrcamentoObserver` e eventos personalizados para disparar ações automáticas:
+- **Orcamento Aprovado**: Dispara `OrcamentoAprovado` → `ReservarEstoqueAoAprovar` & `GerarFaturaAoAprovar`.
+- **Orcamento Cancelado**: Dispara `OrcamentoCancelado` → `LiberarReservaAoCancelar`.
+- **Orcamento Finalizado**: Dispara `OrcamentoFinalizado` → `LiberarReservaAoFinalizar`.
+- **Movimentação Física**: Dispara `StockMovementRegistered` → `LogStockMovement` (Auditoria detalhada).
 
 > [!IMPORTANT]
 > A reserva de estoque possui proteção de idempotência via coluna `estoque_reservado_em` no model `Orcamento`, garantindo que múltiplas aprovações não dupliquem a reserva física.

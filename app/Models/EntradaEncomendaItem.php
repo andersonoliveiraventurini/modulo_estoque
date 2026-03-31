@@ -26,6 +26,7 @@ class EntradaEncomendaItem extends Model {
         'peso',
         'categoria_id',
         'sub_categoria_id',
+        'data_vencimento',
     ];
 
     protected $casts = [
@@ -33,6 +34,7 @@ class EntradaEncomendaItem extends Model {
         'quantidade_solicitada' => 'integer',
         'quantidade_recebida'   => 'integer',
         'peso'                  => 'float',
+        'data_vencimento'       => 'date',
     ];
 
     // ── Relacionamentos ─────────────────────────────────────

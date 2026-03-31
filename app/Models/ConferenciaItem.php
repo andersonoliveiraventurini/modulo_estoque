@@ -27,11 +27,13 @@ class ConferenciaItem extends Model
         'motivo_divergencia',
         'conferido_por_id',
         'conferido_em',
+        'data_vencimento',
     ];
 
     protected $casts = [
         'conferido_em' => 'datetime',
-        'is_encomenda' => 'bool',
+        'data_vencimento' => 'date',
+        'is_encomenda' => 'boolean',
         'qty_separada' => 'integer',
         'qty_conferida' => 'integer',
         'divergencia' => 'integer',

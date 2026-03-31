@@ -112,6 +112,19 @@ class EntradaEncomendaController extends Controller
             'itens.*.peso'              => 'nullable|numeric|min:0',
             'itens.*.categoria_id'      => 'nullable|exists:categorias,id',
             'itens.*.sub_categoria_id'  => 'nullable|exists:sub_categorias,id',
+            'itens.*.data_vencimento'   => [
+                'nullable',
+                'date',
+                'after:today',
+                function ($attribute, $value, $fail) {
+                    $index = explode('.', $attribute)[1];
+                    $cpId = $this->input("itens.{$index}.consulta_preco_id");
+                    $cp = \App\Models\ConsultaPreco::with('produto')->find($cpId);
+                    if ($cp && $cp->produto && $cp->produto->is_perishable && empty($value)) {
+                        $fail("A data de vencimento é obrigatória para o produto perecível: {$cp->produto->nome}.");
+                    }
+                }
+            ],
         ]);
 
         DB::beginTransaction();
@@ -175,6 +188,7 @@ class EntradaEncomendaController extends Controller
                     'peso'              => $itemData['peso'] ?? null,
                     'categoria_id'      => $itemData['categoria_id'] ?? null,
                     'sub_categoria_id'  => $itemData['sub_categoria_id'] ?? null,
+                    'data_vencimento'   => $itemData['data_vencimento'] ?? null,
                 ]);
             }
 
