@@ -47,13 +47,16 @@ class ProductReturnService
             foreach ($data['items'] as $itemId => $quantity) {
                 $orcamentoItem = $orcamento->itens()->findOrFail($itemId);
                 
+                // O crédito deve ser baseado no que o cliente REALMENTE pagou (valor com desconto)
+                $valorUnitarioPago = (float) ($orcamentoItem->valor_unitario_com_desconto ?? $orcamentoItem->valor_unitario);
+
                 $item = ReturnItem::create([
                     'return_id' => $return->id,
                     'produto_id' => $orcamentoItem->produto_id,
                     'orcamento_item_id' => $itemId,
                     'quantidade' => $quantity,
-                    'valor_unitario' => $orcamentoItem->valor_unitario,
-                    'subtotal' => $orcamentoItem->valor_unitario * $quantity,
+                    'valor_unitario' => $valorUnitarioPago,
+                    'subtotal' => $valorUnitarioPago * $quantity,
                 ]);
 
                 $totalCredito += $item->subtotal;
@@ -114,10 +117,16 @@ class ProductReturnService
                     }
                 }
 
+                // Recalcular o crédito total a partir dos itens para garantir precisão absoluta
+                $valorFinalCredito = (float) $return->items()->sum('subtotal');
+
+                // Garante que o valor no registro da devolução esteja sincronizado
+                $return->update(['valor_total_credito' => $valorFinalCredito]);
+
                 // Gerar Crédito para o Cliente
                 $this->creditoService->adicionarCredito(
                     $return->cliente,
-                    $return->valor_total_credito,
+                    $valorFinalCredito,
                     "Crédito gerado pela devolução #{$return->nr}",
                     $return->id
                 );

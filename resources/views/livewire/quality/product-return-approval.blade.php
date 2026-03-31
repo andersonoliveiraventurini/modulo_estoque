@@ -123,10 +123,25 @@
             <flux:card class="p-6 space-y-6 sticky top-6 shadow-lg border-t-4 border-t-indigo-500">
                 <h3 class="font-bold text-xl text-zinc-900 dark:text-white flex items-center gap-2">
                     <flux:icon icon="shield-check" class="w-6 h-6 text-indigo-500" />
-                    Ação Necessária
+                    @if($return->status === 'pendente_supervisor')
+                        Aprovação do Supervisor de Vendas
+                    @elseif($return->status === 'pendente_estoque')
+                        Inspeção de Qualidade (Estoque)
+                    @else
+                        Decisão Final
+                    @endif
                 </h3>
                 
                 <div class="space-y-4">
+                    @if($return->status === 'pendente_estoque')
+                        <div class="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900 rounded-xl mb-4">
+                            <p class="text-xs text-blue-700 dark:text-blue-300 font-medium leading-relaxed">
+                                <flux:icon icon="information-circle" class="w-4 h-4 inline mr-1" />
+                                Como Chefe de Estoque, sua aprovação confirma que os produtos foram recebidos e passaram na inspeção de qualidade. Isso gerará o crédito automático para o cliente.
+                            </p>
+                        </div>
+                    @endif
+
                     <div class="div p-1.5 bg-zinc-50 dark:bg-black/20 rounded-xl border border-zinc-100 dark:border-zinc-800">
                         <div class="p-3 space-y-3">
                             <div class="flex items-center justify-between group">
@@ -161,61 +176,28 @@
                     </div>
                 </div>
 
-                @if (in_array($return->status, ['pendente_supervisor', 'pendente_estoque']))
-                    <div class="space-y-5 pt-2">
-                        <flux:field>
-                            <flux:label class="font-bold text-xs uppercase tracking-widest text-zinc-500 mb-2">Observações / Motivo da Decisão</flux:label>
-                            <flux:textarea wire:model="observacoes" rows="4" placeholder="Descreva o motivo da sua decisão..." class="rounded-xl" />
-                            <flux:error name="observacoes" />
-                        </flux:field>
+                @if($return->status === 'pendente_supervisor' || $return->status === 'pendente_estoque')
+                    <div class="space-y-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                        <flux:textarea 
+                            wire:model="observacoes" 
+                            label="{{ $return->status === 'pendente_estoque' ? 'Laudo da Inspeção / Observações' : 'Observações do Supervisor' }}" 
+                            placeholder="{{ $return->status === 'pendente_estoque' ? 'Descreva o estado dos produtos recebidos...' : 'Motivo da decisão...' }}" 
+                            rows="4" 
+                        />
 
-                        @if ($return->status === 'pendente_estoque')
-                            <div class="p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/20 border-2 border-indigo-100 dark:border-indigo-900/50 shadow-sm">
-                                <flux:checkbox 
-                                    wire:model="retorno_estoque" 
-                                    label="Confirmar retorno ao estoque?" 
-                                    description="Aumenta automaticamente o saldo físico do produto disponível." 
-                                />
-                            </div>
+                        @if($return->status === 'pendente_estoque')
+                            <flux:checkbox wire:model="retorno_estoque" label="Retornar itens ao estoque físico" />
                         @endif
 
-                        <div class="grid grid-cols-2 gap-4 pt-2">
-                            <flux:button wire:click="reject" variant="danger" icon="x-mark" class="py-3 shadow-md hover:shadow-lg transition-all">Recusar</flux:button>
-                            <flux:button wire:click="approve" variant="primary" icon="check" class="py-3 shadow-md hover:shadow-lg transition-all">Aprovar</flux:button>
-                        </div>
-                    </div>
-                @else
-                    <div class="py-10 text-center space-y-6">
-                        <div class="relative inline-block">
-                            <flux:icon icon="lock-closed" class="w-16 h-16 mx-auto text-zinc-200 dark:text-zinc-800" />
-                            <div class="absolute -bottom-1 -right-1 bg-emerald-500 text-white rounded-full p-1 border-2 border-white dark:border-zinc-900">
-                                <flux:icon icon="check" class="w-3 h-3" />
-                            </div>
-                        </div>
-                        <div class="space-y-2 px-4">
-                            <p class="text-sm font-bold text-zinc-900 dark:text-white">Processo Finalizado</p>
-                            <p class="text-xs text-zinc-500">Este processo de devolução foi <strong>{{ strtolower($return->status_label) }}</strong> e está bloqueado para novas alterações.</p>
-                        </div>
-                        
-                        <div class="pt-4 flex flex-col gap-3 px-4">
-                            <flux:button variant="ghost" size="sm" icon="document-text" class="justify-start w-full">Ver PDF Solicitação</flux:button>
-                            @if ($return->status === 'finalizado')
-                                <flux:button variant="ghost" size="sm" icon="check-badge" class="justify-start w-full">Ver PDF Autorização</flux:button>
-                                @if ($return->troca_produto)
-                                    <flux:button variant="ghost" size="sm" icon="truck" class="justify-start w-full">Ver Romaneio de Troca</flux:button>
-                                @endif
-                            @endif
+                        <div class="flex gap-3">
+                            <flux:button wire:click="reject" variant="danger" class="flex-1" icon="x-mark">Negar Devolução</flux:button>
+                            <flux:button wire:click="approve" variant="primary" class="flex-1" icon="check">
+                                {{ $return->status === 'pendente_estoque' ? 'Aprovar e Finalizar' : 'Aprovar Solicitação' }}
+                            </flux:button>
                         </div>
                     </div>
                 @endif
             </flux:card>
-
-            @if ($return->observacoes)
-                <flux:card class="p-6 border-dashed bg-zinc-50/30 dark:bg-zinc-800/10">
-                    <h3 class="font-bold text-zinc-400 uppercase text-[10px] tracking-widest mb-3">Justificativa da Solicitação</h3>
-                    <p class="text-sm text-zinc-600 dark:text-zinc-400 italic font-medium leading-relaxed">"{{ $return->observacoes }}"</p>
-                </flux:card>
-            @endif
         </div>
     </div>
 </div>

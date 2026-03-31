@@ -176,6 +176,19 @@
                 :current="request()->routeIs('product_returns.create')" wire:navigate>{{ __('Solicitar Devolução') }}
             </flux:navlist.item>
             @endcan
+
+            {{-- Links de Aprovação para Supervisor e Estoque --}}
+            @can('approveSupervisor', App\Models\ProductReturn::class)
+            <flux:navlist.item icon="shield-check" :href="route('quality.dashboard', ['status_filter' => 'pendente_supervisor'])"
+                wire:navigate>{{ __('Aprovações Pendentes') }}
+            </flux:navlist.item>
+            @endcan
+
+            @can('approveEstoque', App\Models\ProductReturn::class)
+            <flux:navlist.item icon="clipboard-document-check" :href="route('quality.dashboard', ['status_filter' => 'pendente_estoque'])"
+                wire:navigate>{{ __('Inspeções de Devolução') }}
+            </flux:navlist.item>
+            @endcan
         </flux:navlist.group>
 
         <flux:navlist.group heading="Produtos" expandable :expanded="false">

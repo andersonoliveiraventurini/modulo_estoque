@@ -92,22 +92,26 @@ Retorna `null` se o cliente não tiver contato com telefone.
 
 ---
 
-### Módulo: Devoluções e Reembolsos (Gestão de Qualidade)
+### Módulo de Devoluções e Saldo de Clientes
 
-| Rota | Função | Permissão |
-|---|---|---|
-| `quality.dashboard` | Painel de Gestão de Devoluções e RNC | Todos (Visualização) |
-| `product_returns.create` | Solicitação de devolução de itens por orçamento/pedido | **Vendedor**, **Supervisor**, **Admin** |
-| `product_returns.approve` | Aprovação e Autorização de Devolução | **Supervisor** (1ª etapa), **Estoque** (Final) |
+Este módulo gerencia o ciclo completo de retorno de mercadorias, desde a solicitação vinculada a um orçamento até a utilização do crédito financeiro gerado em futuras compras.
 
-#### Fluxo de Devolução e Regras de Acesso:
-1. **Solicitação**: O **Vendedor** seleciona os itens e quantidades. O sistema gera o **Romaneio de Solicitação** (`DEV-YYYY-NNNN`) em PDF.
-2. **Aprovação Vendas**: O **Supervisor de Vendas** (Role: `supervisor`) valida o motivo e autoriza o processo para a conferência física.
-3. **Aprovação Estoque**: Somente o **Responsável do Estoque** (Role: `estoquista`) possui permissão para:
-   - Finalizar a devolução após conferência física.
-   - Confirmar o retorno automático dos itens ao saldo do estoque.
-   - Gerar o **Crédito de Devolução** para o cliente.
-   - Gerar o **Romaneio de Troca** (caso a opção de troca esteja marcada).
+#### Fluxo de Dupla Aprovação
+O processo é estruturado em etapas obrigatórias para garantir a integridade fiscal e física:
+1.  **Solicitação (Qualidade/Vendas)**: Iniciada no [ProductReturnForm](file:///c:/Users/and7_/Documents/GitHub/modulo_estoque/app/Livewire/Quality/ProductReturnForm.php) ao buscar um orçamento pago. O usuário seleciona os itens e a quantidade (limitada à venda original).
+2.  **Etapa 1: Supervisor de Vendas**: O supervisor acessa a solicitação no painel e realiza a aprovação comercial. Caso negue, o processo é encerrado imediatamente.
+3.  **Etapa 2: Chefe de Estoque (Inspeção)**: Após o "OK" comercial, o estoque realiza a inspeção física. O Chefe de Estoque emite o laudo de qualidade e decide se o item retorna ao saldo físico. A aprovação final nesta etapa é o gatilho para a geração automática do crédito.
+
+#### Regra de Cálculo do Crédito
+Para evitar discrepâncias financeiras, o sistema utiliza a seguinte lógica matemática no [ProductReturnService](file:///c:/Users/and7_/Documents/GitHub/modulo_estoque/app/Services/ProductReturnService.php):
+- **Base de Valor**: É utilizado o `valor_unitario_com_desconto` do item no orçamento original.
+- **Cálculo**: `Crédito Gerado = (Preço Unitário Pago) x (Quantidade Devolvida)`.
+- **Persistência**: O valor é somado à coluna `saldo_credito` na tabela `clientes` e registrado em um log de transações FIFO por validade.
+
+#### Abatimento Automático no Checkout (Balcão e Rota)
+Nas telas de [Pagamento Balcão](file:///c:/Users/and7_/Documents/GitHub/modulo_estoque/app/Livewire/PagamentoBalcao.php) e [Pagamento Rota](file:///c:/Users/and7_/Documents/GitHub/modulo_estoque/app/Livewire/PagamentoRota.php), o operador possui a opção **"Abater Crédito"**:
+- **Se Crédito > Valor do Pedido**: O sistema abate o valor total da venda e o saldo restante do cliente é preservado (Ex: Crédito R$500 - Pedido R$100 = R$400 de saldo restante).
+- **Se Crédito < Valor do Pedido**: O sistema consome todo o crédito disponível e exige que o operador adicione outras formas de pagamento para o saldo devedor restante (Ex: Crédito R$100 - Pedido R$500 = R$400 a pagar em dinheiro/cartão/pix).
 
 > [!NOTE]
 > As travas de segurança são aplicadas via `ProductReturnPolicy` e verificadas em tempo real nos componentes Livewire e na interface (UI).
