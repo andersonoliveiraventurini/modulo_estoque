@@ -199,6 +199,27 @@ Ações de cobrança registradas na tela de **Consulta de Prazos**. Atualizam a 
 | `reposicao.index` | **HUB Reposição** — Gestão de saldo e ordens |
 | `reposicao.pdf` | Formulário de retirada para reposição |
 
+---
+
+### Módulo: Validação de CNPJ (Compliance)
+
+O sistema realiza a validação automática da situação cadastral de Clientes e Fornecedores junto à Receita Federal para garantir a conformidade fiscal antes de operações críticas (venda, faturamento e compras).
+
+#### Lógica de Funcionamento:
+- **Variável Principal**: `$isCnpjAtivo` (Livewire) ou `$ativo` (Controllers/Blade).
+- **Fonte de Dados**: Consulta externa via **BrasilAPI** (`https://brasilapi.com.br/api/cnpj/v2/`).
+- **Serviço Responsável**: `App\Services\CnpjService`.
+- **Cache**: Os resultados das consultas são armazenados em cache por **24 horas**.
+- **Regra de Ativação (Compliance Fiscal)**: O sistema considera o status fiscal válido somente se:
+    1. A situação cadastral na Receita Federal for **"ATIVA"**.
+    2. Existir pelo menos uma **Inscrição Estadual (IE)** com situação **"ATIVA"** (validação via BrasilAPI V2).
+
+#### Impactos no Sistema:
+1. **Orçamentos**: Se o cliente possuir pendência fiscal (CNPJ inativo ou sem IE ativa), um banner de "PENDÊNCIA FISCAL DETECTADA" e um alerta JS são exibidos.
+2. **Pagamento de Rota**: Impede a finalização fluida e exibe banner crítico caso o cliente esteja irregular.
+3. **Entrada de Encomendas**: Valida cada fornecedor da cotação. Caso um fornecedor não possua IE ativa, exibe o alerta específico: **"Favor verificar - Fornecedor sem inscrição estadual"**.
+
+
 #### Regras de Negócio — Relatórios Gerenciais
 
 | Relatório | Lógica de Cálculo / Filtros |

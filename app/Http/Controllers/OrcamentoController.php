@@ -38,6 +38,7 @@ use App\Models\SolicitacaoPagamento;
 
 use Illuminate\Support\Str;
 use App\Services\EstoqueService;
+use App\Services\CnpjService;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class OrcamentoController extends Controller
@@ -108,23 +109,13 @@ class OrcamentoController extends Controller
     }
 
 
-    public function criarOrcamento($cliente_id)
+    public function criarOrcamento($cliente_id, CnpjService $cnpjService)
     {
         $cliente = Cliente::with('enderecos')->findOrFail($cliente_id);
         $cnpj = preg_replace('/\D/', '', $cliente->cnpj);
 
-        $body = Cache::remember("cnpj_{$cnpj}", now()->addHours(24), function () use ($cnpj) {
-            $response = Http::timeout(10)->get("https://brasilapi.com.br/api/cnpj/v1/{$cnpj}");
-
-            if ($response->status() === 429 || !$response->successful()) {
-                return null;
-            }
-
-            $data = json_decode($response->body(), true);
-            return json_last_error() === JSON_ERROR_NONE ? $data : null;
-        });
-
-        $ativo = strtoupper(trim($body['descricao_situacao_cadastral'] ?? '')) === 'ATIVA';
+        $body = $cnpjService->consultarCnpj($cnpj);
+        $ativo = $cnpjService->isStatusFiscalValido($body);
 
         $produtos = Produto::all();
         $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
@@ -1420,12 +1411,11 @@ class OrcamentoController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit($id)
+    public function edit($id, CnpjService $cnpjService)
     {
         $orcamento = Orcamento::with([
-            'cliente.enderecos',
-            'itens.produto.fornecedor',
-            'itens.produto.cor',
+            'itens.produto',
+            'itens.cor',
             'vidros',
             'descontos'
         ])->findOrFail($id);
@@ -1433,18 +1423,8 @@ class OrcamentoController extends Controller
         $cliente = Cliente::with('enderecos')->findOrFail($orcamento->cliente_id);
         $cnpj = preg_replace('/\D/', '', $cliente->cnpj);
 
-        $body = Cache::remember("cnpj_{$cnpj}", now()->addHours(24), function () use ($cnpj) {
-            $response = Http::timeout(10)->get("https://brasilapi.com.br/api/cnpj/v1/{$cnpj}");
-
-            if ($response->status() === 429 || !$response->successful()) {
-                return null;
-            }
-
-            $data = json_decode($response->body(), true);
-            return json_last_error() === JSON_ERROR_NONE ? $data : null;
-        });
-
-        $ativo = strtoupper(trim($body['descricao_situacao_cadastral'] ?? '')) === 'ATIVA';
+        $body = $cnpjService->consultarCnpj($cnpj);
+        $ativo = $cnpjService->isStatusFiscalValido($body);
 
         $produtos = Produto::all();
         $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();

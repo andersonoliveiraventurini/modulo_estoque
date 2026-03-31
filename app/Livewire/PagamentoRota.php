@@ -173,7 +173,7 @@ class PagamentoRota extends Component
             $cnpj = preg_replace('/\D/', '', $this->orcamento->cliente->cnpj_cpf);
             if (strlen($cnpj) === 14) {
                 $dadosCnpj = $this->cnpjService->consultarCnpj($cnpj);
-                $this->isCnpjAtivo = $this->cnpjService->estaAtivo($dadosCnpj);
+                $this->isCnpjAtivo = $this->cnpjService->isStatusFiscalValido($dadosCnpj);
             }
         }
     }

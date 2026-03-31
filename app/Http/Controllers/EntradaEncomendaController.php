@@ -57,7 +57,12 @@ class EntradaEncomendaController extends Controller
                 if ($item->fornecedorSelecionado && $item->fornecedorSelecionado->fornecedor) {
                     $f = $item->fornecedorSelecionado->fornecedor;
                     if ($f->cnpj && !isset($fornecedoresStatus[$f->cnpj])) {
-                        $fornecedoresStatus[$f->cnpj] = $cnpjService->consultarCnpj($f->cnpj);
+                        $body = $cnpjService->consultarCnpj($f->cnpj);
+                        $fornecedoresStatus[$f->cnpj] = [
+                            'ativo' => $cnpjService->estaAtivo($body),
+                            'tem_ie' => $cnpjService->temIeAtiva($body),
+                            'situacao' => $body['descricao_situacao_cadastral'] ?? 'N/A'
+                        ];
                     }
                 }
             }
@@ -268,7 +273,12 @@ class EntradaEncomendaController extends Controller
                 if ($item->fornecedorSelecionado && $item->fornecedorSelecionado->fornecedor) {
                     $f = $item->fornecedorSelecionado->fornecedor;
                     if ($f->cnpj && !isset($fornecedoresStatus[$f->cnpj])) {
-                        $fornecedoresStatus[$f->cnpj] = $cnpjService->consultarCnpj($f->cnpj);
+                        $body = $cnpjService->consultarCnpj($f->cnpj);
+                        $fornecedoresStatus[$f->cnpj] = [
+                            'ativo' => $cnpjService->estaAtivo($body),
+                            'tem_ie' => $cnpjService->temIeAtiva($body),
+                            'situacao' => $body['descricao_situacao_cadastral'] ?? 'N/A'
+                        ];
                     }
                 }
             }

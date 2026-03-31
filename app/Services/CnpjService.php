@@ -49,7 +49,7 @@ class CnpjService
     }
 
     /**
-     * Verifica se a situação cadastral está ativa.
+     * Verifica se a situação cadastral está ativa (CNPJ).
      *
      * @param array|null $data
      * @return bool
@@ -57,10 +57,52 @@ class CnpjService
     public function estaAtivo(?array $data): bool
     {
         if (!$data) {
-            return true; // Se não conseguir consultar, não bloqueamos por padrão (ou tratamos como incerto)
+            return true; // Se não conseguir consultar, não bloqueamos por padrão
         }
 
         $situacao = strtoupper(trim($data['descricao_situacao_cadastral'] ?? ''));
         return $situacao === 'ATIVA';
+    }
+
+    /**
+     * Verifica se o CNPJ possui pelo menos uma Inscrição Estadual (IE) ativa.
+     *
+     * @param array|null $data
+     * @return bool
+     */
+    public function temIeAtiva(?array $data): bool
+    {
+        if (!$data) {
+            return true; // Se não conseguir consultar, não bloqueamos por padrão
+        }
+
+        // Na V2 da BrasilAPI, as IEs vêm no campo 'inscricoes_estaduais'
+        $ies = $data['inscricoes_estaduais'] ?? [];
+
+        if (empty($ies)) {
+            // Algumas empresas são isentas, mas se o sistema exige IE para fornecedores, 
+            // este método retornará false se não houver nenhuma IE listada.
+            return false;
+        }
+
+        foreach ($ies as $ie) {
+            $situacao = strtoupper(trim($ie['situacao'] ?? ''));
+            if ($situacao === 'ATIVA') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Verifica se o status fiscal geral (CNPJ + IE) é válido.
+     *
+     * @param array|null $data
+     * @return bool
+     */
+    public function isStatusFiscalValido(?array $data): bool
+    {
+        return $this->estaAtivo($data) && $this->temIeAtiva($data);
     }
 }

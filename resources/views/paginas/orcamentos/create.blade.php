@@ -349,9 +349,19 @@
     </div>
 
     @if ($ativo !== true)
+        <div class="mb-6 bg-red-50 dark:bg-red-900/20 border-2 border-red-500 dark:border-red-600 rounded-xl p-4 animate-pulse">
+            <div class="flex gap-3 items-center">
+                <x-heroicon-o-exclamation-triangle class="w-8 h-8 text-red-600 flex-shrink-0" />
+                <div>
+                    <h4 class="font-bold text-red-900 dark:text-red-200 text-lg">PENDÊNCIA FISCAL DETECTADA</h4>
+                    <p class="text-red-800 dark:text-red-300 font-medium text-sm">Favor verificar - Cliente sem inscrição estadual ativa ou CNPJ irregular na Receita Federal.</p>
+                </div>
+            </div>
+        </div>
+
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                alert('⚠️ Atenção: a situação do CNPJ não está ATIVA na Receita Federal.');
+                alert('⚠️ Favor verificar - Cliente sem inscrição estadual ativa ou CNPJ irregular na Receita Federal.');
             });
         </script>
     @endif

@@ -64,15 +64,15 @@
                     <div class="flex gap-3 items-center">
                         <x-heroicon-o-exclamation-triangle class="w-8 h-8 text-red-600 flex-shrink-0" />
                         <div>
-                            <h4 class="font-bold text-red-900 dark:text-red-200 text-lg">CNPJ INATIVO / IRREGULAR</h4>
-                            <p class="text-red-800 dark:text-red-300 font-medium text-sm">A situação do CNPJ não está ATIVA na Receita Federal.</p>
+                            <h4 class="font-bold text-red-900 dark:text-red-200 text-lg">PENDÊNCIA FISCAL DETECTADA</h4>
+                            <p class="text-red-800 dark:text-red-300 font-medium text-sm">Favor verificar - Cliente sem inscrição estadual ativa ou CNPJ irregular na Receita Federal.</p>
                         </div>
                     </div>
                 </div>
 
                 <script>
                     document.addEventListener('DOMContentLoaded', function() {
-                        alert('⚠️ Atenção: a situação do CNPJ não está ATIVA na Receita Federal.');
+                        alert('⚠️ Favor verificar - Cliente sem inscrição estadual ativa ou CNPJ irregular na Receita Federal.');
                     });
                 </script>
             @endif

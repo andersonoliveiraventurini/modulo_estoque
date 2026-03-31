@@ -95,10 +95,16 @@
 
                     @if (isset($fornecedoresStatus) && !empty($fornecedoresStatus))
                         @foreach ($fornecedoresStatus as $cnpj => $status)
-                            @if ($status && strtoupper(trim($status['descricao_situacao_cadastral'] ?? '')) !== 'ATIVA')
+                            @if (!$status['ativo'])
                                 <div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg text-sm text-red-700 dark:text-red-300">
                                     <x-heroicon-o-exclamation-triangle class="w-5 h-5 inline-block mr-1" />
-                                    <strong>Aviso:</strong> O fornecedor de CNPJ {{ $cnpj }} não está com a situação ATIVA na Receita Federal ({{ $status['descricao_situacao_cadastral'] ?? 'N/A' }}).
+                                    <strong>Aviso:</strong> O fornecedor de CNPJ {{ $cnpj }} não está com a situação ATIVA na Receita Federal ({{ $status['situacao'] }}).
+                                </div>
+                            @endif
+                            @if (!$status['tem_ie'])
+                                <div class="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg text-sm text-amber-700 dark:text-amber-300">
+                                    <x-heroicon-o-exclamation-triangle class="w-5 h-5 inline-block mr-1" />
+                                    <strong>Favor verificar - Fornecedor sem inscrição estadual</strong> (CNPJ: {{ $cnpj }}).
                                 </div>
                             @endif
                         @endforeach
