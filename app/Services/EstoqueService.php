@@ -7,6 +7,8 @@ use App\Models\EstoqueReserva;
 use App\Models\Orcamento;
 use App\Models\Produto;
 use App\Models\User;
+use App\Models\SystemAlert;
+use App\Models\StockMovementLog;
 use Illuminate\Support\Facades\DB;
 use App\Events\StockMovementRegistered;
 use Illuminate\Support\Facades\Log;
@@ -18,24 +20,25 @@ final class EstoqueService
      */
     private function logMovement(array $data): void
     {
-        event(new StockMovementRegistered([
+        StockMovementLog::create([
             'produto_id' => $data['produto_id'],
             'posicao_id' => $data['posicao_id'] ?? null,
+            'colaborador_id' => $data['colaborador_id'] ?? auth()->id(),
+            'orcamento_id' => $data['orcamento_id'] ?? null,
             'tipo_movimentacao' => $data['tipo_movimentacao'],
             'quantidade' => $data['quantidade'],
-            'colaborador_id' => $data['colaborador_id'] ?? auth()->id(),
+            'origem' => $data['origem'] ?? null,
+            'destino' => $data['destino'] ?? null,
+            'motivo' => $data['motivo'] ?? null,
             'observacao' => $data['observacao'] ?? null,
-        ]));
+        ]);
+
+        // Também dispara o evento se houver ouvintes
+        event(new StockMovementRegistered($data));
     }
 
     public function reservarParaOrcamento(Orcamento $orcamento): void
     {
-        /* 
-        if ($orcamento->estoque_reservado_em !== null) {
-            return;
-        } 
-        */
-
         Log::info("Iniciando reserva de estoque para Orçamento #{$orcamento->id}");
         $orcamento->load('itens.produto');
 
@@ -60,13 +63,58 @@ final class EstoqueService
                         throw new \Exception("Estoque insuficiente para o produto {$produto->nome} (SKU: {$produto->sku}). Disponível: {$produto->estoque_atual}");
                     }
 
-                    EstoqueReserva::create([
-                        'orcamento_id'  => $orcamento->id,
-                        'produto_id'    => $produto->id,
-                        'quantidade'    => $quantidade,
-                        'status'        => 'ativa',
-                        'criado_por_id' => auth()->id(),
-                    ]);
+                    // Priorização do HUB (ID 1)
+                    $hubStock = \App\Models\HubStock::where('produto_id', $produto->id)->lockForUpdate()->first();
+                    $saldoHub = $hubStock ? (float) $hubStock->quantidade : 0;
+                    
+                    // Reservado no HUB já existente (para não contar duas vezes)
+                    $reservadoHub = (float) EstoqueReserva::where('produto_id', $produto->id)
+                        ->where('armazem_id', 1)
+                        ->where('status', 'ativa')
+                        ->sum('quantidade');
+                    
+                    $disponivelHub = max(0, $saldoHub - $reservadoHub);
+
+                    if ($disponivelHub >= $quantidade) {
+                        // Reserva total do HUB
+                        EstoqueReserva::create([
+                            'orcamento_id'  => $orcamento->id,
+                            'produto_id'    => $produto->id,
+                            'armazem_id'    => 1,
+                            'quantidade'    => $quantidade,
+                            'status'        => 'ativa',
+                            'criado_por_id' => auth()->id(),
+                        ]);
+                    } else {
+                        // HUB zerado ou insuficiente
+                        if ($disponivelHub > 0) {
+                            EstoqueReserva::create([
+                                'orcamento_id'  => $orcamento->id,
+                                'produto_id'    => $produto->id,
+                                'armazem_id'    => 1,
+                                'quantidade'    => $disponivelHub,
+                                'status'        => 'ativa',
+                                'criado_por_id' => auth()->id(),
+                            ]);
+                        }
+
+                        $restante = $quantidade - $disponivelHub;
+                        
+                        // Reserva do estoque principal (armazém id != 1)
+                        EstoqueReserva::create([
+                            'orcamento_id'  => $orcamento->id,
+                            'produto_id'    => $produto->id,
+                            'armazem_id'    => null, // Indica estoque principal
+                            'quantidade'    => $restante,
+                            'status'        => 'ativa',
+                            'criado_por_id' => auth()->id(),
+                        ]);
+
+                        // Notificação se HUB insuficiente ou zerado
+                        if ($disponivelHub < $quantidade) {
+                            $this->notificarHubInsuficiente($produto, $orcamento);
+                        }
+                    }
                     
                     Log::info("Item reservado: Produto #{$produto->id}, Qtd: {$quantidade}");
                 }
@@ -81,6 +129,18 @@ final class EstoqueService
         }
     }
 
+    private function notificarHubInsuficiente(Produto $produto, Orcamento $orcamento): void
+    {
+        SystemAlert::create([
+            'tipo' => 'hub_zero',
+            'mensagem' => "Item [{$produto->sku}] zerado ou insuficiente no HUB - reserva efetuada do estoque principal",
+            'produto_id' => $produto_id ?? $produto->id,
+            'orcamento_id' => $orcamento->id,
+        ]);
+        
+        Log::warning("Item {$produto->sku} insuficiente no HUB para Orçamento #{$orcamento->id}");
+    }
+
     public function liberarReservas(Orcamento $orcamento, array $consumos): void
     {
         Log::info("Liberando reservas para Orçamento #{$orcamento->id}");
@@ -91,14 +151,28 @@ final class EstoqueService
             $reservas = EstoqueReserva::where('orcamento_id', $orcamento->id)
                 ->where('produto_id', $produtoId)
                 ->where('status', 'ativa')
+                ->orderBy('armazem_id', 'desc') // Consumir HUB primeiro (ID 1 > NULL)
                 ->get();
 
+            $restanteConsumir = $quantidadeConsumida;
             foreach ($reservas as $reserva) {
-                // Para simplificar, estamos marcando a reserva como consumida.
-                // Em um cenário perfeito, poderíamos subtrair a quantidade se fosse parcial,
-                // mas aqui o sistema parece tratar a reserva como um bloco por orçamento/produto.
-                $reserva->update(['status' => 'consumida']);
-                Log::info("Reserva consumida: Produto #{$produtoId}, Qtd Consumida: {$quantidadeConsumida}");
+                if ($restanteConsumir <= 0) break;
+
+                if ($reserva->quantidade <= $restanteConsumir) {
+                    $restanteConsumir -= $reserva->quantidade;
+                    $reserva->update(['status' => 'consumida']);
+                } else {
+                    // Consumo parcial da reserva
+                    $novaReserva = $reserva->replicate();
+                    $novaReserva->quantidade = $reserva->quantidade - $restanteConsumir;
+                    $novaReserva->save();
+
+                    $reserva->update([
+                        'quantidade' => $restanteConsumir,
+                        'status' => 'consumida'
+                    ]);
+                    $restanteConsumir = 0;
+                }
             }
         }
     }
@@ -110,7 +184,6 @@ final class EstoqueService
 
         try {
             DB::transaction(function () use ($conf) {
-                // Garante que apenas um processo mexa no orçamento relacionado por vez
                 Orcamento::where('id', $conf->orcamento_id)->lockForUpdate()->first();
 
                 $consumos = [];
@@ -124,27 +197,44 @@ final class EstoqueService
 
                     if ($q <= 0) continue;
 
-                    // REGRA: Baixa SOMENTE no HUB
-                    $hubStock = \App\Models\HubStock::where('produto_id', $produto->id)->lockForUpdate()->first();
-                    $saldoHub = $hubStock ? (float) $hubStock->quantidade : 0;
+                    // Lógica de baixa: Primeiro HUB, depois outros.
+                    // Mas as reservas já estão priorizadas.
+                    $restanteBaixar = $q;
 
-                    if ($saldoHub < $q) {
-                        throw new \Exception("Produto {$produto->nome} (SKU: {$produto->sku}) sem saldo suficiente no HUB para baixa de venda. Disponível no HUB: {$saldoHub}. Solicite reposição ao operador de estoque.");
+                    // 1. Baixar do HUB
+                    $hubStock = \App\Models\HubStock::where('produto_id', $produto->id)->lockForUpdate()->first();
+                    if ($hubStock && $hubStock->quantidade > 0) {
+                        $baixaHub = min($hubStock->quantidade, $restanteBaixar);
+                        $hubStock->decrement('quantidade', $baixaHub);
+                        $restanteBaixar -= $baixaHub;
+                        
+                        $this->logMovement([
+                            'produto_id' => $produto->id,
+                            'tipo_movimentacao' => 'sale_output',
+                            'quantidade' => -$baixaHub,
+                            'origem' => 'HUB (Armazém 1)',
+                            'destino' => 'Venda (Cliente)',
+                            'orcamento_id' => $conf->orcamento_id,
+                            'observacao' => "Saída HUB - Conferência #{$conf->id} / Orçamento #{$conf->orcamento_id}",
+                        ]);
                     }
 
-                    $hubStock->decrement('quantidade', $q);
+                    // 2. Baixar do estoque principal se sobrar
+                    if ($restanteBaixar > 0) {
+                        $this->logMovement([
+                            'produto_id' => $produto->id,
+                            'tipo_movimentacao' => 'sale_output',
+                            'quantidade' => -$restanteBaixar,
+                            'origem' => 'Estoque Principal (Outros)',
+                            'destino' => 'Venda (Cliente)',
+                            'orcamento_id' => $conf->orcamento_id,
+                            'observacao' => "Saída Estoque Principal - Conferência #{$conf->id} / Orçamento #{$conf->orcamento_id}",
+                        ]);
+                    }
+
                     $produto->decrement('estoque_atual', $q);
 
-                    // Registrar Log
-                    $this->logMovement([
-                        'produto_id' => $produto->id,
-                        'posicao_id' => null, // Baixa do HUB (virtualmente agnóstico de posição específica aqui)
-                        'tipo_movimentacao' => 'sale_output',
-                        'quantidade' => -$q, // Corrigido: Valor negativo para saída
-                        'observacao' => "Saída por venda - Conferência #{$conf->id} / Orçamento #{$conf->orcamento_id}",
-                    ]);
-
-                    Log::info("Estoque atualizado (Saída HUB): Produto #{$produto->id}, Qtd: -{$q}");
+                    Log::info("Estoque atualizado (Saída): Produto #{$produto->id}, Qtd: -{$q}");
                     
                     $this->verificarAlertaEstoqueBaixo($produto);
 
@@ -158,6 +248,48 @@ final class EstoqueService
             Log::error("Erro ao processar baixa de saída da Conferência #{$conf->id}: " . $e->getMessage());
             throw $e;
         }
+    }
+
+    public function baixarRnc(Produto $produto, float $quantidade, string $motivo, ?int $armazemId = null): void
+    {
+        Log::info("Processando baixa por RNC para Produto #{$produto->id}, Qtd: {$quantidade}");
+
+        DB::transaction(function () use ($produto, $quantidade, $motivo, $armazemId) {
+            $restanteBaixar = $quantidade;
+
+            // Priorizar HUB se armazemId for 1 ou nulo
+            if ($armazemId === 1 || is_null($armazemId)) {
+                $hubStock = \App\Models\HubStock::where('produto_id', $produto->id)->lockForUpdate()->first();
+                if ($hubStock && $hubStock->quantidade > 0) {
+                    $baixaHub = min($hubStock->quantidade, $restanteBaixar);
+                    $hubStock->decrement('quantidade', $baixaHub);
+                    $restanteBaixar -= $baixaHub;
+                    
+                    $this->logMovement([
+                        'produto_id' => $produto->id,
+                        'tipo_movimentacao' => 'manual_adjustment', // Usando manual_adjustment para RNC ou podemos adicionar rnc_output
+                        'quantidade' => -$baixaHub,
+                        'origem' => 'HUB (Armazém 1)',
+                        'motivo' => "RNC: {$motivo}",
+                        'observacao' => "Baixa por RNC - HUB",
+                    ]);
+                }
+            }
+
+            if ($restanteBaixar > 0) {
+                $this->logMovement([
+                    'produto_id' => $produto->id,
+                    'tipo_movimentacao' => 'manual_adjustment',
+                    'quantidade' => -$restanteBaixar,
+                    'origem' => 'Estoque Principal',
+                    'motivo' => "RNC: {$motivo}",
+                    'observacao' => "Baixa por RNC - Geral",
+                ]);
+            }
+
+            $produto->decrement('estoque_atual', $quantidade);
+            $this->verificarAlertaEstoqueBaixo($produto);
+        });
     }
 
     public function getHubStock(int $productId): float
@@ -184,6 +316,13 @@ final class EstoqueService
     public function verificarAlertaEstoqueBaixo(Produto $produto): void
     {
         if ($produto->estoque_atual <= $produto->estoque_minimo) {
+            // Alerta de reposição necessária
+            SystemAlert::create([
+                'tipo' => 'replenishment_needed',
+                'mensagem' => "Item [{$produto->sku}] com estoque baixo. Reposição necessária.",
+                'produto_id' => $produto->id,
+            ]);
+
             // 1. Enviar E-mail Alerta
             $admins = \App\Models\User::role('admin')->get();
             $compras = \App\Models\User::role('compras')->get();
@@ -252,7 +391,6 @@ final class EstoqueService
         $orcamento->load('itens.produto');
 
         DB::transaction(function () use ($orcamento) {
-            // Garante que apenas um processo mexa neste orçamento por vez
             Orcamento::where('id', $orcamento->id)->lockForUpdate()->first();
 
             $consumos = [];
@@ -263,28 +401,42 @@ final class EstoqueService
 
                 if (!$produto || $quantidade <= 0) continue;
 
-                // REGRA: Baixa SOMENTE no HUB
-                $hubStock = \App\Models\HubStock::where('produto_id', $produto->id)->lockForUpdate()->first();
-                $saldoHub = $hubStock ? (float) $hubStock->quantidade : 0;
+                $restanteBaixar = $quantidade;
 
-                if ($saldoHub < $quantidade) {
-                    throw new \Exception("Produto {$produto->nome} (SKU: {$produto->sku}) sem saldo suficiente no HUB para baixa de venda. Disponível no HUB: {$saldoHub}. Solicite reposição ao operador de estoque.");
+                // 1. Baixar do HUB
+                $hubStock = \App\Models\HubStock::where('produto_id', $produto->id)->lockForUpdate()->first();
+                if ($hubStock && $hubStock->quantidade > 0) {
+                    $baixaHub = min($hubStock->quantidade, $restanteBaixar);
+                    $hubStock->decrement('quantidade', $baixaHub);
+                    $restanteBaixar -= $baixaHub;
+                    
+                    $this->logMovement([
+                        'produto_id' => $produto->id,
+                        'tipo_movimentacao' => 'sale_output',
+                        'quantidade' => -$baixaHub,
+                        'origem' => 'HUB (Armazém 1)',
+                        'destino' => 'Venda (Cliente)',
+                        'orcamento_id' => $orcamento->id,
+                        'observacao' => "Baixa definitiva HUB - Orçamento #{$orcamento->id}",
+                    ]);
                 }
 
-                $hubStock->decrement('quantidade', $quantidade);
+                // 2. Baixar do estoque principal se sobrar
+                if ($restanteBaixar > 0) {
+                    $this->logMovement([
+                        'produto_id' => $produto->id,
+                        'tipo_movimentacao' => 'sale_output',
+                        'quantidade' => -$restanteBaixar,
+                        'origem' => 'Estoque Principal',
+                        'destino' => 'Venda (Cliente)',
+                        'orcamento_id' => $orcamento->id,
+                        'observacao' => "Baixa definitiva Estoque Principal - Orçamento #{$orcamento->id}",
+                    ]);
+                }
+
                 $produto->decrement('estoque_atual', $quantidade);
 
-                // Registrar Log
-                $this->logMovement([
-                    'produto_id' => $produto->id,
-                    'posicao_id' => null,
-                    'tipo_movimentacao' => 'sale_output',
-                    'quantidade' => -$quantidade, // Corrigido: Valor negativo para saída
-                    'observacao' => "Baixa definitiva HUB - Orçamento #{$orcamento->id}",
-                ]);
-                
-                // Log da movimentação
-                Log::info("Baixa definitiva HUB: Produto #{$produto->id}, Qtd: -{$quantidade}");
+                Log::info("Baixa definitiva: Produto #{$produto->id}, Qtd: -{$quantidade}");
 
                 $this->verificarAlertaEstoqueBaixo($produto);
 

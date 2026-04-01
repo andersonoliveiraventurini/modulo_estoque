@@ -14,9 +14,13 @@ class StockMovementLog extends Model
     protected $fillable = [
         'produto_id',
         'posicao_id',
+        'colaborador_id',
+        'orcamento_id',
         'tipo_movimentacao',
         'quantidade',
-        'colaborador_id',
+        'origem',
+        'destino',
+        'motivo',
         'observacao',
     ];
 
@@ -37,5 +41,10 @@ class StockMovementLog extends Model
     public function colaborador()
     {
         return $this->belongsTo(User::class, 'colaborador_id');
+    }
+
+    public function orcamento()
+    {
+        return $this->belongsTo(Orcamento::class);
     }
 }

@@ -33,16 +33,18 @@ final class ReposicaoService
     /**
      * Cria uma nova Ordem de Reposição ao HUB (status: pendente).
      */
-    public function solicitarReposicao(int $produtoId, float $quantidade, ?int $solicitanteId = null): OrdemReposicao
+    public function solicitarReposicao(int $produtoId, float $quantidade, ?int $solicitanteId = null, ?int $orcamentoId = null): OrdemReposicao
     {
         Log::info('ReposicaoService: solicitando reposição ao HUB', [
             'produto_id'    => $produtoId,
             'quantidade'    => $quantidade,
+            'orcamento_id'  => $orcamentoId,
             'solicitado_por' => $solicitanteId ?? auth()->id(),
         ]);
 
         $ordem = OrdemReposicao::create([
             'produto_id'           => $produtoId,
+            'orcamento_id'         => $orcamentoId,
             'quantidade_solicitada' => $quantidade,
             'status'               => 'pendente',
             'solicitado_por_id'    => $solicitanteId ?? auth()->id(),

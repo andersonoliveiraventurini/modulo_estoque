@@ -370,6 +370,11 @@ class Orcamento extends Model
         return $this->canal_venda === 'balcao';
     }
 
+    public function isBalcao(): bool
+    {
+        return $this->isProntaEntrega();
+    }
+
     public function isEncomenda(): bool
     {
         return $this->canal_venda === 'encomenda';
@@ -378,6 +383,11 @@ class Orcamento extends Model
     public function isEntregaAgendada(): bool
     {
         return in_array($this->canal_venda, ['rota', 'entrega_terceiros']);
+    }
+
+    public function isCanalEntrega(): bool
+    {
+        return $this->isEntregaAgendada();
     }
 
     // ─── Status helpers ───────────────────────────────────────────────────────

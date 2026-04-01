@@ -31,6 +31,16 @@ class NonConformityService
             
             $rnc = NonConformity::create($data);
             
+            // Se marcado para baixar estoque
+            if ($rnc->baixar_estoque && $rnc->produto_id && $rnc->quantidade > 0) {
+                app(EstoqueService::class)->baixarRnc(
+                    $rnc->produto,
+                    (float) $rnc->quantidade,
+                    "RNC #{$rnc->nr}: {$rnc->observacoes}",
+                    $rnc->armazem_id
+                );
+            }
+            
             // Gerar PDF automático
             app(QualityPdfService::class)->generateRncPdf($rnc);
             

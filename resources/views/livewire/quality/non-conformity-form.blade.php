@@ -66,6 +66,33 @@
                         <flux:error name="produto_nome" />
                     </flux:field>
 
+                    <div class="grid grid-cols-2 gap-4">
+                        <flux:field>
+                            <flux:label>Quantidade com Defeito</flux:label>
+                            <flux:input type="number" step="0.001" wire:model="quantidade" placeholder="Qtd" />
+                            <flux:error name="quantidade" />
+                        </flux:field>
+
+                        <flux:field>
+                            <flux:label>Baixar do Estoque?</flux:label>
+                            <flux:checkbox wire:model="baixar_estoque" label="Sim, realizar baixa física" />
+                            <flux:error name="baixar_estoque" />
+                        </flux:field>
+                    </div>
+
+                    @if($baixar_estoque)
+                        <flux:field>
+                            <flux:label>Origem da Baixa (Armazém)</flux:label>
+                            <flux:select wire:model="armazem_id" placeholder="Selecione o armazém (Prioridade HUB)">
+                                <option value="">Automático (HUB primeiro)</option>
+                                @foreach($armazens as $armazem)
+                                    <option value="{{ $armazem->id }}">{{ $armazem->nome }}</option>
+                                @endforeach
+                            </flux:select>
+                            <flux:error name="armazem_id" />
+                        </flux:field>
+                    @endif
+
                     <flux:field>
                         <flux:label>Fornecedor</flux:label>
                         <flux:input wire:model="fornecedor_nome" placeholder="Nome do Fornecedor" />

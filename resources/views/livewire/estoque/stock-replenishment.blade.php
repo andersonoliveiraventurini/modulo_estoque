@@ -23,6 +23,17 @@
                 {{-- Seleção de Produto --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="col-span-2 md:col-span-1">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-zinc-300 mb-2 uppercase tracking-wide">Vincular a Orçamento (Opcional)</label>
+                        <select wire:model="orcamentoId" class="block w-full rounded-xl border-none ring-1 ring-gray-200 dark:ring-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 focus:ring-2 focus:ring-indigo-500 transition duration-200">
+                            <option value="">Nenhum (Transferência Geral)</option>
+                            @foreach($orcamentos as $o)
+                                <option value="{{ $o->id }}">Orçamento #{{ $o->id }} - {{ $o->cliente?->nome ?? 'Cliente não informado' }}</option>
+                            @endforeach
+                        </select>
+                        @error('orcamentoId') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="col-span-2 md:col-span-1">
                         <label class="block text-sm font-bold text-gray-700 dark:text-zinc-300 mb-2 uppercase tracking-wide">Colaborador Executor <span class="text-red-500">*</span></label>
                         <select wire:model="colaboradorId" class="block w-full rounded-xl border-none ring-1 ring-gray-200 dark:ring-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 focus:ring-2 focus:ring-indigo-500 transition duration-200">
                             <option value="">Quem está realizando a movimentação?</option>

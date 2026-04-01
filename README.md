@@ -473,6 +473,48 @@ O sistema mantém um log detalhado (`customer_discount_history`) de todas as alt
 
 ---
 
+### Módulo: Baixa de Estoque e Reservas
+
+Este módulo implementa o controle rigoroso de reservas e baixas físicas, priorizando o armazém **HUB (ID 1)** e garantindo a rastreabilidade total de todas as movimentações.
+
+#### 1. Reserva de Itens no Orçamento
+Quando um orçamento é aprovado, o sistema executa automaticamente a reserva dos itens:
+- **Prioridade HUB**: O sistema tenta reservar primeiro do saldo disponível no HUB.
+- **Reserva de Outras Posições**: Caso o HUB seja insuficiente, o restante é reservado do "Estoque Principal" (outros armazéns).
+- **Notificação Automática**: Se o item estiver zerado ou insuficiente no HUB, um alerta é gerado para o setor de estoque: *"Item [código] zerado no HUB - reserva efetuada do estoque principal"*.
+
+#### 2. Baixa por Venda
+No momento do faturamento (conferência finalizada), a baixa definitiva é executada:
+- Segue a sequência: **HUB primeiro**, depois demais posições.
+- Gera log de auditoria detalhado em `stock_movement_logs`.
+
+#### 3. Baixa por Problemas (RNC)
+Funcionalidade integrada ao módulo de Qualidade:
+- Exige obrigatoriamente a descrição detalhada do motivo.
+- Permite selecionar se a baixa deve ser realizada fisicamente.
+- Segue a mesma lógica de priorização do HUB.
+
+#### 4. Reabastecimento para Pedidos
+Rotina de movimentação interna que permite transferir produtos reservados para o HUB:
+- Garante que o material esteja acessível ao separador físico.
+- Mantém o vínculo com o orçamento original.
+- Move automaticamente a reserva de "Estoque Principal" para "HUB" após a transferência.
+
+#### 5. Auditoria e Logs
+Toda operação gera registros completos com:
+- Tipo de movimento (Venda, RNC, Reposição).
+- Quantidade, Origem e Destino.
+- Usuário responsável e Timestamp.
+- Número do orçamento vinculado e Motivo (quando aplicável).
+
+#### Interface de Notificação
+O setor de estoque possui um painel de alertas em tempo real (`estoque.notifications`) que exibe:
+- Itens com estoque zerado no HUB.
+- Alertas de reabastecimento necessário.
+- Movimentações pendentes.
+
+---
+
 ## 🔒 Papéis e Permissões (Spatie Permissions)
 
 | Role | Acesso Principal |

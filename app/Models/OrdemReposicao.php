@@ -14,6 +14,7 @@ class OrdemReposicao extends Model
 
     protected $fillable = [
         'produto_id',
+        'orcamento_id',
         'quantidade_solicitada',
         'status',
         'solicitado_por_id',

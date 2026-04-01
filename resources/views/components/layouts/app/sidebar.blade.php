@@ -153,6 +153,9 @@
                 </flux:navlist.item>
             </flux:navlist.group>
 
+            <flux:navlist.item icon="bell" :href="route('estoque.notifications')" :current="request()->routeIs('estoque.notifications')" wire:navigate>
+                {{ __('Alertas de Estoque') }}
+            </flux:navlist.item>
             <flux:navlist.item icon="list-bullet" :href="route('estoque.logs')" :current="request()->routeIs('estoque.logs')" wire:navigate>
                 {{ __('Logs de Movimentação') }}
             </flux:navlist.item>

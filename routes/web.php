@@ -313,8 +313,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Novo Módulo de RNC e Devoluções
     Route::get('gestao/qualidade', \App\Livewire\Quality\QualityDashboard::class)->name('quality.dashboard');
-    Route::get('rnc/novo', \App\Livewire\Quality\NonConformityForm::class)->name('rnc.create');
-    Route::get('rnc/{rnc}/editar', \App\Livewire\Quality\NonConformityForm::class)->name('rnc.edit');
+    Route::get('quality/rnc/novo', \App\Livewire\Quality\NonConformityForm::class)->name('rnc.create');
+    Route::get('quality/rnc/{rnc}/editar', \App\Livewire\Quality\NonConformityForm::class)->name('rnc.edit');
     Route::get('devolucoes-produtos/novo', \App\Livewire\Quality\ProductReturnForm::class)->name('product_returns.create');
     Route::get('devolucoes-produtos/{return}/autorizar', \App\Livewire\Quality\ProductReturnApproval::class)->name('product_returns.approve');
 
@@ -322,6 +322,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('estoque/encomendas/retirada', \App\Livewire\Estoque\EncomendaRetirada::class)->name('estoque.encomendas.retirada');
     Route::get('estoque/reposicao/manual', \App\Livewire\Estoque\StockReplenishment::class)->name('estoque.reposicao.manual');
     Route::get('estoque/logs', \App\Livewire\Estoque\StockMovementLogs::class)->name('estoque.logs');
+    Route::get('estoque/notifications', \App\Livewire\Estoque\StockNotifications::class)->name('estoque.notifications');
 
     Route::resource('bloqueios', BloqueioController::class)->names('bloqueios');
     Route::get('bloquear/{cliente_id}/cliente', [BloqueioController::class, 'bloquear'])->name('bloquear.cliente');

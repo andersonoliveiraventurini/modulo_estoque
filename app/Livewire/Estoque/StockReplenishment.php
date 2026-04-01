@@ -20,6 +20,7 @@ use App\Events\StockMovementRegistered;
 class StockReplenishment extends Component
 {
     public $produtoId;
+    public $orcamentoId; // Novo campo
     public $quantidade = 1;
     public $armazemOrigemId;
     public $corredorOrigemId;
@@ -30,13 +31,16 @@ class StockReplenishment extends Component
     public $corredoresOrigem = [];
     public $posicoesOrigem = [];
     public $vendedores = []; // Para selecionar o colaborador que está operando
+    public $orcamentos = []; // Para selecionar o orçamento vinculado
 
-    public function mount()
-    {
+    public function mount($orcamentoId = null)
+    {        $this->orcamentoId = $orcamentoId;
         // Apenas armazéns que NÃO são HUB
         $this->armazensOrigem = Armazem::where('tipo', '!=', 'hub')->where('is_active', true)->get();
         // Colaboradores que podem realizar a movimentação
         $this->vendedores = \App\Models\User::all();
+        // Orçamentos aprovados
+        $this->orcamentos = \App\Models\Orcamento::where('status', 'Aprovado')->latest()->get();
     }
 
     public function updatedArmazemOrigemId($value)
@@ -61,7 +65,8 @@ class StockReplenishment extends Component
             'armazemOrigemId'  => 'required|exists:armazens,id',
             'corredorOrigemId' => 'nullable|exists:corredores,id',
             'posicaoOrigemId'  => 'nullable|exists:posicoes,id',
-            'colaboradorId'    => 'required|exists:users,id', // Novo campo obrigatório
+            'colaboradorId'    => 'required|exists:users,id',
+            'orcamentoId'      => 'nullable|exists:orcamentos,id',
         ], [
             'produtoId.required'       => 'Selecione o produto.',
             'quantidade.min'           => 'A quantidade deve ser maior que zero.',
@@ -78,7 +83,7 @@ class StockReplenishment extends Component
                     'tipo'              => 'saida_para_hub',
                     'status'            => 'aprovado',
                     'data_movimentacao' => now()->toDateString(),
-                    'observacao'        => "Transferência Manual para HUB - Executado por Colaborador #{$this->colaboradorId}",
+                    'observacao'        => "Transferência Manual para HUB - Executado por Colaborador #{$this->colaboradorId}" . ($this->orcamentoId ? " (Vinculado ao Orçamento #{$this->orcamentoId})" : ""),
                     'is_reposicao'      => true,
                     'usuario_id'        => auth()->id(), // Operador Logado
                     'aprovado_em'       => now(),
@@ -99,6 +104,7 @@ class StockReplenishment extends Component
                     'tipo_movimentacao' => 'replenishment',
                     'quantidade' => -$this->quantidade,
                     'colaborador_id' => $this->colaboradorId,
+                    'orcamento_id' => $this->orcamentoId,
                     'observacao' => "Reposição HUB (Saída Secundário) - Movimentação #{$saida->id}",
                 ]));
 
@@ -126,6 +132,7 @@ class StockReplenishment extends Component
                     'tipo_movimentacao' => 'replenishment',
                     'quantidade' => $this->quantidade,
                     'colaborador_id' => $this->colaboradorId,
+                    'orcamento_id' => $this->orcamentoId,
                     'observacao' => "Reposição HUB (Entrada HUB) - Movimentação #{$entrada->id}",
                 ]));
 
@@ -136,6 +143,36 @@ class StockReplenishment extends Component
                 );
                 $hubStock->increment('quantidade', $this->quantidade);
 
+                // 4. Se houver vínculo com orçamento, mover reserva de 'Geral' para 'HUB'
+                if ($this->orcamentoId) {
+                    $reservaGeral = \App\Models\EstoqueReserva::where('orcamento_id', $this->orcamentoId)
+                        ->where('produto_id', $this->produtoId)
+                        ->whereNull('armazem_id')
+                        ->where('status', 'ativa')
+                        ->first();
+                    
+                    if ($reservaGeral) {
+                        $qtdMover = min($reservaGeral->quantidade, $this->quantidade);
+                        
+                        // Reduz do geral
+                        if ($reservaGeral->quantidade == $qtdMover) {
+                            $reservaGeral->delete();
+                        } else {
+                            $reservaGeral->decrement('quantidade', $qtdMover);
+                        }
+
+                        // Adiciona no HUB
+                        \App\Models\EstoqueReserva::create([
+                            'orcamento_id'  => $this->orcamentoId,
+                            'produto_id'    => $this->produtoId,
+                            'armazem_id'    => 1, // HUB
+                            'quantidade'    => $qtdMover,
+                            'status'        => 'ativa',
+                            'criado_por_id' => auth()->id(),
+                        ]);
+                    }
+                }
+
                 Log::info('StockReplenishment: transferência concluída', [
                     'produto'    => $produto->nome,
                     'quantidade' => $this->quantidade,
@@ -144,7 +181,7 @@ class StockReplenishment extends Component
             });
 
             session()->flash('success', 'Transferência realizada com sucesso!');
-            $this->reset(['produtoId', 'quantidade', 'armazemOrigemId', 'corredorOrigemId', 'posicaoOrigemId']);
+            $this->reset(['produtoId', 'quantidade', 'armazemOrigemId', 'corredorOrigemId', 'posicaoOrigemId', 'orcamentoId']);
             $this->corredoresOrigem = [];
             $this->posicoesOrigem = [];
 

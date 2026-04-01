@@ -14,6 +14,9 @@ class NonConformity extends Model
         'nr',
         'produto_id',
         'produto_nome',
+        'quantidade',
+        'baixar_estoque',
+        'armazem_id',
         'fornecedor_id',
         'fornecedor_nome',
         'data_ocorrencia',
@@ -26,11 +29,17 @@ class NonConformity extends Model
 
     protected $casts = [
         'data_ocorrencia' => 'date',
+        'baixar_estoque' => 'boolean',
     ];
 
     public function produto()
     {
-        return $this->belongsTo(Produto::class, 'produto_id');
+        return $this->belongsTo(Produto::class);
+    }
+
+    public function armazem()
+    {
+        return $this->belongsTo(Armazem::class);
     }
 
     public function fornecedor()

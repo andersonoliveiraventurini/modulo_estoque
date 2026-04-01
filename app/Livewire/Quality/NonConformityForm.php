@@ -17,6 +17,9 @@ class NonConformityForm extends Component
     // Campos do formulário
     public $produto_id;
     public $produto_nome;
+    public $quantidade = 0;
+    public $baixar_estoque = false;
+    public $armazem_id;
     public $fornecedor_id;
     public $fornecedor_nome;
     public $data_ocorrencia;
@@ -29,19 +32,24 @@ class NonConformityForm extends Component
     public $showProdutoSearch = false;
     public $searchProduto = '';
     public $produtos = [];
+    public $armazens = [];
 
     protected $rules = [
         'produto_nome' => 'required|string|max:255',
+        'quantidade' => 'required|numeric|min:0',
+        'baixar_estoque' => 'boolean',
+        'armazem_id' => 'nullable|exists:armazens,id',
         'fornecedor_nome' => 'required|string|max:255',
         'data_ocorrencia' => 'required|date',
         'nota_fiscal' => 'nullable|string|max:100',
         'romaneio_recebimento' => 'nullable|string|max:100',
         'acoes_tomadas' => 'nullable|string|max:2000',
-        'observacoes' => 'nullable|string|max:2000',
+        'observacoes' => 'required|string|max:2000', // Obrigatorio para RNC
     ];
 
     public function mount($rnc = null)
     {
+        $this->armazens = \App\Models\Armazem::all();
         if ($rnc) {
             $this->rncId = $rnc instanceof NonConformity ? $rnc->id : $rnc;
             $this->isEdit = true;
@@ -56,6 +64,9 @@ class NonConformityForm extends Component
         $rnc = NonConformity::findOrFail($this->rncId);
         $this->produto_id = $rnc->produto_id;
         $this->produto_nome = $rnc->produto_nome;
+        $this->quantidade = $rnc->quantidade;
+        $this->baixar_estoque = $rnc->baixar_estoque;
+        $this->armazem_id = $rnc->armazem_id;
         $this->fornecedor_id = $rnc->fornecedor_id;
         $this->fornecedor_nome = $rnc->fornecedor_nome;
         $this->data_ocorrencia = $rnc->data_ocorrencia->format('Y-m-d');
