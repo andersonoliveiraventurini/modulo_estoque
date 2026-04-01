@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: laravel-app
+    restart: unless-stopped
     ports:
       - "8087:80"
     env_file:
@@ -46,6 +47,7 @@ services:
   mysql:
     image: mysql:8.0
     container_name: mysql-1
+    restart: unless-stopped
     ports:
       - "33060:3306"
     environment:
