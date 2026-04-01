@@ -149,8 +149,8 @@ class Orcamento extends Model
     {
         $totalPago = (float) $this->pagamentos()->ativos()->sum('valor_pago');
         
-        // Usamos o accessor valor_total que já resolve valor_total_itens vs valor_com_desconto
-        return $totalPago >= (float) $this->valor_total;
+        // Usamos o accessor valor_total_final que já inclui o orç. base + cobranças residuais
+        return $totalPago >= (float) $this->valor_total_final;
     }
 
     public function transportes()
@@ -245,6 +245,11 @@ class Orcamento extends Model
         return $this->hasMany(SolicitacaoPagamento::class);
     }
 
+    public function pagamentosResiduais()
+    {
+        return $this->hasMany(Pagamento::class)->residuais();
+    }
+
     public function solicitacaoPagamentoPendente()
     {
         return $this->hasOne(SolicitacaoPagamento::class)
@@ -277,6 +282,32 @@ class Orcamento extends Model
     public function getValorTotalAttribute()
     {
         return $this->valor_com_desconto > 0 ? $this->valor_com_desconto : $this->valor_total_itens;
+    }
+
+    /**
+     * Retorna o total de cobranças residuais ativas.
+     */
+    public function getValorResiduaisAttribute(): float
+    {
+        return (float) $this->pagamentosResiduais()->ativos()->sum('valor_final');
+    }
+
+    /**
+     * Retorna o valor total final do orçamento somado aos residuais.
+     */
+    public function getValorTotalFinalAttribute(): float
+    {
+        return (float) $this->valor_total + $this->valor_residuais;
+    }
+
+    /**
+     * Retorna o saldo que falta pagar (Total Final - Total Pago).
+     */
+    public function getValorRestanteAttribute(): float
+    {
+        $totalFinal = $this->valor_total_final;
+        $totalPago = (float) $this->pagamentos()->ativos()->sum('valor_pago');
+        return max(0, $totalFinal - $totalPago);
     }
 
     /**
@@ -360,7 +391,7 @@ class Orcamento extends Model
     /** O orçamento foi faturado / concluído financeiramente. */
     public function isFinalizado(): bool
     {
-        return in_array($this->status, ['Finalizado', 'Pago']);
+        return in_array($this->status, ['Finalizado', 'Pago', 'Concluído']);
     }
 
     /** O orçamento foi cancelado, rejeitado, expirado ou estornado. */

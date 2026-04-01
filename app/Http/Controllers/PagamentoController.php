@@ -166,11 +166,11 @@ class PagamentoController extends Controller
         $pagamento = DB::transaction(function () use ($request, $orcamentoId, $validated) {
             $orcamento = Orcamento::with(['cliente'])->findOrFail($orcamentoId);
  
-            // ── Já pago? ──────────────────────────────────────────────────
-            if (Pagamento::where('orcamento_id', $orcamentoId)->where('estornado', false)->exists()) {
-                throw new \Exception('Este orçamento já possui um pagamento registrado.');
+            // ── Já pago totalmente? ──────────────────────────────────────────
+            if ($orcamento->pagamentoFinalizado()) {
+                throw new \Exception('Este orçamento já foi totalmente pago.');
             }
- 
+
             // ── Proteção: bloqueia tipo "outros" se não for condição 20 ───
             $condicaoEspecial = (int) $orcamento->condicao_id === self::CONDICAO_ESPECIAL_OUTROS;
             $isBlocked = $orcamento->cliente->bloqueado ?? false;
@@ -188,9 +188,12 @@ class PagamentoController extends Controller
             }
  
             // ── Valores base ──────────────────────────────────────────────
-            $valorTotal       = (float) $orcamento->valor_total_itens;
+            $valorTotal       = (float) $orcamento->valor_total_final;
             $descontoOriginal = (float) ($orcamento->totalDescontosAprovados() ?? 0);
             $descontoBalcao   = (float) ($request->desconto_balcao ?? 0);
+            
+            // Subtrai o que já foi pago anteriormente (para calcular o que falta nesta sessão)
+            $totalJaPago      = (float) $orcamento->pagamentos()->ativos()->sum('valor_pago');
  
             // ── Valida desconto de balcão ─────────────────────────────────
             $valorPixDinheiro = 0;
@@ -218,7 +221,7 @@ class PagamentoController extends Controller
             }
  
             // ── Valor final e troco ───────────────────────────────────────
-            $valorFinal = $valorTotal - $descontoOriginal - $descontoBalcao;
+            $valorFinal = $valorTotal - $descontoOriginal - $descontoBalcao - $totalJaPago;
             $valorPago  = (float) array_sum(array_column($validated['formas_pagamento'], 'valor'));
  
             if ($valorPago < $valorFinal - 0.01) {

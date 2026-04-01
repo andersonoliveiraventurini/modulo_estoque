@@ -1271,11 +1271,113 @@
                         <p><strong>Total Vidros:</strong> R$ {{ number_format($totalVidros, 2, ',', '.') }}</p>
                     @endif
                     <p class="text-lg font-semibold text-green-600 mt-2">
-                        Valor Final: R$ {{ number_format($valorFinal, 2, ',', '.') }}
+                        Valor Orçamento: R$ {{ number_format($valorFinal, 2, ',', '.') }}
                     </p>
+                    @if($orcamento->valor_residuais > 0)
+                        <p class="text-sm font-medium text-blue-600">
+                            + Cobranças Residuais: R$ {{ number_format($orcamento->valor_residuais, 2, ',', '.') }}
+                        </p>
+                        <p class="text-xl font-bold text-emerald-700 mt-1 border-t pt-1">
+                            Total Geral: R$ {{ number_format($orcamento->valor_total_final, 2, ',', '.') }}
+                        </p>
+                    @endif
                 </div>
             </div>
         </div>
+
+        {{-- Histórico de Pagamentos --}}
+        @if($orcamento->pagamentos()->ativos()->exists())
+            <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow mb-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-bold text-neutral-800 dark:text-white flex items-center gap-2">
+                        <x-heroicon-o-banknotes class="w-5 h-5 text-emerald-500" />
+                        Histórico de Pagamentos
+                    </h4>
+                    @if($orcamento->valor_restante > 0)
+                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200 border border-amber-200">
+                            Pendente: R$ {{ number_format($orcamento->valor_restante, 2, ',', '.') }}
+                        </span>
+                    @endif
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-xs uppercase bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500">
+                            <tr>
+                                <th class="px-4 py-2">Data</th>
+                                <th class="px-4 py-2">Tipo</th>
+                                <th class="px-4 py-2">Condição</th>
+                                <th class="px-4 py-2">Valor</th>
+                                <th class="px-4 py-2">Status</th>
+                                <th class="px-4 py-2">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800">
+                            @foreach($orcamento->pagamentos()->ativos()->get() as $p)
+                                <tr class="{{ $p->tipo === 'residual' ? 'bg-blue-50/30 dark:bg-blue-900/10' : '' }}">
+                                    <td class="px-4 py-3">{{ $p->data_pagamento ? $p->data_pagamento->format('d/m/Y H:i') : '-' }}</td>
+                                    <td class="px-4 py-3">
+                                        @if($p->tipo === 'residual')
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200 text-[10px] font-bold uppercase">
+                                                Residual
+                                            </span>
+                                        @else
+                                            <span class="text-neutral-500 text-xs">Principal</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 text-xs">{{ $p->condicaoPagamento->nome ?? 'N/A' }}</td>
+                                    <td class="px-4 py-3 font-medium">R$ {{ number_format($p->valor_final, 2, ',', '.') }}</td>
+                                    <td class="px-4 py-3">
+                                        @if($p->valor_pago >= $p->valor_final)
+                                            <span class="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-semibold text-xs">
+                                                <x-heroicon-o-check-circle class="w-4 h-4" /> Pago
+                                            </span>
+                                        @else
+                                            <span class="text-amber-600 dark:text-amber-400 flex items-center gap-1 font-semibold text-xs">
+                                                <x-heroicon-o-clock class="w-4 h-4" /> Aguardando
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center gap-2">
+                                            @if($p->pdf_path)
+                                                <a href="{{ asset('storage/'.$p->pdf_path) }}" target="_blank" class="text-blue-600 hover:text-blue-800 dark:text-blue-400" title="Ver Comprovante">
+                                                    <x-heroicon-o-document-text class="w-4 h-4" />
+                                                </a>
+                                            @endif
+                                            
+                                            @if($p->valor_pago < $p->valor_final)
+                                                <a href="{{ route('orcamentos.residuais.pagar', $p->id) }}" 
+                                                   class="inline-flex items-center gap-1 px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold transition-colors">
+                                                    PAGAR
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                                @if($p->observacoes)
+                                    <tr class="{{ $p->tipo === 'residual' ? 'bg-blue-50/30 dark:bg-blue-900/10' : '' }}">
+                                        <td colspan="6" class="px-4 py-0 pb-2 text-[11px] text-neutral-400 italic">
+                                            Obs: {{ $p->observacoes }}
+                                        </td>
+                                    </tr>
+                                @endif
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
+
+        {{-- Cobrança Residual (apenas encomendas com pagamento ativo) --}}
+        @if($orcamento->isEncomenda() && $orcamento->pagamentos()->ativos()->exists())
+            <div class="mt-4 flex justify-end">
+                <a href="{{ route('orcamentos.residuais', $orcamento->id) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg shadow transition-all">
+                    <x-heroicon-o-currency-dollar class="w-5 h-5 mr-2" />
+                    Gerenciar Valores Residuais
+                </a>
+            </div>
+        @endif
 
         {{-- Observações --}}
         <div

@@ -1001,6 +1001,8 @@ class OrcamentoController extends Controller
             'descontos',
             'vidros',
             'condicaoPagamento',
+            'pagamentos.user',
+            'pagamentos.condicaoPagamento'
         ])->findOrFail($id);
 
         // ── Verificação de estoque ────────────────────────────────────────────

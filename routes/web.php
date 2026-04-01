@@ -33,6 +33,8 @@ use App\Http\Controllers\PedidoCompraController;
 use  App\Http\Controllers\CorController;
 use App\Http\Controllers\CategoriaController;
 use App\Livewire\OrcamentoShow;
+use App\Livewire\OrcamentoPagamentoResidualDetalhe;
+use App\Livewire\OrcamentoPagamentoResidualBaixa;
 use App\Http\Controllers\SeparacaoController;
 use App\Http\Controllers\ConferenciaController;
 use App\Http\Controllers\EntradaEncomendaController;
@@ -154,6 +156,8 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/orcamentos/{id}/status', [OrcamentoController::class, 'atualizarStatus'])->name('orcamentos.atualizar-status');
     Route::put('/orcamentos/{id}/aprovar-desconto', [OrcamentoController::class, 'aprovarDesconto'])->name('orcamentos.aprovar-desconto');
     Route::get('/orcamentos/{id}/gerenciar', OrcamentoShow::class)->name('orcamentos.gerenciar');
+    Route::get('/orcamentos/{id}/residuais', OrcamentoPagamentoResidualDetalhe::class)->name('orcamentos.residuais');
+    Route::get('/orcamentos/residuais/{pagamento_id}/pagar', OrcamentoPagamentoResidualBaixa::class)->name('orcamentos.residuais.pagar');
 
     // ========== ROTAS DESCONTOS ==========
     Route::get('/descontos/clientes', [DescontoController::class, 'descontosClientes'])->name('descontos.clientes');

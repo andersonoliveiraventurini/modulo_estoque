@@ -292,7 +292,7 @@
                                         <div>
                                             <p class="text-sm text-blue-900 dark:text-blue-200 font-medium">Valor a Pagar</p>
                                             <p class="text-xl font-bold text-blue-700 dark:text-blue-300" id="valorTotal">
-                                                R$ {{ number_format($orcamento->valor_total_itens - $orcamento->totalDescontosAprovados(), 2, ',', '.') }}
+                                                R$ {{ number_format($orcamento->valor_restante, 2, ',', '.') }}
                                             </p>
                                         </div>
                                         <div>

@@ -11,7 +11,7 @@ class OrcamentoShow extends Component
     public $status;
     public $desconto_aprovado;
 
-    protected $listeners = ['refresh' => '$refresh'];
+    protected $listeners = ['refresh' => '$refresh', 'residualSalvo' => '$refresh'];
 
     public function mount($id)
     {
@@ -92,7 +92,7 @@ class OrcamentoShow extends Component
     public function render()
     {
         // Atualiza o relacionamento ao recarregar
-        $this->orcamento->load(['cliente', 'itens', 'vidros', 'transporte']);
+        $this->orcamento->load(['cliente', 'itens', 'vidros', 'transporte', 'pagamentos']);
         return view('livewire.orcamento-show');
     }
 }

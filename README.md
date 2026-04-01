@@ -361,6 +361,54 @@ Centraliza a movimentação de itens para o **HUB (Armazém ID 1)** para facilit
 
 ---
 
+### Cobrança Residual em Encomendas
+
+#### O que é
+Permite registrar um pagamento adicional em orçamentos do tipo **encomenda**
+que já possuem ao menos um pagamento ativo. Utilizado para cobrar acréscimos
+de valor após o pagamento inicial — como reajuste de preço ou itens adicionados
+após a confirmação da encomenda.
+
+#### Pré-requisitos
+- O orçamento deve ser do tipo encomenda (`isEncomenda()` retorna `true`)
+- O orçamento deve ter ao menos 1 pagamento com `estornado = false`
+
+#### Como usar
+1. Acesse **Orçamentos → [id do orçamento]** (`/orcamentos/{id}`)
+2. O bloco **"Cobrança Residual"** aparece automaticamente abaixo da
+   seção de Totais e Descontos quando os pré-requisitos são atendidos
+3. Informe o valor do acréscimo e, opcionalmente, uma observação
+4. Clique em **"Registrar Cobrança Residual"**
+5. O pagamento é registrado e a tela é atualizada automaticamente
+
+#### Impacto no sistema
+- O pagamento residual é salvo na tabela `pagamentos` com `tipo = 'residual'`
+- É **somado normalmente** ao total pago via `pagamentoFinalizado()`,
+  pois o `scopeAtivos()` filtra apenas por `estornado = false`
+- **Nenhuma lógica de pagamento existente foi alterada**
+
+#### Arquivos envolvidos
+
+| Tipo | Arquivo |
+|------|---------|
+| Migration | `database/migrations/2026_03_31_203111_add_tipo_to_pagamentos_table.php` |
+| Model | `app/Models/Pagamento.php` |
+| Model | `app/Models/Orcamento.php` |
+| Livewire Class | `app/Livewire/OrcamentoPagamentoResidual.php` |
+| Livewire View | `resources/views/livewire/orcamento-pagamento-residual.blade.php` |
+| View modificada | `resources/views/paginas/orcamentos/show.blade.php` |
+| Componente alterado | `app/Livewire/OrcamentoShow.php` |
+
+#### Decisões técnicas
+- Criado componente Livewire **isolado** para não interferir nos componentes
+  existentes (`PagamentoBalcao`, `PagamentoRota`, `OrcamentoShow`)
+- A coluna `tipo` na tabela `pagamentos` é **nullable com default null**,
+  garantindo compatibilidade total com todos os registros existentes
+- O campo `condicao_pagamento_id` do pagamento residual herda o valor de
+  `condicao_id` do orçamento pai
+
+---
+
 ### Módulo: CRM & Integrações
 
 #### Serviço: `RdStationService`

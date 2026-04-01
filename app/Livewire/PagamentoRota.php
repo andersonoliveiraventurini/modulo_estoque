@@ -261,7 +261,7 @@ class PagamentoRota extends Component
 
     public function calcularValores(): void
     {
-        $this->valorComDesconto = (float) $this->orcamento->valor_total;
+        $this->valorComDesconto = (float) $this->orcamento->valor_total_final;
         
         // Agora todos os pagamentos (novos e já salvos) estão no grid formasPagamento
         $this->valorPago = collect($this->formasPagamento)->sum('valor');

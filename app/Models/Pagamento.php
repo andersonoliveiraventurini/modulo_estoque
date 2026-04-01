@@ -10,6 +10,8 @@ class Pagamento extends Model
 {
     use HasFactory, SoftDeletes;
 
+    const TIPO_RESIDUAL = 'residual';
+
     protected $fillable = [
         'orcamento_id',
         'pedido_id',
@@ -30,6 +32,7 @@ class Pagamento extends Model
         'data_estorno',
         'motivo_estorno',
         'usuario_estorno_id',
+        'tipo',
     ];
 
     protected $casts = [
@@ -108,6 +111,11 @@ class Pagamento extends Model
 
     // ── Scopes ───────────────────────────────────────────────────────────────
 
+    public function scopeResiduais($query)
+    {
+        return $query->where('tipo', self::TIPO_RESIDUAL);
+    }
+
     public function scopeAtivos($query)
     {
         return $query->where('estornado', false);
@@ -167,4 +175,5 @@ class Pagamento extends Model
     {
         return ! empty($this->pdf_path);
     }
+
 }
