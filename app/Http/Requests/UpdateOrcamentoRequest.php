@@ -14,7 +14,7 @@ class UpdateOrcamentoRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $normalizarValor = function ($valor) {
-            if (is_null($valor) || $valor === '' || $valor === '0') {
+            if (is_null($valor) || $valor === '') {
                 return null;
             }
 
@@ -23,16 +23,22 @@ class UpdateOrcamentoRequest extends FormRequest
             // Se for string com vírgula (ex: 1.250,50 ou 10,00)
             if (str_contains($valor, ',')) {
                 // Remove pontos de milhar e troca vírgula por ponto
-                return str_replace(',', '.', str_replace('.', '', $valor));
+                $valor = str_replace(',', '.', str_replace('.', '', $valor));
+            }
+
+            // Se após a normalização o valor for 0 ou equivalente, retorna 0
+            if ($valor === '0' || $valor === '0.00' || $valor === '0.0') {
+                return 0;
             }
 
             return $valor;
         };
 
         $this->merge([
+            'desconto'            => $normalizarValor($this->desconto),
+            'desconto_aprovado'   => $normalizarValor($this->desconto_aprovado),
             'desconto_especifico' => $normalizarValor($this->desconto_especifico),
             'guia_recolhimento'   => $normalizarValor($this->guia_recolhimento),
-            'frete'               => $normalizarValor($this->frete),
             'valor_total'         => $normalizarValor($this->valor_total),
         ]);
 
@@ -67,12 +73,12 @@ class UpdateOrcamentoRequest extends FormRequest
             'prazo_entrega'               => 'nullable|string|max:100', // CORRIGIDO: era 'nullable|date', quebrava com "15 dias úteis"
 
             // Valores monetários
-            'valor_total'                 => 'nullable|string',
+            'valor_total'                 => 'nullable|numeric|min:0',
             'frete'                       => 'nullable|string',
             'desconto'                    => 'nullable|numeric|min:0|max:100',
             'desconto_aprovado'           => 'nullable|numeric|min:0|max:100',
-            'desconto_especifico'         => 'nullable|string',
-            'guia_recolhimento'           => 'nullable|string',
+            'desconto_especifico'         => 'nullable|numeric|min:0',
+            'guia_recolhimento'           => 'nullable|numeric|min:0',
 
             // Documento e pagamento
             'tipo_documento'              => 'nullable|string',

@@ -25,12 +25,14 @@ class OrcamentoStoreRequest extends FormRequest
         return [
             'cliente_id' => 'required|exists:clientes,id',
             'nome_obra' => 'required|string|max:255',
-            'valor_total' => 'nullable|string',
+            'valor_total' => 'nullable|numeric|min:0',
+            'frete' => 'nullable|string',
             'observacoes' => 'nullable|string',
             'desconto' => 'nullable|numeric|min:0|max:100',
             'desconto_aprovado' => 'nullable|numeric|min:0|max:100',
-            'desconto_especifico' => 'nullable|string',
-            'guia_recolhimento' => 'nullable|numeric',
+            'desconto_especifico' => 'nullable|numeric|min:0',
+            'guia_recolhimento' => 'nullable|numeric|min:0',
+            'observacoes' => 'nullable|string',
             'itens' => 'nullable|array',
             'itens.*.id' => 'required_with:itens|exists:produtos,id',
             'itens.*.quantidade' => 'required_with:itens|numeric|min:0',
@@ -84,32 +86,28 @@ class OrcamentoStoreRequest extends FormRequest
     {
         // Função helper para normalizar valores brasileiros
         $normalizarValor = function ($valor) {
-            if (empty($valor) || $valor === '0') {
+            if (is_null($valor) || $valor === '') {
                 return null;
             }
 
-            $valor = trim($valor);
+            $valor = trim((string)$valor);
 
-            // Se não tem vírgula nem ponto, é um valor inteiro
-            if (!str_contains($valor, ',') && !str_contains($valor, '.')) {
-                return $valor;
-            }
-
-            // Se tem vírgula, é formato brasileiro (1.234,56)
+            // Remove pontos de milhar e troca vírgula por ponto
             if (str_contains($valor, ',')) {
-                return str_replace(',', '.', str_replace('.', '', $valor));
+                $valor = str_replace(',', '.', str_replace('.', '', $valor));
             }
 
-            // Se tem apenas ponto, verifica se é milhares ou decimal
-            $partes = explode('.', $valor);
-            if (count($partes) == 2 && strlen($partes[1]) == 3) {
-                return str_replace('.', '', $valor);
+            // Se após a normalização o valor for 0 ou equivalente, retorna 0
+            if ($valor === '0' || $valor === '0.00' || $valor === '0.0') {
+                return 0;
             }
 
             return $valor;
         };
 
         $this->merge([
+            'desconto' => $normalizarValor($this->desconto),
+            'desconto_aprovado' => $normalizarValor($this->desconto_aprovado),
             'desconto_especifico' => $normalizarValor($this->desconto_especifico),
             'guia_recolhimento' => $normalizarValor($this->guia_recolhimento),
             'valor_total' => $normalizarValor($this->valor_total),

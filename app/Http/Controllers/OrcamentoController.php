@@ -525,7 +525,7 @@ class OrcamentoController extends Controller
         }
 
         //  DESCONTO ESPECÍFICO
-        if ($descontoEspecifico) {
+        if ($descontoEspecifico > 0) {
             $orcamento->descontos()->create([
                 'motivo' => 'Desconto específico em reais',
                 'valor' => $descontoEspecifico,
@@ -1414,10 +1414,14 @@ class OrcamentoController extends Controller
             'itens.produto.cor',
             'itens.produto.fornecedor',
             'vidros',
-            'descontos'
+            'descontos',
+            'transportes',
+            'cliente.enderecos',
+            'condicaoPagamento',
+            'endereco'
         ])->findOrFail($id);
 
-        $cliente = Cliente::with('enderecos')->findOrFail($orcamento->cliente_id);
+        $cliente = $orcamento->cliente;
         $cnpj = preg_replace('/\D/', '', $cliente->cnpj);
 
         $body = $cnpjService->consultarCnpj($cnpj);
@@ -1546,7 +1550,6 @@ class OrcamentoController extends Controller
             $orcamento->update([
                 'obra' => $request->obra,
                 'prazo_entrega' => $request->prazo_entrega,
-                'vendedor_id' => $request->vendedor_id ?? $orcamento->vendedor_id,
                 'frete' => $request->frete ?? 0,
                 'valor_total_itens' => $request->valor_total ?? $orcamento->valor_total_itens,
                 'guia_recolhimento' => $guiaRecolhimento,
@@ -2034,7 +2037,7 @@ class OrcamentoController extends Controller
             // ----------------------------------------------------------------
             // Desconto ESPECÍFICO (valor fixo em R$)
             // ----------------------------------------------------------------
-            if ($descontoEspecifico) {
+            if ($descontoEspecifico > 0) {
                 $orcamento->descontos()->create([
                     'motivo' => 'Desconto específico em reais',
                     'valor' => $descontoEspecifico,

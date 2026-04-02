@@ -103,7 +103,7 @@
                     {{-- ================================================================
                          ITENS DE ENCOMENDA — ✅ FIX 2: agora DENTRO do form
                          ================================================================ --}}
-                    @if ($orcamento->encomenda && $orcamento->itens->whereNotNull('produto_id')->isEmpty())
+                    @if ($orcamento->encomenda)
                         @php
                             $grupo = \App\Models\ConsultaPrecoGrupo::with([
                                 'itens.cor',
@@ -299,21 +299,24 @@
                                                 $descontoProduto = $descontoItem ? ($descontoItem->valor / $item->quantidade) : 0;
                                                 $tipoDesconto = $descontoItem ? 'produto' : 'percentual';
                                                 
-                                                $valorUnitario = (float) $item->valor_unitario;
+                                                $precoOriginal = (float) $item->valor_unitario;
+                                                $valorExibido = (float) $item->valor_unitario_com_desconto;
+                                                if ($valorExibido <= 0) $valorExibido = $precoOriginal;
+
                                                 $quantidade = (float) $item->quantidade;
-                                                $subtotal = $valorUnitario * $quantidade;
+                                                $subtotalOriginal = $precoOriginal * $quantidade;
                                                 $valorComDesconto = (float) $item->valor_com_desconto;
                                             @endphp
                                             <tr data-estoque="{{ $item->produto->estoque_atual ?? 'null' }}">
                                                 <input type="hidden" name="produtos[{{ $loop->index }}][produto_id]" value="{{ $item->produto->id }}">
-                                                <input type="hidden" name="produtos[{{ $loop->index }}][preco_original]" value="{{ $valorUnitario }}">
+                                                <input type="hidden" name="produtos[{{ $loop->index }}][preco_original]" value="{{ $precoOriginal }}">
                                                 <input type="hidden" name="produtos[{{ $loop->index }}][liberar_desconto]" value="{{ $item->produto->liberar_desconto ? 1 : 0 }}">
                                                 <input type="hidden" name="produtos[{{ $loop->index }}][desconto_produto]" class="input-desconto-produto" value="{{ $descontoProduto }}">
                                                 <input type="hidden" name="produtos[{{ $loop->index }}][tipo_desconto]" class="input-tipo-desconto" value="{{ $tipoDesconto }}">
                                                 
-                                                <input type="hidden" name="produtos[{{ $loop->index }}][subtotal]" class="input-subtotal" value="{{ number_format($subtotal, 2, '.', '') }}">
+                                                <input type="hidden" name="produtos[{{ $loop->index }}][subtotal]" class="input-subtotal" value="{{ number_format($subtotalOriginal, 2, '.', '') }}">
                                                 <input type="hidden" name="produtos[{{ $loop->index }}][subtotal_com_desconto]" class="input-subtotal-com-desconto" value="{{ number_format($valorComDesconto, 2, '.', '') }}">
-                                                <input type="hidden" name="produtos[{{ $loop->index }}][preco_unitario_com_desconto]" class="input-preco-unitario-com-desconto" value="{{ number_format($valorComDesconto / $quantidade, 2, '.', '') }}">
+                                                <input type="hidden" name="produtos[{{ $loop->index }}][preco_unitario_com_desconto]" class="input-preco-unitario-com-desconto" value="{{ number_format($valorExibido, 2, '.', '') }}">
 
                                                 <td class="px-3 py-2 border">{{ $item->produto->id }}</td>
                                                 <td class="px-3 py-2 border">{{ $item->produto->nome }}</td>
@@ -325,16 +328,16 @@
                                                         <div class="flex flex-col gap-1">
                                                             <input type="number" step="0.01" 
                                                                 name="produtos[{{ $loop->index }}][valor_unitario]"
-                                                                value="{{ number_format($valorUnitario, 2, '.', '') }}"
+                                                                value="{{ number_format($valorExibido, 2, '.', '') }}"
                                                                 onchange="alterarPrecoProdutoOriginal({{ $loop->index }}, this.value)"
                                                                 class="input-valor-unitario w-24 border rounded px-2 py-1 text-sm" />
                                                             @if($descontoProduto > 0)
-                                                                <small class="text-xs text-gray-500">Original: R$ {{ number_format($valorUnitario, 2, ',', '.') }}</small>
+                                                                <small class="text-xs text-gray-500">Original: R$ {{ number_format($precoOriginal, 2, ',', '.') }}</small>
                                                             @endif
                                                         </div>
                                                     @else
-                                                        R$ {{ number_format($valorUnitario, 2, ',', '.') }}
-                                                        <input type="hidden" name="produtos[{{ $loop->index }}][valor_unitario]" value="{{ $valorUnitario }}" class="input-valor-unitario">
+                                                        R$ {{ number_format($precoOriginal, 2, ',', '.') }}
+                                                        <input type="hidden" name="produtos[{{ $loop->index }}][valor_unitario]" value="{{ $precoOriginal }}" class="input-valor-unitario">
                                                     @endif
                                                 </td>
                                                 <td class="px-3 py-2 border">
@@ -346,7 +349,7 @@
                                                         class="input-quantidade w-16 border rounded px-2 py-1 text-center font-bold" />
                                                 </td>
                                                 <td class="px-3 py-2 border label-subtotal font-medium">
-                                                    R$ {{ number_format($subtotal, 2, ',', '.') }}
+                                                    R$ {{ number_format($subtotalOriginal, 2, ',', '.') }}
                                                 </td>
                                                 <td class="px-3 py-2 border text-green-600 label-subtotal-desconto font-bold">
                                                     R$ {{ number_format($valorComDesconto, 2, ',', '.') }}
@@ -499,7 +502,7 @@
                             <x-select name="enderecos_cadastrados" label="Endereços de cadastrados do cliente">
                                 <option value="">Selecione...</option>
                                 @foreach ($cliente->enderecos as $endereco)
-                                    <option value="{{ $endereco->id }}">
+                                    <option value="{{ $endereco->id }}" {{ old('enderecos_cadastrados', $orcamento->endereco_id) == $endereco->id ? 'selected' : '' }}>
                                         @if ($endereco->logradouro != null)
                                             {{ $endereco->logradouro . ' - ' }}
                                         @endif
@@ -562,10 +565,10 @@
                                 <label
                                     class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 hover:bg-blue-50 cursor-pointer transition">
 
-                                    <input type="radio" name="tipos_transporte" value="{{ $opcao->id }}" x-model="tipoTransporteId"
+                                    <input type="radio" name="tipos_transporte" value="{{ $opcao->id }}"
                                         required class="rounded-full border-gray-300 text-blue-600 focus:ring-blue-500"
-                                        @if ($orcamento->transportes->contains($opcao->id)) checked @endif /><span
-                                        class="text-sm text-gray-700">{{ $opcao->nome }}</span>
+                                        {{ old('tipos_transporte', $orcamento->transportes->first()->id ?? '') == $opcao->id ? 'checked' : '' }} />
+                                    <span class="text-sm text-gray-700">{{ $opcao->nome }}</span>
                                 </label>
                             @endforeach
                         </div>
@@ -610,24 +613,24 @@
                         <input type="hidden" id="desconto_aprovado" value="{{ $cliente->desconto ?? 0 }}">
                         
                         <flux:input name="desconto" label="Desconto na vendedor %" 
-                            :value="old('desconto', $desconto_percentual ?? 0)" 
+                            :value="old('desconto', number_format($desconto_percentual, 2, ',', '.'))" 
                             placeholder="0" 
                             oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
 
                         <flux:input name="desconto_especifico" label="Desconto específico R$" 
-                            :value="old('desconto_especifico', $desconto_especifico ?? '0.00')" 
+                            :value="old('desconto_especifico', number_format($desconto_especifico, 2, ',', '.'))" 
                             placeholder="0.00" 
                             oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
 
                         <flux:input name="guia_recolhimento" label="Guia Recolhimento" 
-                            :value="old('guia_recolhimento', $orcamento->guia_recolhimento ?? 0)" 
+                            :value="old('guia_recolhimento', number_format($orcamento->guia_recolhimento, 2, ',', '.'))" 
                             oninput="this.value = this.value.replace(/[^0-9,\.]/g,'');" />
 
                         <flux:input id="valor_total" name="valor_total" label="Total s/ desconto (R$)" 
-                            readonly value="0,00" />
+                            readonly value="{{ number_format($orcamento->valor_total_itens, 2, ',', '.') }}" />
 
                         <flux:input id="valor_final" label="Valor Final c/ desconto (R$)" 
-                            readonly value="0.00" 
+                            readonly value="{{ number_format($orcamento->valor_total, 2, ',', '.') }}" 
                             class="font-semibold text-green-700 dark:text-green-400" />
                     </div>
 
@@ -1158,9 +1161,12 @@
 
     // ==================== CÁLCULOS TOTAIS ====================
     function obterDescontoAplicado() {
-        const descontoCliente = parseFloat(document.getElementById('desconto_aprovado')?.value) || 0;
+        const descAprovadoEl = document.getElementById('desconto_aprovado');
+        const descontoCliente = parseMoeda(descAprovadoEl?.value);
+        
         const descontoOrcamentoEl = document.querySelector('[name="desconto"]');
-        let descontoOrcamento = parseFloat(descontoOrcamentoEl?.value?.replace(',', '.')) || 0;
+        let descontoOrcamento = parseMoeda(descontoOrcamentoEl?.value);
+        
         return Math.max(descontoOrcamento, descontoCliente);
     }
 
@@ -1173,8 +1179,8 @@
         rowsOriginais.forEach((row, i) => {
             if (row.style.display !== 'none') {
                 recalcularProdutoOriginal(row, i);
-                totalOriginais += parseFloat(row.querySelector('.input-subtotal').value) || 0;
-                totalOriginaisDesc += parseFloat(row.querySelector('.input-subtotal-com-desconto').value) || 0;
+                totalOriginais += parseMoeda(row.querySelector('.input-subtotal').value);
+                totalOriginaisDesc += parseMoeda(row.querySelector('.input-subtotal-com-desconto').value);
             }
         });
 
@@ -1192,16 +1198,16 @@
         let totalVidros = 0, totalVidrosDesc = 0;
         document.querySelectorAll('#vidros-wrapper .space-y-2').forEach(v => {
             if (v.style.display !== 'none') {
-                totalVidros += parseFloat(v.querySelector('.valor-hidden').value) || 0;
-                totalVidrosDesc += parseFloat(v.querySelector('.valor-desconto-hidden').value) || 0;
+                totalVidros += parseMoeda(v.querySelector('.valor-hidden').value);
+                totalVidrosDesc += parseMoeda(v.querySelector('.valor-desconto-hidden').value);
             }
         });
 
         // 4. Encomendas (se houver)
         let totalEnc = 0, totalEncDesc = 0;
         document.querySelectorAll('#itens-encomenda tr').forEach(row => {
-            const precoOri = parseFloat(row.querySelector('.enc-preco-original')?.value) || 0;
-            const precoFinal = parseFloat(row.querySelector('.enc-preco-final')?.value) || precoOri;
+            const precoOri = parseMoeda(row.querySelector('.enc-preco-original')?.value);
+            const precoFinal = parseMoeda(row.querySelector('.enc-preco-final')?.value) || precoOri;
             const qtd = parseFloat(row.dataset.quantidade) || 1;
             const subtotal = precoOri * qtd;
             let subtotalDesc = (row.querySelector('.enc-tipo-desconto')?.value === 'produto') ? precoFinal * qtd : subtotal * (1 - descPercent/100);
@@ -1213,18 +1219,36 @@
         const totalComDesc = totalOriginaisDesc + totalNovosDesc + totalVidrosDesc + totalEncDesc;
 
         const valorTotalInput = document.getElementById('valor_total');
-        if (valorTotalInput) valorTotalInput.value = totalBruto.toFixed(2);
+        if (valorTotalInput) valorTotalInput.value = formatarMoeda(totalBruto);
 
-        const guia = parseFloat(document.querySelector('[name="guia_recolhimento"]')?.value.replace(',', '.')) || 0;
-        const descEsp = parseFloat(document.querySelector('[name="desconto_especifico"]')?.value.replace(',', '.')) || 0;
+        const guia = parseMoeda(document.querySelector('[name="guia_recolhimento"]')?.value);
+        const descEsp = parseMoeda(document.querySelector('[name="desconto_especifico"]')?.value);
 
         let valorFinal = totalComDesc - descEsp + guia;
         const valorFinalInput = document.getElementById('valor_final');
-        if (valorFinalInput) valorFinalInput.value = Math.max(0, valorFinal).toFixed(2);
+        if (valorFinalInput) valorFinalInput.value = formatarMoeda(Math.max(0, valorFinal));
     }
 
     // ==================== AUXILIARES ====================
-    function formatarMoeda(v) { return parseFloat(v).toFixed(2).replace('.', ','); }
+    function formatarMoeda(v) { 
+        return parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function parseMoeda(valor) {
+        if (valor === null || valor === undefined || valor === '') return 0;
+        let s = valor.toString().trim();
+        if (s.includes(',') && s.includes('.')) {
+            // 1.234,56 -> 1234.56
+            return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0;
+        } else if (s.includes(',')) {
+            // 1234,56 -> 1234.56
+            return parseFloat(s.replace(',', '.')) || 0;
+        } else {
+            // 1234.56
+            return parseFloat(s) || 0;
+        }
+    }
+
     function escaparHTML(t) { return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
     // ==================== INICIALIZAÇÃO ====================
@@ -1266,7 +1290,7 @@
         }
 
         // Itens iniciais
-        for (let i = 1; i < oldItensRaw.length; i++) addItem();
+        for (let i = 0; i < oldItensRaw.length; i++) addItem();
 
         recalcularTotais();
         console.log('Sistema de orçamento pronto.');
