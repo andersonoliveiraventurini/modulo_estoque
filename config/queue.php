@@ -82,18 +82,12 @@ return [
                     'password' => env('RABBITMQ_PASSWORD', 'guest'),
                     'vhost' => env('RABBITMQ_VHOST', '/'),
                 ],
-                
-                // ...
             ],
-            'queue' => [
-                // ...
-
-                'prioritize_delayed' =>  false,
+            'queue' => env('RABBITMQ_QUEUE', 'default'),
+            'options' => [
+                'prioritize_delayed' => false,
                 'queue_max_priority' => 10,
             ],
-            
-
-            // ...
         ],
 
     ],

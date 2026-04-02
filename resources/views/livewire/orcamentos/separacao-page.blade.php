@@ -406,8 +406,19 @@
         {{-- SEÇÃO 3: HISTÓRICO DE LOTES CONCLUÍDOS --}}
         @if ($concludedBatches && $concludedBatches->isNotEmpty())
             <div class="mt-8">
-                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Histórico de Lotes Concluídos
-                </h3>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Histórico de Lotes Concluídos</h3>
+                    
+                    {{-- Botão Finalizar Separação Total --}}
+                    @if ($orcamento->workflow_status === 'em_separacao')
+                        <button wire:click="finalizarSeparacao" 
+                                wire:confirm="Deseja realmente finalizar a separação deste orçamento e enviá-lo para conferência? Certifique-se de que todos os itens foram separados ou justificados."
+                                class="inline-flex items-center px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-lg shadow-md transition-all active:scale-95">
+                            <x-heroicon-o-check-badge class="w-5 h-5 mr-2" />
+                            Finalizar Separação Total
+                        </button>
+                    @endif
+                </div>
                 <div class="space-y-4" x-data="{ open: null }">
                     @foreach ($concludedBatches as $cBatch)
                         <div

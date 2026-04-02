@@ -14,10 +14,10 @@ services:
       CLEAR_CACHE_ON_START: "false"
     volumes:
       - .:/var/www/html
-      - /var/www/html/vendor
-      - /var/www/html/node_modules
+      - vendor_data:/var/www/html/vendor
     depends_on:
       - mysql
+      - rabbitmq
     networks:
       - laravel-network
 
@@ -31,11 +31,11 @@ services:
       - .env
     volumes:
       - .:/var/www/html
-      - /var/www/html/vendor
-      - /var/www/html/node_modules
+      - vendor_data:/var/www/html/vendor
     depends_on:
       - mysql
       - app
+      - rabbitmq
     networks:
       - laravel-network
     command: >
@@ -43,6 +43,43 @@ services:
                php artisan schedule:run --verbose --no-interaction >> /var/www/html/storage/logs/scheduler.log 2>&1;
                sleep 60;
              done"
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel-worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - .:/var/www/html
+      - vendor_data:/var/www/html/vendor
+    depends_on:
+      - mysql
+      - app
+      - rabbitmq
+    networks:
+      - laravel-network
+    command: php artisan queue:work --verbose --tries=3 --timeout=90
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-1
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - laravel-network
 
   mysql:
     image: mysql:8.0
@@ -62,6 +99,7 @@ services:
 
 volumes:
   db_data:
+  vendor_data:
 
 networks:
   laravel-network:

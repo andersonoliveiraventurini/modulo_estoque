@@ -140,6 +140,12 @@ class SeparacaoPage extends Component
             }
 
             $orcamento->update(['workflow_status' => 'em_separacao']);
+
+            // Log de auditoria
+            \App\Models\AcaoCriar::create([
+                'descricao' => "Lote de separação #{$batch->id} iniciado para o orçamento #{$orcamento->id}",
+                'user_id' => auth()->id(),
+            ]);
         });
 
         $this->carregar();
@@ -198,6 +204,12 @@ class SeparacaoPage extends Component
             }
 
             $item->save();
+
+            // Log de auditoria
+            \App\Models\AcaoAtualizar::create([
+                'descricao' => "Item de separação #{$item->id} (Orc #{$this->orcamentoId}) atualizado: Qty {$validatedQty}",
+                'user_id' => auth()->id(),
+            ]);
         });
 
         $this->dispatch('refresh');
@@ -242,12 +254,94 @@ class SeparacaoPage extends Component
                 'outros_embalagem' => !empty($this->outros) ? trim($this->outros) : null,
             ]);
 
-            $this->batch->orcamento()->update([
+            // Removido o update automático do workflow_status para 'aguardando_conferencia'
+            // O orçamento permanece em 'em_separacao' até que o usuário clique em 'Finalizar Separação'
+        });
+
+        // Adiciona log de auditoria
+        \App\Models\AcaoAtualizar::create([
+            'descricao' => "Lote de separação #{$this->batch->id} concluído para o orçamento #{$this->orcamento->id}",
+            'user_id' => auth()->id(),
+        ]);
+
+        session()->flash('success', 'Lote de separação concluído com sucesso! Você pode iniciar um novo lote ou finalizar a separação total.');
+        $this->carregar();
+    }
+
+    /**
+     * Finaliza a separação total do orçamento e o envia para conferência.
+     */
+    public function finalizarSeparacao()
+    {
+        $this->orcamento->refresh();
+
+        // Valida se não há lotes abertos
+        $lotesAbertos = PickingBatch::where('orcamento_id', $this->orcamento->id)
+            ->whereIn('status', ['aberto', 'em_separacao'])
+            ->exists();
+
+        if ($lotesAbertos) {
+            session()->flash('error', 'Existem lotes de separação em andamento. Conclua-os antes de finalizar a separação total.');
+            return;
+        }
+
+        // Valida se todos os itens foram processados (separados ou com motivo)
+        $itensPendentes = false;
+        
+        // Itens normais
+        foreach ($this->orcamento->itens as $oi) {
+            if ($oi->quantidade_separada < $oi->quantidade) {
+                // Verifica se no último lote concluído há um motivo para a divergência
+                $ultimoItem = PickingItem::where('orcamento_item_id', $oi->id)
+                    ->whereHas('batch', fn($q) => $q->where('status', 'concluido'))
+                    ->latest()
+                    ->first();
+                
+                if (!$ultimoItem || (!$ultimoItem->motivo_nao_separado && $oi->quantidade_separada < $oi->quantidade)) {
+                    $itensPendentes = true;
+                    break;
+                }
+            }
+        }
+
+        // Se ainda houver pendências, verifica encomendas
+        if (!$itensPendentes) {
+            $grupo = \App\Models\ConsultaPrecoGrupo::with(['itens'])->where('orcamento_id', $this->orcamento->id)->first();
+            if ($grupo) {
+                foreach ($grupo->itens as $eni) {
+                    if ($eni->quantidade_separada < $eni->quantidade) {
+                        $ultimoItemEnc = PickingItem::where('consulta_preco_id', $eni->id)
+                            ->whereHas('batch', fn($q) => $q->where('status', 'concluido'))
+                            ->latest()
+                            ->first();
+                        
+                        if (!$ultimoItemEnc || (!$ultimoItemEnc->motivo_nao_separado && $eni->quantidade_separada < $eni->quantidade)) {
+                            $itensPendentes = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if ($itensPendentes) {
+            session()->flash('error', 'Ainda existem itens pendentes de separação sem justificativa. Verifique o progresso geral.');
+            return;
+        }
+
+        DB::transaction(function () {
+            $this->orcamento->update([
                 'workflow_status' => 'aguardando_conferencia'
+            ]);
+
+            // Log de auditoria
+            \App\Models\AcaoAtualizar::create([
+                'descricao' => "Separação total finalizada para o orçamento #{$this->orcamento->id}. Enviado para conferência.",
+                'user_id' => auth()->id(),
             ]);
         });
 
-        session()->flash('success', 'Separação concluída! Redirecionando para a conferência...');
+        session()->flash('success', 'Separação total finalizada! Orçamento enviado para a conferência.');
         return redirect()->route('orcamentos.conferencia.show', $this->orcamento->id);
     }
 

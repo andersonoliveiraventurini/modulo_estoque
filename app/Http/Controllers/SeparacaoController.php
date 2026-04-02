@@ -141,10 +141,15 @@ class SeparacaoController extends Controller
                 'outros_embalagem' => $data['outros_embalagem'],
             ]);
 
-            $batch->orcamento->update([
-                'workflow_status' => 'aguardando_conferencia'
-            ]);
+            // Removido o update automático do workflow_status para 'aguardando_conferencia'
+            // O orçamento permanece em 'em_separacao' até que o usuário clique em 'Finalizar Separação'
         });
+
+        // Log de auditoria
+        \App\Models\AcaoAtualizar::create([
+            'descricao' => "Lote de separação #{$batch->id} concluído para o orçamento #{$batch->orcamento_id} (via Controller)",
+            'user_id' => auth()->id(),
+        ]);
 
         \Illuminate\Support\Facades\Log::info("Lote {$batch->id} de separacao finalizado. Volumes registrados.");
 

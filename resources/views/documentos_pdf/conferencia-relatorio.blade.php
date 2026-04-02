@@ -577,34 +577,30 @@
         $confConcl   = $conferencias->where('status', 'concluida')->count();
         $confAndando = $conferencias->whereNotIn('status', ['concluida','cancelada'])->count();
 
-        // ✅ Para produtos normais: agrupa por produto_id
-        // ✅ Para encomendas: agrupa por consulta_preco_id (ou picking_item_id como fallback)
-        $ultimaOcorrenciaPorItem = $todosItens
-            ->sortByDesc('id')
-            ->unique(function ($i) {
-                // Chave única: produto normal usa produto_id, encomenda usa consulta_preco_id ou id
-                return ($i->is_encomenda ?? false)
-                    ? 'enc_' . ($i->consulta_preco_id ?? $i->id)
-                    : 'prod_' . $i->produto_id;
-            });
+        // Agrupamos por item para somar as quantidades
+        $resumoPorItem = $todosItens->groupBy(function ($i) {
+            return ($i->is_encomenda ?? false)
+                ? 'enc_' . ($i->consulta_preco_id ?? $i->id)
+                : 'prod_' . $i->produto_id;
+        })->map(function ($itens) {
+            $primeiro = $itens->first();
+            return (object) [
+                'nome' => $primeiro->is_encomenda ? $primeiro->descricao_encomenda : $primeiro->produto->nome,
+                'is_encomenda' => $primeiro->is_encomenda,
+                'total_separado' => $itens->sum('qty_separada'),
+                'total_conferido' => $itens->sum('qty_conferida'),
+                'status' => $itens->contains('status', 'divergente') ? 'divergente' : ($itens->every('status', 'ok') ? 'ok' : 'pendente'),
+                'conferido' => $itens->every(fn($i) => !is_null($i->conferido_por_id))
+            ];
+        });
 
-        $sumOk   = $ultimaOcorrenciaPorItem
-            ->filter(fn($i) => $i->conferido_por_id && $i->status === 'ok')
-            ->count();
+        $sumOk   = $resumoPorItem->filter(fn($i) => $i->conferido && $i->status === 'ok')->count();
+        $sumDiv  = $resumoPorItem->filter(fn($i) => $i->status === 'divergente')->count();
+        $sumPend = $resumoPorItem->filter(fn($i) => !$i->conferido)->count();
 
-        $sumDiv  = $ultimaOcorrenciaPorItem
-            ->filter(fn($i) => $i->status === 'divergente')
-            ->count();
-
-        $sumPend = $ultimaOcorrenciaPorItem
-            ->filter(fn($i) => is_null($i->conferido_por_id))
-            ->count();
-
-        $totalItensUnicos = $ultimaOcorrenciaPorItem->count();
-
-        // ✅ Conta separado para exibir no resumo
-        $totalProdutos  = $ultimaOcorrenciaPorItem->filter(fn($i) => !($i->is_encomenda ?? false))->count();
-        $totalEncomenda = $ultimaOcorrenciaPorItem->filter(fn($i) => $i->is_encomenda ?? false)->count();
+        $totalItensUnicos = $resumoPorItem->count();
+        $totalProdutos    = $resumoPorItem->filter(fn($i) => !$i->is_encomenda)->count();
+        $totalEncomenda   = $resumoPorItem->filter(fn($i) => $i->is_encomenda)->count();
     @endphp
 
     <div class="resumo-final">

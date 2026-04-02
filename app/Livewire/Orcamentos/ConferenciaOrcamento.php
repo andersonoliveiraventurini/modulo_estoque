@@ -234,6 +234,12 @@ class ConferenciaOrcamento extends Component
 
             $this->orcamento->update(['workflow_status' => 'em_conferencia']);
 
+            // Log de auditoria
+            \App\Models\AcaoCriar::create([
+                'descricao' => "Conferência #{$conf->id} iniciada para o orçamento #{$this->orcamento->id}" . ($batch ? " (Lote #{$batch->id})" : " (Virtual)"),
+                'user_id' => Auth::id(),
+            ]);
+
             if ($batch) {
                 // Fluxo com Lote: Adiciona todos os itens do lote
                 foreach ($batch->items as $pi) {
@@ -291,6 +297,12 @@ class ConferenciaOrcamento extends Component
             'motivo_divergencia' => $this->inputs[$itemId]['motivo'] ?? null,
             'conferido_por_id'   => Auth::id(),
             'conferido_em'       => now(),
+        ]);
+
+        // Log de auditoria
+        \App\Models\AcaoAtualizar::create([
+            'descricao' => "Item de conferência #{$item->id} (Conf #{$this->conferencia->id}) salvo: Qty {$qty}",
+            'user_id' => Auth::id(),
         ]);
 
         $this->processarFotos($item);
@@ -370,6 +382,12 @@ class ConferenciaOrcamento extends Component
             }
 
             DB::commit();
+
+            // Log de auditoria
+            \App\Models\AcaoAtualizar::create([
+                'descricao' => "Conferência #{$conf->id} concluída para o orçamento #{$this->orcamento->id}. Msg: {$msg}",
+                'user_id' => Auth::id(),
+            ]);
             
             $this->reset(['conferencia', 'caixas', 'sacos', 'sacolas', 'outros', 'usaConferenciaAnteriorId']);
             $this->carregarConferencia();
