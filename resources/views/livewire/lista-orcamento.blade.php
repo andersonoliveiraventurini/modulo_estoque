@@ -159,16 +159,19 @@
                         </td>
                         <td class="px-3 py-4">
                             @php
+                                $statusDisplay = $o->status === 'Rejeitado' ? 'Reprovado' : $o->status;
                                 $statusColor = match($o->status) {
-                                    'Pago', 'Concluído' => 'bg-green-100 text-green-700',
+                                    'Pago', 'Concluído', 'Aprovado' => 'bg-green-100 text-green-700',
                                     'Pendente' => 'bg-amber-100 text-amber-700',
                                     'Aprovar desconto', 'Aprovar pagamento' => 'bg-blue-100 text-blue-700',
-                                    'Cancelado' => 'bg-red-100 text-red-700',
+                                    'Cancelado', 'Rejeitado', 'Reprovado' => 'bg-red-100 text-red-700',
+                                    'Sem estoque' => 'bg-pink-100 text-pink-700',
+                                    'Expirado' => 'bg-zinc-900 text-zinc-50',
                                     default => 'bg-zinc-100 text-zinc-700'
                                 };
                             @endphp
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase whitespace-nowrap {{ $statusColor }}">
-                                {{ $o->status }}
+                                {{ $statusDisplay }}
                             </span>
                         </td>
                         <td class="px-3 py-4 text-xs font-medium text-zinc-700 dark:text-zinc-300">

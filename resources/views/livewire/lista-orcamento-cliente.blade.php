@@ -85,20 +85,19 @@
                         {{-- Status --}}
                         <td class="px-6 py-4">
                             @php
+                                $statusDisplay = $c->status === 'Rejeitado' ? 'Reprovado' : $c->status;
                                 $cor = match ($c->status) {
-                                    'Pago' => 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
-                                    'Aprovado' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
-                                    'Cancelado',
-                                    'Rejeitado'
-                                        => 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
-                                    'Expirado' => 'bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400',
-                                    default
-                                        => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
+                                    'Pago', 'Concluído', 'Aprovado' => 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
+                                    'Pendente' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
+                                    'Cancelado', 'Rejeitado', 'Reprovado' => 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+                                    'Sem estoque' => 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300',
+                                    'Expirado' => 'bg-zinc-900 text-zinc-50 dark:bg-zinc-950 dark:text-zinc-400',
+                                    default => 'bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400',
                                 };
                             @endphp
                             <span
                                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $cor }}">
-                                {{ $c->status }}
+                                {{ $statusDisplay }}
                             </span>
                         </td>
 
