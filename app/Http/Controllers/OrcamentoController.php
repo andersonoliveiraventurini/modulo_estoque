@@ -592,7 +592,7 @@ class OrcamentoController extends Controller
             ]);
 
             return redirect()
-                ->route('orcamentos.index')
+                ->route('orcamentos.show', $orcamento->id)
                 ->with('info', 'Orçamento criado com sucesso! Aguardando aprovação do meio de pagamento especial para gerar o PDF.');
         } elseif ($necessitaAprovacaoDesconto) {
             // Só desconto precisa de aprovação (ou pagamento já está ok/não é 20)
@@ -600,7 +600,7 @@ class OrcamentoController extends Controller
             $orcamento->save();
 
             return redirect()
-                ->route('orcamentos.index')
+                ->route('orcamentos.show', $orcamento->id)
                 ->with('error', 'Orçamento criado, mas é necessária a aprovação do desconto.');
         } else {
             // Nenhuma aprovação necessária — verifica estoque antes de aprovar
@@ -924,7 +924,7 @@ class OrcamentoController extends Controller
             ]);
 
             return redirect()
-                ->route('orcamentos.index')
+                ->route('orcamentos.show', $novoOrcamento->id)
                 ->with('warning', 'Orçamento duplicado com sucesso! É necessária a aprovação do meio de pagamento especial antes de gerar o PDF.');
         } elseif ($necessitaAprovacaoDesconto) {
             // Só desconto precisa de aprovação
@@ -936,7 +936,7 @@ class OrcamentoController extends Controller
             ]);
 
             return redirect()
-                ->route('orcamentos.index')
+                ->route('orcamentos.show', $novoOrcamento->id)
                 ->with('error', 'Orçamento duplicado com sucesso! É necessária a aprovação do desconto antes de gerar o PDF.');
         }
 
@@ -976,7 +976,7 @@ class OrcamentoController extends Controller
         ]);
 
         return redirect()
-            ->route('orcamentos.index')
+            ->route('orcamentos.show', $novoOrcamento->id)
             ->with('success', 'Orçamento duplicado e PDF gerado com sucesso!');
     }
 
@@ -1189,7 +1189,7 @@ class OrcamentoController extends Controller
                 $orcamento->cancelarLoteDeSeparacaoAtivo();
                 return response()->json([
                     'message'  => 'Status atualizado com sucesso!',
-                    'redirect' => route('orcamentos.index'),
+                    'redirect' => route('orcamentos.show', $orcamento->id),
                 ]);
             }
 
