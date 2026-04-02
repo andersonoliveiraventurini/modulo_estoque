@@ -193,10 +193,8 @@
 @include('documentos_pdf.partials.cabecalho', [
     'docLabel'  => 'Orçamento',
     'docNumero' => (string) $orcamento->id,
+    'qrCode'    => $qrCode ?? null,
 ])
- <div style="text-align:right; margin-top:-60px; margin-right:4px;">
-        <img src="data:image/png;base64,{{ $qrCode }}" width="70" height="70">
-    </div>
 
 @if (!empty($showRotaRestriction) && $showRotaRestriction)
     <div style="
@@ -212,15 +210,6 @@
         </strong>
     </div>
 @endif
-{{--
-    NOTA: o QR code foi removido do partial pois o cabeçalho compartilhado não
-    recebe $qrCode em todos os documentos. Se quiser mantê-lo no orçamento,
-    adicione-o logo APÓS o @include acima, em uma linha separada:
- 
-    <div style="text-align:right; margin-top:-60px; margin-right:4px;">
-        <img src="data:image/png;base64,{{ $qrCode }}" width="70" height="70">
-    </div>
---}}
 
 {{-- ===========================
      TÍTULO: versão só aparece se versao > 1

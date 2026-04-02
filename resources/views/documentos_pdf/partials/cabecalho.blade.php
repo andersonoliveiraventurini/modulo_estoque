@@ -7,6 +7,7 @@
 
     Variáveis opcionais:
         $docData   (string|null) — ex: '13/03/2026 às 16:36'  (omite a linha se null)
+        $qrCode    (string|null) — Base64 do QR code (se presente, exibe à direita)
 --}}
 <table style="width:100%; font-family: DejaVu Sans, sans-serif; font-size:12px; color:#333; border-collapse:collapse; margin-bottom:10px;">
     <tr>
@@ -41,5 +42,12 @@
                 </div>
             @endif
         </td>
+
+        {{-- QR Code (opcional) --}}
+        @if(!empty($qrCode))
+            <td style="width:5rem; text-align:right; vertical-align:middle; padding-left:10px;">
+                <img src="data:image/png;base64,{{ $qrCode }}" width="70" height="70" style="display:block; margin-left:auto;">
+            </td>
+        @endif
     </tr>
 </table>
