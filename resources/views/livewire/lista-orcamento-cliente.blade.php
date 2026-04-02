@@ -91,8 +91,8 @@
                                     'Pendente' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
                                     'Cancelado', 'Rejeitado', 'Reprovado' => 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
                                     'Sem estoque' => 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300',
-                                    'Expirado' => 'bg-zinc-900 text-zinc-50 dark:bg-zinc-950 dark:text-zinc-400',
-                                    default => 'bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400',
+                                     'Expirado' => 'bg-black text-white dark:bg-zinc-950 dark:text-zinc-400',
+                                     default => 'bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400',
                                 };
                             @endphp
                             <span

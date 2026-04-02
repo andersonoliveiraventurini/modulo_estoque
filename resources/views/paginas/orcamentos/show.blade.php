@@ -32,7 +32,7 @@
                                 'Cancelado' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'dark' => 'dark:bg-red-900/40 dark:text-red-200'],
                                 'Rejeitado' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'dark' => 'dark:bg-red-900/40 dark:text-red-200'],
                                 'Reprovado' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'dark' => 'dark:bg-red-900/40 dark:text-red-200'],
-                                'Expirado' => ['bg' => 'bg-zinc-900', 'text' => 'text-zinc-50', 'dark' => 'dark:bg-zinc-950 dark:text-zinc-400'],
+                                'Expirado' => ['bg' => 'bg-black', 'text' => 'text-white', 'dark' => 'dark:bg-zinc-950 dark:text-zinc-400'],
                                 'Pago' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'dark' => 'dark:bg-green-900/40 dark:text-green-200'],
                                 'Sem estoque' => ['bg' => 'bg-pink-100', 'text' => 'text-pink-700', 'dark' => 'dark:bg-pink-900/40 dark:text-pink-300'],
                                 'Pagamento pendente' => ['bg' => 'bg-orange-100', 'text' => 'text-orange-800', 'dark' => 'dark:bg-orange-900/40 dark:text-orange-200'],

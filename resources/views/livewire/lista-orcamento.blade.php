@@ -166,7 +166,7 @@
                                     'Aprovar desconto', 'Aprovar pagamento' => 'bg-blue-100 text-blue-700',
                                     'Cancelado', 'Rejeitado', 'Reprovado' => 'bg-red-100 text-red-700',
                                     'Sem estoque' => 'bg-pink-100 text-pink-700',
-                                    'Expirado' => 'bg-zinc-900 text-zinc-50',
+                                    'Expirado' => 'bg-black text-white',
                                     default => 'bg-zinc-100 text-zinc-700'
                                 };
                             @endphp
