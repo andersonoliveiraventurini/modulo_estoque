@@ -28,13 +28,16 @@
                         @php
                             $statusColors = [
                                 'Pendente' => ['bg' => 'bg-amber-100', 'text' => 'text-amber-800', 'dark' => 'dark:bg-amber-900/40 dark:text-amber-200'],
-                                'Aprovado' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-800', 'dark' => 'dark:bg-blue-900/40 dark:text-blue-200'],
+                                'Aprovado' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'dark' => 'dark:bg-green-900/40 dark:text-green-200'],
                                 'Cancelado' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'dark' => 'dark:bg-red-900/40 dark:text-red-200'],
                                 'Rejeitado' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'dark' => 'dark:bg-red-900/40 dark:text-red-200'],
-                                'Expirado' => ['bg' => 'bg-neutral-100', 'text' => 'text-neutral-800', 'dark' => 'dark:bg-neutral-700 dark:text-neutral-200'],
+                                'Reprovado' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'dark' => 'dark:bg-red-900/40 dark:text-red-200'],
+                                'Expirado' => ['bg' => 'bg-zinc-900', 'text' => 'text-zinc-50', 'dark' => 'dark:bg-zinc-950 dark:text-zinc-400'],
                                 'Pago' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'dark' => 'dark:bg-green-900/40 dark:text-green-200'],
+                                'Sem estoque' => ['bg' => 'bg-pink-100', 'text' => 'text-pink-700', 'dark' => 'dark:bg-pink-900/40 dark:text-pink-300'],
                                 'Pagamento pendente' => ['bg' => 'bg-orange-100', 'text' => 'text-orange-800', 'dark' => 'dark:bg-orange-900/40 dark:text-orange-200'],
                             ];
+                            $statusDisplay = $orcamento->status === 'Rejeitado' ? 'Reprovado' : $orcamento->status;
                             $currentStatusColor = $statusColors[$orcamento->status] ?? $statusColors['Pendente'];
 
                             // Lógica de Transporte (Rota vs Balcão)
@@ -48,7 +51,7 @@
                             <span
                                 class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold {{ $currentStatusColor['bg'] }} {{ $currentStatusColor['text'] }} {{ $currentStatusColor['dark'] }} border border-current border-opacity-20 flex-shrink-0">
                                 <span class="inline-block w-1.5 h-1.5 rounded-full bg-current opacity-70"></span>
-                                {{ $orcamento->status }}
+                                {{ $statusDisplay }}
                             </span>
 
                             {{-- Badge de Rota/Balcão --}}
