@@ -1279,7 +1279,7 @@ class OrcamentoController extends Controller
 
             return response()->json([
                 'message'  => 'Orçamento aprovado e separação iniciada!',
-                'redirect' => route('orcamentos.separacao.show', $orcamento->id),
+                'redirect' => route('orcamentos.show', $orcamento->id),
             ]);
         } catch (\Exception $e) {
             \Log::error("Erro ao atualizar status do orçamento #{$id}: " . $e->getMessage());
