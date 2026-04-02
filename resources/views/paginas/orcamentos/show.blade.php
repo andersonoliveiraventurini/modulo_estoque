@@ -473,7 +473,7 @@
                                                                 class="flex-1 border border-gray-300 dark:border-neutral-600 dark:bg-zinc-700 dark:text-white rounded-lg px-2 py-1.5 text-sm status-select focus:ring-2 focus:ring-blue-300 focus:outline-none
                     {{ ($statusBloqueado || $bloqueioPorPendencia) ? 'opacity-50 cursor-not-allowed' : '' }}"
                                                                 data-id="{{ $orcamento->id }}">
-                                                                @foreach (['Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado', 'Pagamento pendente'] as $s)
+                                                                @foreach (['Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'] as $s)
                                                                     @if ($s === 'Aprovado' && ($bloqueiaAprovado || $bloqueioPorPendencia) && $orcamento->status !== 'Aprovado')
                                                                         @continue
                                                                     @endif
