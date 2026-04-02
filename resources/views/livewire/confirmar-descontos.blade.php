@@ -179,7 +179,48 @@
 
                             @if ($descontosAprovados->count() > 0)
                                 <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                    <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">💰 Composição dos Descontos Aprovados</p>
+                                   @if (!empty($impacto) && $impacto['temDesconto'])
+                                        @php
+                                            $estaEmPrejuizo = $impacto['estaEmPrejuizo'];
+                                        @endphp
+
+                                        @if ($estaEmPrejuizo)
+                                            <div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/30 border border-red-400 rounded-lg">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                                                </svg>
+                                                <h2 class="text-sm font-bold text-red-700 dark:text-red-300">
+                                                    Esta operação vai gerar um
+                                                    <span class="underline">prejuízo</span>
+                                                    de
+                                                    <span class="text-red-800 dark:text-red-200">
+                                                        {{ number_format($impacto['prejuizoPct'], 1, ',', '.') }}%
+                                                        (R$ {{ number_format($impacto['prejuizoValor'], 2, ',', '.') }})
+                                                    </span>
+                                                    — o total com desconto (R$ {{ number_format($impacto['totalVendaComDesc'], 2, ',', '.') }})
+                                                    ficou abaixo do custo (R$ {{ number_format($impacto['totalCusto'], 2, ',', '.') }}).
+                                                </h2>
+                                            </div>
+                                        @else
+                                            <div class="flex items-start gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-400 rounded-lg">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 110 20A10 10 0 0112 2z"/>
+                                                </svg>
+                                                <h2 class="text-sm font-semibold text-yellow-800 dark:text-yellow-200">
+                                                    A aprovação gerou uma perda na margem de lucro de
+                                                    <span class="font-bold text-yellow-900 dark:text-yellow-100">
+                                                        {{ number_format($impacto['perdaMargem'], 1, ',', '.') }} %
+                                                        (R$ {{ number_format($impacto['totalDesconto'], 2, ',', '.') }})
+                                                    </span>
+                                                    — margem passou de
+                                                    {{ number_format($impacto['margemOriginal'], 1, ',', '.') }}%
+                                                    para
+                                                    {{ number_format($impacto['margemComDesconto'], 1, ',', '.') }}%.
+                                                </h2>
+                                            </div>
+                                        @endif
+                                    @endif 
+                                    <br/><p class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">💰 Composição dos Descontos Aprovados</p>
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                         @if ($totalDescontosProduto > 0)
                                             <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
@@ -209,7 +250,7 @@
                                             <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
                                                 <div class="flex items-center gap-2 mb-1">
                                                     <x-heroicon-o-arrow-trending-down class="w-4 h-4 text-green-600 dark:text-green-400"/>
-                                                    <span class="text-xs font-medium text-green-900 dark:text-green-200">Economia Total</span>
+                                                    <span class="text-xs font-medium text-green-900 dark:text-green-200">Total descontos</span>
                                                 </div>
                                                 <p class="text-lg font-bold text-green-700 dark:text-green-300">
                                                     -R$ {{ number_format($totalDescontosProduto + $totalDescontosOutros, 2, ',', '.') }}
@@ -535,6 +576,35 @@
                                             @elseif (!$isEncomenda && $desconto->produto_id)
                                                 @php $prodCard = $desconto->produto ?? \App\Models\Produto::find($desconto->produto_id); @endphp
                                                 @if ($prodCard)
+                                                <div class="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                                                <div class="flex items-center justify-center w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-full">
+                                                    <x-heroicon-o-calculator class="w-5 h-5 text-green-600 dark:text-green-400"/>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <p class="text-xs text-green-600 dark:text-green-400 font-medium">Preço com Desconto (unitário)</p>
+                                                    <p class="text-lg font-bold text-green-700 dark:text-green-300">
+                                                        R$ {{ number_format($valorComDesconto/($desconto->quantidade_item ?: 1), 2, ',', '.') }}
+                                                    </p>
+                                                   @php
+                                                    $precoCusto = (float) ($prodCard->preco_custo ?? 0);
+                                                    $precoComDesconto = (float) $valorComDesconto / ($desconto->quantidade_item ?: 1);
+                                                    @endphp
+
+                                                    @if($precoCusto > $precoComDesconto)
+                                                        <div class="mt-2 p-3 bg-red-100 dark:bg-red-900/40 border border-red-500 rounded-lg flex items-center gap-2">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600 dark:text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                                                            </svg>
+                                                            <span class="text-red-700 dark:text-red-300 font-bold text-sm">
+                                                                PREJUÍZO: Preço com desconto 
+                                                                (R$ {{ number_format($precoComDesconto, 2, ',', '.') }}) 
+                                                                é menor que o custo unitário 
+                                                                (R$ {{ number_format($precoCusto, 2, ',', '.') }})!
+                                                            </span>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </div>
                                                     <div class="flex items-center gap-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg">
                                                         <div class="flex items-center justify-center w-10 h-10 bg-indigo-100 dark:bg-indigo-900/40 rounded-full">
                                                             <x-heroicon-o-cube class="w-5 h-5 text-indigo-600 dark:text-indigo-400"/>
@@ -684,18 +754,32 @@
                                                         @endif
 
                                                         {{-- Produtos normais elegíveis --}}
-                                                        @foreach ($itensSemDescontoProduto as $itemEl)
+                                                       @foreach ($itensSemDescontoProduto as $itemEl)
                                                             @php
                                                                 $subtotalItemEl  = (float) $itemEl->valor_unitario * (float) $itemEl->quantidade;
                                                                 $descontoItemEl  = ($desconto->tipo === 'percentual' && $desconto->porcentagem)
                                                                     ? $subtotalItemEl * ($desconto->porcentagem / 100) : 0;
+                                                                $precoCustoEl       = (float) ($itemEl->produto->preco_custo ?? 0);
+                                                                $precoComDescontoEl = (float) $itemEl->valor_unitario - ($descontoItemEl / ($itemEl->quantidade ?: 1));
                                                             @endphp
                                                             <div class="flex justify-between items-center py-1 border-t border-green-200 dark:border-green-700 text-xs">
                                                                 <span class="text-gray-700 dark:text-gray-300">
                                                                     {{ $itemEl->produto->nome ?? "Produto #{$itemEl->produto_id}" }}
                                                                     <span class="text-gray-400">({{ (int) $itemEl->quantidade }}x R$ {{ number_format((float) $itemEl->valor_unitario, 2, ',', '.') }})</span>
                                                                     @if ($itemEl->produto?->preco_custo)
-                                                                        - <b>Custo unitário: R$ {{ number_format($itemEl->produto->preco_custo, 2, ',', '.') }} - custo total: R$ {{ number_format($itemEl->produto->preco_custo * $itemEl->quantidade, 2, ',', '.') }}</b>
+                                                                        - <b>Valor unitário com desconto: R$ {{ number_format($precoComDescontoEl, 2, ',', '.') }}</b><br/>
+                                                                        <b>Custo unitário: R$ {{ number_format($precoCustoEl, 2, ',', '.') }} - Custo total: R$ {{ number_format($precoCustoEl * $itemEl->quantidade, 2, ',', '.') }}</b>
+
+                                                                        @if($precoCustoEl > $precoComDescontoEl)
+                                                                            <div class="mt-1 p-2 bg-red-100 dark:bg-red-900/40 border border-red-500 rounded-lg flex items-center gap-2">
+                                                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-600 dark:text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                                                                                </svg>
+                                                                                <span class="text-red-700 dark:text-red-300 font-bold">
+                                                                                    PREJUÍZO: preço com desconto (R$ {{ number_format($precoComDescontoEl, 2, ',', '.') }}) abaixo do custo (R$ {{ number_format($precoCustoEl, 2, ',', '.') }})
+                                                                                </span>
+                                                                            </div>
+                                                                        @endif
                                                                     @endif
                                                                 </span>
                                                                 <span class="font-semibold">R$ {{ number_format($subtotalItemEl, 2, ',', '.') }}</span>

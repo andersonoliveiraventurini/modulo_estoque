@@ -72,12 +72,21 @@ class ConfirmarDescontos extends Component
             ]);
 
             // Carrega os descontos pendentes de aprovação
-            $this->descontos = Desconto::where('orcamento_id', $this->orcamentoId)
+            $descontos = Desconto::where('orcamento_id', $this->orcamentoId)
                 ->whereNull('aprovado_em')
                 ->whereNull('rejeitado_em')
                 ->with('user', 'produto')
                 ->orderBy('created_at', 'desc')
                 ->get();
+
+            // Injeta a quantidade do item em cada desconto
+            $descontos->each(function ($desconto) {
+                $desconto->quantidade_item = \App\Models\OrcamentoItens::where('orcamento_id', $desconto->orcamento_id)
+                    ->where('produto_id', $desconto->produto_id)
+                    ->value('quantidade');
+            });
+
+            $this->descontos = $descontos;
 
             Log::info('Descontos carregados', ['total' => $this->descontos->count()]);
 
@@ -440,8 +449,67 @@ class ConfirmarDescontos extends Component
         }
     }
 
+    private function calcularImpactoDescontos(): array
+    {
+        if (!$this->orcamento) {
+            return [];
+        }
+
+        $itens = \App\Models\OrcamentoItens::where('orcamento_id', $this->orcamentoId)
+            ->with('produto')
+            ->get();
+
+        $totalCusto        = 0;
+        $totalVendaSemDesc = 0;
+
+        foreach ($itens as $item) {
+            $precoCusto    = (float) ($item->produto->preco_custo ?? 0);
+            $valorUnitario = (float) $item->valor_unitario;
+            $quantidade    = (float) $item->quantidade;
+
+            $totalCusto        += $precoCusto * $quantidade;
+            $totalVendaSemDesc += $valorUnitario * $quantidade;
+        }
+
+        // Pega o total de descontos aprovados direto da tabela descontos (fonte da verdade)
+        $totalDesconto = \App\Models\Desconto::where('orcamento_id', $this->orcamentoId)
+            ->whereNotNull('aprovado_em')
+            ->sum('valor');
+
+        $totalVendaComDesc = $totalVendaSemDesc - (float) $totalDesconto;
+        $estaEmPrejuizo    = $totalCusto > 0 && $totalVendaComDesc < $totalCusto;
+
+        $margemOriginal = $totalVendaSemDesc > 0
+            ? (($totalVendaSemDesc - $totalCusto) / $totalVendaSemDesc) * 100
+            : 0;
+
+        $margemComDesconto = $totalVendaComDesc > 0
+            ? (($totalVendaComDesc - $totalCusto) / $totalVendaComDesc) * 100
+            : 0;
+
+        $perdaMargem   = $margemOriginal - $margemComDesconto;
+        $prejuizoValor = max(0, $totalCusto - $totalVendaComDesc);
+        $prejuizoPct   = $totalCusto > 0 ? ($prejuizoValor / $totalCusto) * 100 : 0;
+
+        return [
+            'totalCusto'        => $totalCusto,
+            'totalVendaSemDesc' => $totalVendaSemDesc,
+            'totalVendaComDesc' => $totalVendaComDesc,
+            'totalDesconto'     => (float) $totalDesconto,
+            'estaEmPrejuizo'    => $estaEmPrejuizo,
+            'margemOriginal'    => $margemOriginal,
+            'margemComDesconto' => $margemComDesconto,
+            'perdaMargem'       => $perdaMargem,
+            'prejuizoValor'     => $prejuizoValor,
+            'prejuizoPct'       => $prejuizoPct,
+            'temDesconto'       => (float) $totalDesconto > 0,
+        ];
+    }
+
     public function render()
     {
-        return view('livewire.confirmar-descontos');
+        return view('livewire.confirmar-descontos', [
+            'impacto' => $this->calcularImpactoDescontos(),
+        ]);
     }
 }

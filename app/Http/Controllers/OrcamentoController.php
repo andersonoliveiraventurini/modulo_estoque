@@ -576,17 +576,8 @@ class OrcamentoController extends Controller
             $orcamento->update(['endereco_id' => $request->enderecos_cadastrados]);
         }
 
-        // ✅ VALIDAÇÃO FINAL: VERIFICA SE PRECISA APROVAÇÃO
-        $temDescontoPercentual = $descontoPercentual > 0;
-        $temDescontoEspecifico = $descontoEspecifico > 0;
-        $temQualquerDesconto = $temDescontoPercentual || $temDescontoEspecifico || $itenscomdesconto;
-
-        $necessitaAprovacaoDesconto = $temQualquerDesconto && (
-            $clienteBloqueado ||
-            $descontoPercentual > $maxMargem ||
-            $itenscomdesconto ||
-            $temDescontoEspecifico
-        );
+        // ✅ VALIDAÇÃO FINAL: VERIFICA SE EXISTE QUALQUER DESCONTO PENDENTE NO BANCO
+        $necessitaAprovacaoDesconto = $orcamento->descontos()->whereNull('aprovado_em')->whereNull('rejeitado_em')->exists();
 
         // ✅ DETERMINA O STATUS FINAL DO ORÇAMENTO
         if ($necessitaAprovacaoPagamento) {
@@ -2078,12 +2069,8 @@ class OrcamentoController extends Controller
 
             DB::commit();
 
-            $necessitaAprovacaoDesconto = $temQualquerDesconto && (
-                $clienteBloqueado ||
-                $descontoPercentual > $maxMargem ||
-                $itenscomdesconto ||
-                $temDescontoEspecifico
-            );
+            // ✅ VALIDAÇÃO FINAL: VERIFICA SE EXISTE QUALQUER DESCONTO PENDENTE NO BANCO
+            $necessitaAprovacaoDesconto = $orcamento->descontos()->whereNull('aprovado_em')->whereNull('rejeitado_em')->exists();
 
             // ----------------------------------------------------------------
             // Definir status e redirecionar

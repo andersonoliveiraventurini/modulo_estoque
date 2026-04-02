@@ -446,6 +446,12 @@
                                                     </div>
                                                 @endif
 
+                                                @php
+                                                    $temDescontoPendente = $orcamento->descontos()->whereNull('aprovado_em')->whereNull('rejeitado_em')->exists();
+                                                    $temPagamentoPendente = $orcamento->solicitacoesPagamento()->where('status', 'Pendente')->exists();
+                                                    $bloqueioPorPendencia = $temDescontoPendente || $temPagamentoPendente;
+                                                @endphp
+
                                                 {{-- ─────────────────────────────────────────── --}}
                                                 {{-- FORMULÁRIO PARA ALTERAR STATUS --}}
                                                 {{-- ─────────────────────────────────────────── --}}
@@ -460,12 +466,12 @@
                                                             Alterar Status Comercial
                                                         </p>
                                                         <div class="flex gap-2">
-                                                            <select name="status" {{ $statusBloqueado ? 'disabled' : '' }}
+                                                            <select name="status" {{ ($statusBloqueado || $bloqueioPorPendencia) ? 'disabled' : '' }}
                                                                 class="flex-1 border border-gray-300 dark:border-neutral-600 dark:bg-zinc-700 dark:text-white rounded-lg px-2 py-1.5 text-sm status-select focus:ring-2 focus:ring-blue-300 focus:outline-none
-                    {{ $statusBloqueado ? 'opacity-50 cursor-not-allowed' : '' }}"
+                    {{ ($statusBloqueado || $bloqueioPorPendencia) ? 'opacity-50 cursor-not-allowed' : '' }}"
                                                                 data-id="{{ $orcamento->id }}">
                                                                 @foreach (['Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado', 'Pagamento pendente'] as $s)
-                                                                    @if ($s === 'Aprovado' && $bloqueiaAprovado && $orcamento->status !== 'Aprovado')
+                                                                    @if ($s === 'Aprovado' && ($bloqueiaAprovado || $bloqueioPorPendencia) && $orcamento->status !== 'Aprovado')
                                                                         @continue
                                                                     @endif
                                                                     <option value="{{ $s }}"
@@ -474,18 +480,36 @@
                                                                     </option>
                                                                 @endforeach
                                                             </select>
-                                                            <button type="button" {{ $statusBloqueado ? 'disabled' : '' }}
+                                                            <button type="button" {{ ($statusBloqueado || $bloqueioPorPendencia) ? 'disabled' : '' }}
                                                                 class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors atualizar-status
-                    {{ $statusBloqueado ? 'opacity-50 cursor-not-allowed' : '' }}"
+                    {{ ($statusBloqueado || $bloqueioPorPendencia) ? 'opacity-50 cursor-not-allowed' : '' }}"
                                                                 data-id="{{ $orcamento->id }}">
                                                                 Salvar
                                                             </button>
                                                         </div>
                                                     </div>
 
-                                                    <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                                                        💡 Selecione o novo status e clique em <strong>Salvar</strong> para alterar.
-                                                    </p>
+                                                    @if($bloqueioPorPendencia)
+                                                        <div class="p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-[11px] text-amber-700 dark:text-amber-300">
+                                                            <p class="font-bold flex items-center gap-1">
+                                                                <x-heroicon-o-lock-closed class="w-3 h-3" />
+                                                                Alteração Bloqueada
+                                                            </p>
+                                                            <p>
+                                                                @if($temDescontoPendente) 
+                                                                    • Existem descontos aguardando aprovação.<br>
+                                                                @endif
+                                                                @if($temPagamentoPendente)
+                                                                    • Existe solicitação de pagamento pendente.<br>
+                                                                @endif
+                                                                O status comercial só poderá ser alterado após a resolução destas pendências.
+                                                            </p>
+                                                        </div>
+                                                    @else
+                                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                                                            💡 Selecione o novo status e clique em <strong>Salvar</strong> para alterar.
+                                                        </p>
+                                                    @endif
 
                                                     {{-- Aviso permanente de falta de estoque --}}
                                                     @if($itensSemEstoqueViewGlobal->isNotEmpty() && $orcamento->status !== 'Aprovado')
@@ -737,7 +761,10 @@
         @endif
 
         {{-- ✅ ALERTA PARA APROVAÇÕES PENDENTES --}}
-        @if ($orcamento->status === 'Aprovar desconto')
+        @php
+            $temDescontoPendenteGlobal = $orcamento->descontos()->whereNull('aprovado_em')->whereNull('rejeitado_em')->exists();
+        @endphp
+        @if ($orcamento->status === 'Aprovar desconto' || $temDescontoPendenteGlobal)
             <div
                 class="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 dark:border-yellow-600 p-4 rounded-lg">
                 <div class="flex">
