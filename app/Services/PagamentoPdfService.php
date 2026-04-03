@@ -74,8 +74,9 @@ class PagamentoPdfService
                 return false;
             }
  
-            // ── 6. Persiste no disco ──────────────────────────────────────
-            $path        = "pagamentos/comprovante_{$pagamento->id}.pdf";
+            // ── 6. Persiste no disco (Garante nome único com timestamp) ───
+            $timestamp   = date('Ymd_His');
+            $path        = "pagamentos/comprovante_{$pagamento->id}_{$timestamp}.pdf";
             $discoRaiz   = Storage::disk('public')->path('');
  
             Log::info("{$tag} → salvando arquivo", [
@@ -83,6 +84,12 @@ class PagamentoPdfService
                 'disco_raiz' => $discoRaiz,
                 'caminho_abs'=> $discoRaiz . $path,
             ]);
+
+            // Remove arquivo anterior se existir no banco para não acumular lixo
+            if ($pagamento->pdf_path && Storage::disk('public')->exists($pagamento->pdf_path)) {
+                Log::info("{$tag} → removendo PDF antigo: {$pagamento->pdf_path}");
+                Storage::disk('public')->delete($pagamento->pdf_path);
+            }
  
             $salvo = Storage::disk('public')->put($path, $output);
  
