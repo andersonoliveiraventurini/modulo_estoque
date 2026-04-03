@@ -116,9 +116,9 @@ Este módulo gerencia o ciclo completo de retorno de mercadorias, desde a solici
 
 #### Fluxo de Dupla Aprovação
 O processo é estruturado em etapas obrigatórias para garantir a integridade fiscal e física:
-1.  **Solicitação (Qualidade/Vendas)**: Iniciada no [ProductReturnForm](file:///c:/Users/and7_/Documents/GitHub/modulo_estoque/app/Livewire/Quality/ProductReturnForm.php) ao buscar um orçamento pago. O usuário seleciona os itens e a quantidade (limitada à venda original).
+1.  **Solicitação (Devolução/Vendas)**: Iniciada no [ProductReturnForm](file:///c:/Users/and7_/Documents/GitHub/modulo_estoque/app/Livewire/Devolucao/ProductReturnForm.php) ao buscar um orçamento pago. O usuário seleciona os itens e a quantidade (limitada à venda original).
 2.  **Etapa 1: Supervisor de Vendas**: O supervisor acessa a solicitação no painel e realiza a aprovação comercial. Caso negue, o processo é encerrado imediatamente.
-3.  **Etapa 2: Chefe de Estoque (Inspeção)**: Após o "OK" comercial, o estoque realiza a inspeção física. O Chefe de Estoque emite o laudo de qualidade e decide se o item retorna ao saldo físico. A aprovação final nesta etapa é o gatilho para a geração automática do crédito.
+3.  **Etapa 2: Chefe de Estoque (Inspeção)**: Após o "OK" comercial, o estoque realiza a inspeção física. O Chefe de Estoque emite o laudo de devolução e decide se o item retorna ao saldo físico. A aprovação final nesta etapa é o gatilho para a geração automática do crédito.
 
 #### Regra de Cálculo do Crédito
 Para evitar discrepâncias financeiras, o sistema utiliza a seguinte lógica matemática no [ProductReturnService](file:///c:/Users/and7_/Documents/GitHub/modulo_estoque/app/Services/ProductReturnService.php):

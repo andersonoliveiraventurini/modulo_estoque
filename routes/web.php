@@ -319,11 +319,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('devolucoes/aprovacao-estoque', \App\Livewire\Returns\ReturnApprovalStock::class)->name('devolucoes.aprovacao-estoque');
 
     // Novo Módulo de RNC e Devoluções
-    Route::get('gestao/qualidade', \App\Livewire\Quality\QualityDashboard::class)->name('quality.dashboard');
-    Route::get('quality/rnc/novo', \App\Livewire\Quality\NonConformityForm::class)->name('rnc.create');
-    Route::get('quality/rnc/{rnc}/editar', \App\Livewire\Quality\NonConformityForm::class)->name('rnc.edit');
-    Route::get('devolucoes-produtos/novo', \App\Livewire\Quality\ProductReturnForm::class)->name('product_returns.create');
-    Route::get('devolucoes-produtos/{return}/autorizar', \App\Livewire\Quality\ProductReturnApproval::class)->name('product_returns.approve');
+    Route::get('gestao/devolucao', \App\Livewire\Devolucao\DevolucaoDashboard::class)->name('devolucao.dashboard');
+    Route::get('devolucao/rnc/novo', \App\Livewire\Devolucao\NonConformityForm::class)->name('rnc.create');
+    Route::get('devolucao/rnc/{rnc}/editar', \App\Livewire\Devolucao\NonConformityForm::class)->name('rnc.edit');
+    Route::get('devolucoes-produtos/novo', \App\Livewire\Devolucao\ProductReturnForm::class)->name('product_returns.create');
+    Route::get('devolucoes-produtos/{return}/autorizar', \App\Livewire\Devolucao\ProductReturnApproval::class)->name('product_returns.approve');
 
     // Módulo de Entrega e Retirada
     Route::get('estoque/encomendas/retirada', \App\Livewire\Estoque\EncomendaRetirada::class)->name('estoque.encomendas.retirada');

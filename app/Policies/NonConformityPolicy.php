@@ -15,7 +15,7 @@ class NonConformityPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('qualidade_visualizar_dashboard');
+        return $user->hasPermissionTo('devolucao_visualizar_dashboard');
     }
 
     /**
@@ -23,7 +23,7 @@ class NonConformityPolicy
      */
     public function view(User $user, NonConformity $nonConformity): bool
     {
-        return $user->hasPermissionTo('qualidade_visualizar_dashboard');
+        return $user->hasPermissionTo('devolucao_visualizar_dashboard');
     }
 
     /**
@@ -32,7 +32,7 @@ class NonConformityPolicy
     public function create(User $user): bool
     {
         // RNC pode ser criada por Supervisor, Estoquista ou Admin
-        return $user->hasPermissionTo('qualidade_criar_rnc');
+        return $user->hasPermissionTo('devolucao_criar_rnc');
     }
 
     /**
@@ -40,7 +40,7 @@ class NonConformityPolicy
      */
     public function update(User $user, NonConformity $nonConformity): bool
     {
-        return $user->hasPermissionTo('qualidade_criar_rnc');
+        return $user->hasPermissionTo('devolucao_criar_rnc');
     }
 
     /**

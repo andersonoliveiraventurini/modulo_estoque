@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Quality;
+namespace App\Livewire\Devolucao;
 
 use App\Models\Orcamento;
 use App\Models\ProductReturn;
@@ -113,7 +113,7 @@ class ProductReturnForm extends Component
             $return = $service->initiate($data);
 
             session()->flash('success', "Solicitação de Devolução #{$return->nr} iniciada com sucesso!");
-            return redirect()->route('quality.dashboard');
+            return redirect()->route('devolucao.dashboard');
             
         } catch (\Exception $e) {
             Log::error("Erro ao iniciar devolução: " . $e->getMessage());
@@ -123,6 +123,6 @@ class ProductReturnForm extends Component
 
     public function render()
     {
-        return view('livewire.quality.product-return-form');
+        return view('livewire.devolucao.product-return-form');
     }
 }

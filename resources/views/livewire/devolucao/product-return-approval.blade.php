@@ -1,7 +1,7 @@
 <div class="p-6 max-w-5xl mx-auto">
     <div class="mb-8">
         <div class="flex items-center gap-2 text-sm text-zinc-500 mb-2">
-            <a href="{{ route('quality.dashboard') }}" class="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">Qualidade</a>
+            <a href="{{ route('devolucao.dashboard') }}" class="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">Devolução</a>
             <flux:icon icon="chevron-right" class="w-3 h-3" />
             <span>Aprovar Devolução</span>
         </div>
@@ -126,7 +126,7 @@
                     @if($return->status === 'pendente_supervisor')
                         Aprovação do Supervisor de Vendas
                     @elseif($return->status === 'pendente_estoque')
-                        Inspeção de Qualidade (Estoque)
+                        Inspeção de Devolução (Estoque)
                     @else
                         Decisão Final
                     @endif
@@ -137,7 +137,7 @@
                         <div class="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900 rounded-xl mb-4">
                             <p class="text-xs text-blue-700 dark:text-blue-300 font-medium leading-relaxed">
                                 <flux:icon icon="information-circle" class="w-4 h-4 inline mr-1" />
-                                Como Chefe de Estoque, sua aprovação confirma que os produtos foram recebidos e passaram na inspeção de qualidade. Isso gerará o crédito automático para o cliente.
+                                Como Chefe de Estoque, sua aprovação confirma que os produtos foram recebidos e passaram na inspeção de devolução. Isso gerará o crédito automático para o cliente.
                             </p>
                         </div>
                     @endif

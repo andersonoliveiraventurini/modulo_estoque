@@ -1,7 +1,7 @@
 <div class="p-6 max-w-7xl mx-auto">
     <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Gestão de Qualidade</h1>
+            <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Gestão de Devolução</h1>
             <p class="text-zinc-500 dark:text-zinc-400 mt-1">Acompanhamento de Devoluções e Não Conformidades (RNC).</p>
         </div>
         <div class="flex items-center gap-3">

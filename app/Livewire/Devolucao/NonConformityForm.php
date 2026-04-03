@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Quality;
+namespace App\Livewire\Devolucao;
 
 use App\Models\NonConformity;
 use App\Models\Produto;
@@ -98,7 +98,7 @@ class NonConformityForm extends Component
                 session()->flash('success', "RNC #{$rnc->nr} criada com sucesso!");
             }
 
-            return redirect()->route('quality.dashboard');
+            return redirect()->route('devolucao.dashboard');
         } catch (\Exception $e) {
             Log::error("Erro ao salvar RNC: " . $e->getMessage());
             $this->addError('general', 'Ocorreu um erro ao salvar a RNC. Verifique os dados e tente novamente.');
@@ -132,6 +132,6 @@ class NonConformityForm extends Component
 
     public function render()
     {
-        return view('livewire.quality.non-conformity-form');
+        return view('livewire.devolucao.non-conformity-form');
     }
 }

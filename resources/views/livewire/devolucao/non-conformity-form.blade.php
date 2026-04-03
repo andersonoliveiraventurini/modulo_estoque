@@ -1,7 +1,7 @@
 <div class="p-6 max-w-4xl mx-auto">
     <div class="mb-8">
         <div class="flex items-center gap-2 text-sm text-zinc-500 mb-2">
-            <a href="{{ route('quality.dashboard') }}" class="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">Qualidade</a>
+            <a href="{{ route('devolucao.dashboard') }}" class="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">Devolução</a>
             <flux:icon icon="chevron-right" class="w-3 h-3" />
             <span>{{ $isEdit ? 'Editar RNC' : 'Nova RNC' }}</span>
         </div>
@@ -152,7 +152,7 @@
         </div>
 
         <div class="flex justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-            <flux:button href="{{ route('quality.dashboard') }}" variant="ghost">Cancelar</flux:button>
+            <flux:button href="{{ route('devolucao.dashboard') }}" variant="ghost">Cancelar</flux:button>
             <flux:button type="submit" variant="primary" icon="check">
                 {{ $isEdit ? 'Atualizar RNC' : 'Registrar e Gerar PDF' }}
             </flux:button>

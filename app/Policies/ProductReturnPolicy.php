@@ -15,7 +15,7 @@ class ProductReturnPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('qualidade_visualizar_dashboard');
+        return $user->hasPermissionTo('devolucao_visualizar_dashboard');
     }
 
     /**
@@ -23,7 +23,7 @@ class ProductReturnPolicy
      */
     public function view(User $user, ProductReturn $productReturn): bool
     {
-        return $user->hasPermissionTo('qualidade_visualizar_dashboard');
+        return $user->hasPermissionTo('devolucao_visualizar_dashboard');
     }
 
     /**
@@ -31,7 +31,7 @@ class ProductReturnPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermissionTo('qualidade_solicitar_devolucao');
+        return $user->hasPermissionTo('devolucao_solicitar_devolucao');
     }
 
     /**
@@ -41,7 +41,7 @@ class ProductReturnPolicy
     {
         // Se for uma verificação genérica (ex: menu sidebar)
         if (is_null($productReturn)) {
-            return $user->hasPermissionTo('qualidade_aprovar_supervisor');
+            return $user->hasPermissionTo('devolucao_aprovar_supervisor');
         }
 
         // Verificação específica da instância
@@ -49,7 +49,7 @@ class ProductReturnPolicy
             return false;
         }
 
-        return $user->hasPermissionTo('qualidade_aprovar_supervisor');
+        return $user->hasPermissionTo('devolucao_aprovar_supervisor');
     }
 
     /**
@@ -59,7 +59,7 @@ class ProductReturnPolicy
     {
         // Se for uma verificação genérica (ex: menu sidebar)
         if (is_null($productReturn)) {
-            return $user->hasPermissionTo('qualidade_aprovar_estoque');
+            return $user->hasPermissionTo('devolucao_aprovar_estoque');
         }
 
         // Verificação específica da instância
@@ -67,7 +67,7 @@ class ProductReturnPolicy
             return false;
         }
 
-        return $user->hasPermissionTo('qualidade_aprovar_estoque');
+        return $user->hasPermissionTo('devolucao_aprovar_estoque');
     }
 
     /**

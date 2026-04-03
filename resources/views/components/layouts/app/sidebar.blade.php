@@ -174,8 +174,8 @@
         </flux:navlist.group>
         
         <flux:navlist.group heading="RNC & Devoluções" expandable :expanded="true">
-            <flux:navlist.item icon="presentation-chart-line" :href="route('quality.dashboard')"
-                :current="request()->routeIs('quality.dashboard')" wire:navigate>{{ __('Painel de Gestão') }}
+            <flux:navlist.item icon="presentation-chart-line" :href="route('devolucao.dashboard')"
+                :current="request()->routeIs('devolucao.dashboard')" wire:navigate>{{ __('Painel de Gestão') }}
             </flux:navlist.item>
             @can('create', App\Models\NonConformity::class)
             <flux:navlist.item icon="document-plus" :href="route('rnc.create')"
@@ -190,13 +190,13 @@
 
             {{-- Links de Aprovação para Supervisor e Estoque --}}
             @can('approveSupervisor', App\Models\ProductReturn::class)
-            <flux:navlist.item icon="shield-check" :href="route('quality.dashboard', ['status_filter' => 'pendente_supervisor'])"
+            <flux:navlist.item icon="shield-check" :href="route('devolucao.dashboard', ['status_filter' => 'pendente_supervisor'])"
                 wire:navigate>{{ __('Aprovações Pendentes') }}
             </flux:navlist.item>
             @endcan
 
             @can('approveEstoque', App\Models\ProductReturn::class)
-            <flux:navlist.item icon="clipboard-document-check" :href="route('quality.dashboard', ['status_filter' => 'pendente_estoque'])"
+            <flux:navlist.item icon="clipboard-document-check" :href="route('devolucao.dashboard', ['status_filter' => 'pendente_estoque'])"
                 wire:navigate>{{ __('Inspeções de Devolução') }}
             </flux:navlist.item>
             @endcan

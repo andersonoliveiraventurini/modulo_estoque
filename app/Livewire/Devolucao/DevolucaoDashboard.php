@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Livewire\Quality;
+namespace App\Livewire\Devolucao;
 
 use App\Models\NonConformity;
 use App\Models\ProductReturn;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-class QualityDashboard extends Component
+class DevolucaoDashboard extends Component
 {
     use WithPagination;
 
@@ -45,7 +45,7 @@ class QualityDashboard extends Component
             ->latest()
             ->paginate(10, ['*'], 'rncPage');
 
-        return view('livewire.quality.quality-dashboard', [
+        return view('livewire.devolucao.devolucao-dashboard', [
             'returns' => $returns,
             'rncs' => $rncs
         ]);

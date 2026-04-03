@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Quality;
+namespace App\Livewire\Devolucao;
 
 use App\Models\ProductReturn;
 use App\Services\ProductReturnService;
@@ -47,7 +47,7 @@ class ProductReturnApproval extends Component
                 session()->flash('success', 'Devolução finalizada e estoque atualizado!');
             }
 
-            return redirect()->route('quality.dashboard');
+            return redirect()->route('devolucao.dashboard');
         } catch (\Exception $e) {
             Log::error("Erro na aprovação da devolução: " . $e->getMessage());
             $this->addError('general', 'Erro ao aprovar: ' . $e->getMessage());
@@ -71,7 +71,7 @@ class ProductReturnApproval extends Component
             }
 
             session()->flash('warning', 'Devolução rejeitada.');
-            return redirect()->route('quality.dashboard');
+            return redirect()->route('devolucao.dashboard');
         } catch (\Exception $e) {
             Log::error("Erro na rejeição da devolução: " . $e->getMessage());
             $this->addError('general', 'Erro ao rejeitar: ' . $e->getMessage());
@@ -80,6 +80,6 @@ class ProductReturnApproval extends Component
 
     public function render()
     {
-        return view('livewire.quality.product-return-approval');
+        return view('livewire.devolucao.product-return-approval');
     }
 }

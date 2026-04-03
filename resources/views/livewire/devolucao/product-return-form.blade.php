@@ -1,7 +1,7 @@
 <div class="p-6 max-w-5xl mx-auto">
     <div class="mb-8">
         <div class="flex items-center gap-2 text-sm text-zinc-500 mb-2">
-            <a href="{{ route('quality.dashboard') }}" class="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">Qualidade</a>
+            <a href="{{ route('devolucao.dashboard') }}" class="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">Devolução</a>
             <flux:icon icon="chevron-right" class="w-3 h-3" />
             <span>Solicitar Devolução</span>
         </div>
@@ -115,7 +115,7 @@
                     </flux:card>
 
                     <div class="flex justify-end gap-3 p-4 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
-                        <flux:button href="{{ route('quality.dashboard') }}" variant="ghost">Cancelar</flux:button>
+                        <flux:button href="{{ route('devolucao.dashboard') }}" variant="ghost">Cancelar</flux:button>
                         <flux:button wire:click="save" variant="primary" icon="paper-airplane">Enviar para Aprovação</flux:button>
                     </div>
                 </div>
