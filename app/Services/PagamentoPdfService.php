@@ -60,10 +60,7 @@ class PagamentoPdfService
  
             Log::info("{$tag} → view renderizada");
  
-            // ── 4. Numeração de páginas ───────────────────────────────────
-            $this->adicionarNumeracaoPaginas($pdf);
- 
-            // ── 5. Output em memória ──────────────────────────────────────
+            // ── 4. Output em memória ──────────────────────────────────────
             $output       = $pdf->output();
             $tamanhoBytes = strlen($output);
  

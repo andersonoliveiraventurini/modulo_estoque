@@ -8,7 +8,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         @page {
-            margin: 1cm 1.5cm;
+            margin: 1cm 1.5cm 2cm 1.5cm;
         }
 
         body {
@@ -16,6 +16,7 @@
             font-size: 11px;
             color: #1a1a1a;
             line-height: 1.45;
+            margin-bottom: 40px;
         }
 
         /* ── Faixa de status ────────────────────────────────────────── */
@@ -216,6 +217,9 @@
             padding: 10px 24px;
             margin-top: 4px;
             page-break-inside: avoid;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
         }
         .footer-table { width: 100%; }
         .footer-table td { vertical-align: middle; font-size: 8.5px; color: #888; }
@@ -245,6 +249,10 @@
         .mt-4        { margin-top: 4px; }
         .mt-8        { margin-top: 8px; }
         .spacer-row  { height: 6px; }
+
+        .pagenum:before {
+            content: counter(page);
+        }
 
         /* ── Devoluções e Trocas ────────────────────────────────────── */
         .politica-box {
@@ -671,6 +679,8 @@
                     Pagamento #{{ str_pad($pagamento->id, 6, '0', STR_PAD_LEFT) }}
                     &nbsp;|&nbsp;
                     {{ $tipoRegistro === 'orcamento' ? 'Orçamento' : 'Pedido' }} #{{ $registro->id }}
+                    &nbsp;|&nbsp;
+                    Página <span class="pagenum"></span>
                 </td>
             </tr>
         </table>
