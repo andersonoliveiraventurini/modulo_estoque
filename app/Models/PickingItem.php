@@ -22,8 +22,8 @@ class PickingItem extends Model
         'separado_em' => 'datetime',
         'inconsistencia_reportada' => 'bool',
         'is_encomenda' => 'bool',
-        'qty_solicitada' => 'integer',
-        'qty_separada' => 'integer',
+        'qty_solicitada' => 'double',
+        'qty_separada' => 'double',
     ];
 
     //  Relacionamento com item de cotação

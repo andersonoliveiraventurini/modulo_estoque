@@ -16,6 +16,14 @@ class OrcamentoItens extends Model
         'valor_unitario', 'desconto', 'valor_com_desconto', 'user_id', 'valor_unitario_com_desconto'
     ];
 
+    protected $casts = [
+        'quantidade' => 'double',
+        'valor_unitario' => 'double',
+        'desconto' => 'double',
+        'valor_com_desconto' => 'double',
+        'valor_unitario_com_desconto' => 'double',
+    ];
+
     public function orcamento()
     {
         return $this->belongsTo(Orcamento::class);

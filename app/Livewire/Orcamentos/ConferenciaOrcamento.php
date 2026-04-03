@@ -131,18 +131,36 @@ class ConferenciaOrcamento extends Component
         $this->orcamentoItens = $this->orcamento->itens()->with('produto')->get();
 
         if ($this->conferencia) {
-            // REPARO AUTOMÁTICO: Se a conferência ativa não tem itens, tenta popular agora
-            // Isso resolve o problema de conferências abertas antes do bug ser corrigido
-            if ($this->conferencia->itens->isEmpty()) {
-                DB::transaction(function () {
-                    $batch = $this->conferencia->picking_batch_id 
-                        ? PickingBatch::with('items')->find($this->conferencia->picking_batch_id)
-                        : null;
+            // REPARO/ATUALIZAÇÃO AUTOMÁTICA: 
+            // Verifica se existem lotes concluídos que NÃO estão na conferência atual e NÃO estão em nenhuma conferência concluída
+            DB::transaction(function () {
+                $lotesParaAdicionar = PickingBatch::where('orcamento_id', $this->orcamento->id)
+                    ->where('status', 'concluido')
+                    ->whereDoesntHave('conferencias', function ($q) {
+                        $q->where('status', 'concluida')
+                          ->orWhere('id', $this->conferencia->id);
+                    })
+                    ->get();
 
-                    if ($batch) {
-                        foreach ($batch->items as $pi) {
-                            $conferidoJa = $pi->conferenciaItems()->whereHas('conferencia', fn($q) => $q->where('status', 'concluida'))->sum('qty_conferida');
-                            $restante = $pi->qty_separada - $conferidoJa;
+                foreach ($lotesParaAdicionar as $batch) {
+                    // Se a conferência atual não tiver picking_batch_id (for virtual), vincula ao primeiro lote encontrado
+                    if (!$this->conferencia->picking_batch_id) {
+                        $this->conferencia->update(['picking_batch_id' => $batch->id]);
+                    }
+
+                    foreach ($batch->items as $pi) {
+                        // Verifica se este item de picking já está na conferência atual
+                        $existeNaConf = $this->conferencia->itens()
+                            ->where('picking_item_id', $pi->id)
+                            ->exists();
+
+                        if (!$existeNaConf) {
+                            $conferidoJa = $pi->conferenciaItems()
+                                ->whereHas('conferencia', fn($q) => $q->where('status', 'concluida'))
+                                ->sum('qty_conferida');
+                            
+                            $restante = (float) $pi->qty_separada - (float) $conferidoJa;
+                            
                             if ($restante > 0) {
                                 ConferenciaItem::create([
                                     'conferencia_id'     => $this->conferencia->id,
@@ -159,10 +177,18 @@ class ConferenciaOrcamento extends Component
                                 ]);
                             }
                         }
-                    } else {
-                        // Fluxo Virtual (Sem Lote)
-                        foreach ($this->orcamentoItens as $oi) {
-                            $falta = $oi->quantidade - $oi->quantidade_conferida;
+                    }
+                }
+
+                // Caso especial: Conferência Virtual (sem lote) — sincroniza itens do orçamento que faltam
+                if (!$this->conferencia->picking_batch_id) {
+                    foreach ($this->orcamentoItens as $oi) {
+                        $existeNaConf = $this->conferencia->itens()
+                            ->where('orcamento_item_id', $oi->id)
+                            ->exists();
+
+                        if (!$existeNaConf) {
+                            $falta = (float) $oi->quantidade - (float) $oi->quantidade_conferida;
                             if ($falta > 0) {
                                 ConferenciaItem::create([
                                     'conferencia_id'     => $this->conferencia->id,
@@ -176,11 +202,11 @@ class ConferenciaOrcamento extends Component
                             }
                         }
                     }
-                });
-                
-                // Recarrega os itens após o reparo
-                $this->conferencia->load('itens.produto', 'itens.conferidoPor', 'itens.fotos.enviadoPor', 'itens.pickingItem.orcamentoItem');
-            }
+                }
+            });
+            
+            // Recarrega os itens após a atualização/reparo
+            $this->conferencia->load('itens.produto', 'itens.conferidoPor', 'itens.fotos.enviadoPor', 'itens.pickingItem.orcamentoItem');
 
             foreach ($this->conferencia->itens as $it) {
                 $this->inputs[$it->id] = [

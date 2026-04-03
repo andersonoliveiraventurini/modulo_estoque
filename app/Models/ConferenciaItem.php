@@ -34,9 +34,9 @@ class ConferenciaItem extends Model
         'conferido_em' => 'datetime',
         'data_vencimento' => 'date',
         'is_encomenda' => 'boolean',
-        'qty_separada' => 'integer',
-        'qty_conferida' => 'integer',
-        'divergencia' => 'integer',
+        'qty_separada' => 'double',
+        'qty_conferida' => 'double',
+        'divergencia' => 'double',
     ];
 
 // ✅ Relacionamento com item de cotação

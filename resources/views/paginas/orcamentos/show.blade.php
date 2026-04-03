@@ -23,7 +23,7 @@
                     </div>
                     <div class="min-w-0">
                         <p
-                            class="text-xs text-neutral-400 dark:text-neutral-500 font-medium uppercase tracking-wider leading-none mb-0.5">
+                            class="text-xs text-neutral-500 dark:text-neutral-500 font-semibold uppercase tracking-wider leading-none mb-0.5">
                             Orçamento</p>
                         @php
                             $statusColors = [
@@ -164,9 +164,9 @@
                             @foreach ($campos as $c)
                                 <div class="flex items-baseline gap-1.5 min-w-0">
                                     <span
-                                        class="text-xs text-neutral-500 dark:text-neutral-400 font-medium flex-shrink-0">{{ $c['label'] }}:</span>
+                                        class="text-xs text-neutral-600 dark:text-neutral-400 font-semibold flex-shrink-0">{{ $c['label'] }}:</span>
                                     <span
-                                        class="text-sm truncate {{ $c['bold'] ?? false ? 'text-neutral-900 dark:text-white font-semibold' : 'text-neutral-700 dark:text-neutral-300' }}">
+                                        class="text-sm truncate {{ $c['bold'] ?? false ? 'text-neutral-900 dark:text-white font-bold' : 'text-neutral-800 dark:text-neutral-300' }}">
                                         {{ $c['value'] ?: '---' }}
                                     </span>
                                 </div>
@@ -178,8 +178,8 @@
                             @foreach ($campos2 as $c)
                                 <div class="flex items-baseline gap-1.5 min-w-0">
                                     <span
-                                        class="text-xs text-neutral-500 dark:text-neutral-400 font-medium flex-shrink-0">{{ $c['label'] }}:</span>
-                                    <span class="text-sm truncate text-neutral-700 dark:text-neutral-300">{{ $c['value'] ?: '---' }}</span>
+                                        class="text-xs text-neutral-600 dark:text-neutral-400 font-semibold flex-shrink-0">{{ $c['label'] }}:</span>
+                                    <span class="text-sm truncate text-neutral-800 dark:text-neutral-300 font-medium">{{ $c['value'] ?: '---' }}</span>
                                 </div>
                             @endforeach
 
@@ -465,7 +465,7 @@
                                                     @method('PUT')
                                                     
                                                     <div>
-                                                        <p class="mb-2 text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                                        <p class="mb-2 text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
                                                             Alterar Status Comercial
                                                         </p>
                                                         <div class="flex gap-2">
@@ -601,7 +601,7 @@
                                     @if ($badge)
                                         <div>
                                             <p
-                                                class="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1.5">
+                                                class="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider mb-1.5">
                                                 Logística</p>
                                             <span
                                                 class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium {{ $badge['class'] }}">
@@ -613,7 +613,7 @@
                                     @elseif($orcamento->status === 'Sem estoque')
                                         <div>
                                             <p
-                                                class="text-xs font-semibold text-red-500 dark:text-red-400 uppercase tracking-wider mb-1.5">
+                                                class="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wider mb-1.5">
                                                 Logística</p>
                                             <span
                                                 class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200 border border-red-200 dark:border-red-800">
@@ -628,7 +628,7 @@
                                         @if ($orcamento->workflow_status !== 'aguardando_pagamento')
                                             <div class="space-y-2">
                                                 <p
-                                                    class="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                                    class="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
                                                     Operacional</p>
                                                 <div class="grid grid-cols-2 gap-2">
                                                     <a href="{{ route('orcamentos.separacao.show', $orcamento->id) }}"
