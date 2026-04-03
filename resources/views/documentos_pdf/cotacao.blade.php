@@ -20,28 +20,6 @@
             font-weight: 600;
         }
 
-        /* CABEÇALHO */
-        .header {
-            width: 100%;
-            border-bottom: 1.5px solid #000;
-            margin-bottom: 15px;
-        }
-
-        .header td {
-            vertical-align: top;
-            font-size: 10.5px;
-        }
-
-        .header h2 {
-            margin: 0;
-            font-size: 13px;
-        }
-
-        .header p {
-            margin: 1px 0;
-            line-height: 1.2;
-        }
-
         /* DADOS DO CLIENTE */
         .cliente-info {
             width: 100%;
@@ -146,28 +124,12 @@
 
 <body>
     <!-- CABEÇALHO -->
-    <table
-        style="width:100%; font-family: Arial, sans-serif; font-size:12px; color:#333; border-collapse:collapse; margin-bottom:15px;">
-        <tr>
-            <td style="width:4rem;">
-                <img src="{{ public_path('images/logo.png') }}" alt="Logo" style="max-width: 70px;">
-            </td>
-            <td style="padding:5px; border:1px solid #ccc; background-color:#f9f9f9;">
-                <div style="text-align:center; margin-bottom:15px;">
-                    <p style="margin:2px 0;">
-                        <strong>ACAV</strong> - Comércio de Acessórios LTDA<br /><br />
-                        R. São Luís do Paraitinga, 1338 - Jardim do Trevo - Campinas - SP - CEP: 13030-105
-                        <br /> (19) 3273-3783 (19) 3274-1717
-                        <a href="mailto:contato@acavacessorios.com.br">contato@acavacessorios.com.br</a> -
-                        <a href="http://www.acavacessorios.com.br" target="_blank">www.acavacessorios.com.br</a>
-                    </p>
-                </div>
-            </td>
-            <td style="width:4rem;">
-                <img src="data:image/png;base64,{{ $qrCode }}" width="80" height="80">
-            </td>
-        </tr>
-    </table>
+    @include('documentos_pdf.partials.cabecalho', [
+        'docLabel'  => 'Cotação',
+        'docNumero' => (string) $cotacao->id,
+        'docData'   => $cotacao->created_at->format('d/m/Y'),
+        'qrCode'    => $qrCode ?? null,
+    ])
 
     <h2 style="margin:0; font-size:20px; text-transform:uppercase;">
         COTAÇÃO Nº {{ $cotacao->id }}

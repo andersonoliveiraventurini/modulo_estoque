@@ -19,26 +19,6 @@
 
         p { margin: 2px 0; }
 
-        /* ─── Cabeçalho ─────────────────────────────────────────────────── */
-        .header-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 14px;
-            font-size: 10.5px;
-        }
-
-        .header-table td {
-            vertical-align: middle;
-            padding: 4px 6px;
-        }
-
-        .header-empresa {
-            border: 1px solid #ccc;
-            background: #f9f9f9;
-            text-align: center;
-            line-height: 1.4;
-        }
-
         /* ─── Título do relatório ───────────────────────────────────────── */
         .titulo-relatorio {
             text-align: center;
@@ -287,23 +267,14 @@
 
 <body>
 
-    {{-- ═══ CABEÇALHO (idêntico ao orçamento) ════════════════════════════════ --}}
-    <table class="header-table">
-        <tr>
-            <td style="width:4rem;">
-                <img src="{{ public_path('images/logo.png') }}" alt="Logo" style="max-width:70px;">
-            </td>
-            <td class="header-empresa">
-                <p>
-                    <strong>ACAV</strong> - Comércio de Acessórios LTDA<br /><br />
-                    R. São Luís do Paraitinga, 1338 - Jardim do Trevo - Campinas - SP - CEP: 13030-105<br />
-                    (19) 3273-3783 (19) 3274-1717 &nbsp;
-                    <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="ec8f8382988d9883ac8d8f8d9a8d8f899f9f839e85839fc28f8381c28e9e">[email&#160;protected]</a> &nbsp;|&nbsp; www.acavacessorios.com.br
-                </p>
-            </td>
-            <td style="width:4rem;"></td>
-        </tr>
-    </table>
+    {{-- ══════════════════════════════════════════════════════════════
+         CABEÇALHO — padrão ACAV
+    ══════════════════════════════════════════════════════════════ --}}
+    @include('documentos_pdf.partials.cabecalho', [
+        'docLabel'  => 'Relatório de Conferência',
+        'docNumero' => (string) $orcamento->id,
+        'docData'   => $geradoEm,
+    ])
 
     {{-- ═══ TÍTULO ════════════════════════════════════════════════════════════ --}}
     <div class="titulo-relatorio">

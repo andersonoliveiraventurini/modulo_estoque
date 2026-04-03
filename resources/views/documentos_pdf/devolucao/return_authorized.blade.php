@@ -5,7 +5,6 @@
     <title>Comprovante de Devolução Finalizada #{{ $return->nr }}</title>
     <style>
         body { font-family: sans-serif; font-size: 11px; color: #333; }
-        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
         .section { margin-bottom: 15px; }
         .section-title { font-weight: bold; background: #eee; padding: 5px; border-left: 4px solid #10b981; margin-bottom: 10px; }
         .table { width: 100%; border-collapse: collapse; }
@@ -17,10 +16,11 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>COMPROVANTE DE DEVOLUÇÃO FINALIZADA</h1>
-        <p>Número: <strong>{{ $return->nr }}</strong> | Data Finalização: {{ $return->finalizado_at->format('d/m/Y H:i') }}</p>
-    </div>
+    @include('documentos_pdf.partials.cabecalho', [
+        'docLabel'  => 'Comprovante de Devolução',
+        'docNumero' => (string) $return->nr,
+        'docData'   => $return->finalizado_at->format('d/m/Y H:i'),
+    ])
 
     <div class="section">
         <div class="section-title">DADOS DO CLIENTE E ORIGEM</div>

@@ -5,8 +5,6 @@
     <title>RNC #{{ $rnc->nr }}</title>
     <style>
         body { font-family: sans-serif; font-size: 12px; color: #333; }
-        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-        .title { font-size: 18px; font-bold: true; margin-bottom: 5px; }
         .section { margin-bottom: 20px; }
         .section-title { font-weight: bold; background: #eee; padding: 5px; margin-bottom: 10px; border-radius: 4px; }
         .grid { display: table; width: 100%; border-collapse: collapse; }
@@ -18,10 +16,11 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="title">RELATÓRIO DE NÃO CONFORMIDADE (RNC)</div>
-        <div class="value">NR: <strong>{{ $rnc->nr }}</strong> | Data: {{ $rnc->data_ocorrencia->format('d/m/Y') }}</div>
-    </div>
+    @include('documentos_pdf.partials.cabecalho', [
+        'docLabel'  => 'RNC',
+        'docNumero' => (string) $rnc->nr,
+        'docData'   => $rnc->data_ocorrencia->format('d/m/Y'),
+    ])
 
     <div class="section">
         <div class="section-title">DADOS DO PRODUTO E FORNECEDOR</div>

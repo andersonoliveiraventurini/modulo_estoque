@@ -5,7 +5,6 @@
     <title>Solicitação de Devolução #{{ $return->nr }}</title>
     <style>
         body { font-family: sans-serif; font-size: 12px; color: #333; }
-        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
         .section { margin-bottom: 15px; }
         .section-title { font-weight: bold; background: #f4f4f4; padding: 5px; border-left: 4px solid #333; margin-bottom: 10px; }
         .grid { display: block; clear: both; }
@@ -18,10 +17,11 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>ROMANEIO DE DEVOLUÇÃO (SOLICITAÇÃO)</h1>
-        <p>Número: <strong>{{ $return->nr }}</strong> | Data: {{ $return->created_at->format('d/m/Y H:i') }}</p>
-    </div>
+    @include('documentos_pdf.partials.cabecalho', [
+        'docLabel'  => 'Romaneio de Devolução',
+        'docNumero' => (string) $return->nr,
+        'docData'   => $return->created_at->format('d/m/Y H:i'),
+    ])
 
     <div class="section">
         <div class="section-title">DADOS DA ORIGEM (ORÇAMENTO)</div>
