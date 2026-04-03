@@ -215,13 +215,14 @@
             border-top: 1px solid #dde4ed;
             padding: 10px 24px;
             margin-top: 4px;
+            page-break-inside: avoid;
         }
         .footer-table { width: 100%; }
         .footer-table td { vertical-align: middle; font-size: 8.5px; color: #888; }
         .footer-table td.right { text-align: right; }
 
         /* ── Assinatura ─────────────────────────────────────────────── */
-        .assinatura-table { width: 100%; margin-top: 20px; }
+        .assinatura-table { width: 100%; margin-top: 15px; }
         .assinatura-table td {
             width: 48%;
             text-align: center;
@@ -247,8 +248,8 @@
 
         /* ── Devoluções e Trocas ────────────────────────────────────── */
         .politica-box {
-            margin-top: 15px;
-            margin-bottom: 8mm;
+            margin-top: 10px;
+            margin-bottom: 5mm;
             page-break-inside: avoid;
         }
         .politica-title {
@@ -587,18 +588,34 @@
         </div>
         @endif
 
-        {{-- ── Assinaturas ─────────────────────────────────────────── --}}
-        <table class="assinatura-table">
-            <tr>
-                <td>
-                    <div class="assinatura-linha">Assinatura do Cliente</div>
-                </td>
-                <td></td>
-                <td>
-                    <div class="assinatura-linha">Assinatura do Responsável</div>
-                </td>
-            </tr>
-        </table>
+        {{-- ══════════════════════════════════════════════════════════
+             POLÍTICA E ASSINATURAS (Agrupados para evitar quebra)
+        ══════════════════════════════════════════════════════════ --}}
+        <div style="page-break-inside: avoid;">
+            <div class="politica-box">
+                <div class="politica-title">DEVOLUÇÕES E TROCAS</div>
+                <div class="politica-text">
+                    <p>Solicitamos que o pedido seja conferido no ato da retirada/entrega (cor, descrição e quantidade), pois devoluções sem defeito poderão não ser aceitas.</p>
+                    <p>Para realizar devoluções, é necessário informar previamente o vendedor, que irá gerar um romaneio com os itens.</p>
+                    <p>O documento deve ser conferido pelo motorista, assinado e enviado junto às mercadorias.</p>
+                    <p>Trocas sem defeito devem ser solicitadas em até 10 (dez) dias corridos da compra, sujeitas à análise.</p>
+                    <p>Devoluções serão processadas em até 1 dia útil.</p>
+                    <p>O crédito ficará disponível somente após o processamento, não podendo ser utilizado no ato.</p>
+                </div>
+            </div>
+
+            <table class="assinatura-table">
+                <tr>
+                    <td>
+                        <div class="assinatura-linha">Assinatura do Cliente</div>
+                    </td>
+                    <td></td>
+                    <td>
+                        <div class="assinatura-linha">Assinatura do Responsável</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
 
         {{-- ══════════════════════════════════════════════════════════════
              COMPROVANTES
@@ -637,21 +654,6 @@
                 @endforeach
             </div>
         @endif
-
-        {{-- ══════════════════════════════════════════════════════════
-             SEÇÃO: DEVOLUÇÕES E TROCAS
-        ══════════════════════════════════════════════════════════ --}}
-        <div class="politica-box">
-            <div class="politica-title">DEVOLUÇÕES E TROCAS</div>
-            <div class="politica-text">
-                <p>Solicitamos que o pedido seja conferido no ato da retirada/entrega (cor, descrição e quantidade), pois devoluções sem defeito poderão não ser aceitas.</p>
-                <p>Para realizar devoluções, é necessário informar previamente o vendedor, que irá gerar um romaneio com os itens.</p>
-                <p>O documento deve ser conferido pelo motorista, assinado e enviado junto às mercadorias.</p>
-                <p>Trocas sem defeito devem ser solicitadas em até 10 (dez) dias corridos da compra, sujeitas à análise.</p>
-                <p>Devoluções serão processadas em até 1 dia útil.</p>
-                <p>O crédito ficará disponível somente após o processamento, não podendo ser utilizado no ato.</p>
-            </div>
-        </div>
 
     </div>{{-- /content --}}
 
