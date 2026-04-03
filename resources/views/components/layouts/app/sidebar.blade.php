@@ -285,6 +285,13 @@
 
         <flux:navlist.group heading="Administração" expandable :expanded="false">
 
+            @if(auth()->user()?->hasRole('admin'))
+                <flux:navlist.item icon="folder" href="/admin/storage"
+                    :current="request()->is('admin/storage*')" wire:navigate>
+                    {{ __('Gerenciador de Arquivos') }}
+                </flux:navlist.item>
+            @endif
+
             <flux:navlist.group heading="Configurações" expandable :expanded="false">
                 <flux:navlist.item icon="user-circle" :href="route('usuarios.index')"
                     :current="request()->routeIs('usuarios.index')" wire:navigate>{{ __('Gerenciar Usuários') }}

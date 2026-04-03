@@ -49,6 +49,8 @@ use App\Http\Controllers\RequisicaoCompraController;
 use App\Http\Controllers\RomaneioController;
 use App\Livewire\Estoque\ReposicaoIndex;
 use App\Http\Controllers\Estoque\ReposicaoPdfController;
+use App\Livewire\Admin\StorageFileManager;
+use App\Http\Controllers\Admin\StorageZipController;
 
 Volt::route('/', 'auth.login')
     ->name('home');
@@ -67,6 +69,11 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('settings/profile', 'settings.profile')->name('settings.profile');
     Volt::route('settings/password', 'settings.password')->name('settings.password');
     Volt::route('settings/appearance', 'settings.appearance')->name('settings.appearance');
+
+    // storage file manager
+    Route::get('admin/storage', StorageFileManager::class)->name('admin.storage');
+    Route::post('admin/storage/zip', StorageZipController::class)->name('admin.storage.zip');
+    // fim storage 
 
     Route::resource('produtos', ProdutoController::class)->names('produtos');
 

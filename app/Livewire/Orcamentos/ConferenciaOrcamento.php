@@ -131,6 +131,57 @@ class ConferenciaOrcamento extends Component
         $this->orcamentoItens = $this->orcamento->itens()->with('produto')->get();
 
         if ($this->conferencia) {
+            // REPARO AUTOMÁTICO: Se a conferência ativa não tem itens, tenta popular agora
+            // Isso resolve o problema de conferências abertas antes do bug ser corrigido
+            if ($this->conferencia->itens->isEmpty()) {
+                DB::transaction(function () {
+                    $batch = $this->conferencia->picking_batch_id 
+                        ? PickingBatch::with('items')->find($this->conferencia->picking_batch_id)
+                        : null;
+
+                    if ($batch) {
+                        foreach ($batch->items as $pi) {
+                            $conferidoJa = $pi->conferenciaItems()->whereHas('conferencia', fn($q) => $q->where('status', 'concluida'))->sum('qty_conferida');
+                            $restante = $pi->qty_separada - $conferidoJa;
+                            if ($restante > 0) {
+                                ConferenciaItem::create([
+                                    'conferencia_id'     => $this->conferencia->id,
+                                    'picking_item_id'    => $pi->id,
+                                    'orcamento_item_id'  => $pi->orcamento_item_id,
+                                    'produto_id'         => $pi->produto_id,
+                                    'consulta_preco_id'  => $pi->consulta_preco_id,
+                                    'is_encomenda'       => $pi->is_encomenda,
+                                    'descricao_encomenda'=> $pi->descricao_encomenda,
+                                    'qty_separada'       => $restante,
+                                    'qty_conferida'      => 0,
+                                    'status'             => 'pendente',
+                                    'divergencia'        => 0,
+                                ]);
+                            }
+                        }
+                    } else {
+                        // Fluxo Virtual (Sem Lote)
+                        foreach ($this->orcamentoItens as $oi) {
+                            $falta = $oi->quantidade - $oi->quantidade_conferida;
+                            if ($falta > 0) {
+                                ConferenciaItem::create([
+                                    'conferencia_id'     => $this->conferencia->id,
+                                    'orcamento_item_id'  => $oi->id,
+                                    'produto_id'         => $oi->produto_id,
+                                    'qty_separada'       => $falta,
+                                    'qty_conferida'      => 0,
+                                    'status'             => 'pendente',
+                                    'divergencia'        => 0,
+                                ]);
+                            }
+                        }
+                    }
+                });
+                
+                // Recarrega os itens após o reparo
+                $this->conferencia->load('itens.produto', 'itens.conferidoPor', 'itens.fotos.enviadoPor', 'itens.pickingItem.orcamentoItem');
+            }
+
             foreach ($this->conferencia->itens as $it) {
                 $this->inputs[$it->id] = [
                     'qty'    => $it->qty_conferida > 0 ? (string) $it->qty_conferida : '',
@@ -179,7 +230,7 @@ class ConferenciaOrcamento extends Component
 
     public function iniciarConferencia(): void
     {
-        // 1. Prioridade: Lotes concluídos que não possuem NENHUMA conferência
+        // 1. Prioridade: Lotes concluídos que não possuem NENHUMA conferência vinculada diretamente
         $batch = PickingBatch::where('orcamento_id', $this->orcamento->id)
             ->where('status', 'concluido')
             ->whereDoesntHave('conferencias')
@@ -195,12 +246,17 @@ class ConferenciaOrcamento extends Component
                 ->get();
 
             foreach ($batches as $b) {
+                $temPendente = false;
                 foreach ($b->items as $pi) {
                     $conferidoNoItem = $pi->conferenciaItems->sum('qty_conferida');
                     if ($pi->qty_separada > $conferidoNoItem) {
-                        $batch = $b;
-                        break 2;
+                        $temPendente = true;
+                        break;
                     }
+                }
+                if ($temPendente) {
+                    $batch = $b;
+                    break;
                 }
             }
         }
@@ -241,21 +297,26 @@ class ConferenciaOrcamento extends Component
             ]);
 
             if ($batch) {
-                // Fluxo com Lote: Adiciona todos os itens do lote
+                // Fluxo com Lote: Adiciona itens do lote que ainda não foram conferidos
                 foreach ($batch->items as $pi) {
-                    ConferenciaItem::create([
-                        'conferencia_id'     => $conf->id,
-                        'picking_item_id'    => $pi->id,
-                        'orcamento_item_id'  => $pi->orcamento_item_id,
-                        'produto_id'         => $pi->produto_id,
-                        'consulta_preco_id'  => $pi->consulta_preco_id,
-                        'is_encomenda'       => $pi->is_encomenda,
-                        'descricao_encomenda'=> $pi->descricao_encomenda,
-                        'qty_separada'       => $pi->qty_separada,
-                        'qty_conferida'      => 0,
-                        'status'             => 'pendente',
-                        'divergencia'        => 0,
-                    ]);
+                    $conferidoJa = $pi->conferenciaItems()->whereHas('conferencia', fn($q) => $q->where('status', 'concluida'))->sum('qty_conferida');
+                    $restante = $pi->qty_separada - $conferidoJa;
+
+                    if ($restante > 0) {
+                        ConferenciaItem::create([
+                            'conferencia_id'     => $conf->id,
+                            'picking_item_id'    => $pi->id,
+                            'orcamento_item_id'  => $pi->orcamento_item_id,
+                            'produto_id'         => $pi->produto_id,
+                            'consulta_preco_id'  => $pi->consulta_preco_id,
+                            'is_encomenda'       => $pi->is_encomenda,
+                            'descricao_encomenda'=> $pi->descricao_encomenda,
+                            'qty_separada'       => $restante,
+                            'qty_conferida'      => 0,
+                            'status'             => 'pendente',
+                            'divergencia'        => 0,
+                        ]);
+                    }
                 }
             } else {
                 // Fluxo Virtual: Adiciona itens do orçamento que ainda faltam conferir
