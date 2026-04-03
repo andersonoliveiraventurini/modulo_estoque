@@ -8,7 +8,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         @page {
-            margin: 1cm 1.5cm 2cm 1.5cm;
+            margin: 1cm 1.5cm 2.5cm 1.5cm;
         }
 
         body {
@@ -16,7 +16,7 @@
             font-size: 11px;
             color: #1a1a1a;
             line-height: 1.45;
-            margin-bottom: 40px;
+            margin-bottom: 50px;
         }
 
         /* ── Faixa de status ────────────────────────────────────────── */
@@ -215,11 +215,12 @@
         .footer {
             border-top: 1px solid #dde4ed;
             padding: 10px 24px;
-            margin-top: 4px;
-            page-break-inside: avoid;
             position: fixed;
             bottom: 0;
+            left: 0;
+            right: 0;
             width: 100%;
+            height: 40px;
         }
         .footer-table { width: 100%; }
         .footer-table td { vertical-align: middle; font-size: 8.5px; color: #888; }
@@ -675,7 +676,7 @@
                     Documento gerado automaticamente pelo sistema em
                     {{ \Carbon\Carbon::now()->format('d/m/Y \à\s H:i:s') }}
                 </td>
-                <td class="right">
+                <td class="right" style="white-space: nowrap;">
                     Pagamento #{{ str_pad($pagamento->id, 6, '0', STR_PAD_LEFT) }}
                     &nbsp;|&nbsp;
                     {{ $tipoRegistro === 'orcamento' ? 'Orçamento' : 'Pedido' }} #{{ $registro->id }}
