@@ -12,6 +12,7 @@ use App\Models\CondicoesPagamento;
 use App\Models\ClienteCreditos;
 use App\Models\ClienteCreditoMovimentacoes;
 use App\Events\OrcamentoPago;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -97,6 +98,13 @@ class PagamentoController extends Controller
 
     public function verComprovantePdf(Pagamento $pagamento)
     {
+        $tag = "PagamentoController [pagamento#{$pagamento->id}]";
+        
+        Log::info("{$tag} → requisição para verComprovantePdf", [
+            'pdf_path' => $pagamento->pdf_path,
+            'existe_no_disco' => $pagamento->pdf_path ? Storage::disk('public')->exists($pagamento->pdf_path) : false
+        ]);
+
         abort_if(
             empty($pagamento->pdf_path) || ! Storage::disk('public')->exists($pagamento->pdf_path),
             404,
@@ -105,10 +113,13 @@ class PagamentoController extends Controller
 
         $conteudo = Storage::disk('public')->get($pagamento->pdf_path);
 
+        // Headers para forçar o navegador a NÃO cachear o PDF, garantindo que sempre veja a versão mais recente
         return response($conteudo, 200)
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', 'inline; filename="comprovante-pagamento-' . $pagamento->id . '.pdf"')
-            ->header('Cache-Control', 'private, max-age=3600');
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -306,18 +317,24 @@ class PagamentoController extends Controller
     }
  
     // ── Gera o PDF FORA da transaction ────────────────────────────────────
+    Log::info("PagamentoController [pagamento#{$pagamento->id}] → iniciando geração de PDF pós-salvamento");
     $pdfGerado = app(PagamentoPdfService::class)->gerar($pagamento);
  
     if ($pdfGerado) {
+        $pagamento->refresh();
+        Log::info("PagamentoController [pagamento#{$pagamento->id}] → PDF gerado com sucesso", [
+            'pdf_path' => $pagamento->pdf_path
+        ]);
         return redirect()->route('pagamentos.show', $pagamento->id)
             ->with('success', "Pagamento #{$pagamento->id} registrado com sucesso!");
+    }else{
+        Log::error("PagamentoController [pagamento#{$pagamento->id}] → falha na geração do PDF");
+         // PDF falhou: pagamento foi salvo, mas comprovante não foi gerado.
+        // Redireciona para o show do pagamento com aviso visível.
+        return redirect()->route('pagamentos.show', $pagamento->id)
+            ->with('success', "Pagamento #{$pagamento->id} registrado com sucesso!")
+            ->with('error', 'O comprovante PDF não pôde ser gerado automaticamente. Verifique os logs ou tente gerar manualmente.');
     }
- 
-    // PDF falhou: pagamento foi salvo, mas comprovante não foi gerado.
-    // Redireciona para o show do pagamento com aviso visível.
-    return redirect()->route('pagamentos.show', $pagamento->id)
-        ->with('success', "Pagamento #{$pagamento->id} registrado com sucesso!")
-        ->with('error', 'O comprovante PDF não pôde ser gerado automaticamente. Verifique os logs ou tente gerar manualmente.');
 }
 
     // ═════════════════════════════════════════════════════════════════════════
