@@ -7,6 +7,10 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        @page {
+            margin: 1cm 1.5cm;
+        }
+
         body {
             font-family: 'DejaVu Sans', 'Helvetica', sans-serif;
             font-size: 11px;
@@ -240,6 +244,28 @@
         .mt-4        { margin-top: 4px; }
         .mt-8        { margin-top: 8px; }
         .spacer-row  { height: 6px; }
+
+        /* ── Devoluções e Trocas ────────────────────────────────────── */
+        .politica-box {
+            margin-top: 15px;
+            margin-bottom: 8mm;
+            page-break-inside: avoid;
+        }
+        .politica-title {
+            font-size: 13pt;
+            font-weight: bold;
+            text-align: left;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        .politica-text {
+            line-height: 1.15;
+            text-align: justify;
+        }
+        .politica-text p {
+            text-indent: 0.5cm;
+            margin-bottom: 6px;
+        }
     </style>
 </head>
 <body>
@@ -611,6 +637,21 @@
                 @endforeach
             </div>
         @endif
+
+        {{-- ══════════════════════════════════════════════════════════
+             SEÇÃO: DEVOLUÇÕES E TROCAS
+        ══════════════════════════════════════════════════════════ --}}
+        <div class="politica-box">
+            <div class="politica-title">DEVOLUÇÕES E TROCAS</div>
+            <div class="politica-text">
+                <p>Solicitamos que o pedido seja conferido no ato da retirada/entrega (cor, descrição e quantidade), pois devoluções sem defeito poderão não ser aceitas.</p>
+                <p>Para realizar devoluções, é necessário informar previamente o vendedor, que irá gerar um romaneio com os itens.</p>
+                <p>O documento deve ser conferido pelo motorista, assinado e enviado junto às mercadorias.</p>
+                <p>Trocas sem defeito devem ser solicitadas em até 10 (dez) dias corridos da compra, sujeitas à análise.</p>
+                <p>Devoluções serão processadas em até 1 dia útil.</p>
+                <p>O crédito ficará disponível somente após o processamento, não podendo ser utilizado no ato.</p>
+            </div>
+        </div>
 
     </div>{{-- /content --}}
 
