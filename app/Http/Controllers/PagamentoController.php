@@ -309,7 +309,7 @@ class PagamentoController extends Controller
     $pdfGerado = app(PagamentoPdfService::class)->gerar($pagamento);
  
     if ($pdfGerado) {
-        return redirect()->route('orcamentos.index')
+        return redirect()->route('pagamentos.show', $pagamento->id)
             ->with('success', "Pagamento #{$pagamento->id} registrado com sucesso!");
     }
  
@@ -317,7 +317,7 @@ class PagamentoController extends Controller
     // Redireciona para o show do pagamento com aviso visível.
     return redirect()->route('pagamentos.show', $pagamento->id)
         ->with('success', "Pagamento #{$pagamento->id} registrado com sucesso!")
-        ->with('warning', 'O comprovante PDF não pôde ser gerado automaticamente. Verifique os logs ou tente gerar manualmente.');
+        ->with('error', 'O comprovante PDF não pôde ser gerado automaticamente. Verifique os logs ou tente gerar manualmente.');
 }
 
     // ═════════════════════════════════════════════════════════════════════════
