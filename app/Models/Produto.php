@@ -59,7 +59,9 @@ class Produto extends Model
             ->where('status', 'ativa')
             ->sum('quantidade');
 
-        return (int) max(0, $this->estoque_atual - $reservado);
+        $minimo = (int) ($this->estoque_minimo ?? 0);
+
+        return (int) max(0, $this->estoque_atual - $reservado - $minimo);
     }
 
     public function addEstoque($quantidade)

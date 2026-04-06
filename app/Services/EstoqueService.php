@@ -60,7 +60,13 @@ final class EstoqueService
                     if (!$produto) continue;
 
                     if (!$this->checarEstoqueMinimo($produto, $quantidade)) {
-                        throw new \Exception("Estoque insuficiente para o produto {$produto->nome} (SKU: {$produto->sku}). Disponível: {$produto->estoque_atual}");
+                        $min = (float) ($produto->estoque_minimo ?? 0);
+                        $reservado = (float) EstoqueReserva::where('produto_id', $produto->id)
+                            ->where('status', 'ativa')
+                            ->sum('quantidade');
+                        $disponivel = $produto->estoque_atual - $reservado;
+
+                        throw new \Exception("Estoque insuficiente para o produto {$produto->nome} (SKU: {$produto->sku}). Disponível: {$disponivel}, Mínimo Exigido: {$min}. A reserva de {$quantidade} deixaria o saldo abaixo do limite.");
                     }
 
                     // Priorização do HUB (ID 1)

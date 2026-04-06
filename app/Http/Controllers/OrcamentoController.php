@@ -2054,7 +2054,8 @@ class OrcamentoController extends Controller
                         ->where('status', 'ativa')
                         ->where('orcamento_id', '!=', $orcamento->id ?? 0)
                         ->sum('quantidade');
-                    $disponivelReal = max(0, ($produto->estoque_atual ?? 0) - $reservadoOutros);
+                    $minimo = (float) ($produto->estoque_minimo ?? 0);
+                    $disponivelReal = max(0, ($produto->estoque_atual ?? 0) - $reservadoOutros - $minimo);
                     if ((float)$item->quantidade > $disponivelReal) {
                         $temItensSemEstoque = true;
                         break;
