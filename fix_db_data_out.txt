@@ -1,0 +1,7 @@
+Fixing Budget #40...
+  - New valor_total_itens: 23.58
+  - New valor_com_desconto: 23.58
+Fixing Budget #42...
+  - New valor_total_itens: 45.94
+  - New valor_com_desconto: 45.94
+Done.
