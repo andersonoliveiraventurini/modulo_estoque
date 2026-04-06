@@ -603,24 +603,15 @@ class OrcamentoController extends Controller
                 ->route('orcamentos.show', $orcamento->id)
                 ->with('error', 'Orçamento criado, mas é necessária a aprovação do desconto.');
         } else {
-            // Nenhuma aprovação necessária — verifica estoque antes de aprovar
+            //  Sem desconto e sem pagamento especial — verifica estoque antes de aprovar
             if ($temItensSemEstoque) {
                 $orcamento->status = 'Sem estoque';
-                $orcamento->save();
             } else {
-                $orcamento->status = 'Aprovado';
-                $orcamento->save();
-
-                // O estoque será reservado automaticamente pelo OrcamentoObserver
-                // via evento OrcamentoAprovado disparado ao salvar o status 'Aprovado'.
-
-                // Sincroniza com RD Station
-                try {
-                    app(\App\Services\RdStationService::class)->registrarVenda($orcamento);
-                } catch (\Exception $e) {
-                    Log::error("Erro ao sincronizar venda com RD Station: " . $e->getMessage());
-                }
+                $orcamento->status = 'Pendente';
             }
+            $orcamento->save();
+            // Garante que a reserva de estoque seja atualizada
+            app(\App\Services\EstoqueService::class)->reservarParaOrcamento($orcamento);
         }
 
         // ✅ NÃO PRECISA DE APROVAÇÃO — GERA O PDF NORMALMENTE
@@ -830,7 +821,7 @@ class OrcamentoController extends Controller
 
         // 3) Copiar descontos (SE HOUVER)
         $necessitaAprovacaoDesconto = false;
-        
+
         // Re-avaliação de necessidade de aprovação de desconto para o novo vendedor
         $cliente = $novoOrcamento->cliente;
         $clienteBloqueado = $cliente->bloqueado ?? false;
@@ -1068,10 +1059,11 @@ class OrcamentoController extends Controller
             $reservadoOutros = $reservas->where('orcamento_id', '!=', $orcamento->id)
                 ->sum('quantidade');
 
-            $detalheReservas = $reservas->map(fn($r) =>
+            $detalheReservas = $reservas->map(
+                fn($r) =>
                 "Orç. #{$r->orcamento_id}" .
-                ($r->orcamento_id === $orcamento->id ? ' (este)' : '') .
-                ": {$r->quantidade} un."
+                    ($r->orcamento_id === $orcamento->id ? ' (este)' : '') .
+                    ": {$r->quantidade} un."
             )->join(' | ');
 
             return [$item->produto_id => [
@@ -2096,14 +2088,12 @@ class OrcamentoController extends Controller
                 //  Sem desconto e sem pagamento especial — verifica estoque antes de aprovar
                 if ($temItensSemEstoque) {
                     $orcamento->status = 'Sem estoque';
-                    $orcamento->save();
                 } else {
-                    $orcamento->status = 'Aprovado';
-                    $orcamento->save();
-                    
-                    // Garante que a reserva de estoque seja atualizada
-                    app(\App\Services\EstoqueService::class)->reservarParaOrcamento($orcamento);
+                    $orcamento->status = 'Pendente';
                 }
+                $orcamento->save();
+                // Garante que a reserva de estoque seja atualizada
+                app(\App\Services\EstoqueService::class)->reservarParaOrcamento($orcamento);
             }
 
             // ----------------------------------------------------------------
