@@ -1173,60 +1173,66 @@
     function recalcularTotais() {
         console.log('Recalculando orçamento...');
         
-        // 1. Produtos Originais
-        let totalOriginais = 0, totalOriginaisDesc = 0;
-        const rowsOriginais = document.getElementById('produtos-originais')?.querySelectorAll('tr') || [];
-        rowsOriginais.forEach((row, i) => {
-            if (row.style.display !== 'none') {
-                recalcularProdutoOriginal(row, i);
-                totalOriginais += parseMoeda(row.querySelector('.input-subtotal').value);
-                totalOriginaisDesc += parseMoeda(row.querySelector('.input-subtotal-com-desconto').value);
+        try {
+            // 1. Produtos Originais
+            let totalOriginais = 0, totalOriginaisDesc = 0;
+            const rowsOriginais = document.getElementById('produtos-originais')?.querySelectorAll('tr') || [];
+            rowsOriginais.forEach((row, i) => {
+                if (row.style.display !== 'none') {
+                    recalcularProdutoOriginal(row, i);
+                    totalOriginais += parseMoeda(row.querySelector('.input-subtotal')?.value || '0');
+                    totalOriginaisDesc += parseMoeda(row.querySelector('.input-subtotal-com-desconto')?.value || '0');
+                }
+            });
+
+            // 2. Produtos Novos
+            let totalNovos = 0, totalNovosDesc = 0;
+            const descPercent = obterDescontoAplicado();
+            if (window.produtos) {
+                window.produtos.forEach(p => {
+                    const subtotal = (p.preco || 0) * (p.quantidade || 0);
+                    let subtotalDesc = (p.descontoProduto > 0 || p.liberarDesconto === 0) ? subtotal : subtotal * (1 - (descPercent || 0)/100);
+                    totalNovos += (p.precoOriginal || 0) * (p.quantidade || 0);
+                    totalNovosDesc += subtotalDesc;
+                });
             }
-        });
 
-        // 2. Produtos Novos
-        let totalNovos = 0, totalNovosDesc = 0;
-        const descPercent = obterDescontoAplicado();
-        window.produtos.forEach(p => {
-            const subtotal = p.preco * p.quantidade;
-            let subtotalDesc = (p.descontoProduto > 0 || p.liberarDesconto === 0) ? subtotal : subtotal * (1 - descPercent/100);
-            totalNovos += p.precoOriginal * p.quantidade;
-            totalNovosDesc += subtotalDesc;
-        });
+            // 3. Vidros
+            let totalVidros = 0, totalVidrosDesc = 0;
+            document.querySelectorAll('#vidros-wrapper .space-y-2').forEach(v => {
+                if (v.style.display !== 'none') {
+                    totalVidros += parseMoeda(v.querySelector('.valor-hidden')?.value || '0');
+                    totalVidrosDesc += parseMoeda(v.querySelector('.valor-desconto-hidden')?.value || '0');
+                }
+            });
 
-        // 3. Vidros
-        let totalVidros = 0, totalVidrosDesc = 0;
-        document.querySelectorAll('#vidros-wrapper .space-y-2').forEach(v => {
-            if (v.style.display !== 'none') {
-                totalVidros += parseMoeda(v.querySelector('.valor-hidden').value);
-                totalVidrosDesc += parseMoeda(v.querySelector('.valor-desconto-hidden').value);
-            }
-        });
+            // 4. Encomendas (se houver)
+            let totalEnc = 0, totalEncDesc = 0;
+            document.querySelectorAll('#itens-encomenda tr').forEach(row => {
+                const precoOri = parseMoeda(row.querySelector('.enc-preco-original')?.value || '0');
+                const precoFinal = parseMoeda(row.querySelector('.enc-preco-final')?.value || '0') || precoOri;
+                const qtd = parseFloat(row.dataset.quantidade) || 1;
+                const subtotal = precoOri * qtd;
+                let subtotalDesc = (row.querySelector('.enc-tipo-desconto')?.value === 'produto') ? precoFinal * qtd : subtotal * (1 - (descPercent || 0)/100);
+                totalEnc += subtotal;
+                totalEncDesc += subtotalDesc;
+            });
 
-        // 4. Encomendas (se houver)
-        let totalEnc = 0, totalEncDesc = 0;
-        document.querySelectorAll('#itens-encomenda tr').forEach(row => {
-            const precoOri = parseMoeda(row.querySelector('.enc-preco-original')?.value);
-            const precoFinal = parseMoeda(row.querySelector('.enc-preco-final')?.value) || precoOri;
-            const qtd = parseFloat(row.dataset.quantidade) || 1;
-            const subtotal = precoOri * qtd;
-            let subtotalDesc = (row.querySelector('.enc-tipo-desconto')?.value === 'produto') ? precoFinal * qtd : subtotal * (1 - descPercent/100);
-            totalEnc += subtotal;
-            totalEncDesc += subtotalDesc;
-        });
+            const totalBruto = totalOriginais + totalNovos + totalVidros + totalEnc;
+            const totalComDesc = totalOriginaisDesc + totalNovosDesc + totalVidrosDesc + totalEncDesc;
 
-        const totalBruto = totalOriginais + totalNovos + totalVidros + totalEnc;
-        const totalComDesc = totalOriginaisDesc + totalNovosDesc + totalVidrosDesc + totalEncDesc;
+            const valorTotalInput = document.getElementById('valor_total');
+            if (valorTotalInput) valorTotalInput.value = formatarMoeda(totalBruto);
 
-        const valorTotalInput = document.getElementById('valor_total');
-        if (valorTotalInput) valorTotalInput.value = formatarMoeda(totalBruto);
+            const guia = parseMoeda(document.querySelector('[name="guia_recolhimento"]')?.value || '0');
+            const descEsp = parseMoeda(document.querySelector('[name="desconto_especifico"]')?.value || '0');
 
-        const guia = parseMoeda(document.querySelector('[name="guia_recolhimento"]')?.value);
-        const descEsp = parseMoeda(document.querySelector('[name="desconto_especifico"]')?.value);
-
-        let valorFinal = totalComDesc - descEsp + guia;
-        const valorFinalInput = document.getElementById('valor_final');
-        if (valorFinalInput) valorFinalInput.value = formatarMoeda(Math.max(0, valorFinal));
+            let valorFinal = totalComDesc - descEsp + guia;
+            const valorFinalInput = document.getElementById('valor_final');
+            if (valorFinalInput) valorFinalInput.value = formatarMoeda(Math.max(0, valorFinal));
+        } catch (e) {
+            console.error('Erro ao recalcular totais:', e);
+        }
     }
 
     // ==================== AUXILIARES ====================
@@ -1237,14 +1243,26 @@
     function parseMoeda(valor) {
         if (valor === null || valor === undefined || valor === '') return 0;
         let s = valor.toString().trim();
+        
+        // Remove R$ e espaços
+        s = s.replace('R$', '').replace(/\s/g, '');
+
         if (s.includes(',') && s.includes('.')) {
             // 1.234,56 -> 1234.56
             return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0;
         } else if (s.includes(',')) {
             // 1234,56 -> 1234.56
             return parseFloat(s.replace(',', '.')) || 0;
+        } else if (s.includes('.')) {
+            // Se tiver apenas ponto, verifica se é separador de milhar ou decimal
+            // Se houver apenas um ponto e ele estiver a 2 casas do fim, tratamos como decimal
+            const parts = s.split('.');
+            if (parts.length === 2 && parts[1].length === 2) {
+                return parseFloat(s) || 0;
+            }
+            // Caso contrário, assumimos que é milhar (ex: 1.250)
+            return parseFloat(s.replace(/\./g, '')) || 0;
         } else {
-            // 1234.56
             return parseFloat(s) || 0;
         }
     }

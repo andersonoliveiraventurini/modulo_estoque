@@ -576,6 +576,34 @@ class OrcamentoController extends Controller
             $orcamento->update(['endereco_id' => $request->enderecos_cadastrados]);
         }
 
+        // ----------------------------------------------------------------
+        // RECALCULAR TOTAIS DO ORÇAMENTO (Sincronizar com os itens)
+        // ----------------------------------------------------------------
+        $orcamento->load('itens', 'vidros');
+
+        $totalBruto = 0;
+        $totalComDesconto = 0;
+
+        foreach ($orcamento->itens as $item) {
+            $totalBruto += (float)$item->valor_unitario * (float)$item->quantidade;
+            $totalComDesconto += (float)($item->valor_com_desconto > 0 ? $item->valor_com_desconto : ($item->valor_unitario * $item->quantidade));
+        }
+
+        foreach ($orcamento->vidros as $vidro) {
+            $totalBruto += (float)$vidro->valor_total;
+            $totalComDesconto += (float)($vidro->valor_com_desconto > 0 ? $vidro->valor_com_desconto : $vidro->valor_total);
+        }
+
+        // Subtrair desconto específico global se houver
+        if ($descontoEspecifico > 0) {
+            $totalComDesconto = max(0, $totalComDesconto - $descontoEspecifico);
+        }
+
+        $orcamento->update([
+            'valor_total_itens' => round($totalBruto, 2),
+            'valor_com_desconto' => round($totalComDesconto, 2),
+        ]);
+
         // ✅ VALIDAÇÃO FINAL: VERIFICA SE EXISTE QUALQUER DESCONTO PENDENTE NO BANCO
         $necessitaAprovacaoDesconto = $orcamento->descontos()->whereNull('aprovado_em')->whereNull('rejeitado_em')->exists();
 
@@ -1543,7 +1571,6 @@ class OrcamentoController extends Controller
                 'obra' => $request->obra,
                 'prazo_entrega' => $request->prazo_entrega,
                 'frete' => $request->frete ?? 0,
-                'valor_total_itens' => $request->valor_total ?? $orcamento->valor_total_itens,
                 'guia_recolhimento' => $guiaRecolhimento,
                 'observacoes' => $request->observacoes,
                 'versao' => $novaVersao,
@@ -1742,12 +1769,6 @@ class OrcamentoController extends Controller
                         $itenscomdesconto = true;
                     }
                 }
-
-                $totalItens = $orcamento->itens()->sum(\DB::raw('COALESCE(valor_com_desconto, valor_unitario * quantidade)'));
-                $orcamento->update([
-                    'valor_total_itens' => $totalItens,
-                    'valor_com_desconto' => $totalItens,
-                ]);
             }
 
             // ----------------------------------------------------------------
@@ -2062,6 +2083,34 @@ class OrcamentoController extends Controller
                     }
                 }
             }
+
+            // ----------------------------------------------------------------
+            // RECALCULAR TOTAIS DO ORÇAMENTO (Sincronizar com os itens)
+            // ----------------------------------------------------------------
+            $orcamento->load('itens', 'vidros');
+
+            $totalBruto = 0;
+            $totalComDesconto = 0;
+
+            foreach ($orcamento->itens as $item) {
+                $totalBruto += (float)$item->valor_unitario * (float)$item->quantidade;
+                $totalComDesconto += (float)($item->valor_com_desconto > 0 ? $item->valor_com_desconto : ($item->valor_unitario * $item->quantidade));
+            }
+
+            foreach ($orcamento->vidros as $vidro) {
+                $totalBruto += (float)$vidro->valor_total;
+                $totalComDesconto += (float)($vidro->valor_com_desconto > 0 ? $vidro->valor_com_desconto : $vidro->valor_total);
+            }
+
+            // Subtrair desconto específico global se houver
+            if ($descontoEspecifico > 0) {
+                $totalComDesconto = max(0, $totalComDesconto - $descontoEspecifico);
+            }
+
+            $orcamento->update([
+                'valor_total_itens' => round($totalBruto, 2),
+                'valor_com_desconto' => round($totalComDesconto, 2),
+            ]);
 
             DB::commit();
 

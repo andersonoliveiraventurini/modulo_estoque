@@ -224,7 +224,7 @@
                                                     </span>
                                                     <span class="text-sm font-bold text-green-600 dark:text-green-400">
                                                         R$
-                                                        {{ number_format($orcamento->valor_total_itens, 2, ',', '.') }}
+                                                        {{ number_format($orcamento->valor_total, 2, ',', '.') }}
                                                     </span>
                                                 </div>
                                             @endif
