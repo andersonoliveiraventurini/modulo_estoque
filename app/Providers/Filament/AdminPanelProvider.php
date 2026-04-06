@@ -19,7 +19,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 use Althinect\FilamentSpatieRolesPermissions\FilamentSpatieRolesPermissionsPlugin;
-
+use AchyutN\FilamentLogViewer\FilamentLogViewer; 
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -57,6 +57,14 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])->plugin(
                 FilamentSpatieRolesPermissionsPlugin::make()
+            )->plugin(
+                FilamentLogViewer::make()
+                    ->navigationGroup('Sistema')
+                    ->navigationLabel('Logs')
+                    ->navigationIcon('heroicon-o-exclamation-triangle')
+                    ->navigationSort(99)
+                    ->authorize(fn () => auth()->user()?->hasRole('admin'))
+                    ->pollingTime(10000) // refresh a cada 10s, null para desativar
             );
     }
 }
