@@ -386,7 +386,14 @@ class RelatorioController extends Controller
             $pdf = Pdf::loadView('paginas.relatorios.pdf.estoque_minimo', compact('produtos', 'inicio', 'fim', 'numMeses', 'codigo'));
             
             \Illuminate\Support\Facades\Log::info('PDF gerado com sucesso, iniciando download');
-        return $pdf->download("{$nomeArquivo}.pdf");
+            return $pdf->download("{$nomeArquivo}.pdf");
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erro na exportação de estoque mínimo: ' . $e->getMessage(), [
+                'exception' => $e,
+                'request' => $request->all()
+            ]);
+            return response()->json(['error' => 'Erro interno ao gerar relatório: ' . $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -506,13 +513,6 @@ class RelatorioController extends Controller
                 'valor_unitario' => $p->preco_custo,
                 'abaixo_minimo' => $p->abaixo_minimo,
             ]);
-        }
-    } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Erro na exportação de estoque mínimo: ' . $e->getMessage(), [
-                'exception' => $e,
-                'request' => $request->all()
-            ]);
-            return response()->json(['error' => 'Erro interno ao gerar relatório: ' . $e->getMessage()], 500);
         }
     }
 
