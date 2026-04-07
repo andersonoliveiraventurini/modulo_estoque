@@ -167,6 +167,9 @@
                 <flux:navlist.item icon="chart-bar" :href="route('relatorios.vendas_estoque_sugerido')" :current="request()->routeIs('relatorios.vendas_estoque_sugerido')" wire:navigate>
                     {{ __('Vendas e Estoque Sugerido') }}
                 </flux:navlist.item>
+                <flux:navlist.item icon="cpu-chip" :href="route('relatorios.projecao_compra')" :current="request()->routeIs('relatorios.projecao_compra')" wire:navigate>
+                    {{ __('Projeção de Compra') }}
+                </flux:navlist.item>
                 <flux:navlist.item icon="exclamation-triangle" :href="route('relatorios.estoque_minimo')" :current="request()->routeIs('relatorios.estoque_minimo')" wire:navigate>
                     {{ __('Estoque Mínimo (Vendas)') }}
                 </flux:navlist.item>

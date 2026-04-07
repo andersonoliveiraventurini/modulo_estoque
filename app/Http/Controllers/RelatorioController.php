@@ -22,6 +22,8 @@ use App\Models\RelatorioEstoqueMinimo;
 use App\Models\Categoria;
 use App\Models\Armazem;
 use App\Models\Venda;
+use App\Models\ProjecaoCompra;
+use App\Models\ProjecaoCompraItem;
 
 class RelatorioController extends Controller
 {
@@ -384,15 +386,225 @@ class RelatorioController extends Controller
             $pdf = Pdf::loadView('paginas.relatorios.pdf.estoque_minimo', compact('produtos', 'inicio', 'fim', 'numMeses', 'codigo'));
             
             \Illuminate\Support\Facades\Log::info('PDF gerado com sucesso, iniciando download');
-            return $pdf->download("{$nomeArquivo}.pdf");
+        return $pdf->download("{$nomeArquivo}.pdf");
+    }
 
-        } catch (\Exception $e) {
+    /**
+     * Tela inicial e processamento do Relatório de Projeção de Compra.
+     */
+    public function relatorioProjecaoCompra(Request $request)
+    {
+        // Se houver parâmetros, validamos e processamos
+        if ($request->has(['data_pedido', 'previsao_recebimento', 'meses_compra'])) {
+            $request->validate([
+                'data_pedido' => 'required|date_format:Y-m-d',
+                'previsao_recebimento' => 'required|date_format:Y-m-d|after:data_pedido',
+                'meses_compra' => 'required|integer|min:1|max:24',
+                'abater_estoque_atual' => 'nullable|boolean',
+                'abater_consumo_ate_recebimento' => 'nullable|boolean',
+                'categoria_id' => 'nullable|exists:categorias,id',
+                'apenas_criticos' => 'nullable|boolean',
+            ]);
+
+            $dataPedido = \Carbon\Carbon::parse($request->data_pedido);
+            $previsaoRecebimento = \Carbon\Carbon::parse($request->previsao_recebimento);
+            $mesesCompra = (int) $request->meses_compra;
+            $abaterEstoque = $request->boolean('abater_estoque_atual', true);
+            $abaterConsumo = $request->boolean('abater_consumo_ate_recebimento', true);
+            
+            // Período de análise de curva (padrão 6 meses antes do pedido)
+            $inicioAnalise = $dataPedido->copy()->subMonths(6)->toDateString();
+            $fimAnalise = $dataPedido->toDateString();
+            
+            // Diferença em dias até o recebimento para o cálculo do consumo previsto
+            $diasAteRecebimento = $dataPedido->diffInDays($previsaoRecebimento);
+            $mesesAteRecebimento = $diasAteRecebimento / 30;
+
+            // Query base de produtos
+            $query = Produto::with(['categoria', 'fornecedor'])
+                ->select('produtos.*')
+                ->selectRaw("(SELECT COALESCE(SUM(oi.quantidade), 0) 
+                              FROM orcamento_itens oi 
+                              JOIN orcamentos o ON o.id = oi.orcamento_id 
+                              JOIN vendas v ON v.orcamento_id = o.id 
+                              WHERE oi.produto_id = produtos.id 
+                              AND v.data_venda BETWEEN ? AND ?) as vendas_analise", [$inicioAnalise, $fimAnalise]);
+
+            if ($request->filled('categoria_id')) {
+                $query->where('categoria_id', $request->categoria_id);
+            }
+
+            $produtos = $query->get()->map(function ($produto) use ($mesesCompra, $abaterEstoque, $abaterConsumo, $mesesAteRecebimento) {
+                // Curva de consumo (vendas nos últimos 6 meses / 6)
+                $produto->consumo_mensal = $produto->vendas_analise / 6;
+                
+                // Cálculo da Projeção
+                // Projeção = (Consumo Mensal * Meses Compra) - Estoque (se selecionado) - Consumo até Receber (se selecionado)
+                $projecao = $produto->consumo_mensal * $mesesCompra;
+                
+                $produto->detalhe_estoque = $abaterEstoque ? $produto->estoque_atual : 0;
+                $produto->detalhe_consumo_previsao = $abaterConsumo ? ($produto->consumo_mensal * $mesesAteRecebimento) : 0;
+                
+                $sugerido = $projecao - $produto->detalhe_estoque - $produto->detalhe_consumo_previsao;
+                
+                $produto->quantidade_sugerida = max(0, round($sugerido, 2));
+                $produto->abaixo_minimo = $produto->estoque_atual < $produto->estoque_minimo;
+                
+                return $produto;
+            });
+
+            if ($request->boolean('apenas_criticos')) {
+                $produtos = $produtos->where('abaixo_minimo', true);
+            }
+
+            // Ordenação: Críticos primeiro, depois por volume sugerido
+            $produtos = $produtos->sortByDesc(function($p) {
+                return [$p->abaixo_minimo, $p->quantidade_sugerida];
+            });
+
+            // Registrar no histórico se não for apenas visualização rápida
+            if ($request->has('save_history')) {
+                $this->salvarHistoricoProjecao($request, $produtos);
+            }
+
+            $categorias = Categoria::orderBy('nome')->get();
+            return view('paginas.relatorios.projecao_compra', compact('produtos', 'categorias'));
+        }
+
+        $categorias = Categoria::orderBy('nome')->get();
+        return view('paginas.relatorios.projecao_compra', compact('categorias'));
+    }
+
+    /**
+     * Salva a projeção no banco para consulta posterior.
+     */
+    private function salvarHistoricoProjecao(Request $request, $produtos)
+    {
+        $codigo = 'PROJ-' . now()->format('Ymd') . '-' . (ProjecaoCompra::whereDate('created_at', today())->count() + 1);
+        
+        $projecao = ProjecaoCompra::create([
+            'codigo' => $codigo,
+            'user_id' => auth()->id() ?? 1,
+            'data_pedido' => $request->data_pedido,
+            'previsao_recebimento' => $request->previsao_recebimento,
+            'meses_compra' => $request->meses_compra,
+            'abater_estoque_atual' => $request->boolean('abater_estoque_atual'),
+            'abater_consumo_ate_recebimento' => $request->boolean('abater_consumo_ate_recebimento'),
+            'filtros' => $request->except(['_token', 'save_history']),
+            'total_itens' => $produtos->where('quantidade_sugerida', '>', 0)->count(),
+            'valor_total_estimado' => $produtos->sum(function($p) { return $p->quantidade_sugerida * $p->preco_custo; }),
+        ]);
+
+        foreach ($produtos->where('quantidade_sugerida', '>', 0) as $p) {
+            ProjecaoCompraItem::create([
+                'projecao_compra_id' => $projecao->id,
+                'produto_id' => $p->id,
+                'consumo_mensal' => $p->consumo_mensal,
+                'estoque_atual' => $p->estoque_atual,
+                'previsao_consumo_recebimento' => $p->detalhe_consumo_previsao,
+                'quantidade_sugerida' => $p->quantidade_sugerida,
+                'valor_unitario' => $p->preco_custo,
+                'abaixo_minimo' => $p->abaixo_minimo,
+            ]);
+        }
+    } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Erro na exportação de estoque mínimo: ' . $e->getMessage(), [
                 'exception' => $e,
                 'request' => $request->all()
             ]);
             return response()->json(['error' => 'Erro interno ao gerar relatório: ' . $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Exporta o relatório de projeção de compra em PDF.
+     */
+    public function exportarProjecaoCompra(Request $request)
+    {
+        $request->validate([
+            'data_pedido' => 'required|date_format:Y-m-d',
+            'previsao_recebimento' => 'required|date_format:Y-m-d|after:data_pedido',
+            'meses_compra' => 'required|integer|min:1|max:24',
+            'format' => 'required|in:pdf,excel',
+        ]);
+
+        $dataPedido = \Carbon\Carbon::parse($request->data_pedido);
+        $previsaoRecebimento = \Carbon\Carbon::parse($request->previsao_recebimento);
+        $mesesCompra = (int) $request->meses_compra;
+        $abaterEstoque = $request->boolean('abater_estoque_atual', true);
+        $abaterConsumo = $request->boolean('abater_consumo_ate_recebimento', true);
+        
+        $inicioAnalise = $dataPedido->copy()->subMonths(6)->toDateString();
+        $fimAnalise = $dataPedido->toDateString();
+        $diasAteRecebimento = $dataPedido->diffInDays($previsaoRecebimento);
+        $mesesAteRecebimento = $diasAteRecebimento / 30;
+
+        $query = Produto::with(['categoria', 'fornecedor'])
+            ->select('produtos.*')
+            ->selectRaw("(SELECT COALESCE(SUM(oi.quantidade), 0) 
+                          FROM orcamento_itens oi 
+                          JOIN orcamentos o ON o.id = oi.orcamento_id 
+                          JOIN vendas v ON v.orcamento_id = o.id 
+                          WHERE oi.produto_id = produtos.id 
+                          AND v.data_venda BETWEEN ? AND ?) as vendas_analise", [$inicioAnalise, $fimAnalise]);
+
+        if ($request->filled('categoria_id')) {
+            $query->where('categoria_id', $request->categoria_id);
+        }
+
+        $produtos = $query->get()->map(function ($produto) use ($mesesCompra, $abaterEstoque, $abaterConsumo, $mesesAteRecebimento) {
+            $produto->consumo_mensal = $produto->vendas_analise / 6;
+            $projecao = $produto->consumo_mensal * $mesesCompra;
+            $produto->detalhe_estoque = $abaterEstoque ? $produto->estoque_atual : 0;
+            $produto->detalhe_consumo_previsao = $abaterConsumo ? ($produto->consumo_mensal * $mesesAteRecebimento) : 0;
+            $sugerido = $projecao - $produto->detalhe_estoque - $produto->detalhe_consumo_previsao;
+            $produto->quantidade_sugerida = max(0, round($sugerido, 2));
+            $produto->abaixo_minimo = $produto->estoque_atual < $produto->estoque_minimo;
+            return $produto;
+        });
+
+        if ($request->boolean('apenas_criticos')) {
+            $produtos = $produtos->where('abaixo_minimo', true);
+        }
+
+        $produtos = $produtos->sortByDesc(function($p) {
+            return [$p->abaixo_minimo, $p->quantidade_sugerida];
+        });
+
+        if ($request->format === 'pdf') {
+            $pdf = Pdf::loadView('paginas.relatorios.pdf.projecao_compra', compact(
+                'produtos', 'dataPedido', 'previsaoRecebimento', 'mesesCompra', 'abaterEstoque', 'abaterConsumo'
+            ));
+            return $pdf->download('projecao_compra.pdf');
+        }
+
+        // Exportação Excel (CSV)
+        $filename = "projecao_compra_" . now()->format('YmdHis') . ".csv";
+        $handle = fopen('php://output', 'w');
+        fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
+        header('Content-Type: text/csv; charset=utf-8');
+        header("Content-Disposition: attachment; filename=\"$filename\"");
+
+        fputcsv($handle, [
+            'Produto', 'SKU', 'Consumo Mensal', 'Estoque Atual', 
+            'Consumo Previsto (até recebimento)', 'Sugestão Compra', 'Preço Custo', 'Subtotal Estimado'
+        ], ';');
+
+        foreach ($produtos->where('quantidade_sugerida', '>', 0) as $p) {
+            fputcsv($handle, [
+                $p->nome,
+                $p->sku,
+                number_format($p->consumo_mensal, 2, ',', ''),
+                number_format($p->estoque_atual, 2, ',', ''),
+                number_format($p->detalhe_consumo_previsao, 2, ',', ''),
+                number_format($p->quantidade_sugerida, 2, ',', ''),
+                number_format($p->preco_custo, 2, ',', ''),
+                number_format($p->quantidade_sugerida * $p->preco_custo, 2, ',', ''),
+            ], ';');
+        }
+
+        fclose($handle);
+        exit;
     }
 
     /**

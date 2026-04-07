@@ -213,6 +213,7 @@ Ações de cobrança registradas na tela de **Consulta de Prazos**. Atualizam a 
 | `estoque.logs` | **Audit Log** — Histórico físico detalhado |
 | `relatorios.index` | Central de relatórios de estoque |
 | `relatorios.vendas_estoque_sugerido` | **Vendas e Estoque Sugerido** — Análise de performance e meta de estoque |
+| `relatorios.projecao_compra` | **Projeção de Compra** — Cálculo inteligente de volume de compra |
 | `relatorios.estoque_minimo` | **Estoque Mínimo (Vendas)** — Identifica produtos abaixo da meta calculada |
 | `relatorios.estoque_minimo.historico` | Histórico e rastreabilidade de relatórios gerados |
 | `relatorios.vencimento_produtos` | Relatório de validade por lote |
@@ -258,6 +259,13 @@ Localizado em `Estoque > Relatórios Estoque > Vendas e Estoque Sugerido`, este 
 Identifica rapidamente quais itens estão com saldo atual abaixo da média mensal calculada:
 - **ID Sequencial**: Cada relatório gerado recebe uma identificação amigável (ex: `RELATÓRIO 12`) para fácil rastreabilidade.
 - **Histórico**: Armazena quem gerou o relatório, quando, e quais parâmetros de data foram utilizados.
+
+##### Relatório de Projeção de Compra
+Módulo avançado para planejamento de compras e reposição de estoque:
+- **Lógica de Cálculo**: `Projeção = (Consumo Mensal * Meses de Compra) - Estoque Atual - Consumo Previsto até Recebimento`.
+- **Análise de Curva**: O sistema analisa automaticamente os últimos 6 meses de vendas para definir o consumo médio.
+- **Previsão de Recebimento**: Considera o tempo de lead-time (entrega do fornecedor) para abater o que será vendido antes da mercadoria chegar.
+- **Histórico e Exportação**: Permite salvar simulações e exportar para PDF ou Excel com estimativa de valor financeiro total.
 
 #### Regras de Negócio — Relatórios Gerenciais
 
