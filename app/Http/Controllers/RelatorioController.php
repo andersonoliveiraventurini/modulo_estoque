@@ -18,6 +18,10 @@ use App\Models\MovimentacaoProduto;
 use App\Models\InconsistenciaRecebimento;
 use App\Models\OrcamentoItens;
 use App\Models\User;
+use App\Models\RelatorioEstoqueMinimo;
+use App\Models\Categoria;
+use App\Models\Armazem;
+use App\Models\Venda;
 
 class RelatorioController extends Controller
 {
@@ -39,6 +43,356 @@ class RelatorioController extends Controller
             ->paginate(20);
 
         return view('paginas.relatorios.estoque_critico', compact('produtos'));
+    }
+
+    /**
+     * Relatório dinâmico de estoque mínimo baseado em vendas.
+     */
+    public function relatorioEstoqueMinimo(Request $request)
+    {
+        $request->validate([
+            'inicio' => 'nullable|date',
+            'fim' => 'nullable|date|after_or_equal:inicio',
+        ]);
+
+        $inicio = $request->input('inicio', now()->subMonths(1)->toDateString());
+        $fim = $request->input('fim', now()->toDateString());
+
+        $carbonInicio = \Carbon\Carbon::parse($inicio);
+        $carbonFim = \Carbon\Carbon::parse($fim);
+        
+        // Cálculo mais preciso do número de meses (dias / 30)
+        $diffDias = $carbonInicio->diffInDays($carbonFim);
+        $numMeses = max(0.1, round($diffDias / 30, 2));
+
+        // Filtrar produtos que têm alguma movimentação de venda no período
+        $query = Produto::with(['cor', 'fornecedor'])
+            ->select('produtos.*')
+            ->selectRaw('(SELECT COALESCE(SUM(oi.quantidade), 0) 
+                          FROM orcamento_itens oi 
+                          JOIN orcamentos o ON o.id = oi.orcamento_id 
+                          JOIN vendas v ON v.orcamento_id = o.id 
+                          WHERE oi.produto_id = produtos.id 
+                          AND v.data_venda BETWEEN ? AND ?) as total_vendido', [$inicio, $fim]);
+
+        if ($request->boolean('apenas_abaixo')) {
+            // Esta condição será aplicada após o cálculo manual da média
+        }
+
+        $produtos = $query->get()->map(function ($produto) use ($numMeses) {
+             $produto->qtd_por_mes = $produto->total_vendido / $numMeses;
+             $produto->estoque_minimo_calculado = round($produto->qtd_por_mes, 2);
+             return $produto;
+        });
+
+        if ($request->boolean('apenas_abaixo')) {
+            $produtos = $produtos->filter(function ($p) {
+                return $p->estoque_atual < $p->estoque_minimo_calculado;
+            });
+        }
+
+        if (!$request->boolean('incluir_sem_giro')) {
+            $produtos = $produtos->filter(function ($p) {
+                return $p->total_vendido > 0;
+            });
+        }
+
+        if (count($produtos) > 1000) {
+             session()->flash('warning', 'O relatório possui muitos itens (' . count($produtos) . '). Mostrando apenas os primeiros 1000. Use filtros mais específicos para ver todos.');
+             $produtos = $produtos->take(1000);
+         }
+
+         // Registrar no histórico
+         $this->registrarSolicitacaoEstoqueMinimo($request, count($produtos));
+
+         return view('paginas.relatorios.estoque_minimo', compact('produtos', 'inicio', 'fim', 'numMeses'));
+    }
+
+    /**
+     * Relatório de Vendas com Estoque Sugerido.
+     */
+    public function relatorioVendasEstoqueSugerido(Request $request)
+    {
+        $request->validate([
+            'inicio' => 'required|date',
+            'fim' => 'required|date|after_or_equal:inicio',
+            'categoria_id' => 'nullable|exists:categorias,id',
+            'fornecedor_id' => 'nullable|exists:fornecedores,id',
+            'armazem_id' => 'nullable|exists:armazens,id',
+        ]);
+
+        $inicio = $request->input('inicio', now()->subMonths(1)->toDateString());
+        $fim = $request->input('fim', now()->toDateString());
+
+        $carbonInicio = \Carbon\Carbon::parse($inicio);
+        $carbonFim = \Carbon\Carbon::parse($fim);
+        $diffDias = $carbonInicio->diffInDays($carbonFim);
+        $numMeses = max(0.1, round($diffDias / 30, 2));
+
+        $query = Produto::with(['cor', 'fornecedor', 'categoria'])
+            ->select('produtos.*')
+            ->selectRaw('(SELECT COALESCE(SUM(oi.quantidade), 0) 
+                          FROM orcamento_itens oi 
+                          JOIN orcamentos o ON o.id = oi.orcamento_id 
+                          JOIN vendas v ON v.orcamento_id = o.id 
+                          WHERE oi.produto_id = produtos.id 
+                          AND v.data_venda BETWEEN ? AND ?) as total_vendido', [$inicio, $fim]);
+
+        if ($request->filled('categoria_id')) {
+            $query->where('categoria_id', $request->categoria_id);
+        }
+
+        if ($request->filled('fornecedor_id')) {
+            $query->where('fornecedor_id', $request->fornecedor_id);
+        }
+
+        if ($request->filled('armazem_id')) {
+            $query->whereHas('movimentacoes', function ($q) use ($request) {
+                $q->where('armazem_id', $request->armazem_id);
+            });
+        }
+
+        $produtos = $query->get()->map(function ($produto) use ($numMeses) {
+            $produto->qtd_por_mes = $produto->total_vendido / $numMeses;
+            $produto->estoque_minimo_sugerido = round($produto->qtd_por_mes, 2);
+            return $produto;
+        });
+
+        $categorias = \App\Models\Categoria::orderBy('nome')->get();
+        $fornecedores = Fornecedor::orderBy('nome_fantasia')->get();
+        $armazens = \App\Models\Armazem::orderBy('nome')->get();
+
+        return view('paginas.relatorios.vendas_estoque_sugerido', compact(
+             'produtos', 'inicio', 'fim', 'numMeses', 
+             'categorias', 'fornecedores', 'armazens'
+         ));
+     }
+
+     /**
+      * Exportar Relatório de Vendas e Estoque Sugerido.
+      */
+     public function exportarVendasEstoqueSugerido(Request $request)
+     {
+         $request->validate([
+             'inicio' => 'required|date',
+             'fim' => 'required|date|after_or_equal:inicio',
+             'format' => 'required|in:pdf,excel',
+         ]);
+
+         $inicio = $request->input('inicio');
+         $fim = $request->input('fim');
+
+         $carbonInicio = \Carbon\Carbon::parse($inicio);
+         $carbonFim = \Carbon\Carbon::parse($fim);
+         $diffDias = $carbonInicio->diffInDays($carbonFim);
+         $numMeses = max(0.1, round($diffDias / 30, 2));
+
+         $query = Produto::with(['cor', 'fornecedor', 'categoria'])
+             ->select('produtos.*')
+             ->selectRaw('(SELECT COALESCE(SUM(oi.quantidade), 0) 
+                           FROM orcamento_itens oi 
+                           JOIN orcamentos o ON o.id = oi.orcamento_id 
+                           JOIN vendas v ON v.orcamento_id = o.id 
+                           WHERE oi.produto_id = produtos.id 
+                           AND v.data_venda BETWEEN ? AND ?) as total_vendido', [$inicio, $fim]);
+
+         if ($request->filled('categoria_id')) {
+             $query->where('categoria_id', $request->categoria_id);
+         }
+
+         if ($request->filled('fornecedor_id')) {
+             $query->where('fornecedor_id', $request->fornecedor_id);
+         }
+
+         if ($request->filled('armazem_id')) {
+             $query->whereHas('movimentacoes', function ($q) use ($request) {
+                 $q->where('armazem_id', $request->armazem_id);
+             });
+         }
+
+         $produtos = $query->get()->map(function ($produto) use ($numMeses) {
+             $produto->qtd_por_mes = $produto->total_vendido / $numMeses;
+             $produto->estoque_minimo_sugerido = round($produto->qtd_por_mes, 2);
+             return $produto;
+         });
+
+         if ($request->format === 'pdf') {
+             $pdf = Pdf::loadView('paginas.relatorios.pdf.vendas_estoque_sugerido', compact('produtos', 'inicio', 'fim', 'numMeses'));
+             return $pdf->download('vendas_estoque_sugerido.pdf');
+         }
+
+         // Exportação Excel (CSV)
+         $filename = "vendas_estoque_sugerido_" . now()->format('YmdHis') . ".csv";
+         $handle = fopen('php://output', 'w');
+         
+         // Adicionar BOM para Excel reconhecer caracteres especiais
+         fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
+         
+         header('Content-Type: text/csv; charset=utf-8');
+         header("Content-Disposition: attachment; filename=\"$filename\"");
+
+         // Cabeçalho
+         fputcsv($handle, [
+             'Produto', 'SKU', 'Categoria', 'Fornecedor', 
+             'Total Vendido', 'Media Mensal', 'Estoque Sugerido', 'Estoque Atual'
+         ], ';');
+
+         foreach ($produtos as $p) {
+             fputcsv($handle, [
+                 $p->nome,
+                 $p->sku,
+                 $p->categoria->nome ?? 'N/A',
+                 $p->fornecedor->nome_fantasia ?? 'N/A',
+                 number_format($p->total_vendido, 2, ',', ''),
+                 number_format($p->qtd_por_mes, 2, ',', ''),
+                 number_format($p->estoque_minimo_sugerido, 2, ',', ''),
+                 number_format($p->estoque_atual, 2, ',', ''),
+             ], ';');
+         }
+
+         fclose($handle);
+         exit;
+     }
+
+    /**
+     * Auxiliar para registrar histórico de geração de relatório de estoque mínimo.
+     */
+    private function registrarSolicitacaoEstoqueMinimo(Request $request, int $totalItens)
+    {
+        // Obter o próximo número sequencial global
+        $proximoNumero = RelatorioEstoqueMinimo::withTrashed()->count() + 1;
+        $codigo = "RELATÓRIO {$proximoNumero}";
+
+        RelatorioEstoqueMinimo::create([
+            'codigo' => $codigo,
+            'user_id' => auth()->id() ?? 1,
+            'parametros' => [
+                'inicio' => $request->input('inicio'),
+                'fim' => $request->input('fim'),
+                'apenas_abaixo' => $request->boolean('apenas_abaixo'),
+                'incluir_sem_giro' => $request->boolean('incluir_sem_giro'),
+                'num_meses' => max(0.1, round(\Carbon\Carbon::parse($request->input('inicio'))->diffInDays(\Carbon\Carbon::parse($request->input('fim'))) / 30, 2)),
+            ],
+            'status' => 'concluido',
+            'total_itens' => $totalItens,
+        ]);
+
+        return $codigo;
+    }
+
+    /**
+     * Histórico de solicitações de relatórios de estoque mínimo.
+     */
+    public function historicoEstoqueMinimo(Request $request)
+    {
+        $query = RelatorioEstoqueMinimo::with('user')->latest();
+
+        if ($request->filled('inicio')) {
+            $query->whereDate('created_at', '>=', $request->inicio);
+        }
+        if ($request->filled('fim')) {
+            $query->whereDate('created_at', '<=', $request->fim);
+        }
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $solicitacoes = $query->paginate(20);
+        $usuarios = User::all(['id', 'name']);
+
+        return view('paginas.relatorios.historico_estoque_minimo', compact('solicitacoes', 'usuarios'));
+    }
+
+    /**
+     * Exporta o relatório de estoque mínimo em PDF.
+     */
+    public function exportarEstoqueMinimo(Request $request)
+    {
+        \Illuminate\Support\Facades\Log::info('Iniciando exportação de estoque mínimo', $request->all());
+
+        try {
+            // Aumentar limites para PDF pesado
+            ini_set('memory_limit', '512M');
+            set_time_limit(180);
+
+            $request->validate([
+                'inicio' => 'nullable|date',
+                'fim' => 'nullable|date|after_or_equal:inicio',
+            ]);
+
+            $inicio = $request->input('inicio', now()->subMonths(1)->toDateString());
+            $fim = $request->input('fim', now()->toDateString());
+
+            $carbonInicio = \Carbon\Carbon::parse($inicio);
+            $carbonFim = \Carbon\Carbon::parse($fim);
+            $diffDias = $carbonInicio->diffInDays($carbonFim);
+            $numMeses = max(0.1, round($diffDias / 30, 2));
+
+            \Illuminate\Support\Facades\Log::info('Buscando produtos no banco');
+
+            // Filtrar produtos que têm alguma movimentação de venda no período
+            // para evitar processar milhares de produtos sem giro
+            $query = Produto::with(['cor', 'fornecedor'])
+                ->select('produtos.*')
+                ->selectRaw('(SELECT COALESCE(SUM(oi.quantidade), 0) 
+                              FROM orcamento_itens oi 
+                              JOIN orcamentos o ON o.id = oi.orcamento_id 
+                              JOIN vendas v ON v.orcamento_id = o.id 
+                              WHERE oi.produto_id = produtos.id 
+                              AND v.data_venda BETWEEN ? AND ?) as total_vendido', [$inicio, $fim]);
+
+            // Se o usuário não pediu todos, vamos focar nos que tiveram giro
+            if (!$request->has('incluir_sem_giro')) {
+                $query->whereExists(function ($q) use ($inicio, $fim) {
+                    $q->select(DB::raw(1))
+                      ->from('orcamento_itens')
+                      ->join('vendas', 'vendas.orcamento_id', '=', 'orcamento_itens.orcamento_id')
+                      ->whereRaw('orcamento_itens.produto_id = produtos.id')
+                      ->whereBetween('vendas.data_venda', [$inicio, $fim]);
+                });
+            }
+
+            $produtos = $query->get()->map(function ($produto) use ($numMeses) {
+                $produto->qtd_por_mes = $produto->total_vendido / $numMeses;
+                $produto->estoque_minimo_calculado = round($produto->qtd_por_mes, 2);
+                $produto->abaixo_minimo = $produto->estoque_atual < $produto->estoque_minimo_calculado;
+                return $produto;
+            });
+
+            if ($request->filled('apenas_abaixo')) {
+                 $produtos = $produtos->where('abaixo_minimo', true);
+            }
+
+            \Illuminate\Support\Facades\Log::info('Gerando PDF com ' . count($produtos) . ' produtos');
+
+            if (count($produtos) > 1000) {
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'error' => 'O relatório possui muitos itens (' . count($produtos) . '). Por favor, use filtros mais específicos (como "Apenas abaixo do mínimo") ou um período menor.'
+                    ], 422);
+                }
+                return back()->with('error', 'O relatório possui muitos itens (' . count($produtos) . '). Por favor, use filtros mais específicos ou um período menor.');
+            }
+
+            // Registrar no histórico e obter código único
+            $codigo = $this->registrarSolicitacaoEstoqueMinimo($request, count($produtos));
+            $nomeArquivo = str_replace(' ', '_', strtolower($codigo));
+
+            $pdf = Pdf::loadView('paginas.relatorios.pdf.estoque_minimo', compact('produtos', 'inicio', 'fim', 'numMeses', 'codigo'));
+            
+            \Illuminate\Support\Facades\Log::info('PDF gerado com sucesso, iniciando download');
+            return $pdf->download("{$nomeArquivo}.pdf");
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erro na exportação de estoque mínimo: ' . $e->getMessage(), [
+                'exception' => $e,
+                'request' => $request->all()
+            ]);
+            return response()->json(['error' => 'Erro interno ao gerar relatório: ' . $e->getMessage()], 500);
+        }
     }
 
     /**

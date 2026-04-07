@@ -164,8 +164,14 @@
                 <flux:navlist.item icon="clock" :href="route('relatorios.vencimento_produtos')" :current="request()->routeIs('relatorios.vencimento_produtos')" wire:navigate>
                     {{ __('Vencimento de Produtos') }}
                 </flux:navlist.item>
+                <flux:navlist.item icon="chart-bar" :href="route('relatorios.vendas_estoque_sugerido')" :current="request()->routeIs('relatorios.vendas_estoque_sugerido')" wire:navigate>
+                    {{ __('Vendas e Estoque Sugerido') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="exclamation-triangle" :href="route('relatorios.estoque_minimo')" :current="request()->routeIs('relatorios.estoque_minimo')" wire:navigate>
+                    {{ __('Estoque Mínimo (Vendas)') }}
+                </flux:navlist.item>
                 <flux:navlist.item icon="arrow-path" :href="route('relatorios.reposicao_estoque')" :current="request()->routeIs('relatorios.reposicao_estoque')" wire:navigate>
-                    {{ __('Relatório Reposição') }}
+                    {{ __('Movimentação Reposição') }}
                 </flux:navlist.item>
                 <flux:navlist.item icon="exclamation-triangle" :href="route('inconsistencias.index')" :current="request()->routeIs('inconsistencias.*')" wire:navigate>
                     {{ __('Inconsistências') }}

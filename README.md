@@ -212,6 +212,9 @@ Ações de cobrança registradas na tela de **Consulta de Prazos**. Atualizam a 
 | `inconsistencias.index` | Inconsistências de recebimento detectadas |
 | `estoque.logs` | **Audit Log** — Histórico físico detalhado |
 | `relatorios.index` | Central de relatórios de estoque |
+| `relatorios.vendas_estoque_sugerido` | **Vendas e Estoque Sugerido** — Análise de performance e meta de estoque |
+| `relatorios.estoque_minimo` | **Estoque Mínimo (Vendas)** — Identifica produtos abaixo da meta calculada |
+| `relatorios.estoque_minimo.historico` | Histórico e rastreabilidade de relatórios gerados |
 | `relatorios.vencimento_produtos` | Relatório de validade por lote |
 | `relatorios.reposicao_estoque` | Histórico de reposição |
 | `estoque.reposicao.index` | **HUB Reposição** — Gestão de saldo e ordens |
@@ -239,15 +242,32 @@ O sistema realiza a validação automática da situação cadastral de Clientes 
 3. **Entrada de Encomendas**: Valida cada fornecedor da cotação. Caso um fornecedor não possua IE ativa, exibe o alerta específico: **"Favor verificar - Fornecedor sem inscrição estadual"**.
 
 
+#### Relatórios e Inteligência de Estoque
+
+O sistema possui um motor de cálculo dinâmico para sugestão de níveis de estoque, baseado no histórico real de saídas.
+
+##### Relatório de Vendas e Estoque Sugerido
+Localizado em `Estoque > Relatórios Estoque > Vendas e Estoque Sugerido`, este módulo automatiza o planejamento de compras:
+- **Cálculo da Média Mensal**: O sistema analisa o total vendido no período selecionado (ex: últimos 6 meses) e divide pelo número exato de meses (dias / 30).
+- **Meta de Estoque**: A meta de estoque sugerida é equivalente à média mensal de consumo calculada.
+- **Gráficos Comparativos**: Visualização em barras do Top 10 produtos mais vendidos e comparação entre Média de Consumo vs. Estoque Atual.
+- **Filtros**: Categoria, Fornecedor e Local de Estoque (Armazém).
+- **Exportação**: Suporte nativo para PDF e Excel (CSV).
+
+##### Relatório de Estoque Mínimo (Vendas)
+Identifica rapidamente quais itens estão com saldo atual abaixo da média mensal calculada:
+- **ID Sequencial**: Cada relatório gerado recebe uma identificação amigável (ex: `RELATÓRIO 12`) para fácil rastreabilidade.
+- **Histórico**: Armazena quem gerou o relatório, quando, e quais parâmetros de data foram utilizados.
+
 #### Regras de Negócio — Relatórios Gerenciais
 
 | Relatório | Lógica de Cálculo / Filtros |
 |---|---|
-| **Estoque Crítico** | Query: `estoque_atual <= estoque_minimo`. Compara dinamicamente o saldo com a meta do produto. |
-| **Vendas e Margem** | Analisa um produto por vez. Calcula o **Desconto Médio** (%) baseado no campo `desconto` de `orcamento_itens`. |
+| **Vendas e Estoque Sugerido** | **Média Mensal**: `Total Vendido / (Dias do Período / 30)`. **Meta de Estoque**: Equivalente à média mensal. |
+| **Estoque Mínimo (Vendas)** | Identifica produtos onde `estoque_atual < média mensal`. Cada geração recebe um ID sequencial (Ex: `RELATÓRIO 1`). |
+| **Estoque Crítico** | Query: `estoque_atual <= estoque_minimo`. Compara o saldo com o valor estático definido no cadastro do produto. |
 | **Vencimento** | Filtra por lote de entrada aprovado. Permite segmentar por `tipo_produto_sped`. |
 | **Não Conformidade** | Lista divergências entre `quantidade_esperada` e `quantidade_recebida` no recebimento. |
-| **Recebimento** | Permite filtrar por **Vendedor** (Responsável pelo pedido) e **Encomenda** (ID do Pedido de Compra). |
 
 #### Serviço: `EstoqueService`
 

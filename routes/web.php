@@ -406,6 +406,11 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('relatorios')->group(function () {
         Route::get('/', [RelatorioController::class, 'index'])->name('relatorios.index');
         Route::get('/estoque-critico', [RelatorioController::class, 'estoqueCritico'])->name('relatorios.estoque_critico');
+        Route::get('/estoque-minimo', [RelatorioController::class, 'relatorioEstoqueMinimo'])->name('relatorios.estoque_minimo');
+        Route::get('/estoque-minimo/export', [RelatorioController::class, 'exportarEstoqueMinimo'])->name('relatorios.estoque_minimo.export');
+        Route::get('/estoque-minimo/historico', [RelatorioController::class, 'historicoEstoqueMinimo'])->name('relatorios.estoque_minimo.historico');
+        Route::get('/vendas-estoque-sugerido', [RelatorioController::class, 'relatorioVendasEstoqueSugerido'])->name('relatorios.vendas_estoque_sugerido');
+        Route::get('/vendas-estoque-sugerido/export', [RelatorioController::class, 'exportarVendasEstoqueSugerido'])->name('relatorios.vendas_estoque_sugerido.export');
         Route::get('/historico-compras', [RelatorioController::class, 'historicoCompras'])->name('relatorios.historico_compras');
         Route::get('/fornecedores-frequentes', [RelatorioController::class, 'fornecedoresFrequentes'])->name('relatorios.fornecedores_frequentes');
         Route::get('/comparativo-precos', [RelatorioController::class, 'comparativoPrecos'])->name('relatorios.comparativo_precos');
