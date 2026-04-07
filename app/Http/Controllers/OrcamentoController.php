@@ -1117,19 +1117,31 @@ class OrcamentoController extends Controller
 
     public function atualizarStatus(Request $request, $id)
     {
+        Log::info("Iniciando atualização de status do orçamento #{$id}", [
+            'status_solicitado' => $request->input('status'),
+            'user_id' => auth()->id()
+        ]);
+
         try {
             $orcamento = Orcamento::with(['itens.produto'])->findOrFail($id);
 
             $status      = $request->input('status');
+            
+            // Mapeia 'Reprovado' (usado na view) para 'Rejeitado' (usado no banco)
+            if ($status === 'Reprovado') {
+                $status = 'Rejeitado';
+            }
+
             $validStatus = ['Aprovar desconto', 'Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado', 'Pagamento pendente'];
 
             if (!in_array($status, $validStatus)) {
-                Log::info("Tentativa de atualizar orçamento #{$id} com status inválido: {$status}");
+                Log::warning("Tentativa de atualizar orçamento #{$id} com status inválido: {$status}");
                 return response()->json(['message' => 'Status inválido!'], 422);
             }
 
             // ── Validações ao tentar Aprovar ─────────────────────────────────────
             if ($status === 'Aprovado') {
+                Log::info("Validando aprovação para orçamento #{$id}");
 
                 // ✅ Bloqueia se houver itens de encomenda sem fornecedor selecionado
                 if ($orcamento->encomenda) {
@@ -1197,15 +1209,18 @@ class OrcamentoController extends Controller
 
             $orcamento->save();
 
+            Log::info("Status do orçamento #{$id} atualizado com sucesso para: {$status}");
 
             // ── PENDENTE / SEM ESTOQUE ───────────────────────────────────────────
             if ($status === 'Pendente' || $status === 'Sem estoque') {
+                Log::info("Limpando lote de separação para orçamento #{$id} (Status: {$status})");
                 $orcamento->cancelarLoteDeSeparacaoAtivo();
                 return response()->json(['message' => "Status atualizado para {$status} com sucesso!"]);
             }
 
             // ── CANCELADO / REJEITADO / EXPIRADO ─────────────────────────────────
             if ($status !== 'Aprovado') {
+                Log::info("Limpando lote de separação para orçamento #{$id} (Status: {$status})");
                 $orcamento->cancelarLoteDeSeparacaoAtivo();
                 return response()->json([
                     'message'  => 'Status atualizado com sucesso!',
