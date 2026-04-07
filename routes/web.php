@@ -99,6 +99,12 @@ Route::middleware(['auth'])->group(function () {
 
     // cotação de produto
     // Grupo de cotação
+
+    // Curva de Vendas
+    Route::get('curva_vendas', [App\Http\Controllers\CurvaVendaController::class, 'index'])->name('curva_vendas.index');
+    Route::post('curva_vendas/processar', [App\Http\Controllers\CurvaVendaController::class, 'processar'])->name('curva_vendas.processar');
+    Route::patch('curva_vendas/reclassificar/{produto}', [App\Http\Controllers\CurvaVendaController::class, 'reclassificar'])->name('curva_vendas.reclassificar');
+    Route::get('curva_vendas/auditoria', [App\Http\Controllers\CurvaVendaController::class, 'auditoria'])->name('curva_vendas.auditoria');
     Route::get('/cotacoes', [ConsultaPrecoController::class, 'index'])->name('consulta_preco.index');
     Route::get('/cotacoes/criar/{cliente_id}', [ConsultaPrecoController::class, 'criar_cotacao'])->name('consulta_preco.criar');
     Route::post('/cotacoes', [ConsultaPrecoController::class, 'store'])->name('consulta_preco.store');

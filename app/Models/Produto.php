@@ -41,13 +41,22 @@ class Produto extends Model
         'imagem_principal',
         'ativo',
         'is_perishable',
+        'classificacao_curva',
+        'classificacao_manual',
+        'justificativa_manual',
     ];
 
     protected $casts = [
         'is_perishable' => 'boolean',
         'ativo' => 'boolean',
         'liberar_desconto' => 'boolean',
+        'classificacao_manual' => 'boolean',
     ];
+
+    public function curvaVendaAuditoria()
+    {
+        return $this->hasMany(CurvaVendaAuditoria::class);
+    }
 
     /**
      * Quantidade disponível para novos orçamentos:

@@ -98,6 +98,24 @@ Retorna `null` se o cliente não tiver contato com telefone.
 |---|---|
 | `movimentacao.index` | Histórico de entradas e saídas de estoque |
 | `movimentacao.create` | Lançamento de nova movimentação com **multi-alocação** |
+
+---
+
+### Módulo: Curva de Vendas (ABC)
+
+| Rota | Método | Função |
+|---|---|---|
+| `curva_vendas.index` | GET | Tela de configuração e processamento da curva |
+| `curva_vendas.processar` | POST | Executa a classificação automatizada baseada em parâmetros |
+| `curva_vendas.reclassificar` | PATCH | Reclassificação manual de um produto com justificativa |
+| `curva_vendas.auditoria` | GET | Histórico de alterações manuais realizadas |
+
+**Funcionalidades:**
+- Classificação automatizada (A, B, C, D) baseada em Valor Total ou Quantidade Vendida.
+- Configuração de até 3 parâmetros simultâneos com faixas de valores customizáveis.
+- Interface para ajuste manual da classificação com obrigatoriedade de justificativa.
+- Auditoria completa de todas as alterações manuais para rastreabilidade.
+- Integração direta com o cadastro de produtos.
 | `estoque.reposicao.index` | Painel de controle do HUB e solicitações de reposição |
 | `estoque.reposicao.manual` | **Reposição Manual** — Transferência direta para o HUB |
 | `estoque.logs` | **Logs de Movimentação** — Auditoria completa por item/posição |

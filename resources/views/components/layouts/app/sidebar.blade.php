@@ -176,6 +176,9 @@
                 <flux:navlist.item icon="arrow-path" :href="route('relatorios.reposicao_estoque')" :current="request()->routeIs('relatorios.reposicao_estoque')" wire:navigate>
                     {{ __('Movimentação Reposição') }}
                 </flux:navlist.item>
+                <flux:navlist.item icon="chart-pie" :href="route('curva_vendas.index')" :current="request()->routeIs('curva_vendas.*')" wire:navigate>
+                    {{ __('Curva de Vendas') }}
+                </flux:navlist.item>
                 <flux:navlist.item icon="exclamation-triangle" :href="route('inconsistencias.index')" :current="request()->routeIs('inconsistencias.*')" wire:navigate>
                     {{ __('Inconsistências') }}
                 </flux:navlist.item>
