@@ -47,7 +47,7 @@
                                 <flux:input wire:model="nota_fiscal" placeholder="Nº NF" />
                             </flux:field>
                             <flux:field>
-                                <flux:label>ROM / Recebimento</flux:label>
+                                <flux:label>Romaneio / Recebimento</flux:label>
                                 <flux:input wire:model="romaneio_recebimento" placeholder="Nº ROM" />
                             </flux:field>
                         </div>
