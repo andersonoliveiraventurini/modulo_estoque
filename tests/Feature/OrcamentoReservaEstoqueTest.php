@@ -53,7 +53,7 @@ class OrcamentoReservaEstoqueTest extends TestCase
 
         $this->cliente = Cliente::create([
             'nome_fantasia' => 'Cliente Teste',
-            'cpf_cnpj' => '12345678901',
+            'cpf' => '12345678901',
         ]);
 
         $this->condicao = CondicoesPagamento::create([

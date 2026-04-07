@@ -49,7 +49,8 @@ class ListaFaturas extends Component
             ->when($this->search, function ($query) {
                 $query->whereHas('cliente', function ($q) {
                     $q->where('nome', 'like', '%' . $this->search . '%')
-                      ->orWhere('cpf_cnpj', 'like', '%' . $this->search . '%');
+                      ->orWhere('cpf', 'like', '%' . $this->search . '%')
+                      ->orWhere('cnpj', 'like', '%' . $this->search . '%');
                 });
             })
             ->when($this->status, fn($q) => $q->where('status', $this->status))

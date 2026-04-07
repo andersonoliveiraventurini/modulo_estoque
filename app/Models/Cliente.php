@@ -69,6 +69,22 @@ class Cliente extends Model
             substr($cnpj, 12, 2);
     }
 
+    public function getCpfCnpjAttribute()
+    {
+        return $this->cpf ?: $this->cnpj;
+    }
+
+    public function getCpfCnpjFormatadoAttribute()
+    {
+        if ($this->cpf) {
+            $cpf = preg_replace('/\D/', '', $this->cpf);
+            if (strlen($cpf) !== 11) return $this->cpf;
+            return substr($cpf, 0, 3) . '.' . substr($cpf, 3, 3) . '.' . substr($cpf, 6, 3) . '-' . substr($cpf, 9, 2);
+        }
+        
+        return $this->cnpj_formatado;
+    }
+
     public function bloqueios()
     {
         return $this->hasMany(Bloqueio::class);
