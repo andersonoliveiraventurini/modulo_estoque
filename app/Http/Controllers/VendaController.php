@@ -41,7 +41,15 @@ class VendaController extends Controller
      */
     public function show(Venda $venda)
     {
-        //
+        $venda->load([
+            'orcamento.itens.produto',
+            'orcamento.vidros',
+            'orcamento.pagamentos.formas.condicaoPagamento',
+            'cliente',
+            'vendedor'
+        ]);
+
+        return view('paginas.vendas.show', compact('venda'));
     }
 
     /**
