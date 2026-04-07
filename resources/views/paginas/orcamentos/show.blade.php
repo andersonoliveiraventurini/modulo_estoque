@@ -30,14 +30,13 @@
                                 'Pendente' => ['bg' => 'bg-amber-100', 'text' => 'text-amber-800', 'dark' => 'dark:bg-amber-900/40 dark:text-amber-200'],
                                 'Aprovado' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'dark' => 'dark:bg-green-900/40 dark:text-green-200'],
                                 'Cancelado' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'dark' => 'dark:bg-red-900/40 dark:text-red-200'],
-                                'Rejeitado' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'dark' => 'dark:bg-red-900/40 dark:text-red-200'],
                                 'Reprovado' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'dark' => 'dark:bg-red-900/40 dark:text-red-200'],
                                 'Expirado' => ['bg' => 'bg-black', 'text' => 'text-white', 'dark' => 'dark:bg-zinc-950 dark:text-zinc-400'],
                                 'Pago' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'dark' => 'dark:bg-green-900/40 dark:text-green-200'],
                                 'Sem estoque' => ['bg' => 'bg-pink-100', 'text' => 'text-pink-700', 'dark' => 'dark:bg-pink-900/40 dark:text-pink-300'],
                                 'Pagamento pendente' => ['bg' => 'bg-orange-100', 'text' => 'text-orange-800', 'dark' => 'dark:bg-orange-900/40 dark:text-orange-200'],
                             ];
-                            $statusDisplay = $orcamento->status === 'Rejeitado' ? 'Reprovado' : $orcamento->status;
+                            $statusDisplay = $orcamento->status === 'Reprovado' ? 'Reprovado' : $orcamento->status;
                             $currentStatusColor = $statusColors[$orcamento->status] ?? $statusColors['Pendente'];
 
                             // Lógica de Transporte (Rota vs Balcão)
@@ -250,16 +249,16 @@
                                         </a>
                                     </div>
 
-                                    {{-- ── REJEITADO ── --}}
-                                @elseif ($orcamento->status === 'Rejeitado')
+                                    {{-- ── Reprovado ── --}}
+                                @elseif ($orcamento->status === 'Reprovado')
                                     <div class="space-y-2">
                                         <div class="flex items-center gap-2">
                                             <span class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
                                             <p class="text-sm font-semibold text-red-700 dark:text-red-400">Orçamento
-                                                Rejeitado</p>
+                                                Reprovado</p>
                                         </div>
                                         <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                                            Este orçamento foi rejeitado durante a aprovação do meio de pagamento.
+                                            Este orçamento foi reprovado durante a aprovação do meio de pagamento.
                                         </p>
                                     </div>
                                 @elseif ($orcamento->status === 'Sem estoque')
@@ -473,7 +472,7 @@
                                                                 class="flex-1 border border-gray-300 dark:border-neutral-600 dark:bg-zinc-700 dark:text-white rounded-lg px-2 py-1.5 text-sm status-select focus:ring-2 focus:ring-blue-300 focus:outline-none
                     {{ ($statusBloqueado || $bloqueioPorPendencia) ? 'opacity-50 cursor-not-allowed' : '' }}"
                                                                 data-id="{{ $orcamento->id }}">
-                                                                @foreach (['Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado'] as $s)
+                                                                @foreach (['Pendente', 'Aprovado', 'Cancelado', 'Reprovado', 'Expirado'] as $s)
                                                                     @if ($s === 'Aprovado' && ($bloqueiaAprovado || $bloqueioPorPendencia) && $orcamento->status !== 'Aprovado')
                                                                         @continue
                                                                     @endif
@@ -781,7 +780,7 @@
                         <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
                             <p>
                                 Este orçamento possui descontos pendentes de aprovação.
-                                O PDF não estará disponível até que todos os descontos sejam aprovados ou rejeitados.
+                                O PDF não estará disponível até que todos os descontos sejam aprovados ou reprovados.
                             </p>
                         </div>
                         <div class="mt-4">
@@ -811,7 +810,7 @@
                             <p>
                                 Este orçamento possui uma solicitação de meio de pagamento especial pendente de
                                 aprovação.
-                                O PDF não estará disponível até que o meio de pagamento seja aprovado ou rejeitado.
+                                O PDF não estará disponível até que o meio de pagamento seja aprovado ou reprovado.
                             </p>
                             @if ($orcamento->outros_meios_pagamento)
                                 <p class="mt-2 font-medium">
@@ -831,7 +830,7 @@
             </div>
         @endif
 
-        @if ($orcamento->status === 'Rejeitado')
+        @if ($orcamento->status === 'Reprovado')
             <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 dark:border-red-600 p-4 rounded-lg">
                 <div class="flex">
                     <div class="flex-shrink-0">
@@ -839,11 +838,11 @@
                     </div>
                     <div class="ml-3">
                         <h3 class="text-sm font-medium text-red-800 dark:text-red-200">
-                            Orçamento Rejeitado
+                            Orçamento Reprovado
                         </h3>
                         <div class="mt-2 text-sm text-red-700 dark:text-red-300">
                             <p>
-                                Este orçamento foi rejeitado durante a aprovação de meio de pagamento.
+                                Este orçamento foi reprovado durante a aprovação de meio de pagamento.
                                 Não é possível prosseguir com a separação ou conferência.
                             </p>
                         </div>
@@ -854,8 +853,8 @@
 
         {{-- Progresso da Expedição — oculto enquanto encomenda aguarda pagamento --}}
         @if (in_array($orcamento->status, ['Aprovado', 'Pago']) && $orcamento->workflow_status !== 'aguardando_pagamento')
-            {{-- ✅ SÓ MOSTRA SE NÃO FOR REJEITADO --}}
-            @if ($orcamento->status !== 'Rejeitado')
+            {{-- ✅ SÓ MOSTRA SE NÃO FOR Reprovado --}}
+            @if ($orcamento->status !== 'Reprovado')
                 <div
                     class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
                     <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -923,7 +922,7 @@
                     ->whereIn('status', ['aberto', 'em_separacao'])
                     ->exists();
             @endphp
-            @if ($orcamento->status === 'Aprovado' && $temBatchAtivo && $orcamento->status !== 'Rejeitado')
+            @if ($orcamento->status === 'Aprovado' && $temBatchAtivo && $orcamento->status !== 'Reprovado')
                 <div
                     class="bg-white dark:bg-zinc-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow">
                     <div class="flex items-center justify-between">

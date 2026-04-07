@@ -164,7 +164,8 @@
                                     'Pago', 'Concluído', 'Aprovado' => 'bg-green-100 text-green-700',
                                     'Pendente' => 'bg-amber-100 text-amber-700',
                                     'Aprovar desconto', 'Aprovar pagamento' => 'bg-blue-100 text-blue-700',
-                                    'Cancelado', 'Rejeitado', 'Reprovado' => 'bg-red-100 text-red-700',
+                                    'Cancelado' => 'bg-gray-100 text-gray-700',
+                                    'Rejeitado', 'Reprovado' => 'bg-red-100 text-red-700',
                                     'Sem estoque' => 'bg-pink-100 text-pink-700',
                                     'Expirado' => 'bg-black text-white',
                                     default => 'bg-zinc-100 text-zinc-700'

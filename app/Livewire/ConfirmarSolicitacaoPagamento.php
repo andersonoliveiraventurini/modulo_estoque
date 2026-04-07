@@ -477,11 +477,11 @@ class ConfirmarSolicitacaoPagamento extends Component
         $this->orcamento->update([
             'outros_meios_pagamento' => null,
             'condicao_id' => null,
-            'status' => 'Rejeitado',
+            'status' => 'Reprovado',
         ]);
 
         Log::info("Orçamento #{$this->orcamentoId} rejeitado - meio de pagamento removido", [
-            'novo_status' => 'Rejeitado',
+            'novo_status' => 'Reprovado',
             'condicao_id' => 'null',
             'outros_meios_pagamento' => 'null'
         ]);
