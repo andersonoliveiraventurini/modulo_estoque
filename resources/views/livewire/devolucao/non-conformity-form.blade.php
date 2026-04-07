@@ -115,7 +115,7 @@
 
                         <flux:field>
                             <flux:label>Romaneio / Recebimento</flux:label>
-                            <flux:input wire:model="romaneio_recebimento" placeholder="Nº ROM" />
+                            <flux:input wire:model="romaneio_recebimento" placeholder="Nº Romaneio" />
                             <flux:error name="romaneio_recebimento" />
                         </flux:field>
                     </div>
