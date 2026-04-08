@@ -7,6 +7,7 @@ use App\Models\Pagamento;
 use App\Models\PagamentoForma;
 use App\Models\PagamentoComprovante;
 use App\Models\Orcamento;
+use App\Models\Fatura;
 use Illuminate\Support\Facades\Cache;
 use App\Models\CondicoesPagamento;
 use App\Models\ClienteCreditos;
