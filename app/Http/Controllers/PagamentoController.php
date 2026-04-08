@@ -243,7 +243,13 @@ class PagamentoController extends Controller
  
             // ── Valores base ──────────────────────────────────────────────
             $valorTotal       = (float) $orcamento->valor_total_final;
-            $descontoOriginal = (float) ($orcamento->totalDescontosAprovados() ?? 0);
+            
+            // O valor_total_final já considera o valor_com_desconto (que abate desconto_total do orçamento)
+            // e soma as cobranças residuais.
+            // Portanto, o descontoOriginal (descontos aprovados da tabela descontos) já foi abatido
+            // no cálculo de valor_total_final. Se abatermos de novo aqui, duplicamos o desconto.
+            
+            $descontoOriginal = 0; // Já embutido no valorTotal (valor_total_final)
             $descontoBalcao   = (float) ($request->desconto_balcao ?? 0);
             
             // Subtrai o que já foi pago anteriormente (para calcular o que falta nesta sessão)
@@ -290,7 +296,7 @@ class PagamentoController extends Controller
             $pagamento = Pagamento::create([
                 'orcamento_id'          => $orcamentoId,
                 'condicao_pagamento_id' => $validated['formas_pagamento'][0]['condicao_id'], // Usa a primeira forma como principal
-                'desconto_aplicado'     => $descontoOriginal,
+                'desconto_aplicado'     => (float) ($orcamento->totalDescontosAprovados() ?? 0),
                 'desconto_balcao'       => $descontoBalcao,
                 'valor_final'           => $valorFinal,
                 'valor_pago'            => $valorPago,

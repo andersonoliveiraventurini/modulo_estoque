@@ -454,10 +454,54 @@
                     @endforeach
                 </tbody>
                 <tfoot>
+                    @php
+                        $valorTotalItensOriginal = $registro->itens->sum(function($item) {
+                            return ($item->preco_unitario ?? $item->valor_unitario ?? 0) * $item->quantidade;
+                        });
+                        $valorTotalItensComDesconto = $registro->itens->sum(function($item) {
+                            return $item->valor_com_desconto ?? (($item->valor_unitario_com_desconto ?? ($item->preco_unitario ?? $item->valor_unitario ?? 0)) * $item->quantidade);
+                        });
+                        $descontoNosItens = $valorTotalItensOriginal - $valorTotalItensComDesconto;
+                        
+                        // Lógica de exibição única para evitar duplicidade
+                        $mostrarDescontoItens = $descontoNosItens > 0.01 && abs($descontoNosItens - $pagamento->desconto_aplicado) > 0.01;
+                    @endphp
                     <tr>
-                        <td colspan="6" class="text-right">Subtotal dos itens</td>
-                        <td class="right">R$ {{ number_format($registro->valor_total_itens ?? $registro->valor_total ?? 0, 2, ',', '.') }}</td>
+                        <td colspan="6" class="text-right">Total original dos itens</td>
+                        <td class="right">R$ {{ number_format($valorTotalItensOriginal, 2, ',', '.') }}</td>
                     </tr>
+                    @if($mostrarDescontoItens)
+                    <tr>
+                        <td colspan="6" class="text-right" style="color:#c0392b">Desconto nos itens</td>
+                        <td class="right" style="color:#c0392b">− R$ {{ number_format($descontoNosItens, 2, ',', '.') }}</td>
+                    </tr>
+                    @endif
+                    @if($pagamento->desconto_aplicado > 0.01)
+                    <tr>
+                        <td colspan="6" class="text-right" style="color:#c0392b">Desconto aprovado</td>
+                        <td class="right" style="color:#c0392b">− R$ {{ number_format($pagamento->desconto_aplicado, 2, ',', '.') }}</td>
+                    </tr>
+                    @endif
+                    @if($pagamento->desconto_balcao > 0.01)
+                    <tr>
+                        <td colspan="6" class="text-right" style="color:#c0392b">Desconto Balcão</td>
+                        <td class="right" style="color:#c0392b">− R$ {{ number_format($pagamento->desconto_balcao, 2, ',', '.') }}</td>
+                    </tr>
+                    @endif
+                    <tr style="background-color: #eef3f8; font-weight: bold;">
+                        <td colspan="6" class="text-right">VALOR FINAL</td>
+                        <td class="right">R$ {{ number_format($pagamento->valor_final, 2, ',', '.') }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="6" class="text-right" style="color:#27ae60">VALOR PAGO</td>
+                        <td class="right" style="color:#27ae60">R$ {{ number_format($pagamento->valor_pago, 2, ',', '.') }}</td>
+                    </tr>
+                    @if($pagamento->troco > 0.005)
+                    <tr>
+                        <td colspan="6" class="text-right" style="color:#e67e22">TROCO</td>
+                        <td class="right" style="color:#e67e22">R$ {{ number_format($pagamento->troco, 2, ',', '.') }}</td>
+                    </tr>
+                    @endif
                 </tfoot>
             </table>
         </div>

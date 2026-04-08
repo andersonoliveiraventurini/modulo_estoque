@@ -138,8 +138,7 @@ class Orcamento extends Model
      */
     public function valorComDescontos()
     {
-        $totalDescontos = $this->descontos()->sum('valor');
-        return $this->valor_total_itens - $totalDescontos;
+        return $this->valor_total_itens - $this->totalDescontosAprovados();
     }
 
     /**
