@@ -290,7 +290,7 @@
 
         {{-- SEÇÃO DE EMBALAGEM - Antes de concluir o lote --}}
         {{-- Liberado para: orçamentos normais Aprovados (dentro da validade) OU encomendas com status Pago --}}
-        @if ($orcamento->validade >= now() || in_array($orcamento->status, ['Aprovado']) || ($orcamento->encomenda != null && $orcamento->status === 'Pago'))
+        @if (($orcamento->validade >= now()->format('Y-m-d')) || in_array($orcamento->status, ['Aprovado']) || ($orcamento->encomenda != null && $orcamento->status === 'Pago'))
             <div class="mt-8 rounded-xl border-2 border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/30 dark:bg-emerald-900/10 overflow-hidden shadow-sm">
                 <div class="p-5">
                     <div class="flex items-center gap-3 mb-4">

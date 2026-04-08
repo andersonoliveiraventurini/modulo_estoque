@@ -1068,7 +1068,7 @@ class OrcamentoController extends Controller
         $prazoAprovacaoDias = $orcamento->encomenda ? 10 : 2;
 
         $prazoExpirado = $orcamento->validade !== null
-            && now()->isAfter($orcamento->validade);
+            && now()->startOfDay()->gt(\Carbon\Carbon::parse($orcamento->validade)->startOfDay());
 
         $bloqueiaAprovado = (!$orcamento->encomenda && $prazoExpirado) || ($orcamento->encomenda && (!$todosDisponiveis || $prazoExpirado));
 

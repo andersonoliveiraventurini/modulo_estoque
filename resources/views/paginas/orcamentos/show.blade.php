@@ -233,7 +233,7 @@
                     </div>
 
                     {{-- ──────── PAINEL DE STATUS ──────── --}}
-                    @if ($orcamento->validade >= now() || in_array($orcamento->status, ['Aprovado', 'Pago']))
+                    @if (!$prazoExpirado || in_array($orcamento->status, ['Aprovado', 'Pago', 'Sem estoque']))
                         <div class="lg:w-72 flex-shrink-0">
                             <div class="space-y-4">
 
