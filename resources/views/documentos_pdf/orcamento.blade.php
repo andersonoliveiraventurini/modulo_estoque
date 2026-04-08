@@ -533,7 +533,7 @@ Ao aprovar este orçamento, o cliente declara, para todos os fins de direito, es
 
     // Produtos normais - soma de valores unitários
     $totalProdutosSemDesconto = $temProdutos
-        ? (float) $orcamento->itens->whereNotNull('produto_id')->sum('valor_unitario')
+        ? (float) $orcamento->itens->whereNotNull('produto_id')->sum(fn($i) => (float)$i->valor_unitario * (float)$i->quantidade)
         : 0;
 
     // Encomenda = soma dos itens do orçamento (produto_id null) já com desconto por item aplicado
@@ -592,8 +592,8 @@ Ao aprovar este orçamento, o cliente declara, para todos os fins de direito, es
 
     @if ($percentualAplicado > 0)
         <tr>
-            <td>Desconto Percentual nos produtos</td>
-            <td class="valor">{{ number_format($percentualAplicado, 2, ',', '.') }}%</td>
+            <td>Desconto Percentual {{ number_format($percentualAplicado, 2, ',', '.') }}% (nos produtos)</td>
+            <td class="valor">- R$ {{ number_format(($totalProdutosSemDesconto * $percentualAplicado / 100), 2, ',', '.') }}</td>
         </tr>
     @endif
 
