@@ -42,7 +42,7 @@
             {{-- Lista de Alertas de Estoque --}}
             <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-6 shadow-sm">
                 <div class="flex items-center justify-between mb-4">
-                    <flux:heading size="lg">Alertas de Reposição</flux:heading>
+                    <flux:heading size="lg">Alertas de Estoque Mínimo</flux:heading>
                     <flux:button variant="ghost" size="sm" href="{{ route('relatorios.estoque_critico') }}">Ver todos</flux:button>
                 </div>
                 
