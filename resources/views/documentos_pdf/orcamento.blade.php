@@ -456,9 +456,14 @@ Ao aprovar este orçamento, o cliente declara, para todos os fins de direito, es
          TOTAIS E DESCONTOS
     =========================== -->
 @php
-    // Produtos normais
+    // Produtos com desconto
     $totalProdutos = $temProdutos
         ? (float) $orcamento->itens->whereNotNull('produto_id')->sum('valor_com_desconto')
+        : 0;
+
+    // Produtos normais - soma de valores unitários
+    $totalProdutosSemDesconto = $temProdutos
+        ? (float) $orcamento->itens->whereNotNull('produto_id')->sum('valor_unitario')
         : 0;
 
     // Encomenda = soma dos itens do orçamento (produto_id null) já com desconto por item aplicado
@@ -487,10 +492,10 @@ Ao aprovar este orçamento, o cliente declara, para todos os fins de direito, es
 
 <h3>Totais e Descontos</h3>
 <table class="totais">
-    @if ($totalProdutos > 0)
+    @if ($totalProdutosSemDesconto > 0)
         <tr>
             <td>Valor Total em Produtos</td>
-            <td class="valor">R$ {{ number_format($totalProdutos, 2, ',', '.') }}</td>
+            <td class="valor">R$ {{ number_format($totalProdutosSemDesconto, 2, ',', '.') }}</td>
         </tr>
     @endif
 
