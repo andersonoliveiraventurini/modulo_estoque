@@ -242,18 +242,19 @@ class PagamentoController extends Controller
             }
  
             // ── Valores base ──────────────────────────────────────────────
-            $valorTotal       = (float) $orcamento->valor_total_final;
+            $valorTotal       = (float) $orcamento->valor_total_itens;
             
-            // O valor_total_final já considera o valor_com_desconto (que abate desconto_total do orçamento)
-            // e soma as cobranças residuais.
-            // Portanto, o descontoOriginal (descontos aprovados da tabela descontos) já foi abatido
-            // no cálculo de valor_total_final. Se abatermos de novo aqui, duplicamos o desconto.
-            
-            $descontoOriginal = 0; // Já embutido no valorTotal (valor_total_final)
+            // O desconto aprovado na tabela descontos deve ser subtraído do valor total bruto.
+            $descontoOriginal = (float) ($orcamento->totalDescontosAprovados() ?? 0);
             $descontoBalcao   = (float) ($request->desconto_balcao ?? 0);
             
             // Subtrai o que já foi pago anteriormente (para calcular o que falta nesta sessão)
             $totalJaPago      = (float) $orcamento->pagamentos()->ativos()->sum('valor_pago');
+            
+            // Soma também cobranças residuais (que aumentam o valor total)
+            $valorResiduais    = (float) $orcamento->getValorResiduaisAttribute();
+            
+            $valorTotalComResiduais = $valorTotal + $valorResiduais;
  
             // ── Valida desconto de balcão ─────────────────────────────────
             $valorPixDinheiro = 0;
@@ -281,7 +282,7 @@ class PagamentoController extends Controller
             }
  
             // ── Valor final e troco ───────────────────────────────────────
-            $valorFinal = $valorTotal - $descontoOriginal - $descontoBalcao - $totalJaPago;
+            $valorFinal = $valorTotalComResiduais - $descontoOriginal - $descontoBalcao - $totalJaPago;
             $valorPago  = (float) array_sum(array_column($validated['formas_pagamento'], 'valor'));
  
             if ($valorPago < $valorFinal - 0.01) {
@@ -351,6 +352,23 @@ class PagamentoController extends Controller
  
             // Atualiza status do orçamento
             $orcamento->update(['status' => 'Pago', 'data_pagamento' => now()]);
+
+            // ── Atualiza Faturas vinculadas (Baixa automática) ────────────
+            $faturas = Fatura::where('orcamento_id', $orcamentoId)
+                ->where('status', '!=', 'pago')
+                ->get();
+
+            foreach ($faturas as $fatura) {
+                // Se o pagamento é integral ou o saldo do orçamento foi zerado
+                if ($orcamento->getValorRestanteAttribute() <= 0.01) {
+                    $fatura->update([
+                        'status' => 'pago',
+                        'valor_pago' => $fatura->valor_total,
+                        'data_pagamento' => now()
+                    ]);
+                    Log::info("Fatura #{$fatura->id} baixada automaticamente após pagamento integral do Orçamento #{$orcamentoId}");
+                }
+            }
 
             // ── Dispara evento de pagamento (baixa automática no estoque, integração e-commerce, etc) ──
             event(new OrcamentoPago($orcamento));

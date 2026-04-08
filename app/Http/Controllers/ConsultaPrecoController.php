@@ -547,23 +547,47 @@ class ConsultaPrecoController extends Controller
         return redirect()->back()->with('success', 'Item removido com sucesso.');
     }
 
-    // ✅ Método auxiliar de recálculo
     private function recalcularTotaisOrcamento(\App\Models\Orcamento $orcamento, ConsultaPrecoGrupo $grupo): void
     {
-        $totalProdutos = \App\Models\OrcamentoItem::where('orcamento_id', $orcamento->id)
+        // 1. Produtos com produto_id (itens comuns)
+        $itensProdutos = \App\Models\OrcamentoItem::where('orcamento_id', $orcamento->id)
             ->whereNotNull('produto_id')
-            ->sum(DB::raw('valor_unitario_com_desconto * quantidade'));
+            ->get();
 
-        $totalEncomenda = 0;
+        $totalBrutoProdutos = $itensProdutos->sum(function($item) {
+            return (float)$item->valor_unitario * (float)$item->quantidade;
+        });
+
+        $totalComDescontoProdutos = $itensProdutos->sum(function($item) {
+            return (float)($item->valor_com_desconto > 0 ? $item->valor_com_desconto : ($item->valor_unitario * $item->quantidade));
+        });
+
+        // 2. Itens de Encomenda (envolvidos no grupo atual)
+        $totalBrutoEncomenda = 0;
+        $totalComDescontoEncomenda = 0;
+        
         foreach ($grupo->fresh('itens.fornecedorSelecionado')->itens as $item) {
             $forn = $item->fornecedorSelecionado;
-            $totalEncomenda += $forn ? (float) $forn->preco_venda * (float) $item->quantidade : 0;
+            $precoOriginal = (float)($item->valor_unitario ?? ($forn ? $forn->preco_venda : 0));
+            $precoFinal = (float)($item->valor_unitario_com_desconto ?? $precoOriginal);
+            
+            $totalBrutoBruto = $precoOriginal * (float)$item->quantidade;
+            $totalComDescontoItem = $precoFinal * (float)$item->quantidade;
+
+            $totalBrutoEncomenda += $totalBrutoBruto;
+            $totalComDescontoEncomenda += $totalComDescontoItem;
         }
 
-        $total = $totalProdutos + $totalEncomenda;
+        $totalBrutoTotal = $totalBrutoProdutos + $totalBrutoEncomenda;
+        $totalComDescontoTotal = $totalComDescontoProdutos + $totalComDescontoEncomenda;
 
-        $orcamento->valor_total_itens   = $total;
-        $orcamento->valor_com_desconto  = $total; // ajuste se houver descontos
+        // 3. Descontos extras (fixos/globais)
+        $totalDescontosAprovados = $orcamento->totalDescontosAprovados();
+        $totalComDescontoTotal = max(0, $totalComDescontoTotal - $totalDescontosAprovados);
+
+        $orcamento->valor_total_itens   = $totalBrutoTotal;
+        $orcamento->valor_com_desconto  = $totalComDescontoTotal;
+        $orcamento->desconto_total      = $totalDescontosAprovados;
         $orcamento->save();
     }
 

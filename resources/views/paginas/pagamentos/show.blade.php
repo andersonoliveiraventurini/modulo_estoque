@@ -444,17 +444,16 @@
                                             return $item->valor_unitario * $item->quantidade;
                                         });
 
-                                        // O desconto dos itens é a diferença entre o total original e o total com descontos dos itens
-                                        $valorTotalItensComDesconto = $pagamento->orcamento->itens->sum(function ($item) {
-                                            return $item->valor_com_desconto ?? $item->valor_unitario_com_desconto * $item->quantidade;
-                                        });
+                                        // O desconto aprovado total (inclui descontos nos itens e descontos extras)
+                                        $descontoAprovadoTotal = $pagamento->desconto_aplicado;
 
-                                        $descontoItens = $valorTotalItensOriginal - $valorTotalItensComDesconto;
-
-                                        // Os descontos em itens só são válidos se forem aprovados na tabela desconto.
-                                        // Se o desconto já estiver em $pagamento->desconto_aplicado, não mostramos $descontoItens
-                                        // para evitar a duplicidade visual no resumo.
-                                        $mostrarDescontoItens = $descontoItens > 0.01 && abs($descontoItens - $pagamento->desconto_aplicado) > 0.01;
+                                        // O valor final deve ser o Total Original - Desconto Aprovado - Desconto Balcao
+                                        // Se houver cobranças residuais, elas somam ao total.
+                                        $valorResiduais = $pagamento->orcamento->valor_residuais;
+                                        $valorCalculadoFinal = $valorTotalItensOriginal + $valorResiduais - $descontoAprovadoTotal - $pagamento->desconto_balcao;
+                                        
+                                        // No entanto, para exibir o que está no banco:
+                                        $valorExibidoFinal = $pagamento->valor_final;
                                     @endphp
                                     <div class="flex justify-between">
                                         <dt class="text-gray-500 dark:text-gray-400">Valor total itens</dt>
@@ -463,20 +462,11 @@
                                         </dd>
                                     </div>
 
-                                    @if ($mostrarDescontoItens)
-                                        <div class="flex justify-between">
-                                            <dt class="text-gray-500 dark:text-gray-400">Desconto nos itens</dt>
-                                            <dd class="font-medium text-red-600 dark:text-red-400">
-                                                − R$ {{ number_format($descontoItens, 2, ',', '.') }}
-                                            </dd>
-                                        </div>
-                                    @endif
-
-                                    @if ($pagamento->desconto_aplicado > 0.01)
+                                    @if ($descontoAprovadoTotal > 0.01)
                                         <div class="flex justify-between">
                                             <dt class="text-gray-500 dark:text-gray-400">Desconto aprovado</dt>
                                             <dd class="font-medium text-red-600 dark:text-red-400">
-                                                − R$ {{ number_format($pagamento->desconto_aplicado, 2, ',', '.') }}
+                                                − R$ {{ number_format($descontoAprovadoTotal, 2, ',', '.') }}
                                             </dd>
                                         </div>
                                     @endif
@@ -494,7 +484,7 @@
                                         class="flex justify-between border-t border-gray-100 dark:border-gray-700 pt-3">
                                         <dt class="font-semibold text-gray-700 dark:text-gray-300">Valor final</dt>
                                         <dd class="font-bold text-blue-700 dark:text-blue-300 text-base">
-                                            R$ {{ number_format($pagamento->valor_final, 2, ',', '.') }}
+                                            R$ {{ number_format($valorExibidoFinal, 2, ',', '.') }}
                                         </dd>
                                     </div>
                                     <div class="flex justify-between">

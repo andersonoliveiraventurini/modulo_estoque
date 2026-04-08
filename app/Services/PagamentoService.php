@@ -263,20 +263,16 @@ class PagamentoService
      */
     protected function calcularValoresVenda($registro, array $dados)
     {
+        // O valorTotal deve ser o bruto (valor_total_itens)
         $valorTotal = (float) ($registro instanceof \App\Models\Orcamento ? $registro->valor_total_itens : $registro->valor_total);
         
-        // No caso de Orçamento, o desconto_total já inclui descontos aprovados.
-        // Se for Pedido, usamos o desconto registrado nele.
-        $descontoAplicado = (float) ($registro instanceof \App\Models\Orcamento ? $registro->desconto_total : ($registro->desconto ?? 0));
+        // O desconto_aplicado deve ser o total de descontos aprovados
+        $descontoAplicado = (float) ($registro instanceof \App\Models\Orcamento ? $registro->totalDescontosAprovados() : ($registro->desconto ?? 0));
         
         $descontoBalcao = (float) ($dados['desconto_balcao'] ?? 0);
         $descontoTotal = $descontoAplicado + $descontoBalcao;
 
-        // O valor_total_itens para Orçamento já é o valor original (sem descontos dos itens).
-        // No entanto, se o sistema já abateu o desconto dos itens no valor_total_itens, 
-        // precisamos garantir que não abateremos novamente.
-        // Pelo que vimos, valor_total_itens é o bruto.
-        
+        // O valor final é Bruto - Desconto Total
         $valorFinal = $valorTotal - $descontoTotal;
 
         // Valida valor final mínimo
