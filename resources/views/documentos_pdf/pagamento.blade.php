@@ -372,16 +372,25 @@
              SEÇÃO 2 — ITENS DO ORÇAMENTO / PEDIDO
         ══════════════════════════════════════════════════════════ --}}
         @if($registro->itens && $registro->itens->count())
+        @php
+            $descontosAtivos = $registro->descontos()->whereNull('deleted_at')->get();
+            $percentualAplicado = $descontosAtivos->where('tipo', 'percentual')->max('porcentagem') ?? 0;
+            $descontosPorProduto = $descontosAtivos
+                ->where('tipo', 'produto')
+                ->filter(fn($d) => !is_null($d->aprovado_em))
+                ->keyBy('produto_id');
+        @endphp
         <div class="section">
             <div class="section-title">Itens da Venda</div>
             <table class="table-itens">
                 <thead>
                     <tr>
                         <th style="width:5%">#</th>
-                        <th style="width:45%">Produto / Descrição</th>
-                        <th class="right" style="width:10%">Qtd</th>
-                        <th class="right" style="width:15%">Preço Unit.</th>
+                        <th style="width:35%">Produto / Descrição</th>
+                        <th class="right" style="width:8%">Qtd</th>
+                        <th class="right" style="width:12%">Vlr. Unit.</th>
                         <th class="right" style="width:10%">Desc.</th>
+                        <th class="right" style="width:15%">Vlr. c/ Desc.</th>
                         <th class="right" style="width:15%">Subtotal</th>
                     </tr>
                 </thead>
@@ -389,8 +398,37 @@
                     @foreach($registro->itens as $i => $item)
                         @php
                             $unitario  = (float) ($item->preco_unitario ?? $item->valor_unitario ?? 0);
-                            $descItem  = (float) ($item->desconto ?? 0);
-                            $subtotal  = (float) ($item->subtotal ?? ($item->quantidade * $unitario - $descItem));
+                            $unitarioComDesc = (float) ($item->valor_unitario_com_desconto ?? $unitario);
+                            
+                            // Se unitarioComDesc ainda for igual ao unitario, mas houver valor_com_desconto, recalculamos
+                            if ($unitarioComDesc == $unitario && isset($item->valor_com_desconto) && $item->quantidade > 0) {
+                                $unitarioComDesc = (float) ($item->valor_com_desconto / $item->quantidade);
+                            }
+                            
+                            $descValorTotalItem = ($unitario - $unitarioComDesc);
+                            $subtotal  = (float) ($item->valor_com_desconto ?? $item->subtotal ?? ($item->quantidade * $unitarioComDesc));
+
+                            // Lógica para exibição do desconto (Porcentagem vs Valor)
+                            $textoDesconto = '—';
+                            $temDesconto = false;
+
+                            if ($percentualAplicado > 0) {
+                                $textoDesconto = number_format($percentualAplicado, 0, ',', '.') . '%';
+                                $temDesconto = true;
+                            } else {
+                                $descontoEspecial = $descontosPorProduto->get($item->produto_id);
+                                if ($descontoEspecial) {
+                                    if ($descontoEspecial->porcentagem > 0) {
+                                        $textoDesconto = number_format($descontoEspecial->porcentagem, 0, ',', '.') . '%';
+                                    } else {
+                                        $textoDesconto = 'R$ ' . number_format($descontoEspecial->valor, 2, ',', '.');
+                                    }
+                                    $temDesconto = true;
+                                } elseif ($descValorTotalItem > 0) {
+                                    $textoDesconto = 'R$ ' . number_format($descValorTotalItem, 2, ',', '.');
+                                    $temDesconto = true;
+                                }
+                            }
                         @endphp
                         <tr>
                             <td class="text-muted">{{ $i + 1 }}</td>
@@ -403,19 +441,20 @@
                             <td class="right">{{ number_format($item->quantidade, 0, ',', '.') }}</td>
                             <td class="right">R$ {{ number_format($unitario, 2, ',', '.') }}</td>
                             <td class="right">
-                                @if($descItem > 0)
-                                    <span style="color:#c0392b">R$ {{ number_format($descItem, 2, ',', '.') }}</span>
+                                @if($temDesconto)
+                                    <span style="color:#c0392b">{{ $textoDesconto }}</span>
                                 @else
                                     —
                                 @endif
                             </td>
+                            <td class="right">R$ {{ number_format($unitarioComDesc, 2, ',', '.') }}</td>
                             <td class="right font-bold">R$ {{ number_format($subtotal, 2, ',', '.') }}</td>
                         </tr>
                     @endforeach
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="5" class="text-right">Subtotal dos itens</td>
+                        <td colspan="6" class="text-right">Subtotal dos itens</td>
                         <td class="right">R$ {{ number_format($registro->valor_total_itens ?? $registro->valor_total ?? 0, 2, ',', '.') }}</td>
                     </tr>
                 </tfoot>

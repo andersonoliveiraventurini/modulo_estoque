@@ -338,25 +338,53 @@ Ao aprovar este orçamento, o cliente declara, para todos os fins de direito, es
             <th>Qtd</th>
             <th>Produto</th>
             <th>Unitário</th>
+            <th>Desc.</th>
             <th>Unitário c/ desconto</th>
             <th>Valor final</th>
         </tr>
         </thead>
         <tbody>
         @foreach ($orcamento->itens->whereNotNull('produto_id') as $item)
-            @php $descontoProduto = $descontosPorProduto->get($item->produto_id); @endphp
+            @php 
+                $descontoEspecial = $descontosPorProduto->get($item->produto_id);
+                $unitario = (float) $item->valor_unitario;
+                $unitarioComDesc = (float) $item->valor_unitario_com_desconto;
+                $descValorTotalItem = $unitario - $unitarioComDesc;
+                
+                $textoDesconto = '—';
+                $temDesconto = false;
+
+                if ($percentualAplicado > 0) {
+                    $textoDesconto = number_format($percentualAplicado, 0, ',', '.') . '%';
+                    $temDesconto = true;
+                } else {
+                    if ($descontoEspecial) {
+                        if ($descontoEspecial->porcentagem > 0) {
+                            $textoDesconto = number_format($descontoEspecial->porcentagem, 0, ',', '.') . '%';
+                        } else {
+                            $textoDesconto = 'R$ ' . number_format($descontoEspecial->valor, 2, ',', '.');
+                        }
+                        $temDesconto = true;
+                    } elseif ($descValorTotalItem > 0) {
+                        $textoDesconto = 'R$ ' . number_format($descValorTotalItem, 2, ',', '.');
+                        $temDesconto = true;
+                    }
+                }
+            @endphp
             <tr>
                 <td align="center">{{ $item->quantidade }}</td>
                 <td>
                     {{ $item->produto->nome ?? '---' }}
-                    @if ($descontoProduto)
-                        <span class="desconto-produto-label">
-                                ✔ Desconto especial: -R$ {{ number_format($descontoProduto->valor, 2, ',', '.') }}
-                            </span>
+                </td>
+                <td class="valor">R$ {{ number_format($unitario, 2, ',', '.') }}</td>
+                <td class="valor">
+                    @if($temDesconto)
+                        <span style="color:#c0392b">{{ $textoDesconto }}</span>
+                    @else
+                        —
                     @endif
                 </td>
-                <td class="valor">R$ {{ number_format($item->valor_unitario, 2, ',', '.') }}</td>
-                <td class="valor">R$ {{ number_format($item->valor_unitario_com_desconto, 2, ',', '.') }}</td>
+                <td class="valor">R$ {{ number_format($unitarioComDesc, 2, ',', '.') }}</td>
                 <td class="valor">R$ {{ number_format($item->valor_com_desconto, 2, ',', '.') }}</td>
             </tr>
         @endforeach
@@ -378,9 +406,9 @@ Ao aprovar este orçamento, o cliente declara, para todos os fins de direito, es
             <th>Qtd</th>
             <th>Descrição</th>
             <th>Cor</th>
-            <th>Part Number</th>
-            <th>Fornecedor</th>
             <th>Preço Unit.</th>
+            <th>Desc.</th>
+            <th>Preço c/ Desc.</th>
             <th>Valor Final</th>
         </tr>
         </thead>
@@ -393,16 +421,45 @@ Ao aprovar este orçamento, o cliente declara, para todos os fins de direito, es
                 $forn     = $item->fornecedorSelecionado;
                 $precoOri = $forn ? (float) $forn->preco_venda : 0;
                 $oi       = $itensOrcamentoEncomenda->get($idx);
-                $preco    = $oi ? (float) $oi->valor_unitario_com_desconto : $precoOri;
+                $precoComDesc = $oi ? (float) $oi->valor_unitario_com_desconto : $precoOri;
                 $subtotal = $oi ? (float) $oi->valor_com_desconto : ($precoOri * (float) $item->quantidade);
+                $descValorTotalItem = $precoOri - $precoComDesc;
+
+                $textoDesconto = '—';
+                $temDesconto = false;
+
+                if ($percentualAplicado > 0) {
+                    $textoDesconto = number_format($percentualAplicado, 0, ',', '.') . '%';
+                    $temDesconto = true;
+                } else {
+                    // Encomendas podem ter descontos específicos também
+                    $descontoEspecial = $oi ? $descontosAtivos->where('consulta_preco_id', $oi->id)->first() : null;
+                    if ($descontoEspecial) {
+                        if ($descontoEspecial->porcentagem > 0) {
+                            $textoDesconto = number_format($descontoEspecial->porcentagem, 0, ',', '.') . '%';
+                        } else {
+                            $textoDesconto = 'R$ ' . number_format($descontoEspecial->valor, 2, ',', '.');
+                        }
+                        $temDesconto = true;
+                    } elseif ($descValorTotalItem > 0) {
+                        $textoDesconto = 'R$ ' . number_format($descValorTotalItem, 2, ',', '.');
+                        $temDesconto = true;
+                    }
+                }
             @endphp
             <tr>
                 <td align="center">{{ $item->quantidade }}</td>
                 <td>{{ $item->descricao }}</td>
                 <td align="center">{{ $item->cor->nome ?? '—' }}</td>
-                <td align="center">{{ $item->part_number ?? '—' }}</td>
-                <td>{{ $forn->fornecedor->nome_fantasia ?? '—' }}</td>
-                <td class="valor">R$ {{ number_format($preco, 2, ',', '.') }}</td>
+                <td class="valor">R$ {{ number_format($precoOri, 2, ',', '.') }}</td>
+                <td class="valor">
+                    @if($temDesconto)
+                        <span style="color:#c0392b">{{ $textoDesconto }}</span>
+                    @else
+                        —
+                    @endif
+                </td>
+                <td class="valor">R$ {{ number_format($precoComDesc, 2, ',', '.') }}</td>
                 <td class="valor">R$ {{ number_format($subtotal, 2, ',', '.') }}</td>
             </tr>
         @endforeach
@@ -420,31 +477,44 @@ Ao aprovar este orçamento, o cliente declara, para todos os fins de direito, es
         <tr>
             <th>Qtd</th>
             <th>Descrição</th>
-            <th style="width: 3rem">Altura (mm)</th>
-            <th style="width: 3rem">Largura (mm)</th>
-            <th style="width: 5rem">Preço m²</th>
-            @if ($percentualAplicado > 0)
-                <th style="width: 5rem">Unitário com desconto</th>
-            @endif
-            <th style="width: 5rem">Valor final</th>
+            <th>Altura</th>
+            <th>Largura</th>
+            <th>Preço m²</th>
+            <th>Desc.</th>
+            <th>m² c/ Desc.</th>
+            <th>Valor Final</th>
         </tr>
         </thead>
         <tbody>
         @foreach ($orcamento->vidros as $vidro)
+            @php
+                $precoM2 = (float) $vidro->preco_metro_quadrado;
+                $precoM2ComDesc = $precoM2;
+                
+                $textoDesconto = '—';
+                $temDesconto = false;
+
+                if ($percentualAplicado > 0) {
+                    $precoM2ComDesc = $precoM2 - ($precoM2 * ($percentualAplicado / 100));
+                    $textoDesconto = number_format($percentualAplicado, 0, ',', '.') . '%';
+                    $temDesconto = true;
+                }
+                // Vidros no momento parecem só aceitar o desconto global percentual nesta view
+            @endphp
             <tr>
                 <td align="center">{{ $vidro->quantidade }}</td>
                 <td>{{ $vidro->descricao }}</td>
                 <td class="valor">{{ $vidro->altura }}</td>
                 <td class="valor">{{ $vidro->largura }}</td>
-                <td class="valor">R$ {{ number_format($vidro->preco_metro_quadrado, 2, ',', '.') }}</td>
-                @if ($percentualAplicado > 0)
-                    <td class="valor">
-                        R$ {{ number_format(
-                                    $vidro->preco_metro_quadrado - $vidro->preco_metro_quadrado * ($percentualAplicado / 100),
-                                    2, ',', '.'
-                                ) }}
-                    </td>
-                @endif
+                <td class="valor">R$ {{ number_format($precoM2, 2, ',', '.') }}</td>
+                <td class="valor">
+                    @if($temDesconto)
+                        <span style="color:#c0392b">{{ $textoDesconto }}</span>
+                    @else
+                        —
+                    @endif
+                </td>
+                <td class="valor">R$ {{ number_format($precoM2ComDesc, 2, ',', '.') }}</td>
                 <td class="valor">R$ {{ number_format($vidro->valor_com_desconto, 2, ',', '.') }}</td>
             </tr>
         @endforeach
