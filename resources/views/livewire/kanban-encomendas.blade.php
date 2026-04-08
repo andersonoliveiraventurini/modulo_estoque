@@ -1,8 +1,15 @@
-<div>
+<div class="flex flex-col bg-zinc-50 dark:bg-zinc-900">
+    <style>
+        /* Ajuste para as colunas do Kanban ocuparem a altura da viewport menos o header */
+        .kanban-column-container {
+            height: calc(100vh - 120px); /* Ajuste conforme o tamanho do header */
+            min-height: 500px;
+        }
+    </style>
     {{-- ══════════════════════════════════════════════════════
          HEADER
     ══════════════════════════════════════════════════════ --}}
-    <div class="bg-white dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 sticky top-0 z-10">
+    <div class="bg-white dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 sticky top-0 z-10 flex-shrink-0">
         <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-3">
 
@@ -73,9 +80,9 @@
          ABA KANBAN
     ══════════════════════════════════════════════════════ --}}
     @if ($aba === 'kanban')
-        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div class="overflow-x-auto -mx-4 px-4">
-                <div class="flex gap-4 min-w-max pb-4">
+        <div class="flex-1 px-4 sm:px-6 lg:px-8 py-4">
+            <div class="overflow-x-auto">
+                <div class="flex gap-4 min-w-max pb-2 kanban-column-container">
 
                     @foreach ($columns as $column)
                         @php
@@ -101,7 +108,7 @@
                             };
                         @endphp
 
-                        <div class="flex-shrink-0 w-80">
+                        <div class="flex-shrink-0 w-80 h-full pb-4">
                             <div class="rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 h-full flex flex-col {{ $borderTop }}">
 
                                 {{-- Column Header --}}
@@ -250,7 +257,7 @@
          ABA LISTA DE ITENS
     ══════════════════════════════════════════════════════ --}}
     @if ($aba === 'lista')
-        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6">
 
             {{-- Perfil de filtro 
             <div class="flex items-center gap-3 mb-5">
