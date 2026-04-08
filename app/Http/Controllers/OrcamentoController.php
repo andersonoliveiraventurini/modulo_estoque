@@ -2127,8 +2127,6 @@ class OrcamentoController extends Controller
                 'valor_com_desconto' => round($totalComDesconto, 2),
             ]);
 
-            DB::commit();
-
             // ✅ VALIDAÇÃO FINAL: VERIFICA SE EXISTE QUALQUER DESCONTO PENDENTE NO BANCO
             $necessitaAprovacaoDesconto = $orcamento->descontos()->whereNull('aprovado_em')->whereNull('rejeitado_em')->exists();
 
@@ -2138,17 +2136,9 @@ class OrcamentoController extends Controller
             if ($necessitaAprovacaoPagamento) {
                 $orcamento->status = 'Aprovar pagamento';
                 $orcamento->save();
-
-                return redirect()
-                    ->route('orcamentos.show', $orcamento->id)
-                    ->with('info', "Orçamento atualizado (Revisão {$novaVersao})! Aguardando aprovação do meio de pagamento especial.");
             } elseif ($necessitaAprovacaoDesconto) {
                 $orcamento->status = 'Aprovar desconto';
                 $orcamento->save();
-
-                return redirect()
-                    ->route('orcamentos.show', $orcamento->id)
-                    ->with('warning', "Orçamento atualizado (Revisão {$novaVersao}), mas é necessária a aprovação do desconto.");
             } else {
                 //  Sem desconto e sem pagamento especial — verifica estoque antes de aprovar
                 if ($temItensSemEstoque) {
@@ -2159,6 +2149,21 @@ class OrcamentoController extends Controller
                 $orcamento->save();
                 // Garante que a reserva de estoque seja atualizada
                 app(\App\Services\EstoqueService::class)->reservarParaOrcamento($orcamento);
+            }
+
+            DB::commit();
+
+            // ----------------------------------------------------------------
+            // Redirecionamento após sucesso (com commit garantido)
+            // ----------------------------------------------------------------
+            if ($necessitaAprovacaoPagamento) {
+                return redirect()
+                    ->route('orcamentos.show', $orcamento->id)
+                    ->with('info', "Orçamento atualizado (Revisão {$novaVersao})! Aguardando aprovação do meio de pagamento especial.");
+            } elseif ($necessitaAprovacaoDesconto) {
+                return redirect()
+                    ->route('orcamentos.show', $orcamento->id)
+                    ->with('warning', "Orçamento atualizado (Revisão {$novaVersao}), mas é necessária a aprovação do desconto.");
             }
 
             // ----------------------------------------------------------------
@@ -2192,11 +2197,16 @@ class OrcamentoController extends Controller
             // ----------------------------------------------------------------
             DB::rollBack();
 
-            Log::error("Erro ao atualizar orçamento #{$orcamento->id}: " . $e->getMessage());
-            Log::error("Stack trace: " . $e->getTraceAsString());
+            // Log com contexto extra para o banco de dados
+            Log::error("Erro ao atualizar orçamento #{$orcamento->id}: " . $e->getMessage(), [
+                'orcamento_id' => $orcamento->id,
+                'user_id' => auth()->id(),
+                'exception' => $e, // O DatabaseHandler vai extrair stack trace e arquivo/linha daqui
+                'request_data' => $request->except(['_token', '_method']),
+            ]);
 
             $mensagemErro = app()->environment('production')
-                ? 'Erro interno ao atualizar o orçamento. Contate o suporte.'
+                ? 'Erro interno ao atualizar o orçamento. Contate o suporte. (ID do Erro capturado no sistema)'
                 : '[' . class_basename($e) . '] '
                 . $e->getMessage()
                 . ' — Arquivo: ' . $e->getFile()
