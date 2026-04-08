@@ -291,7 +291,8 @@
 
     {{-- Título do documento --}}
     <h2 style="margin:0 0 6px; font-size:16px; text-transform:uppercase; text-align:center; font-family: DejaVu Sans, sans-serif;">
-        Comprovante de Pagamento
+        Pedido #{{ $pagamento->id }}
+        {{-- Pedido pelo Cezar para não deixar Pagamento e sim pedido 08/04/26 whatsapp e chamado #133 --}}
         @if($tipoRegistro === 'orcamento')
             — Orçamento #{{ $registro->id }}
         @else

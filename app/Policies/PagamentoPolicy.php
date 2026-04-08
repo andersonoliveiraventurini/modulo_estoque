@@ -13,7 +13,7 @@ class PagamentoPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->hasRole('admin') || $user->hasRole('financeiro');
     }
 
     /**
@@ -21,7 +21,7 @@ class PagamentoPolicy
      */
     public function view(User $user, Pagamento $pagamento): bool
     {
-        return false;
+        return $user->hasRole('admin') || $user->hasRole('financeiro');
     }
 
     /**

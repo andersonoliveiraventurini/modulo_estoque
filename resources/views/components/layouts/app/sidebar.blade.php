@@ -240,6 +240,9 @@
         </flux:navlist.group>
 
         <flux:navlist.group heading="Financeiro" expandable :expanded="false">
+            <flux:navlist.item icon="banknotes" :href="route('pagamentos.index')"
+                :current="request()->routeIs('pagamentos.*')" wire:navigate>{{ __('Pagamentos') }}
+            </flux:navlist.item>
             <flux:navlist.item icon="users" :href="route('clientes.index')"
                 :current="request()->routeIs('clientes.index')" wire:navigate>{{ __('Clientes e Créditos') }}
             </flux:navlist.item>

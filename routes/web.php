@@ -284,6 +284,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('orcamentos', OrcamentoController::class)->names('orcamentos');
 
 
+    // Listagem de pagamentos
+    Route::get('/pagamentos', [PagamentoController::class, 'index'])
+        ->name('pagamentos.index');
+
     // Ver detalhes de um pagamento
     Route::get('/pagamentos/{pagamento}', [PagamentoController::class, 'show'])
         ->name('pagamentos.show');

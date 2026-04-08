@@ -27,6 +27,49 @@ class PagamentoController extends Controller
     const CONDICAO_ESPECIAL_OUTROS = 20;
 
     // ═════════════════════════════════════════════════════════════════════════
+    // LISTAGEM
+    // ═════════════════════════════════════════════════════════════════════════
+
+    public function index(Request $request)
+    {
+        $this->authorize('viewAny', Pagamento::class);
+
+        $query = Pagamento::with(['orcamento.cliente', 'pedido.cliente', 'user'])
+            ->latest('data_pagamento');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('id', $search)
+                    ->orWhereHas('orcamento.cliente', function ($q) use ($search) {
+                        $q->where('nome', 'like', "%{$search}%")
+                          ->orWhere('razao_social', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('pedido.cliente', function ($q) use ($search) {
+                        $q->where('nome', 'like', "%{$search}%")
+                          ->orWhere('razao_social', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status === 'pago') {
+                $query->ativos();
+            } elseif ($request->status === 'estornado') {
+                $query->estornados();
+            }
+        }
+
+        if ($request->filled('data_inicio') && $request->filled('data_fim')) {
+            $query->noPeriodo($request->data_inicio, $request->data_fim);
+        }
+
+        $pagamentos = $query->paginate(20)->withQueryString();
+
+        return view('paginas.pagamentos.index', compact('pagamentos'));
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
     // FORMULÁRIO
     // ═════════════════════════════════════════════════════════════════════════
 
@@ -366,6 +409,8 @@ class PagamentoController extends Controller
             'routeBillingAttachments.user',
             'user',
         ])->findOrFail($id);
+
+        $this->authorize('view', $pagamento);
 
         return view('paginas.pagamentos.show', compact('pagamento'));
     }
