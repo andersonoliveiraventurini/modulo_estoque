@@ -115,6 +115,11 @@ class CreditoService
                     }
                     $credito->save();
 
+                    $creditosUtilizados[] = [
+                        'credito_id' => $credito->id,
+                        'valor_utilizado' => $valorUsar,
+                    ];
+
                     $valorRestante -= $valorUsar;
                 }
 
@@ -132,6 +137,7 @@ class CreditoService
                 return [
                     'sucesso' => true,
                     'valor_utilizado' => $valorUtilizar,
+                    'creditos_utilizados' => $creditosUtilizados,
                 ];
             });
         } catch (\Exception $e) {
@@ -187,5 +193,58 @@ class CreditoService
     {
         $cliente = Cliente::find($clienteId);
         return $this->adicionarCredito($cliente, $valorDevolucao, $motivo, $referenciaId, 'devolucao');
+    }
+
+    /**
+     * Estorna uma utilização de crédito específica
+     */
+    public function estornarUtilizacao($movimentacaoId, $usuarioId, $motivo)
+    {
+        return DB::transaction(function () use ($movimentacaoId, $usuarioId, $motivo) {
+            $movimentacao = ClienteCreditoMovimentacoes::findOrFail($movimentacaoId);
+            
+            if ($movimentacao->tipo_movimentacao !== 'utilizacao') {
+                throw new \Exception('Esta movimentação não é uma utilização de crédito');
+            }
+
+            $credito = $movimentacao->credito;
+            $valorEstorno = $movimentacao->valor_movimentado;
+
+            // 1. Devolve o valor ao crédito original
+            $saldoAnterior = $credito->valor_disponivel;
+            $saldoPosterior = $saldoAnterior + $valorEstorno;
+
+            $credito->valor_disponivel = $saldoPosterior;
+            $credito->status = 'ativo'; // Garante que volta a ser ativo se estava utilizado
+            $credito->save();
+
+            // 2. Registra a nova movimentação de estorno
+            $novaMovimentacao = ClienteCreditoMovimentacoes::create([
+                'credito_id' => $credito->id,
+                'cliente_id' => $credito->cliente_id,
+                'tipo_movimentacao' => 'estorno',
+                'valor_movimentado' => $valorEstorno,
+                'saldo_anterior' => $saldoAnterior,
+                'saldo_posterior' => $saldoPosterior,
+                'motivo' => $motivo,
+                'referencia_tipo' => $movimentacao->referencia_tipo,
+                'referencia_id' => $movimentacao->referencia_id,
+                'usuario_id' => $usuarioId,
+            ]);
+
+            // 3. Registra no novo sistema (Transaction Log)
+            ClientCredit::create([
+                'cliente_id' => $credito->cliente_id,
+                'orcamento_id' => $movimentacao->referencia_tipo === 'orcamento' ? $movimentacao->referencia_id : null,
+                'tipo' => 'entrada',
+                'valor' => $valorEstorno,
+                'descricao' => "ESTORNO: " . $motivo,
+            ]);
+
+            // 4. Sincronizar saldo persistido
+            $this->sincronizarSaldo($credito->cliente_id);
+
+            return $novaMovimentacao;
+        });
     }
 }

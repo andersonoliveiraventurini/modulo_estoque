@@ -461,7 +461,7 @@ class PagamentoService
 
                 $creditosUtilizados = array_merge(
                     $creditosUtilizados,
-                    $resultadoCredito['creditos_utilizados']
+                    $resultadoCredito['creditos_utilizados'] ?? []
                 );
             }
 
