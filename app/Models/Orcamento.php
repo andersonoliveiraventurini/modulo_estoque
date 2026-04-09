@@ -99,7 +99,7 @@ class Orcamento extends Model
 
     public function totalDescontosAprovados(): float
     {
-        return (float) $this->descontos()->where('status', 'Aprovado')->sum('valor_desconto');
+        return (float) $this->descontos()->aprovados()->sum('valor');
     }
 
     /**
