@@ -1127,12 +1127,8 @@ class OrcamentoController extends Controller
 
             $status      = $request->input('status');
             
-            // Mapeia 'Reprovado' (usado na view) para 'Rejeitado' (usado no banco)
-            if ($status === 'Reprovado') {
-                $status = 'Rejeitado';
-            }
-
-            $validStatus = ['Aprovar desconto', 'Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Expirado', 'Pagamento pendente'];
+            // Aceita tanto 'Reprovado' quanto 'Rejeitado' (banco)
+            $validStatus = ['Aprovar desconto', 'Pendente', 'Aprovado', 'Cancelado', 'Rejeitado', 'Reprovado', 'Expirado', 'Pagamento pendente'];
 
             if (!in_array($status, $validStatus)) {
                 Log::warning("Tentativa de atualizar orçamento #{$id} com status inválido: {$status}");
@@ -1203,8 +1199,8 @@ class OrcamentoController extends Controller
 
             if ($status === 'Aprovado') {
                 $orcamento->workflow_status = 'aguardando_separacao';
-            } elseif ($status === 'Pendente' || $status === 'Sem estoque') {
-                $orcamento->workflow_status = null; // ✅ Limpa workflow ao voltar para Pendente ou Sem estoque
+            } elseif (in_array($status, ['Pendente', 'Sem estoque', 'Rejeitado', 'Reprovado', 'Cancelado', 'Expirado'])) {
+                $orcamento->workflow_status = null; // ✅ Limpa workflow ao voltar para Pendente, Sem estoque ou cancelar
             }
 
             $orcamento->save();

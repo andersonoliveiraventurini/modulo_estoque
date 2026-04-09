@@ -473,14 +473,14 @@ class ConfirmarSolicitacaoPagamento extends Component
         // Recarrega o orçamento
         $this->orcamento->refresh();
 
-        // Limpa os campos de meio de pagamento e volta status para Rejeitado
+        // Limpa os campos de meio de pagamento e volta status para Reprovado
         $this->orcamento->update([
             'outros_meios_pagamento' => null,
             'condicao_id' => null,
             'status' => 'Reprovado',
         ]);
 
-        Log::info("Orçamento #{$this->orcamentoId} rejeitado - meio de pagamento removido", [
+        Log::info("Orçamento #{$this->orcamentoId} reprovado - meio de pagamento removido", [
             'novo_status' => 'Reprovado',
             'condicao_id' => 'null',
             'outros_meios_pagamento' => 'null'

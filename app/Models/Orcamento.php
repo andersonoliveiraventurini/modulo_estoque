@@ -403,9 +403,9 @@ class Orcamento extends Model
         return in_array($this->status, ['Finalizado', 'Pago', 'Concluído']);
     }
 
-    /** O orçamento foi cancelado, rejeitado, expirado ou estornado. */
+    /** O orçamento foi cancelado, rejeitado, reprovado, expirado ou estornado. */
     public function isCancelado(): bool
     {
-        return in_array($this->status, ['Cancelado', 'Rejeitado', 'Expirado', 'Estornado']);
+        return in_array($this->status, ['Cancelado', 'Rejeitado', 'Reprovado', 'Expirado', 'Estornado']);
     }
 }

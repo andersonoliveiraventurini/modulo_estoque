@@ -47,6 +47,11 @@
                                     'text' => 'text-red-800',
                                     'dark' => 'dark:bg-red-900/40 dark:text-red-200',
                                 ],
+                                'Rejeitado' => [
+                                    'bg' => 'bg-red-100',
+                                    'text' => 'text-red-800',
+                                    'dark' => 'dark:bg-red-900/40 dark:text-red-200',
+                                ],
                                 'Expirado' => [
                                     'bg' => 'bg-black',
                                     'text' => 'text-white',
@@ -68,7 +73,7 @@
                                     'dark' => 'dark:bg-orange-900/40 dark:text-orange-200',
                                 ],
                             ];
-                            $statusDisplay = $orcamento->status === 'Reprovado' ? 'Reprovado' : $orcamento->status;
+                            $statusDisplay = in_array($orcamento->status, ['Reprovado', 'Rejeitado']) ? 'Reprovado' : $orcamento->status;
                             $currentStatusColor = $statusColors[$orcamento->status] ?? $statusColors['Pendente'];
 
                             // Lógica de Transporte (Rota vs Balcão)
