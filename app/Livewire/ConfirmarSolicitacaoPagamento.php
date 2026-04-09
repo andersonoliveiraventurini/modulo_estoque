@@ -441,6 +441,22 @@ class ConfirmarSolicitacaoPagamento extends Component
             // Não tem mais nada pendente e tem estoque — muda para 'Aprovado' (para disparar reserva) e gera PDF
             $this->orcamento->update(['status' => 'Aprovado']);
 
+            // ✅ ENCOMENDA: Processa cobrança financeira automática e auditoria
+            if ($this->orcamento->encomenda !== null) {
+                try {
+                    $financialService = app(\App\Services\FinancialService::class);
+                    $resultadoCobranca = $financialService->processarCobrancaEncomenda($this->orcamento);
+                    
+                    Log::info("Cobrança financeira automática concluída para encomenda #{$this->orcamentoId}", [
+                        'transaction_id' => $resultadoCobranca['transaction_id']
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error("FALHA na cobrança automática da encomenda #{$this->orcamentoId}: " . $e->getMessage());
+                    // Relança para o catch externo do Livewire
+                    throw $e;
+                }
+            }
+
             Log::info("Orçamento #{$this->orcamentoId} aprovado - status definido como 'Aprovado' para reserva de estoque", [
                 'novo_status' => 'Aprovado'
             ]);

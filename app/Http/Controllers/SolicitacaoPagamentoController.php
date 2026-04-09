@@ -229,6 +229,26 @@ class SolicitacaoPagamentoController extends Controller
         $novoStatus = $orcamento->encomenda !== null ? 'Pago' : 'Pendente';
         $orcamento->update(['status' => $novoStatus]);
 
+        // ── ENCOMENDA: Processa cobrança financeira automática e auditoria ──
+        if ($orcamento->encomenda !== null) {
+            try {
+                // Inicia transação atômica para cobrança
+                DB::transaction(function () use ($orcamento) {
+                    $financialService = app(\App\Services\FinancialService::class);
+                    $resultadoCobranca = $financialService->processarCobrancaEncomenda($orcamento);
+                    
+                    Log::info("Cobrança financeira automática concluída para encomenda #{$orcamento->id}", [
+                        'transaction_id' => $resultadoCobranca['transaction_id']
+                    ]);
+                });
+            } catch (\Exception $e) {
+                Log::error("FALHA CRÍTICA na cobrança automática da encomenda #{$orcamento->id}: " . $e->getMessage());
+                // Rollback automático via DB::transaction garantido acima. 
+                // Relança para o catch externo do método aprovar()
+                throw $e;
+            }
+        }
+
         // Gera o PDF
         $pdfService = new OrcamentoPdfService();
         $pdfService->gerarOrcamentoPdf($orcamento->fresh());
