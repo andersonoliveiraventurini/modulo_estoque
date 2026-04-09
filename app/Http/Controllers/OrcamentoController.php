@@ -1495,6 +1495,11 @@ class OrcamentoController extends Controller
 
     public function update(UpdateOrcamentoRequest $request, Orcamento $orcamento)
     {
+        // ✅ Previne edição de orçamentos já finalizados ou cancelados
+        if ($orcamento->isFinalizado() || $orcamento->isCancelado()) {
+            return redirect()->back()->with('error', 'Este orçamento já foi finalizado ou cancelado e não permite edições.');
+        }
+
         DB::beginTransaction();
 
         try {
@@ -2165,18 +2170,28 @@ class OrcamentoController extends Controller
             // ----------------------------------------------------------------
             // Nenhuma aprovação necessária — gera PDF normalmente
             // ----------------------------------------------------------------
-            $pdfService = new OrcamentoPdfService();
-            $pdfGeradoComSucesso = $pdfService->gerarOrcamentoPdf($orcamento);
+            try {
+                $pdfService = new OrcamentoPdfService();
+                $pdfGeradoComSucesso = $pdfService->gerarOrcamentoPdf($orcamento);
 
-            if ($pdfGeradoComSucesso) {
+                if ($pdfGeradoComSucesso) {
+                    return redirect()
+                        ->route('orcamentos.show', $orcamento->id)
+                        ->with('success', "Orçamento atualizado (Revisão {$novaVersao}) e PDF gerado com sucesso!");
+                }
+
+                Log::warning("Falha ao gerar PDF para orçamento #{$orcamento->id} após atualização bem-sucedida.");
+
                 return redirect()
                     ->route('orcamentos.show', $orcamento->id)
-                    ->with('success', "Orçamento atualizado (Revisão {$novaVersao}) e PDF gerado com sucesso!");
+                    ->with('warning', 'Orçamento atualizado, mas houve falha ao gerar o PDF. Verifique os logs do sistema.');
+            } catch (\Exception $pdfEx) {
+                Log::error("Exceção ao gerar PDF para orçamento #{$orcamento->id}: " . $pdfEx->getMessage());
+                
+                return redirect()
+                    ->route('orcamentos.show', $orcamento->id)
+                    ->with('warning', 'Orçamento atualizado, mas o gerador de PDF encontrou um erro: ' . $pdfEx->getMessage());
             }
-
-            return redirect()
-                ->route('orcamentos.show', $orcamento->id)
-                ->with('warning', 'Orçamento atualizado, mas houve falha ao gerar o PDF. Contate o suporte.');
         } catch (\Illuminate\Validation\ValidationException $e) {
             // ----------------------------------------------------------------
             // Erros de validação do Laravel — exibe campos com problema
