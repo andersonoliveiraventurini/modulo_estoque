@@ -16,13 +16,7 @@ class CreditoService
      */
     public function getSaldoDisponivel($clienteId)
     {
-        // Prioriza o novo saldo persistido se disponível, senão calcula
-        $cliente = Cliente::find($clienteId);
-        if ($cliente && isset($cliente->saldo_credito)) {
-            return (float) $cliente->saldo_credito;
-        }
-
-        return (float) ClienteCreditos::where('cliente_id', $clienteId)
+        $saldo = (float) ClienteCreditos::where('cliente_id', $clienteId)
             ->where('status', 'ativo')
             ->where('valor_disponivel', '>', 0)
             ->where(function($query) {
@@ -30,6 +24,14 @@ class CreditoService
                       ->orWhere('data_validade', '>=', now());
             })
             ->sum('valor_disponivel');
+
+        // Opcional: sincroniza se houver divergência
+        $cliente = Cliente::find($clienteId);
+        if ($cliente && isset($cliente->saldo_credito) && (float)$cliente->saldo_credito !== $saldo) {
+            $cliente->update(['saldo_credito' => $saldo]);
+        }
+
+        return $saldo;
     }
 
     /**
@@ -72,6 +74,13 @@ class CreditoService
      */
     public function utilizarCreditos($clienteId, $valorUtilizar, $referenciaId, $referenciaTipo, $usuarioId, $motivo)
     {
+        Log::info("Iniciando utilização de créditos", [
+            'cliente_id' => $clienteId,
+            'valor' => $valorUtilizar,
+            'referencia_id' => $referenciaId,
+            'referencia_tipo' => $referenciaTipo,
+        ]);
+
         try {
             return DB::transaction(function () use ($clienteId, $valorUtilizar, $referenciaId, $referenciaTipo, $usuarioId, $motivo) {
                 $valorRestante = $valorUtilizar;
@@ -94,6 +103,12 @@ class CreditoService
                     $valorUsar = min($credito->valor_disponivel, $valorRestante);
                     $saldoAnterior = $credito->valor_disponivel;
                     $saldoPosterior = $saldoAnterior - $valorUsar;
+
+                    Log::info("Utilizando crédito individual #{$credito->id}", [
+                        'valor_usar' => $valorUsar,
+                        'saldo_anterior' => $saldoAnterior,
+                        'saldo_posterior' => $saldoPosterior,
+                    ]);
 
                     // Registra a movimentação antiga
                     ClienteCreditoMovimentacoes::create([
@@ -124,15 +139,28 @@ class CreditoService
                 }
 
                 // Novo Registro de Débito (Transaction Log)
+                $orcamentoId = null;
+                if ($referenciaTipo === 'orcamento') {
+                    $orcamentoId = $referenciaId;
+                } elseif ($referenciaTipo === 'pagamento') {
+                    $pagamento = \App\Models\Pagamento::find($referenciaId);
+                    $orcamentoId = $pagamento?->orcamento_id;
+                }
+
                 ClientCredit::create([
                     'cliente_id' => $clienteId,
-                    'orcamento_id' => $referenciaId, // assume orcamento_id se referenciaTipo for orcamento
+                    'orcamento_id' => $orcamentoId,
                     'tipo' => 'saida',
                     'valor' => $valorUtilizar,
                     'descricao' => $motivo,
                 ]);
 
                 $this->sincronizarSaldo($clienteId);
+
+                Log::info("Utilização de créditos finalizada com sucesso", [
+                    'cliente_id' => $clienteId,
+                    'valor_total' => $valorUtilizar,
+                ]);
 
                 return [
                     'sucesso' => true,
@@ -200,6 +228,12 @@ class CreditoService
      */
     public function estornarUtilizacao($movimentacaoId, $usuarioId, $motivo)
     {
+        Log::info("Iniciando estorno de utilização de crédito", [
+            'movimentacao_id' => $movimentacaoId,
+            'user_id' => $usuarioId,
+            'motivo' => $motivo,
+        ]);
+
         return DB::transaction(function () use ($movimentacaoId, $usuarioId, $motivo) {
             $movimentacao = ClienteCreditoMovimentacoes::findOrFail($movimentacaoId);
             
@@ -213,6 +247,12 @@ class CreditoService
             // 1. Devolve o valor ao crédito original
             $saldoAnterior = $credito->valor_disponivel;
             $saldoPosterior = $saldoAnterior + $valorEstorno;
+
+            Log::info("Devolvendo valor ao crédito original #{$credito->id}", [
+                'valor_estorno' => $valorEstorno,
+                'saldo_anterior' => $saldoAnterior,
+                'saldo_posterior' => $saldoPosterior,
+            ]);
 
             $credito->valor_disponivel = $saldoPosterior;
             $credito->status = 'ativo'; // Garante que volta a ser ativo se estava utilizado
@@ -233,9 +273,17 @@ class CreditoService
             ]);
 
             // 3. Registra no novo sistema (Transaction Log)
+            $orcamentoId = null;
+            if ($movimentacao->referencia_tipo === 'orcamento') {
+                $orcamentoId = $movimentacao->referencia_id;
+            } elseif ($movimentacao->referencia_tipo === 'pagamento') {
+                $pagamento = \App\Models\Pagamento::find($movimentacao->referencia_id);
+                $orcamentoId = $pagamento?->orcamento_id;
+            }
+
             ClientCredit::create([
                 'cliente_id' => $credito->cliente_id,
-                'orcamento_id' => $movimentacao->referencia_tipo === 'orcamento' ? $movimentacao->referencia_id : null,
+                'orcamento_id' => $orcamentoId,
                 'tipo' => 'entrada',
                 'valor' => $valorEstorno,
                 'descricao' => "ESTORNO: " . $motivo,
@@ -243,6 +291,11 @@ class CreditoService
 
             // 4. Sincronizar saldo persistido
             $this->sincronizarSaldo($credito->cliente_id);
+
+            Log::info("Estorno de utilização de crédito finalizado com sucesso", [
+                'credito_id' => $credito->id,
+                'valor_estornado' => $valorEstorno,
+            ]);
 
             return $novaMovimentacao;
         });

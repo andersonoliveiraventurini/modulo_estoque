@@ -60,7 +60,8 @@ class PagamentoService
                     $this->validarMetodosPagamento(
                         $dadosValidados['metodos_pagamento'],
                         $valoresVenda,
-                        $clienteId
+                        $clienteId,
+                        $dadosValidados
                     );
      
                     // Se não for permitido parcial, valida se o valor total foi atingido
@@ -304,7 +305,7 @@ class PagamentoService
     /**
      * Valida os métodos de pagamento
      */
-    protected function validarMetodosPagamento(array $metodosPagamento, array $valoresVenda, $clienteId)
+    protected function validarMetodosPagamento(array $metodosPagamento, array $valoresVenda, $clienteId, array $dados = [])
     {
         $valorTotalMetodos = 0;
         $valorCreditosUtilizados = 0;
@@ -367,6 +368,13 @@ class PagamentoService
         if ($valorCreditosUtilizados > 0) {
             $saldoDisponivel = $this->creditoService->getSaldoDisponivel($clienteId);
             
+            \Illuminate\Support\Facades\Log::info("Validando créditos para cliente #{$clienteId}", [
+                'necessario' => $valorCreditosUtilizados,
+                'disponivel' => $saldoDisponivel,
+                'orcamento_id' => $dados['orcamento_id'] ?? null,
+                'pedido_id' => $dados['pedido_id'] ?? null,
+            ]);
+
             if ($saldoDisponivel < $valorCreditosUtilizados) {
                 throw new \Exception(
                     'Créditos insuficientes. ' .
@@ -454,7 +462,7 @@ class PagamentoService
                     $clienteId,
                     $metodoPag['valor'],
                     $pagamento->id,
-                    $dados['orcamento_id'] ? 'orcamento' : 'pedido',
+                    'pagamento',
                     Auth::id(),
                     $this->gerarMotivoUtilizacaoCredito($dados, $metodoPag['valor'])
                 );
@@ -570,11 +578,46 @@ class PagamentoService
                 // Estorna os créditos utilizados
                 $metodosComCredito = $pagamento->metodos()->where('usa_credito', true)->get();
                 
+                \Illuminate\Support\Facades\Log::info("Estornando créditos de pagamento", [
+                    'pagamento_id' => $pagamento->id,
+                    'metodos_com_credito_count' => $metodosComCredito->count()
+                ]);
+
                 foreach ($metodosComCredito as $metodo) {
-                    $movimentacoes = \App\Models\ClienteCreditoMovimentacoes::where('referencia_tipo', 'pagamento')
-                        ->where('referencia_id', $pagamento->id)
-                        ->where('tipo_movimentacao', 'utilizacao')
+                    // Busca movimentações vinculadas a este pagamento
+                    // Tentamos várias combinações de referencia_id e referencia_tipo para robustez
+                    $movimentacoes = \App\Models\ClienteCreditoMovimentacoes::where('tipo_movimentacao', 'utilizacao')
+                        ->where(function($query) use ($pagamento) {
+                            // 1. Pelo ID do pagamento (padrão correto)
+                            $query->where(function($q) use ($pagamento) {
+                                $q->where('referencia_id', $pagamento->id)
+                                  ->whereIn('referencia_tipo', ['pagamento', 'venda', 'orcamento', 'pedido']);
+                            });
+
+                            // 2. Pelo ID do orçamento (caso tenha sido gravado assim por erro legado)
+                            if ($pagamento->orcamento_id) {
+                                $query->orWhere(function($q) use ($pagamento) {
+                                    $q->where('referencia_id', $pagamento->orcamento_id)
+                                      ->where('referencia_tipo', 'orcamento');
+                                });
+                            }
+
+                            // 3. Pelo ID do pedido (caso tenha sido gravado assim por erro legado)
+                            if ($pagamento->pedido_id) {
+                                $query->orWhere(function($q) use ($pagamento) {
+                                    $q->where('referencia_id', $pagamento->pedido_id)
+                                      ->where('referencia_tipo', 'pedido');
+                                });
+                            }
+                        })
                         ->get();
+
+                    \Illuminate\Support\Facades\Log::info("Movimentações encontradas para método de crédito", [
+                        'metodo_id' => $metodo->id,
+                        'movimentacoes_count' => $movimentacoes->count(),
+                        'pagamento_id' => $pagamento->id,
+                        'orcamento_id' => $pagamento->orcamento_id,
+                    ]);
 
                     foreach ($movimentacoes as $movimentacao) {
                         $resultadoEstorno = $this->creditoService->estornarUtilizacao(
