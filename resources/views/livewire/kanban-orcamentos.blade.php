@@ -2,8 +2,8 @@
     <style>
         /* Ajuste para as colunas do Kanban ocuparem a altura da viewport menos o header */
         .kanban-column-container {
-            height: calc(100vh - 120px); /* Ajuste conforme o tamanho do header */
-            min-height: 500px;
+            height: calc(100vh - 170px); /* Ajustado para caber na viewport sem scroll lateral */
+            min-height: 450px;
         }
     </style>
     {{-- Header --}}
@@ -71,11 +71,11 @@
     </div>
 
     {{-- Kanban Board --}}
-    <div class="flex-1 px-4 sm:px-6 lg:px-8 py-4">
+    <div class="flex-1 px-4 sm:px-6 lg:px-8 py-2">
         <div class="overflow-x-auto">
             <div class="flex gap-4 min-w-max pb-2 kanban-column-container">
                 @foreach ($columns as $column)
-                    <div class="flex-shrink-0 w-96 h-full pb-4">
+                    <div class="flex-shrink-0 w-96 h-full pb-2">
                         <div
                             class="rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 h-full flex flex-col">
                             {{-- Column Header --}}
