@@ -18,7 +18,7 @@ return new class extends Migration
                         ->comment('Complemento para outro orçamento relacionado.');
                   $table->date('validade')
                         ->nullable()
-                        ->comment('Data de validade do orçamento, geralmente 2 dias após a emissão.');
+                        ->comment('Data de validade do orçamento, geralmente 5 dias após a emissão.');
 
                   $table->unsignedBigInteger('condicao_id')->nullable()
                         ->comment('Referência à condição de pagamento associada a este orçamento.');

@@ -34,7 +34,7 @@ class OrcamentoPagamentoResidualDetalhe extends Component
         $this->orcamento = Orcamento::with(['cliente', 'pagamentos.condicaoPagamento'])->findOrFail($id);
         $this->condicoes = CondicoesPagamento::where('ativo', true)->orderBy('nome')->get();
         
-        $this->solicitacao['data_vencimento'] = now()->addDays(2)->format('Y-m-d');
+        $this->solicitacao['data_vencimento'] = now()->addDays(5)->format('Y-m-d');
     }
 
     public function salvarSolicitacao()
@@ -67,7 +67,7 @@ class OrcamentoPagamentoResidualDetalhe extends Component
             });
 
             $this->reset('solicitacao');
-            $this->solicitacao['data_vencimento'] = now()->addDays(2)->format('Y-m-d');
+            $this->solicitacao['data_vencimento'] = now()->addDays(5)->format('Y-m-d');
 
             return redirect()->route('orcamentos.show', $this->orcamento->id)
                 ->with('success', 'Solicitação de cobrança residual registrada com sucesso!');

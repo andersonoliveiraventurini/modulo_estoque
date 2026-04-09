@@ -32,7 +32,7 @@ class OrcamentoStatusUpdateTest extends TestCase
             'obra' => 'Obra Teste',
             'valor_total_itens' => 1000,
             'valor_com_desconto' => 1000,
-            'validade' => now()->addDays(2),
+            'validade' => now()->addDays(5),
         ]);
     }
 

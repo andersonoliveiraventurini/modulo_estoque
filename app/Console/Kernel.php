@@ -24,6 +24,18 @@ class Kernel extends ConsoleKernel
                 \Log::error('Falha ao expirar créditos vencidos');
             });
 
+        // Expira orçamentos pendentes vencidos todos os dias às 00:00
+        $schedule->command('orcamentos:expirar-pendentes')
+            ->daily()
+            ->at('00:00')
+            ->withoutOverlapping()
+            ->onSuccess(function () {
+                \Log::info('Orçamentos pendentes vencidos expirados com sucesso');
+            })
+            ->onFailure(function () {
+                \Log::error('Falha ao expirar orçamentos pendentes vencidos');
+            });
+
         // Verifica estoque dos orçamentos Pendentes a cada 30 minutos
         $schedule->command('orcamentos:verificar-estoque')
             ->everyThirtyMinutes()

@@ -357,7 +357,7 @@ class ConsultaPrecoController extends Controller
                 'vendedor_id' => auth()->id(),
                 'usuario_logado_id' => auth()->id(),
                 'status' => 'Pendente',
-                'validade' => Carbon::now()->addDays(2),
+                'validade' => Carbon::now()->addDays(5),
                 'observacoes' => 'Gerado a partir da cotação #' . $grupo->id,
                 'encomenda' => true,
                 'valor_total_itens' => $totalItens,
@@ -621,7 +621,7 @@ class ConsultaPrecoController extends Controller
             $cotacao->load(['grupo.cliente', 'fornecedores.fornecedor', 'cor']);
 
             $token = Str::uuid();
-            $tokenExpiraEm = Carbon::now()->addDays(2);
+            $tokenExpiraEm = Carbon::now()->addDays(5);
             $linkSeguro = route('cotacoes.view', ['token' => $token]);
             $qrCodeBase64 = base64_encode(
                 QrCode::format('png')->size(130)->margin(1)->generate($linkSeguro)

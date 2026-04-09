@@ -528,7 +528,7 @@
                                                         <strong>Prazo de aprovação expirado</strong><br>
                                                         Todos os itens ficaram disponíveis em
                                                         {{ \Carbon\Carbon::parse($ultimaAtualizacao)->format('d/m/Y \à\s H:i') }},
-                                                        mas o prazo de {{ $orcamento->encomenda ? '10' : '2' }} dias
+                                                        mas o prazo de {{ $orcamento->encomenda ? '10' : '5' }} dias
                                                         para aprovar o orçamento foi
                                                         encerrado.
                                                     </div>

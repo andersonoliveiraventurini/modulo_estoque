@@ -17,7 +17,7 @@ return new class extends Migration
 
             $table->date('validade')
                 ->nullable()
-                ->comment('Data de validade do orçamento, geralmente 2 dias após a emissão.');
+                ->comment('Data de validade do orçamento, geralmente 5 dias após a emissão.');
             $table->enum('status', ['Pendente', 'Aguardando fornecedor', 'Disponível'])->default('Pendente')
                 ->comment('Status da cotação de preço.');
 

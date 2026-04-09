@@ -273,7 +273,7 @@
                                                                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                             </svg>
                                                             Val: {{ $validade->format('d/m/Y') }}
-                                                            @if ($isExpired)
+                                                            @if ($isExpired && $orcamento->status === 'Pendente')
                                                                 <span class="text-[10px] uppercase">(Expirado)</span>
                                                             @endif
                                                         </span>

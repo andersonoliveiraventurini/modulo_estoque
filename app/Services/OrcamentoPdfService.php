@@ -33,7 +33,7 @@ class OrcamentoPdfService
 
             // 1. TOKEN E LINK SEGURO
             $token         = Str::uuid();
-            $tokenExpiraEm = Carbon::now()->addDays(2);
+            $tokenExpiraEm = Carbon::now()->addDays(5);
             $linkSeguro    = route('orcamentos.view', ['token' => $token]);
 
             // 2. QR CODE

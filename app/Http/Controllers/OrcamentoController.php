@@ -169,7 +169,7 @@ class OrcamentoController extends Controller
 
             // Gera token de acesso e QR Code
             $token = Str::uuid();
-            $tokenExpiraEm = Carbon::now()->addDays(2);
+            $tokenExpiraEm = Carbon::now()->addDays(5);
             $orcamento->update([
                 'token_acesso' => $token,
                 'token_expira_em' => $tokenExpiraEm,
@@ -333,7 +333,7 @@ class OrcamentoController extends Controller
             'tipo_documento' => $request->tipo_documento,
             'venda_triangular' => $request->venda_triangular,
             'homologacao' => $request->homologacao,
-            'validade' => Carbon::now()->addDays(2),
+            'validade' => Carbon::now()->addDays(5),
             'loading_day' => in_array($request->tipos_transporte, [1, 2, 3, 6, 7]) ? $request->loading_day : null,
         ]);
 
@@ -768,7 +768,7 @@ class OrcamentoController extends Controller
             'tipo_documento' => $orcamentoOriginal->tipo_documento,
             'condicao_id' => $orcamentoOriginal->condicao_id,
             'outros_meios_pagamento' => $orcamentoOriginal->outros_meios_pagamento,
-            'validade' => Carbon::now()->addDays(2),
+            'validade' => Carbon::now()->addDays(5),
         ]);
 
         // ✅ PRIORIDADE 1: VERIFICAR SE A CONDIÇÃO É "OUTROS" (ID 20)
@@ -963,7 +963,7 @@ class OrcamentoController extends Controller
         // 5) Gerar token e expiração
         $novoOrcamento->update([
             'token_acesso' => Str::uuid(),
-            'token_expira_em' => Carbon::now()->addDays(2),
+            'token_expira_em' => Carbon::now()->addDays(5),
         ]);
 
         // 6) Gerar PDF com QR Code
@@ -1065,7 +1065,7 @@ class OrcamentoController extends Controller
 
         $ultimaAtualizacao = $itensConsulta->where('status', 'Disponível')->max('updated_at');
 
-        $prazoAprovacaoDias = $orcamento->encomenda ? 10 : 2;
+        $prazoAprovacaoDias = $orcamento->encomenda ? 10 : 5;
 
         $prazoExpirado = $orcamento->validade !== null
             && now()->startOfDay()->gt(\Carbon\Carbon::parse($orcamento->validade)->startOfDay());
@@ -1400,8 +1400,8 @@ class OrcamentoController extends Controller
                     'valor_com_desconto' => $totalItens,
                     'versao' => $orcamento->versao + 1,
                     'updated_at' => now(),
-                    // atualiza a validade desse orçamento para 2 dias a partir da data de atualização
-                    'validade' => Carbon::now()->addDays(2),
+                    // atualiza a validade desse orçamento para 5 dias a partir da data de atualização
+                    'validade' => Carbon::now()->addDays(5),
                 ]);
 
                 // 6. Remove PDF antigo
@@ -1593,7 +1593,7 @@ class OrcamentoController extends Controller
                 'tipo_documento' => $request->tipo_documento,
                 'venda_triangular' => $request->venda_triangular,
                 'homologacao' => $request->homologacao,
-                'validade' => Carbon::now()->addDays(1),
+                'validade' => Carbon::now()->addDays(5),
                 'loading_day' => in_array($request->tipos_transporte, [1, 2, 3, 6, 7]) ? $request->loading_day : null,
             ]);
 
