@@ -95,9 +95,7 @@ class EntradaEncomendaController extends Controller
         $request->validate([
             'grupo_id'         => 'required|exists:consulta_preco_grupos,id',
             'data_recebimento' => 'required|date',
-            'data_entrega'     => 'nullable|date|after_or_equal:data_recebimento',
             'recebido_por'     => 'nullable|exists:users,id',
-            'entregue_para'    => 'nullable|exists:users,id',
             'observacao'       => 'nullable|string|max:1000',
             'itens'            => 'required|array|min:1',
             'itens.*.consulta_preco_id'     => 'required|exists:consulta_precos,id',
@@ -159,12 +157,9 @@ class EntradaEncomendaController extends Controller
             $entrada = EntradaEncomenda::create([
                 'grupo_id'         => $grupo->id,
                 'recebido_por'     => $request->filled('recebido_por') ? $request->recebido_por : auth()->id(),
-                'entregue_para'    => $request->entregue_para ?? null,
                 'cliente_id'       => $grupo->cliente_id,
                 'data_recebimento' => $request->data_recebimento,
-                'data_entrega'     => $request->data_entrega ?? null,
-                'status'           => $request->filled('data_entrega') ? 'Entregue'
-                    : ($todosCompletos ? 'Recebido completo' : 'Recebido parcialmente'),
+                'status'           => $todosCompletos ? 'Recebido completo' : 'Recebido parcialmente',
                 'observacao'       => $request->observacao ?? null,
             ]);
 
@@ -193,6 +188,12 @@ class EntradaEncomendaController extends Controller
                     'data_vencimento'   => $itemData['data_vencimento'] ?? null,
                 ]);
             }
+
+            // Log de auditoria para o recebimento físico
+            \App\Models\AcaoCriar::create([
+                'descricao' => "Recebimento físico de encomenda registrado: Entrada #{$entrada->id} (Cotação #{$grupo->id})",
+                'user_id' => auth()->id(),
+            ]);
 
             DB::commit();
 
@@ -317,9 +318,7 @@ class EntradaEncomendaController extends Controller
     {
         $request->validate([
             'data_recebimento' => 'required|date',
-            'data_entrega'     => 'nullable|date|after_or_equal:data_recebimento',
             'recebido_por'     => 'nullable|exists:users,id',
-            'entregue_para'    => 'nullable|exists:users,id',
             'observacao'       => 'nullable|string|max:1000',
             'itens'            => 'required|array|min:1',
             'itens.*.id'                    => 'required|exists:entrada_encomenda_itens,id',
@@ -381,17 +380,13 @@ class EntradaEncomendaController extends Controller
                 return $recebido >= (float) $item->quantidade;
             });
 
-            $novoStatus = $request->filled('data_entrega')
-                ? 'Entregue'
-                : ($todosCompletos ? 'Recebido completo' : 'Recebido parcialmente');
+            $novoStatus = $todosCompletos ? 'Recebido completo' : 'Recebido parcialmente';
 
             $entradaEncomenda->update([
                 'data_recebimento' => $request->data_recebimento,
                 'recebido_por'     => $request->filled('recebido_por')
                     ? $request->recebido_por
                     : $entradaEncomenda->recebido_por,
-                'entregue_para'    => $request->entregue_para ?? null,
-                'data_entrega'     => $request->data_entrega  ?? null,
                 'status'           => $novoStatus,
                 'observacao'       => $request->observacao ?? null,
             ]);

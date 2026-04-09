@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\EntradaEncomendaItem;
+use App\Models\PickingItem;
 
 class ConsultaPreco extends Model
 {
@@ -93,6 +95,23 @@ class ConsultaPreco extends Model
                 $query->where('status', 'concluido');
             })
             ->sum('qty_separada');
+    }
+
+    /**
+     * Retorna a quantidade total recebida via EntradaEncomenda
+     */
+    public function getQuantidadeRecebidaAttribute()
+    {
+        return EntradaEncomendaItem::where('consulta_preco_id', $this->id)
+            ->sum('quantidade_recebida');
+    }
+
+    /**
+     * Retorna a quantidade física disponível para separação (recebido - já separado)
+     */
+    public function getQuantidadeDisponivelParaSepararAttribute()
+    {
+        return max(0, $this->quantidade_recebida - $this->quantidade_separada);
     }
 
     public function getQuantidadeRestanteAttribute()

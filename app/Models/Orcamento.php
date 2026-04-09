@@ -99,9 +99,39 @@ class Orcamento extends Model
 
     public function totalDescontosAprovados(): float
     {
-        return $this->descontos()
-            ->whereNotNull('aprovado_por')
-            ->sum('valor');
+        return (float) $this->descontos()->where('status', 'Aprovado')->sum('valor_desconto');
+    }
+
+    /**
+     * Verifica se o orçamento possui itens de encomenda (cotação externa)
+     */
+    public function possuiEncomenda(): bool
+    {
+        return $this->encomenda !== null || $this->consultaPrecoGrupo()->exists();
+    }
+
+    /**
+     * Verifica se todos os itens de encomenda vinculados foram totalmente recebidos
+     */
+    public function encomendaTotalmenteRecebida(): bool
+    {
+        $grupo = $this->consultaPrecoGrupo;
+        if (!$grupo) return true; // Se não tem grupo, não tem o que receber
+
+        foreach ($grupo->itens as $item) {
+            if ($item->quantidade_recebida < $item->quantidade) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Verifica se o orçamento está pronto para entrega (conferência finalizada)
+     */
+    public function prontoParaFinalizar(): bool
+    {
+        return $this->workflow_status === 'conferido';
     }
 
     /**

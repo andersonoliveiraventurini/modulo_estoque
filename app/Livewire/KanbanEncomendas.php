@@ -75,6 +75,10 @@ class KanbanEncomendas extends Component
     {
         $status = $grupo->status ?? '';
 
+        // Prioridade 1: Orçamento finalizado (processo completo de conferência e entrega)
+        if ($grupo->orcamento && $grupo->orcamento->workflow_status === 'finalizado') return 'entregue';
+
+        // Compatibilidade com registros antigos que marcavam entrega na entrada
         if ($grupo->entradas->contains(fn($e) => $e->status === 'Entregue')) return 'entregue';
         
         // Verifica o workflow vinculado do Orçamento

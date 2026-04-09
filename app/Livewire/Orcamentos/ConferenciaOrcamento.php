@@ -358,6 +358,12 @@ class ConferenciaOrcamento extends Component
         }
 
         iniciar:
+        // ✅ Validação Crítica de Encomendas (antes de iniciar transação)
+        if ($this->orcamento->possuiEncomenda() && !$this->orcamento->encomendaTotalmenteRecebida()) {
+            session()->flash('error', 'Este orçamento possui itens de encomenda que ainda não foram totalmente recebidos no estoque. O recebimento físico é obrigatório antes da conferência.');
+            return;
+        }
+
         DB::transaction(function () use ($batch) {
             // Garante que apenas um processo mexa neste orçamento por vez
             $this->orcamento = Orcamento::where('id', $this->orcamento->id)->lockForUpdate()->first();

@@ -82,6 +82,12 @@ class SeparacaoPage extends Component
     {
         $orcamento = $this->orcamento;
 
+        // ✅ Validação Crítica de Encomendas (antes de iniciar)
+        if ($orcamento->possuiEncomenda() && !$orcamento->encomendaTotalmenteRecebida()) {
+            session()->flash('error', 'Este orçamento possui itens de encomenda que ainda não foram totalmente recebidos no estoque. O recebimento físico é obrigatório antes da separação.');
+            return;
+        }
+
         DB::transaction(function () use ($orcamento) {
             // Garante que apenas um processo mexa neste orçamento por vez
             $orcamento = Orcamento::where('id', $orcamento->id)->lockForUpdate()->first();
@@ -175,6 +181,18 @@ class SeparacaoPage extends Component
         }
 
         $validatedQty = max(0, (float) ($data['qty'] ?? 0));
+
+        // ✅ Validação Crítica: Encomendas só podem ser separadas se foram recebidas fisicamente
+        if ($item->is_encomenda && $item->consulta_preco_id) {
+            $item->load('consultaPreco');
+            $disponivel = (float) $item->consultaPreco->quantidade_disponivel_para_separar;
+            
+            if ($validatedQty > $disponivel) {
+                $validatedQty = $disponivel;
+                session()->flash('warning', "Quantidade limitada ao saldo recebido fisicamente ({$disponivel}).");
+            }
+        }
+
         $validatedQty = min($validatedQty, (float) $item->qty_solicitada);
 
         DB::transaction(function () use ($item, $data, $validatedQty) {

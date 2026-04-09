@@ -64,31 +64,6 @@
                             @endforeach
                         </select>
                     </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                            Entregue para
-                        </label>
-                        <select name="entregue_para"
-                                class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
-                            <option value="">Não entregue ainda</option>
-                            @foreach ($usuarios as $u)
-                                <option value="{{ $u->id }}"
-                                    {{ old('entregue_para', $entradaEncomenda->entregue_para) == $u->id ? 'selected' : '' }}>
-                                    {{ $u->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                            Data de Entrega ao vendedor
-                        </label>
-                        <input type="date" name="data_entrega"
-                               value="{{ old('data_entrega', $entradaEncomenda->data_entrega?->format('Y-m-d')) }}"
-                               class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
-                    </div>
                 </div>
 
                 {{-- ── Itens ───────────────────────────────────── --}}

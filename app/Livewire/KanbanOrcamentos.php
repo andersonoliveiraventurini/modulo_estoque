@@ -114,9 +114,27 @@ class KanbanOrcamentos extends Component
 
     public function updateWorkflowStatus($orcamentoId, $newWorkflowStatus)
     {
-        $orcamento = Orcamento::find($orcamentoId);
+        $orcamento = Orcamento::with(['consultaPrecoGrupo.itens'])->find($orcamentoId);
         
         if ($orcamento) {
+            // ✅ Validação de Encomenda: Não permite avançar se houver encomendas não recebidas
+            if ($newWorkflowStatus !== 'cancelado' && $orcamento->possuiEncomenda() && !$orcamento->encomendaTotalmenteRecebida()) {
+                $this->dispatch('showNotification', [
+                    'message' => 'Este orçamento possui itens de encomenda que ainda não foram totalmente recebidos no estoque.',
+                    'type' => 'error'
+                ]);
+                return;
+            }
+
+            // ✅ Validação de Finalização: Só permite finalizar se o status for 'conferido'
+            if ($newWorkflowStatus === 'finalizado' && !$orcamento->prontoParaFinalizar()) {
+                $this->dispatch('showNotification', [
+                    'message' => 'O orçamento deve passar pela conferência antes de ser finalizado.',
+                    'type' => 'error'
+                ]);
+                return;
+            }
+
             // Validar transições permitidas
             $validTransitions = $this->getValidTransitions($orcamento->workflow_status);
             
@@ -125,6 +143,12 @@ class KanbanOrcamentos extends Component
                     'workflow_status' => $newWorkflowStatus
                 ]);
                 
+                // Log de auditoria para rastreabilidade crítica
+                \App\Models\AcaoAtualizar::create([
+                    'descricao' => "Workflow do orçamento #{$orcamento->id} alterado manualmente para: {$newWorkflowStatus}",
+                    'user_id' => auth()->id(),
+                ]);
+
                 $this->dispatch('orcamentoAtualizado');
                 $this->dispatch('showNotification', [
                     'message' => "Orçamento #{$orcamento->id} movido para {$this->getWorkflowLabel($newWorkflowStatus)}",
@@ -132,7 +156,7 @@ class KanbanOrcamentos extends Component
                 ]);
             } else {
                 $this->dispatch('showNotification', [
-                    'message' => 'Transição não permitida',
+                    'message' => 'Transição não permitida pelo fluxo operacional.',
                     'type' => 'error'
                 ]);
             }
