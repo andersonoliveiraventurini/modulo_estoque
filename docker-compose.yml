@@ -17,7 +17,6 @@ services:
       - vendor_data:/var/www/html/vendor
     depends_on:
       - mysql
-      - rabbitmq
     networks:
       - laravel-network
 
@@ -35,7 +34,6 @@ services:
     depends_on:
       - mysql
       - app
-      - rabbitmq
     networks:
       - laravel-network
     command: >
@@ -58,28 +56,9 @@ services:
     depends_on:
       - mysql
       - app
-      - rabbitmq
     networks:
       - laravel-network
     command: php artisan queue:work --verbose --tries=3 --timeout=90
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq-1
-    restart: unless-stopped
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - laravel-network
 
   mysql:
     image: mysql:8.0

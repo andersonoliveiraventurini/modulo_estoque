@@ -37,13 +37,14 @@ final class EstoqueService
         event(new StockMovementRegistered($data));
     }
 
-    public function reservarParaOrcamento(Orcamento $orcamento): void
+    public function reservarParaOrcamento(Orcamento $orcamento): bool
     {
         Log::info("Iniciando reserva de estoque para Orçamento #{$orcamento->id}");
         $orcamento->load('itens.produto');
+        $sucessoTotal = true;
 
         try {
-            DB::transaction(function () use ($orcamento) {
+            DB::transaction(function () use ($orcamento, &$sucessoTotal) {
                 // Garante que apenas um processo mexa neste orçamento por vez
                 Orcamento::where('id', $orcamento->id)->lockForUpdate()->first();
 
@@ -66,7 +67,9 @@ final class EstoqueService
                             ->sum('quantidade');
                         $disponivel = $produto->estoque_atual - $reservado;
 
-                        throw new \Exception("Estoque insuficiente para o produto {$produto->nome} (SKU: {$produto->sku}). Disponível: {$disponivel}, Mínimo Exigido: {$min}. A reserva de {$quantidade} deixaria o saldo abaixo do limite.");
+                        Log::warning("Reserva parcial para Orçamento #{$orcamento->id}: Estoque insuficiente para o produto {$produto->nome} (SKU: {$produto->sku}). Disponível: {$disponivel}, Mínimo Exigido: {$min}. A reserva de {$quantidade} deixaria o saldo abaixo do limite.");
+                        $sucessoTotal = false;
+                        continue; // ✅ Não lança exceção, permitindo que outros itens sejam reservados e o orçamento seja salvo.
                     }
 
                     // Priorização do HUB (ID 1)
@@ -129,6 +132,7 @@ final class EstoqueService
                 $orcamento->saveQuietly();
             });
             Log::info("Reserva concluída com sucesso para Orçamento #{$orcamento->id}");
+            return $sucessoTotal;
         } catch (\Exception $e) {
             Log::error("Erro ao reservar estoque para Orçamento #{$orcamento->id}: " . $e->getMessage());
             throw $e;

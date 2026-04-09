@@ -39,11 +39,12 @@ class OrcamentoShow extends Component
                     ->where('orcamento_id', '!=', $this->orcamento->id)
                     ->sum('quantidade');
 
-                $disponivel = max(0, ($produto->estoque_atual ?? 0) - $reservadoOutros);
+                $minimo = (float) ($produto->estoque_minimo ?? 0);
+                $disponivel = max(0, ($produto->estoque_atual ?? 0) - $reservadoOutros - $minimo);
                 $saldoHub = $estoqueService->getHubStock($produto->id);
 
                 if ($disponivel < $item->quantidade) {
-                    $itensSemEstoque[] = "{$produto->nome}: disponível {$disponivel}, necessário {$item->quantidade}";
+                    $itensSemEstoque[] = "{$produto->nome}: disponível {$disponivel} acima do mínimo, necessário {$item->quantidade}";
                 }
 
                 if ($saldoHub < $item->quantidade) {

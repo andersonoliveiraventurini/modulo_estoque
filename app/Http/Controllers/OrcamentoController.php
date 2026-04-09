@@ -1021,7 +1021,12 @@ class OrcamentoController extends Controller
             $todosTêmEstoque = $orcamento->itens->every(function ($item) {
                 $produto = $item->produto;
                 if (! $produto) return false;
-                $disponivel = ($produto->estoque_atual ?? 0) - ($produto->estoque_web ?? 0);
+                $reservadoOutros = \App\Models\EstoqueReserva::where('produto_id', $produto->id)
+                    ->where('status', 'ativa')
+                    ->where('orcamento_id', '!=', $item->orcamento_id)
+                    ->sum('quantidade');
+                $minimo = (float) ($produto->estoque_minimo ?? 0);
+                $disponivel = max(0, ($produto->estoque_atual ?? 0) - $reservadoOutros - $minimo);
                 return $disponivel >= $item->quantidade;
             });
 
