@@ -271,10 +271,10 @@
                                 @endif
 
                                 <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                                    Separada neste lote:
+                                    Total Separado:
                                     <span class="font-semibold">
-            {{ rtrim(rtrim(number_format($it->qty_separada, 3, ',', '.'), '0'), ',') }}
-        </span>
+                                        {{ rtrim(rtrim(number_format($it->qty_separada, 3, ',', '.'), '0'), ',') }}
+                                    </span>
                                 </p>
 
                                 @php
