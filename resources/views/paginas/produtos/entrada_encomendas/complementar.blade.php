@@ -85,7 +85,7 @@
 
                     <div>
                         <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                            Entregue para (vendedor)
+                            Entregue para (separador)
                         </label>
                         <select name="entregue_para"
                                 class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
@@ -187,6 +187,15 @@
                                                placeholder="Ex: item faltante, avaria..."
                                                {{ $resumo['pendente'] <= 0 ? 'readonly' : '' }}
                                                class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none {{ $resumo['pendente'] <= 0 ? 'bg-zinc-100 dark:bg-zinc-700' : '' }}">
+                                    </div>
+                                    <div class="md:col-span-3">
+                                        <label class="block text-xs font-medium text-zinc-500 mb-1">Descrição do Produto (Opcional)</label>
+                                        <textarea name="itens[{{ $idx }}][descricao]"
+                                                  rows="2"
+                                                  maxlength="500"
+                                                  placeholder="Ex: Alumínio anodizado fosco, acabamento especial..."
+                                                  {{ $resumo['pendente'] <= 0 ? 'readonly' : '' }}
+                                                  class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none {{ $resumo['pendente'] <= 0 ? 'bg-zinc-100 dark:bg-zinc-700' : '' }}">{{ old("itens.{$idx}.descricao") }}</textarea>
                                     </div>
                                 </div>
                             </div>

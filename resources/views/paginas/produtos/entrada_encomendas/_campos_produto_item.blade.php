@@ -13,6 +13,14 @@
 
     {{-- Linha 1: NCM · Código de Barras · SKU --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+        <div class="md:col-span-3">
+            <label class="block text-xs font-medium text-zinc-500 mb-1">Descrição do Produto (Opcional)</label>
+            <textarea name="itens[{{ $index }}][descricao]"
+                      rows="2"
+                      maxlength="500"
+                      placeholder="Ex: Alumínio anodizado fosco, acabamento especial..."
+                      class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">{{ old("itens.{$index}.descricao") }}</textarea>
+        </div>
         <div>
             <label class="block text-xs font-medium text-zinc-500 mb-1">NCM</label>
             <input type="text"

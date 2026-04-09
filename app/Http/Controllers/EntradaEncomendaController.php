@@ -104,6 +104,7 @@ class EntradaEncomendaController extends Controller
             'itens.*.quantidade_solicitada' => 'required|integer|min:0',
             'itens.*.quantidade_recebida'   => 'required|integer|min:0',
             'itens.*.observacao'            => 'nullable|string|max:500',
+            'itens.*.descricao'             => 'nullable|string|max:500',
             // Campos de produto — todos opcionais
             'itens.*.ncm'               => 'nullable|string|max:20',
             'itens.*.codigo_barras'     => 'nullable|string|max:50',
@@ -180,6 +181,7 @@ class EntradaEncomendaController extends Controller
                     'quantidade_recebida'   => $novaQtd,
                     'recebido_completo'     => ($jaRecebido + $novaQtd) >= $totalPedido,
                     'observacao'            => $itemData['observacao'] ?? null,
+                    'descricao'             => $itemData['descricao'] ?? null,
                     // Campos de produto opcionais
                     'ncm'               => $itemData['ncm'] ?? null,
                     'codigo_barras'     => $itemData['codigo_barras'] ?? null,
@@ -323,6 +325,7 @@ class EntradaEncomendaController extends Controller
             'itens.*.id'                    => 'required|exists:entrada_encomenda_itens,id',
             'itens.*.quantidade_recebida'   => 'required|integer|min:0',
             'itens.*.observacao'            => 'nullable|string|max:500',
+            'itens.*.descricao'             => 'nullable|string|max:500',
             // Campos de produto — opcionais
             'itens.*.ncm'              => 'nullable|string|max:20',
             'itens.*.codigo_barras'    => 'nullable|string|max:50',
@@ -347,6 +350,7 @@ class EntradaEncomendaController extends Controller
                     'quantidade_recebida' => $novaQtd,
                     'recebido_completo'   => $novaQtd >= (float) $item->quantidade_solicitada,
                     'observacao'          => $itemData['observacao'] ?? null,
+                    'descricao'           => $itemData['descricao'] ?? null,
                     // Campos de produto
                     'ncm'              => $itemData['ncm'] ?? null,
                     'codigo_barras'    => $itemData['codigo_barras'] ?? null,

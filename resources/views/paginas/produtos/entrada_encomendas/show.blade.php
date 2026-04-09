@@ -134,9 +134,21 @@
 
                         {{-- Observação do recebimento --}}
                         @if ($item->observacao)
-                            <p class="text-xs italic text-zinc-500 dark:text-zinc-400 mb-3">
-                                📝 {{ $item->observacao }}
+                            <p class="text-xs italic text-zinc-500 dark:text-zinc-400 mb-2">
+                                📝 Observação: {{ $item->observacao }}
                             </p>
+                        @endif
+
+                        {{-- Descrição do Produto --}}
+                        @if ($item->descricao)
+                            <div class="mb-3 p-3 bg-blue-50/50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-800/30">
+                                <p class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
+                                    Descrição do Produto
+                                </p>
+                                <p class="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                                    {{ $item->descricao }}
+                                </p>
+                            </div>
                         @endif
 
                         {{-- Informações do produto --}}

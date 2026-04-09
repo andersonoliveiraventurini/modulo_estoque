@@ -17,6 +17,8 @@
                 </div>
             @endif
 
+            <form action="{{ route('entrada_encomendas.update', $entradaEncomenda->id) }}" method="POST">
+                @csrf
                 @method('PUT')
 
                 @if (isset($fornecedoresStatus) && !empty($fornecedoresStatus))
@@ -156,6 +158,16 @@
                                     <p class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">
                                         Informações do produto <span class="font-normal normal-case">(opcionais)</span>
                                     </p>
+
+                                    {{-- Descrição do Produto --}}
+                                    <div class="mb-3">
+                                        <label class="block text-xs font-medium text-zinc-500 mb-1">Descrição do Produto (Opcional)</label>
+                                        <textarea name="itens[{{ $idx }}][descricao]"
+                                                  rows="2"
+                                                  maxlength="500"
+                                                  placeholder="Ex: Alumínio anodizado fosco, acabamento especial..."
+                                                  class="w-full border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">{{ old("itens.{$idx}.descricao", $itemEntrada->descricao) }}</textarea>
+                                    </div>
 
                                     {{-- NCM · Código de Barras · SKU --}}
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">

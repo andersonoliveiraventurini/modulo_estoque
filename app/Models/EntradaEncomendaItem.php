@@ -18,6 +18,7 @@ class EntradaEncomendaItem extends Model {
         'quantidade_recebida',
         'recebido_completo',
         'observacao',
+        'descricao',
         // campos de identificação do produto
         'ncm',
         'codigo_barras',
