@@ -84,8 +84,7 @@
                                 </flux:table.cell>
                                 <flux:table.cell align="right">
                                     <div class="flex justify-end gap-2">
-                                        @if(($ret->status === 'pendente_supervisor' && auth()->user()->hasAnyRole(['supervisor', 'admin'])) || 
-                                            ($ret->status === 'pendente_estoque' && auth()->user()->hasAnyRole(['estoquista', 'admin'])))
+                                        @if(auth()->user()->can('approveSupervisor', $ret) || auth()->user()->can('approveEstoque', $ret))
                                             <flux:button href="{{ route('product_returns.approve', $ret->id) }}" variant="primary" size="sm" icon="shield-check">Aprovar</flux:button>
                                         @else
                                             <flux:button href="{{ route('product_returns.approve', $ret->id) }}" variant="ghost" size="sm" icon="eye">Ver Detalhes</flux:button>

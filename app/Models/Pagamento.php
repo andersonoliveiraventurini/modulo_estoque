@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Pagamento extends Model
 {
@@ -107,6 +108,14 @@ class Pagamento extends Model
     {
         return $this->hasMany(ClienteCreditoMovimentacoes::class, 'referencia_id')
             ->where('referencia_tipo', 'orcamento');
+    }
+
+    /**
+     * Estornos vinculados a este pagamento.
+     */
+    public function estornos(): HasMany
+    {
+        return $this->hasMany(Estorno::class);
     }
 
     // ── Scopes ───────────────────────────────────────────────────────────────

@@ -22,8 +22,10 @@ use App\Services\PagamentoService;
 
 use App\Models\ProductReturn;
 use App\Models\NonConformity;
+use App\Models\Estorno;
 use App\Policies\ProductReturnPolicy;
 use App\Policies\NonConformityPolicy;
+use App\Policies\EstornoPolicy;
 
 use App\Events\StockMovementRegistered;
 use App\Listeners\LogStockMovement;
@@ -55,6 +57,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Cliente::class, ClientePolicy::class);
         Gate::policy(ProductReturn::class, ProductReturnPolicy::class);
         Gate::policy(NonConformity::class, NonConformityPolicy::class);
+        Gate::policy(Estorno::class, EstornoPolicy::class);
         Orcamento::observe(OrcamentoObserver::class);
 
         // ─── Eventos de Orçamento ─────────────────────────────────────────────

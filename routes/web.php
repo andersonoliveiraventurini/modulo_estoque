@@ -316,6 +316,11 @@ Route::middleware(['auth'])->group(function () {
         ->name('pagamentos.comprovante-pdf')
         ->middleware('auth');
 
+    // ── Fluxo de Estornos (Livewire) ─────────────────────────────────────────
+    Route::get('/estornos', \App\Livewire\Estorno\EstornoIndex::class)->name('estornos.index');
+    Route::get('/estornos/novo/{pagamentoId}', \App\Livewire\Estorno\EstornoForm::class)->name('estornos.form');
+    Route::get('/estornos/aprovacao', \App\Livewire\Estorno\EstornoApproval::class)->name('estornos.approval');
+
     Route::resource('notas', NotaFiscalController::class)->names('notas');
 
     Route::resource('clientes', ClienteController::class)->names('clientes');

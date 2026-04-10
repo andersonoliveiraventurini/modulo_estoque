@@ -505,35 +505,22 @@
                             </div>
 
                             {{-- Estornar --}}
-                            @if (!$pagamento->estornado)
-                                <div
-                                    class="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-red-200 dark:border-red-900 p-5">
-                                    <h3
-                                        class="text-base font-semibold text-red-700 dark:text-red-400 mb-3 flex items-center gap-2">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
+                            @if (!$pagamento->estornado && auth()->user()->can('create', App\Models\Estorno::class))
+                                <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-red-200 dark:border-red-900 p-5 pt-4">
+                                    <h3 class="text-base font-semibold text-red-700 dark:text-red-400 mb-2 flex items-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                                         </svg>
-                                        Estornar Pagamento
+                                        Solicitar Estorno
                                     </h3>
-                                    <form action="{{ route('pagamentos.estornar', $pagamento->id) }}" method="POST"
-                                        onsubmit="return confirm('Confirma o estorno deste pagamento?')">
-                                        @csrf
-                                        <div class="mb-3">
-                                            <label
-                                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                Motivo <span class="text-red-500">*</span>
-                                            </label>
-                                            <textarea name="motivo_estorno" rows="3" minlength="10" required
-                                                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500"
-                                                placeholder="Mín. 10 caracteres..."></textarea>
-                                        </div>
-                                        <button type="submit"
-                                            class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2.5 rounded-lg text-sm transition-colors">
-                                            Confirmar Estorno
-                                        </button>
-                                    </form>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
+                                        Use esta opção se precisar reverter ou ressarcir o cliente deste recebimento. O estorno passará por aprovação gerencial.
+                                    </p>
+                                    <a href="{{ route('estornos.form', $pagamento->id) }}"
+                                        class="flex items-center justify-center w-full bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2.5 rounded-lg text-sm transition-colors text-center cursor-pointer select-none">
+                                        Prosseguir para formulário de estorno
+                                    </a>
                                 </div>
                             @endif
 

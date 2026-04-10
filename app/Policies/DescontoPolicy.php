@@ -27,7 +27,8 @@ class DescontoPolicy
             return false;
         }
         
-        // Verifica se tem permissão (exemplo usando roles)
+        // FIXME: se reativado, substituir hasRole() por hasPermissionTo('aprovar_desconto')
+        // aprovar_desconto deve ser criada no RolesAndPermissionsSeeder antes de usar
         return $user->hasRole(['admin', 'gerente', 'supervisor']);
     }
  */

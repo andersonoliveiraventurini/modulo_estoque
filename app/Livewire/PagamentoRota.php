@@ -628,7 +628,7 @@ class PagamentoRota extends Component
         $orcamento->vendedor?->notify($notificacao);
 
         // Notificar: supervisores de vendas, separação, conferência
-        $roles = ['Supervisor de Vendas', 'Separação', 'Conferência'];
+        $roles = ['supervisor vendas', 'separacao', 'conferencia'];
         User::role($roles)->each(fn ($u) => $u->notify($notificacao));
 
         Log::info("PagamentoRota: notificações de negação enviadas", [

@@ -243,6 +243,20 @@
             <flux:navlist.item icon="banknotes" :href="route('pagamentos.index')"
                 :current="request()->routeIs('pagamentos.*')" wire:navigate>{{ __('Pagamentos') }}
             </flux:navlist.item>
+
+            @if (auth()->user()->can('estorno_visualizar') || auth()->user()->hasRole('admin'))
+            <flux:navlist.group heading="Estornos" expandable :expanded="false" class="border-l-2 border-zinc-200 dark:border-zinc-700 ml-4 pl-2 mt-2">
+                <flux:navlist.item icon="arrow-path-rounded-square" :href="route('estornos.index')"
+                    :current="request()->routeIs('estornos.index')" wire:navigate>{{ __('Lista de Estornos') }}
+                </flux:navlist.item>
+
+                @if (auth()->user()->can('estorno_aprovar') || auth()->user()->hasRole('admin'))
+                <flux:navlist.item icon="shield-check" :href="route('estornos.approval')"
+                    :current="request()->routeIs('estornos.approval')" wire:navigate>{{ __('Aprovações Pendentes') }}
+                </flux:navlist.item>
+                @endif
+            </flux:navlist.group>
+            @endif
             <flux:navlist.item icon="users" :href="route('clientes.index')"
                 :current="request()->routeIs('clientes.index')" wire:navigate>{{ __('Clientes e Créditos') }}
             </flux:navlist.item>
