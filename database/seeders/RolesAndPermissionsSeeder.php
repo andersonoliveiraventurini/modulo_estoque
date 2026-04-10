@@ -86,7 +86,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $roleAdmin->syncPermissions(Permission::all());
 
         // SUPERVISOR: Aprovações
-        $roleSupervisor = Role::findOrCreate('supervisor', 'web');
+        $roleSupervisor = Role::findOrCreate('supervisor comercial', 'web');
         $roleSupervisor->syncPermissions([
             'visualizar_movimentacao',
             'aprovar_movimentacao',
@@ -184,7 +184,7 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
 
         // SUPERVISOR VENDAS: Orçamentos e devoluções iniciadas pelo cliente
-        $roleSupervisorVendas = Role::findOrCreate('supervisor vendas', 'web');
+        $roleSupervisorVendas = Role::findOrCreate('supervisor expedição', 'web');
         $roleSupervisorVendas->syncPermissions([
             'criar_orcamento',
             'editar_orcamento',
