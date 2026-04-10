@@ -41,15 +41,23 @@
                 </flux:table.cell>
 
                 <flux:table.cell>
-                    @if($estorno->isPendente())
-                        <flux:badge color="yellow">Pendente</flux:badge>
-                    @elseif($estorno->isAprovado())
-                        <flux:badge color="lime">Aprovado</flux:badge>
-                    @elseif($estorno->isRejeitado())
-                        <flux:badge color="red">Rejeitado</flux:badge>
-                    @elseif($estorno->isConcluido())
-                        <flux:badge color="blue">Concluído</flux:badge>
-                    @endif
+                    <div class="flex flex-col gap-1">
+                        @if($estorno->isPendente())
+                            <flux:badge color="yellow" class="w-fit">Pendente</flux:badge>
+                        @elseif($estorno->isAprovado())
+                            <flux:badge color="lime" class="w-fit">Aprovado</flux:badge>
+                        @elseif($estorno->isRejeitado())
+                            <flux:badge color="red" class="w-fit">Rejeitado</flux:badge>
+                        @elseif($estorno->isConcluido())
+                            <flux:badge color="blue" class="w-fit">Concluído</flux:badge>
+                        @endif
+
+                        @if($estorno->isRejeitado() && $estorno->observacao_aprovador)
+                            <span class="text-xs text-red-600 dark:text-red-400 mt-1 max-w-[150px] truncate" title="{{ $estorno->observacao_aprovador }}">
+                                <b>Motivo:</b> {{ $estorno->observacao_aprovador }}
+                            </span>
+                        @endif
+                    </div>
                 </flux:table.cell>
 
                 <flux:table.cell class="font-semibold">
@@ -64,15 +72,18 @@
                     {{ $estorno->created_at->format('d/m/Y H:i') }}
                 </flux:table.cell>
 
-                <flux:table.cell>
+                <flux:table.cell class="flex items-center gap-2">
+                    <flux:button size="sm" variant="subtle" icon="eye" href="{{ route('estornos.show', $estorno->id) }}" />
+
                     @if($estorno->isAprovado() && auth()->user()->can('conclude', $estorno))
                         <flux:button size="sm" variant="primary" wire:click="concluir({{ $estorno->id }})">
                             Concluir
                         </flux:button>
                     @elseif($estorno->isPendente() && auth()->user()->can('approve', $estorno))
-                        <flux:button size="sm" variant="subtle" class="text-red-600 dark:text-red-400" href="{{ route('estornos.approval') }}">
-                            Julgar (Aprovar/Rejeitar)
-                        </flux:button>
+                        <a href="{{ route('estornos.approval') }}" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-orange-200 dark:border-orange-800 bg-orange-50 hover:bg-orange-100 dark:bg-orange-900/30 dark:hover:bg-orange-900/50 text-orange-700 dark:text-orange-400 text-xs font-bold shadow-sm transition-colors whitespace-nowrap">
+                            <span class="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span>
+                            Julgar (Aprov/Rej)
+                        </a>
                     @endif
                 </flux:table.cell>
             </flux:table.row>

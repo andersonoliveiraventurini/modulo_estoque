@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Notifications\EstornoDecididoNotification;
 use App\Notifications\EstornoSolicitadoNotification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
 class EstornoService
@@ -58,6 +59,13 @@ class EstornoService
             ]);
 
             $estorno->solicitante->notify(new EstornoDecididoNotification($estorno));
+            
+            Log::info("Estorno #{$estorno->id} APROVADO por {$aprovador->name}", [
+                'estorno_id' => $estorno->id,
+                'aprovador_id' => $aprovador->id,
+                'valor' => $estorno->valor,
+                'observacao' => $observacao,
+            ]);
         });
     }
 
@@ -79,6 +87,13 @@ class EstornoService
             ]);
 
             $estorno->solicitante->notify(new EstornoDecididoNotification($estorno));
+
+            Log::warning("Estorno #{$estorno->id} REJEITADO por {$aprovador->name}", [
+                'estorno_id' => $estorno->id,
+                'aprovador_id' => $aprovador->id,
+                'valor' => $estorno->valor,
+                'motivo_rejeicao' => $observacao,
+            ]);
         });
     }
 

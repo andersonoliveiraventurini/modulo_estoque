@@ -320,6 +320,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/estornos', \App\Livewire\Estorno\EstornoIndex::class)->name('estornos.index');
     Route::get('/estornos/novo/{pagamentoId}', \App\Livewire\Estorno\EstornoForm::class)->name('estornos.form');
     Route::get('/estornos/aprovacao', \App\Livewire\Estorno\EstornoApproval::class)->name('estornos.approval');
+    Route::get('/estornos/{estorno}', \App\Livewire\Estorno\EstornoShow::class)->name('estornos.show');
 
     Route::resource('notas', NotaFiscalController::class)->names('notas');
 

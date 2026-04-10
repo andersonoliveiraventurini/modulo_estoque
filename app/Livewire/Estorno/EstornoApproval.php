@@ -13,12 +13,14 @@ class EstornoApproval extends Component
     public $observacao = '';
     public $estornoEmAtendimento = null;
     public $acaoSelecionada = null; // 'approve' ou 'reject'
+    public bool $showModal = false;
 
     public function selecionarEstorno($id, $acao)
     {
         $this->estornoEmAtendimento = Estorno::findOrFail($id);
         $this->acaoSelecionada = $acao;
         $this->observacao = '';
+        $this->showModal = true;
     }
 
     public function processarAcao(EstornoService $estornoService)
@@ -55,6 +57,7 @@ class EstornoApproval extends Component
         $this->estornoEmAtendimento = null;
         $this->acaoSelecionada = null;
         $this->observacao = '';
+        $this->showModal = false;
     }
 
     public function render()

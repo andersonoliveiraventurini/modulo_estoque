@@ -44,13 +44,13 @@
     </div>
 
     <!-- Modal de Interação (Rejeitar ou Aprovar e incluir obs) -->
-    <flux:modal wire:model.live="estornoEmAtendimento" variant="flyout" @close="$wire.cancelar()">
+    <flux:modal wire:model.live="showModal" variant="flyout" @close="$wire.cancelar()">
         @if($estornoEmAtendimento)
             <flux:heading size="lg">Confirmar {{ $acaoSelecionada === 'approve' ? 'Aprovação' : 'Rejeição' }}</flux:heading>
             <flux:subheading class="mb-4">Adicione uma observação caso aplicável. A observação é obrigatória para rejeições.</flux:subheading>
 
             <form wire:submit="processarAcao">
-                <flux:textarea wire:model="observacao" label="Observação do Líder" rows="3" />
+                <flux:textarea wire:model="observacao" label="Observação do Supervisor" rows="3" />
                 
                 <div class="mt-6 flex justify-end gap-2">
                     <flux:button wire:click="cancelar" variant="ghost">Cancelar</flux:button>
