@@ -74,6 +74,7 @@ class KanbanOrcamentos extends Component
             ->with(['cliente', 'vendedor', 'endereco'])
             ->where('workflow_status', $workflowStatus)
             ->where('status', '!=', 'Cancelado') // Não mostrar cancelados no board
+            ->where('status', '!=', 'Pendente') // Não mostrar pendentes no board
             
             // 🔎 Busca geral
             ->when($this->search, function ($query) {
